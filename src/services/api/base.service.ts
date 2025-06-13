@@ -85,3 +85,5 @@ export abstract class BaseApiService {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 }
+
+export { BaseApiService }
