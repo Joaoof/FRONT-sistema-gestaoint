@@ -1,49 +1,21 @@
-import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2, Tag } from 'lucide-react';
+import { Edit, Plus, Search, Tag, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CategoryService } from "../../services/api";
 
+// Defina a interface Categoria conforme os campos utilizados no componente
 interface Categoria {
     id: string;
     nome: string;
-    descricao: string;
+    descricao?: string;
     cor: string;
     ativo: boolean;
 }
 
 export function CategoriesRegistration() {
+
     const [showForm, setShowForm] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-
-    const [categorias] = useState<Categoria[]>([
-        {
-            id: '1',
-            nome: 'Alimentação',
-            descricao: 'Produtos alimentícios em geral',
-            cor: '#3B82F6',
-            ativo: true
-        },
-        {
-            id: '2',
-            nome: 'Limpeza',
-            descricao: 'Produtos de limpeza e higiene',
-            cor: '#10B981',
-            ativo: true
-        },
-        {
-            id: '3',
-            nome: 'Bebidas',
-            descricao: 'Bebidas alcoólicas e não alcoólicas',
-            cor: '#F59E0B',
-            ativo: true
-        },
-        {
-            id: '4',
-            nome: 'Higiene',
-            descricao: 'Produtos de higiene pessoal',
-            cor: '#EF4444',
-            ativo: true
-        }
-    ]);
-
+    const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [formData, setFormData] = useState({
         nome: '',
         descricao: '',
@@ -51,26 +23,84 @@ export function CategoriesRegistration() {
         ativo: true
     });
 
+    const [notification, setNotification] = useState({
+        show: false,
+        message: '',
+        type: 'success' as 'success' | 'error'
+    });
+
+    const categoryService = new CategoryService(); // Instância do serviço
+
     const coresPredefinidas = [
         '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
         '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
     ];
 
-    const filteredCategorias = categorias.filter(categoria =>
+    const filteredCategorias = categorias.filter((categoria: { nome: string; }) =>
         categoria.nome.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Salvando categoria:', formData);
-        setShowForm(false);
-        setFormData({
-            nome: '',
-            descricao: '',
-            cor: '#3B82F6',
-            ativo: true
-        });
+    const loadCategories = async () => {
+        try {
+            const response = await categoryService.getAll();
+            if (response.success && response.data?.items) {
+                setCategorias(
+                    response.data.items.map((item: any) => ({
+                        id: item.id,
+                        nome: item.nome ?? '',
+                        descricao: item.descricao ?? '',
+                        cor: item.cor ?? '#3B82F6',
+                        ativo: item.ativo === 'ACTIVE' || item.ativo === true,
+                    }))
+                );
+            }
+        } catch (error) {
+            console.error('Erro ao carregar categorias');
+        }
     };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+    
+        const response = await categoryService.create({
+            name: formData.nome,
+            description: formData.descricao,
+            cor: formData.cor,
+            status: formData.ativo ? 'ACTIVE' : 'INACTIVE'
+        });
+    
+        console.log(response);
+    
+    
+        if (response.success) {
+            setNotification({
+                show: true,
+                message: 'Categoria criada com sucesso!',
+                type: 'success'
+            });
+    
+            setShowForm(false);
+            setFormData({
+                nome: '',
+                descricao: '',
+                cor: '#3B82F6',
+                ativo: true
+            });
+    
+            // Recarrega categorias da API
+            loadCategories();
+        }
+    
+        // Ocultar notificação após 5 segundos
+        setTimeout(() => {
+            setNotification((prev: any) => ({ ...prev, show: false }));
+        }, 5000);
+    };
+
+    // Carregar categorias ao montar o componente
+    useEffect(() => {
+        loadCategories();
+    }, []);
 
     return (
         <div className="space-y-6">
@@ -97,6 +127,16 @@ export function CategoriesRegistration() {
                 </button>
             </div>
 
+            {/* Notificação */}
+            {notification.show && (
+                <div
+                    className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}
+                >
+                    <p>{notification.message}</p>
+                </div>
+            )}
+
             {/* Form Modal */}
             {showForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -113,7 +153,6 @@ export function CategoriesRegistration() {
                                     </svg>
                                 </button>
                             </div>
-
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -128,7 +167,6 @@ export function CategoriesRegistration() {
                                         placeholder="Nome da categoria"
                                     />
                                 </div>
-
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Descrição
@@ -141,7 +179,6 @@ export function CategoriesRegistration() {
                                         rows={3}
                                     />
                                 </div>
-
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Cor
@@ -167,7 +204,6 @@ export function CategoriesRegistration() {
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="flex items-center">
                                     <input
                                         type="checkbox"
@@ -180,7 +216,6 @@ export function CategoriesRegistration() {
                                         Categoria ativa
                                     </label>
                                 </div>
-
                                 <div className="flex justify-end space-x-3 pt-4">
                                     <button
                                         type="button"
@@ -204,7 +239,7 @@ export function CategoriesRegistration() {
 
             {/* Categories Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredCategorias.map((categoria) => (
+                {filteredCategorias.map((categoria: any) => (
                     <div key={categoria.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center">
