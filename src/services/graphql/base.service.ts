@@ -124,3 +124,5 @@ export abstract class BaseGraphQLService {
     }
   }
 }
+
+export { BaseGraphQLService }
