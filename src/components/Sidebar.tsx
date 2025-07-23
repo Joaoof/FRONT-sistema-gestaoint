@@ -1,15 +1,14 @@
-import React from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Package, 
+import {
+  LayoutDashboard,
+  Users,
+  Package,
   ShoppingCart,
   FileText,
   DollarSign,
   ShoppingBag,
   Search
 } from 'lucide-react';
-import { View } from '../App';
+import { View } from './AuthenticatedApp';
 
 interface SidebarProps {
   currentView: View;
@@ -31,9 +30,8 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
   ];
 
   return (
-    <div className={`fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${
-      isOpen ? 'translate-x-0' : '-translate-x-full'
-    } lg:translate-x-0`}>
+    <div className={`fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0`}>
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -52,12 +50,12 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
           </button>
         </div>
       </div>
-      
+
       <nav className="mt-4">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
-          
+
           return (
             <button
               key={item.id}
@@ -67,11 +65,10 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
                   onToggle();
                 }
               }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 text-left text-sm transition-colors ${
-                isActive 
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`w-full flex items-center space-x-3 px-4 py-3 text-left text-sm transition-colors ${isActive
+                ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                : 'text-gray-600 hover:bg-gray-50'
+                }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
               <span>{item.label}</span>

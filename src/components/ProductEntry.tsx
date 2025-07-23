@@ -58,7 +58,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Entrada de Produtos</h1>
+        <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">Entrada de Produtos</h1>
         <p className="text-gray-600">Registre novos produtos no seu estoque</p>
       </div>
 

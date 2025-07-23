@@ -1,4 +1,3 @@
-import React from 'react';
 import { MetricCard } from './MetricCard';
 import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
@@ -6,21 +5,12 @@ import { InventoryData } from '../hooks/useInventory';
 
 export function Dashboard({
   entries,
-  exits,
   products,
-  getDailySpending,
   getDailyRevenue,
-  getMonthlySpending,
-  getMonthlyRevenue,
   getDailyProfit,
-  getMonthlyProfit
 }: InventoryData) {
-  const dailySpending = getDailySpending();
   const dailyRevenue = getDailyRevenue();
-  const monthlySpending = getMonthlySpending();
-  const monthlyRevenue = getMonthlyRevenue();
   const dailyProfit = getDailyProfit();
-  const monthlyProfit = getMonthlyProfit();
 
   // Dados para gráfico de linha (últimos 12 meses)
   const last12Months = Array.from({ length: 12 }, (_, i) => {
@@ -73,7 +63,7 @@ export function Dashboard({
     <div className="space-y-4 lg:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl lg:text-2xl font-semibold text-gray-900">
+        <h1 className="text-xl lg:text-2xl font- font-serif text-gray-900">
           Dashboard
         </h1>
       </div>
@@ -188,7 +178,7 @@ export function Dashboard({
                 <h4 className="text-sm font-medium leading-tight">
                   Precisa de Ajuda? Fale com os nossos consultores →
                 </h4>
-                <p className="text-xs mt-2 opacity-90">☎ (11) 99.999-9999</p>
+                <p className="text-xs mt-2 opacity-90">☎ (55) 63.99102-1043</p>
               </div>
               <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center ml-2">
                 <span className="text-lg">🎯</span>
@@ -205,20 +195,6 @@ export function Dashboard({
               <p className="text-xs text-gray-500">(RECEITAS E DESPESAS)</p>
             </div>
             <PieChart data={pieData} />
-          </div>
-
-          {/* Card Certificado Digital */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h4 className="text-sm font-medium leading-tight">
-                  Adquira já um Certificado Digital e tenha mais segurança →
-                </h4>
-              </div>
-              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center ml-2">
-                <span className="text-lg">🏆</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>

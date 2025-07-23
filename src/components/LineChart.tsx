@@ -16,15 +16,15 @@ export function LineChart({ data, height = 200 }: LineChartProps) {
     ...data.flatMap(d => [d.receita, d.despesas]),
     1000 // Valor mínimo para evitar divisão por zero
   );
-  
+
   const chartHeight = height;
   const chartWidth = 100; // Usar porcentagem
   const padding = { top: 10, right: 10, bottom: 25, left: 30 };
-  
-  const getX = (index: number) => 
+
+  const getX = (index: number) =>
     padding.left + (index / (data.length - 1)) * (chartWidth - padding.left - padding.right);
-  
-  const getY = (value: number) => 
+
+  const getY = (value: number) =>
     chartHeight - padding.bottom - (value / maxValue) * (chartHeight - padding.top - padding.bottom);
 
   const revenuePoints = data.map((d, i) => `${getX(i)},${getY(d.receita)}`).join(' ');
@@ -79,7 +79,7 @@ export function LineChart({ data, height = 200 }: LineChartProps) {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        
+
         {/* Expense line */}
         <polyline
           points={expensePoints}
@@ -111,8 +111,8 @@ export function LineChart({ data, height = 200 }: LineChartProps) {
         {/* Gradient definition */}
         <defs>
           <linearGradient id="revenueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.8"/>
-            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.1"/>
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.1" />
           </linearGradient>
         </defs>
       </svg>
