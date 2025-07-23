@@ -23,7 +23,7 @@ export function CategoriesRegistration() {
         '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
     ];
 
-    const filteredCategorias = categories.filter(categoria =>
+    const filteredCategorias = categories.filter((categoria: { name: string; }) =>
         categoria.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -228,7 +228,7 @@ export function CategoriesRegistration() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filteredCategorias.map((categoria) => (
+                    {filteredCategorias.map((categoria: any) => (
                         <div key={categoria.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
                             <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center">
