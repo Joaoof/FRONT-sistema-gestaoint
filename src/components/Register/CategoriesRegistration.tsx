@@ -1,106 +1,91 @@
-import { Edit, Plus, Search, Tag, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { CategoryService } from "../../services/api";
-
-// Defina a interface Categoria conforme os campos utilizados no componente
-interface Categoria {
-    id: string;
-    nome: string;
-    descricao?: string;
-    cor: string;
-    ativo: boolean;
-}
+import React, { useState } from 'react';
+import { Plus, Search, Edit, Trash2, Tag } from 'lucide-react';
+import { useInventoryGraphQL } from '../../hooks/useInventoryGraphQL';
+import { useToast } from '../../hooks/useToast';
+import { CreateCategoryInput, UpdateCategoryInput } from '../../graphql/types';
 
 export function CategoriesRegistration() {
+  const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    color: '#3B82F6',
+    active: true
+  });
 
-    const [showForm, setShowForm] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [categorias, setCategorias] = useState<Categoria[]>([]);
-    const [formData, setFormData] = useState({
-        nome: '',
-        descricao: '',
-        cor: '#3B82F6',
-        ativo: true
-    });
+  const { categories, loading, mutations } = useInventoryGraphQL();
+  const { success, error } = useToast();
 
-    const [notification, setNotification] = useState({
-        show: false,
-        message: '',
-        type: 'success' as 'success' | 'error'
-    });
+  const coresPredefinidas = [
+    '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
+    '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
+  ];
 
-    const categoryService = new CategoryService(); // Instância do serviço
+  const filteredCategorias = categories.filter(categoria =>
+    categoria.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    const coresPredefinidas = [
-        '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
-        '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
-    ];
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    const filteredCategorias = categorias.filter((categoria: { nome: string; }) =>
-        categoria.nome.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const loadCategories = async () => {
-        try {
-            const response = await categoryService.getAll();
-            if (response.success && response.data?.items) {
-                setCategorias(
-                    response.data.items.map((item: any) => ({
-                        id: item.id,
-                        nome: item.nome ?? '',
-                        descricao: item.descricao ?? '',
-                        cor: item.cor ?? '#3B82F6',
-                        ativo: item.ativo === 'ACTIVE' || item.ativo === true,
-                    }))
-                );
-            }
-        } catch (error) {
-            console.error('Erro ao carregar categorias');
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-    
-        const response = await categoryService.create({
-            name: formData.nome,
-            description: formData.descricao,
-            cor: formData.cor,
-            status: formData.ativo ? 'ACTIVE' : 'INACTIVE'
+    try {
+      if (editingCategory) {
+        const result = await mutations.updateCategory.mutate({
+          id: editingCategory.id,
+          input: formData as UpdateCategoryInput
         });
-    
-        console.log(response);
-    
-    
-        if (response.success) {
-            setNotification({
-                show: true,
-                message: 'Categoria criada com sucesso!',
-                type: 'success'
-            });
-    
-            setShowForm(false);
-            setFormData({
-                nome: '',
-                descricao: '',
-                cor: '#3B82F6',
-                ativo: true
-            });
-    
-            // Recarrega categorias da API
-            loadCategories();
+        
+        if (result) {
+          success('Categoria atualizada com sucesso!');
         }
-    
-        // Ocultar notificação após 5 segundos
-        setTimeout(() => {
-            setNotification((prev: any) => ({ ...prev, show: false }));
-        }, 5000);
-    };
+      } else {
+        const result = await mutations.createCategory.mutate({
+          input: formData as CreateCategoryInput
+        });
+        
+        if (result) {
+          success('Categoria criada com sucesso!');
+        }
+      }
 
-    // Carregar categorias ao montar o componente
-    useEffect(() => {
-        loadCategories();
-    }, []);
+      setShowForm(false);
+      setEditingCategory(null);
+      setFormData({
+        name: '',
+        description: '',
+        color: '#3B82F6',
+        active: true
+      });
+    } catch (err) {
+      error('Erro ao salvar categoria');
+    }
+  };
+
+  const handleEdit = (categoria: any) => {
+    setEditingCategory(categoria);
+    setFormData({
+      name: categoria.name,
+      description: categoria.description || '',
+      color: categoria.color,
+      active: categoria.active
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir esta categoria?')) {
+      try {
+        const result = await mutations.deleteCategory.mutate({ id });
+        if (result) {
+          success('Categoria excluída com sucesso!');
+        }
+      } catch (err) {
+        error('Erro ao excluir categoria');
+      }
+    }
+  };
 
     return (
         <div className="space-y-6">
@@ -127,25 +112,20 @@ export function CategoriesRegistration() {
                 </button>
             </div>
 
-            {/* Notificação */}
-            {notification.show && (
-                <div
-                    className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}
-                >
-                    <p>{notification.message}</p>
-                </div>
-            )}
-
             {/* Form Modal */}
             {showForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg max-w-md w-full">
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Nova Categoria</h3>
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                  {editingCategory ? 'Editar Categoria' : 'Nova Categoria'}
+                                </h3>
                                 <button
-                                    onClick={() => setShowForm(false)}
+                                    onClick={() => {
+                                      setShowForm(false);
+                                      setEditingCategory(null);
+                                    }}
                                     className="text-gray-400 hover:text-gray-600"
                                 >
                                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,8 +141,8 @@ export function CategoriesRegistration() {
                                     <input
                                         type="text"
                                         required
-                                        value={formData.nome}
-                                        onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Nome da categoria"
                                     />
@@ -172,8 +152,8 @@ export function CategoriesRegistration() {
                                         Descrição
                                     </label>
                                     <textarea
-                                        value={formData.descricao}
-                                        onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Descrição da categoria"
                                         rows={3}
@@ -186,8 +166,8 @@ export function CategoriesRegistration() {
                                     <div className="flex items-center space-x-2">
                                         <input
                                             type="color"
-                                            value={formData.cor}
-                                            onChange={(e) => setFormData({ ...formData, cor: e.target.value })}
+                                            value={formData.color}
+                                            onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                                             className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
                                         />
                                         <div className="flex space-x-1">
@@ -195,8 +175,8 @@ export function CategoriesRegistration() {
                                                 <button
                                                     key={cor}
                                                     type="button"
-                                                    onClick={() => setFormData({ ...formData, cor })}
-                                                    className={`w-8 h-8 rounded-lg border-2 ${formData.cor === cor ? 'border-gray-400' : 'border-gray-200'
+                                                    onClick={() => setFormData({ ...formData, color: cor })}
+                                                    className={`w-8 h-8 rounded-lg border-2 ${formData.color === cor ? 'border-gray-400' : 'border-gray-200'
                                                         }`}
                                                     style={{ backgroundColor: cor }}
                                                 />
@@ -208,8 +188,8 @@ export function CategoriesRegistration() {
                                     <input
                                         type="checkbox"
                                         id="ativo"
-                                        checked={formData.ativo}
-                                        onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
+                                        checked={formData.active}
+                                        onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
                                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                     />
                                     <label htmlFor="ativo" className="ml-2 block text-sm text-gray-700">
@@ -219,16 +199,20 @@ export function CategoriesRegistration() {
                                 <div className="flex justify-end space-x-3 pt-4">
                                     <button
                                         type="button"
-                                        onClick={() => setShowForm(false)}
+                                        onClick={() => {
+                                          setShowForm(false);
+                                          setEditingCategory(null);
+                                        }}
                                         className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                                     >
                                         Cancelar
                                     </button>
                                     <button
                                         type="submit"
+                                        disabled={mutations.createCategory.loading || mutations.updateCategory.loading}
                                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                     >
-                                        Salvar
+                                        {editingCategory ? 'Atualizar' : 'Salvar'}
                                     </button>
                                 </div>
                             </form>
@@ -238,42 +222,54 @@ export function CategoriesRegistration() {
             )}
 
             {/* Categories Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredCategorias.map((categoria: any) => (
+            {loading.categories ? (
+              <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredCategorias.map((categoria) => (
                     <div key={categoria.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center">
                                 <div
                                     className="w-8 h-8 rounded-lg flex items-center justify-center mr-3"
-                                    style={{ backgroundColor: categoria.cor }}
+                                    style={{ backgroundColor: categoria.color }}
                                 >
                                     <Tag className="h-4 w-4 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-medium text-gray-900">{categoria.nome}</h3>
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${categoria.ativo
+                                    <h3 className="font-medium text-gray-900">{categoria.name}</h3>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${categoria.active
                                         ? 'bg-green-100 text-green-800'
                                         : 'bg-red-100 text-red-800'
                                         }`}>
-                                        {categoria.ativo ? 'Ativo' : 'Inativo'}
+                                        {categoria.active ? 'Ativo' : 'Inativo'}
                                     </span>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-1">
-                                <button className="text-blue-600 hover:text-blue-900 p-1">
+                                <button 
+                                  onClick={() => handleEdit(categoria)}
+                                  className="text-blue-600 hover:text-blue-900 p-1"
+                                >
                                     <Edit className="h-4 w-4" />
                                 </button>
-                                <button className="text-red-600 hover:text-red-900 p-1">
+                                <button 
+                                  onClick={() => handleDelete(categoria.id)}
+                                  className="text-red-600 hover:text-red-900 p-1"
+                                >
                                     <Trash2 className="h-4 w-4" />
                                 </button>
                             </div>
                         </div>
-                        {categoria.descricao && (
-                            <p className="text-sm text-gray-600">{categoria.descricao}</p>
+                        {categoria.description && (
+                            <p className="text-sm text-gray-600">{categoria.description}</p>
                         )}
                     </div>
                 ))}
-            </div>
+              </div>
+            )}
         </div>
     );
 }
