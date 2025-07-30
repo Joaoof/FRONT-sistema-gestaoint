@@ -80,37 +80,122 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initializeAuth = async () => {
         try {
-            if (authService.isAuthenticated()) {
-                const user = await authService.getCurrentUser()
-                if (user) {
-                    const companyId = authService.getStoredCompanyId()
-                    if (companyId) {
-                        const company = await authService.getCompanyData(companyId)
-                        if (company) {
-                            dispatch({ type: "SET_AUTH_DATA", payload: { user, company } })
-                            return
+            const token = localStorage.getItem("token")
+            if (token) throw new Error("Sem token")
+
+            const res = await fetch("http://localhost:3000/graphql", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    query: `
+            query User {
+              accessToken
+              ex
+              user {
+                id
+                name
+                email
+                role
+                 company {
+                    id
+                    name
+                    email
+                 }
+                 plan {
+                    name
+                    module {
+                            module_key
+                            name
+                            permission
+                            isActive
                         }
+                        permission
+                        isActive
                     }
-                }
+                 }
+              }
             }
-            dispatch({ type: "SET_LOADING", payload: false })
+          `,
+                }),
+            })
+
+            const json = await res.json()
+            const { accessToken, user } = json.data.login;
+            if (json.errors) throw new Error("Token inválido")
+            dispatch({ type: "SET_AUTH_DATA", payload: { user: user, company: user.company } })
         } catch (error) {
             dispatch({ type: "LOGOUT" })
         }
     }
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password_hash: string) => {
         dispatch({ type: "SET_LOADING", payload: true })
         dispatch({ type: "CLEAR_ERROR" })
 
         try {
-            const { user, company } = await authService.login(email, password)
-            dispatch({ type: "SET_AUTH_DATA", payload: { user, company } })
-        } catch (error) {
-            dispatch({ type: "SET_ERROR", payload: error instanceof Error ? error.message : "Erro no login" })
+            const res = await fetch("http://localhost:3000/graphql", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    query: `
+           mutation Login($loginUserInput: LoginUserInput!) {
+  login(loginUserInput: $loginUserInput) {
+    accessToken
+    expiresIn
+    user {
+      id
+      name
+      email
+      role
+      company {
+        id
+        name
+        email
+        modules {
+          moduleId
+          name
+          isActive
+          permission
+        }
+      }
+      plan {
+        name
+        modules {
+          module_key   # ✅ direto
+          name
+          permission
+          isActive
+        }
+      }
+    }
+  }
+}
+          `,
+                    variables: {
+                        loginUserInput: {
+                            email, password_hash
+                        }
+                    }
+                }),
+            })
+
+            const json = await res.json()
+            if (json.errors) throw new Error(json.errors[0].message)
+
+
+            const { accessToken, user } = json.data.login;
+
+            localStorage.setItem("token", accessToken)
+            dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })
+        } catch (err: any) {
+            dispatch({ type: "SET_ERROR", payload: err.message || "Erro no login" })
         }
     }
-
     const logout = async () => {
         await authService.logout()
         dispatch({ type: "LOGOUT" })

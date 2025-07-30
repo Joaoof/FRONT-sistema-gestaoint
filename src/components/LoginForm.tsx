@@ -1,46 +1,18 @@
-"use client"
-
 import type React from "react"
 import { useState, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 
-const TestAccountsInfo = () => (
-    <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-sm font-medium text-gray-900 mb-2">Contas para teste:</h3>
-        <div className="space-y-2 text-xs text-gray-600">
-            <div>
-                <strong>Plano Básico:</strong>
-                <br />
-                Email: the9@gmail.com
-                <br />
-                Senha: 123456
-                <br />
-                <span className="text-orange-600">Acesso: Dashboard, Estoque, Vendas</span>
-            </div>
-            <div>
-                <strong>JC Concretos (Premium):</strong>
-                <br />
-                Email: jcconcretos@gmail.com
-                <br />
-                Senha: 123456
-                <br />
-                <span className="text-green-600">Acesso: Todos os módulos</span>
-            </div>
-        </div>
-    </div>
-)
-
 export const LoginForm = () => {
     const [email, setEmail] = useState<string>("")
-    const [password, setPassword] = useState<string>("")
+    const [password_hash, setPassword] = useState<string>("")
     const { login, isLoading, error } = useAuth()
 
     const handleSubmit = useCallback(
         async (e: React.FormEvent) => {
             e.preventDefault()
-            await login(email, password)
+            await login(email, password_hash)
         },
-        [email, password, login]
+        [email, password_hash, login]
     )
 
     return (
@@ -78,17 +50,17 @@ export const LoginForm = () => {
                             />
                         </div>
                         <div>
-                            <label htmlFor="password" className="sr-only">
+                            <label htmlFor="password_hash" className="sr-only">
                                 Senha
                             </label>
                             <input
-                                id="password"
-                                name="password"
+                                id="password_hash"
+                                name="password_hash"
                                 type="password"
                                 required
                                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                                 placeholder="Senha"
-                                value={password}
+                                value={password_hash}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
@@ -109,8 +81,6 @@ export const LoginForm = () => {
                             {isLoading ? "Entrando..." : "Entrar"}
                         </button>
                     </div>
-
-                    <TestAccountsInfo />
                 </form>
             </div>
         </div>

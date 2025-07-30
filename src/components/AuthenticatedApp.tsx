@@ -46,9 +46,22 @@ export function AuthenticatedApp() {
 
     // Check if user has access to the current view based on company modules
     const hasModuleAccess = (moduleId: string) => {
-        if (!company) return false
-        return company.modules.some((module) => module.moduleId === moduleId && module.isActive)
-    }
+        console.log("Company:", company);
+        console.log("Modules:", company?.modules);
+        console.log("Checking access for:", moduleId);
+
+        const result = company?.modules?.some((module) => {
+            console.log("Checking module:", module);
+            return module.moduleId === moduleId && module.isActive;
+        });
+
+        console.log("Access result:", result);
+
+        return result ?? false;
+    };
+
+    console.log(hasModuleAccess);
+
 
     // Handle view change with access check
     const handleViewChange = (newView: View) => {
