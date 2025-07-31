@@ -6,10 +6,23 @@ import type { Company, User, AuthState } from "../types/auth"
 import { MockAuthService } from "../auth/MockAuthService"
 
 interface AuthContextState extends AuthState {
-    login: (email: string, password: string) => Promise<void>
-    logout: () => Promise<void>
-    error: string | null
+    user: User | null;
+    company: Company | null;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    error: string | null;
+    login: (email: string, password: string) => Promise<void>;
+    logout: () => Promise<void>;
+    modules: Module[]; // ✅ Adicione isso
 }
+
+type Module = {
+    module_key: string;
+    name: string;
+    description?: string;
+    permission: string[];
+    isActive: boolean;
+};
 
 type AuthAction =
     | { type: "SET_LOADING"; payload: boolean }
@@ -24,9 +37,10 @@ const initialState: AuthContextState = {
     isAuthenticated: false,
     isLoading: true,
     error: null,
+    modules: [], // ✅
     login: async () => { },
     logout: async () => { },
-}
+};
 
 const AuthContext = createContext<AuthContextState>(initialState)
 
@@ -41,6 +55,7 @@ function authReducer(state: AuthContextState, action: AuthAction): AuthContextSt
                 ...state,
                 user,
                 company,
+                modules: user.plan?.modules || [],
                 isAuthenticated: true,
                 isLoading: false,
                 error: null,
@@ -105,17 +120,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     email
                  }
                  plan {
-                    name
-                    module {
-                            module_key
-                            name
-                            permission
-                            isActive
-                        }
-                        permission
-                        isActive
-                    }
-                 }
+  name
+  description
+  modules {
+    module_key
+    name
+    description
+    permission
+    isActive
+  }
               }
             }
           `,
@@ -143,39 +156,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 },
                 body: JSON.stringify({
                     query: `
-           mutation Login($loginUserInput: LoginUserInput!) {
-  login(loginUserInput: $loginUserInput) {
-    accessToken
-    expiresIn
-    user {
-      id
-      name
-      email
-      role
-      company {
-        id
-        name
-        email
-        modules {
-          moduleId
-          name
-          isActive
-          permission
-        }
-      }
-      plan {
-        name
-        modules {
-          module_key   # ✅ direto
-          name
-          permission
-          isActive
-        }
-      }
-    }
-  }
-}
-          `,
+                                mutation Login($loginUserInput: LoginUserInput!) {
+            login(loginUserInput: $loginUserInput) {
+                accessToken
+                expiresIn
+                user {
+                id
+                name
+                email
+                role
+                company {
+                    id
+                    name
+                    email
+                    phone
+                    address
+                }
+                plan {
+                    name
+                    description
+                    modules {
+                    module_key
+                    name
+                    description
+                    permission
+                    isActive
+                    }
+                }
+                }
+            }
+            }`,
                     variables: {
                         loginUserInput: {
                             email, password_hash
@@ -194,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })
         } catch (err: any) {
             dispatch({ type: "SET_ERROR", payload: err.message || "Erro no login" })
+            console.error("Erro no login:", err);
         }
     }
     const logout = async () => {

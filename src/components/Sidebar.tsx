@@ -27,7 +27,7 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
     { id: 'financeiro' as View, label: 'Financeiro', icon: DollarSign },
     { id: 'ecommerce' as View, label: 'E-commerce', icon: ShoppingBag },
     { id: 'consultas' as View, label: 'Consultas', icon: Search },
-  ];
+  ]
 
   return (
     <div className={`fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'

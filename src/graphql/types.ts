@@ -91,11 +91,13 @@ export interface CreateProductInput {
   name: string;
   description?: string;
   categoryId: string;
+  quantity: number;
   costPrice: number;
-  sellingPrice: number;
+  salePrice: number;
   stock?: number;
   minStock?: number;
   supplierId?: string;
+  createdById: string;
   active?: boolean;
 }
 

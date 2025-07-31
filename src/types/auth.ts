@@ -1,10 +1,28 @@
 export interface User {
+
     id: string
     email: string
     name: string
     companyId: string
     role: UserRole
+    plan?: PlanDto; // ✅ Corrigido: é um objeto, não uma string
 }
+
+
+export type PlanDto = {
+    id: string;
+    name: string;
+    description?: string;
+    modules: ModuleDto[];
+};
+
+export type ModuleDto = {
+    module_key: string;
+    name: string;
+    description?: string;
+    permission: string[];
+    isActive: boolean;
+};
 
 export interface Company {
     id: string

@@ -44,26 +44,23 @@ export function AuthenticatedApp() {
         moduleName: "",
     })
 
+    console.log("User completo:", user);
+    console.log("Plano do usuário:", user?.plan);
+    console.log("Módulos do plano:", user?.plan?.modules);
+
     // Check if user has access to the current view based on company modules
     const hasModuleAccess = (moduleId: string) => {
-        console.log("Company:", company);
-        console.log("Modules:", company?.modules);
-        console.log("Checking access for:", moduleId);
-
-        const result = company?.modules?.some((module) => {
-            console.log("Checking module:", module);
-            return module.moduleId === moduleId && module.isActive;
-        });
-
-        console.log("Access result:", result);
-
-        return result ?? false;
+        return user?.plan?.modules?.some((module) => {
+            return module.module_key === moduleId && module.isActive;
+        }) ?? false;
     };
 
     console.log(hasModuleAccess);
 
+    console.log("User plan:", user?.plan);
+    console.log("Current view:", currentView);
+    console.log("Has access to estoque:", hasModuleAccess("estoque"));
 
-    // Handle view change with access check
     const handleViewChange = (newView: View) => {
         if (!hasModuleAccess(newView)) {
             setUpgradeModal({
@@ -79,7 +76,7 @@ export function AuthenticatedApp() {
     useEffect(() => {
         if (!hasModuleAccess(currentView)) {
             // If current view is not accessible, redirect to dashboard or first available module
-            const availableModules = [
+            const availableModules: View[] = [
                 "dashboard",
                 "estoque",
                 "vendas",
@@ -89,13 +86,12 @@ export function AuthenticatedApp() {
                 "ecommerce",
                 "consultas",
             ]
-            const firstAvailable = availableModules.find((moduleId) => hasModuleAccess(moduleId))
-
+            const firstAvailable = availableModules.find(hasModuleAccess)
             if (firstAvailable) {
-                setCurrentView(firstAvailable as View)
+                setCurrentView(firstAvailable);
             }
         }
-    }, [company, currentView])
+    }, [user, currentView])
 
     const renderContent = () => {
         // Double check access before rendering

@@ -1,12 +1,15 @@
+// components/ProductEntry.tsx
 import React, { useState } from 'react';
 import { Plus, Package } from 'lucide-react';
-import { ProductEntry as ProductEntryType } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { CreateProductInput } from '../graphql/types';
 
 interface ProductEntryProps {
-  onAddEntry: (entry: Omit<ProductEntryType, 'id'>) => void;
+  onAddEntry: (entry: Omit<ProductEntry, 'id'>) => void;
 }
 
 export function ProductEntry({ onAddEntry }: ProductEntryProps) {
+  const { user } = useAuth(); // ✅ Pega o usuário logado
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -14,8 +17,10 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
     costPrice: 0,
     sellingPrice: 0,
     supplier: '',
-    description: ''
+    description: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const categories = [
     'Eletrônicos',
@@ -25,34 +30,101 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
     'Beleza',
     'Esportes',
     'Livros',
-    'Outros'
+    'Outros',
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAddEntry({
-      ...formData,
-      date: new Date().toISOString()
-    });
-    setFormData({
-      name: '',
-      category: '',
-      quantity: 0,
-      costPrice: 0,
-      sellingPrice: 0,
-      supplier: '',
-      description: ''
-    });
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === 'quantity' || name === 'costPrice' || name === 'sellingPrice'
+          ? parseFloat(value) || 0
+          : value,
+    }));
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'quantity' || name === 'costPrice' || name === 'sellingPrice' 
-        ? parseFloat(value) || 0 
-        : value
-    }));
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      // ✅ Validação mínima
+      if (!formData.name || !formData.category || !formData.quantity || !user?.id) {
+        throw new Error('Preencha todos os campos obrigatórios');
+      }
+
+      // ✅ Mapeia para o formato do backend
+      const productData: CreateProductInput = {
+        name: formData.name,
+        categoryId: '', // Pode vir de um select real depois
+        quantity: formData.quantity,
+        costPrice: Number(formData.costPrice.toFixed(2)),
+        salePrice: Number(formData.sellingPrice.toFixed(2)),
+        supplierId: undefined, // Pode vir de um select real depois
+        createdById: user.id,
+        description: formData.description || undefined,
+      };
+
+      // ✅ Envia para o GraphQL
+      const res = await fetch('http://localhost:3000/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({
+          query: `
+            mutation CreateProduct($dto: CreateProductInput) {
+              createProduct(dto: $dto) {
+                id
+                nameProduct
+                quantity
+                costPrice
+                salePrice
+                description
+                createdById
+                createdAt
+              }
+            }
+          `,
+          variables: { data: productData },
+        }),
+      });
+
+      const json = await res.json();
+
+      if (json.errors) {
+        throw new Error(json.errors[0].message);
+      }
+
+      // ✅ Atualiza o estado local (estoque)
+      onAddEntry({
+        ...formData,
+        date: new Date().toISOString(),
+      });
+
+      // ✅ Reseta o formulário
+      setFormData({
+        name: '',
+        category: '',
+        quantity: 0,
+        costPrice: 0,
+        sellingPrice: 0,
+        supplier: '',
+        description: '',
+      });
+
+      alert('Produto criado com sucesso!');
+    } catch (err: any) {
+      console.error('Erro ao criar produto:', err);
+      setError(err.message || 'Erro ao criar produto');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -67,6 +139,12 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
           <Package className="w-6 h-6 text-blue-600 mr-3" />
           <h2 className="text-xl font-semibold text-gray-900">Novo Produto</h2>
         </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -99,8 +177,10 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               >
                 <option value="">Selecione uma categoria</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
                 ))}
               </select>
             </div>
@@ -195,10 +275,30 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
             </div>
             <button
               type="submit"
-              className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+              disabled={loading}
+              className={`flex items-center px-6 py-3 text-white rounded-lg transition-all duration-200 ${loading
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }`}
             >
-              <Plus className="w-5 h-5 mr-2" />
-              Adicionar Produto
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Criando...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-5 h-5 mr-2" />
+                  Adicionar Produto
+                </>
+              )}
             </button>
           </div>
         </form>
