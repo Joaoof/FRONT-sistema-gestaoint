@@ -88,7 +88,7 @@ export interface DashboardMetrics {
 
 // Input Types
 export interface CreateProductInput {
-  name: string;
+  nameProduct: string;
   description?: string;
   categoryId: string;
   quantity: number;
@@ -97,7 +97,7 @@ export interface CreateProductInput {
   stock?: number;
   minStock?: number;
   supplierId?: string;
-  createdById: string;
+  // createdById: string;
   active?: boolean;
 }
 

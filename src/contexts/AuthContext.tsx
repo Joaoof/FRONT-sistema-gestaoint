@@ -95,7 +95,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initializeAuth = async () => {
         try {
-            const token = localStorage.getItem("token")
+            const token = localStorage.getItem("accessToken")
+            console.log(token);
+
             if (token) throw new Error("Sem token")
 
             const res = await fetch("http://localhost:3000/graphql", {
@@ -135,10 +137,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }),
             })
 
-            const json = await res.json()
-            const { accessToken, user } = json.data.login;
-            if (json.errors) throw new Error("Token inválido")
-            dispatch({ type: "SET_AUTH_DATA", payload: { user: user, company: user.company } })
+            console.log(res);
+
+
+            const data = await res.json();
+            if (data.data?.login?.accessToken) {
+                localStorage.setItem('accessToken', data.data.login.accessToken);
+                // Pode atualizar contexto ou estado do user aqui também
+            } else {
+                // tratar erro
+                console.log('Login falhou:', data.errors || 'Sem token retornado');
+            }
+            dispatch({ type: "SET_AUTH_DATA", payload: { user: data, company: data.company } })
         } catch (error) {
             dispatch({ type: "LOGOUT" })
         }
@@ -200,7 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const { accessToken, user } = json.data.login;
 
-            localStorage.setItem("token", accessToken)
+            localStorage.setItem("accessToken", accessToken);
             dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })
         } catch (err: any) {
             dispatch({ type: "SET_ERROR", payload: err.message || "Erro no login" })

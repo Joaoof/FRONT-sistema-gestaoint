@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Package } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { CreateProductInput } from '../graphql/types';
+import { useCategories } from '../hooks/useCategories';
 
 interface ProductEntryProps {
   onAddEntry: (entry: Omit<ProductEntry, 'id'>) => void;
@@ -11,27 +12,19 @@ interface ProductEntryProps {
 export function ProductEntry({ onAddEntry }: ProductEntryProps) {
   const { user } = useAuth(); // ✅ Pega o usuário logado
   const [formData, setFormData] = useState({
-    name: '',
+    nameProduct: '',
     category: '',
     quantity: 0,
     costPrice: 0,
-    sellingPrice: 0,
+    salePrice: 0,
     supplier: '',
     description: '',
+    createdAt: new Date()
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
 
-  const categories = [
-    'Eletrônicos',
-    'Roupas',
-    'Alimentação',
-    'Casa e Jardim',
-    'Beleza',
-    'Esportes',
-    'Livros',
-    'Outros',
-  ];
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -53,32 +46,37 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
 
     try {
       // ✅ Validação mínima
-      if (!formData.name || !formData.category || !formData.quantity || !user?.id) {
+      if (!formData.nameProduct || !formData.category || !formData.quantity || !user?.id) {
         throw new Error('Preencha todos os campos obrigatórios');
       }
 
       // ✅ Mapeia para o formato do backend
       const productData: CreateProductInput = {
-        name: formData.name,
-        categoryId: '', // Pode vir de um select real depois
-        quantity: formData.quantity,
-        costPrice: Number(formData.costPrice.toFixed(2)),
-        salePrice: Number(formData.sellingPrice.toFixed(2)),
-        supplierId: undefined, // Pode vir de um select real depois
-        createdById: user.id,
+        nameProduct: formData.nameProduct,
         description: formData.description || undefined,
+        categoryId: formData.category, // Pode vir de um select real depois
+        quantity: formData.quantity,
+        costPrice: Number(formData.costPrice) || 0,
+        salePrice: Number(formData.salePrice) || 0,
+        supplierId: formData.supplier, // Pode vir de um select real depois
       };
+
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        alert('Faça login primeiro');
+        return;
+      }
 
       // ✅ Envia para o GraphQL
       const res = await fetch('http://localhost:3000/graphql', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           query: `
-            mutation CreateProduct($dto: CreateProductInput) {
+            mutation CreateProduct($dto: CreateProductInput!) {
               createProduct(dto: $dto) {
                 id
                 nameProduct
@@ -86,14 +84,18 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 costPrice
                 salePrice
                 description
-                createdById
-                createdAt
               }
             }
           `,
-          variables: { data: productData },
+          variables: { dto: productData },
         }),
       });
+
+      console.log(res);
+
+
+      console.log('Token usado no fetch:', token);
+
 
       const json = await res.json();
 
@@ -109,13 +111,14 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
 
       // ✅ Reseta o formulário
       setFormData({
-        name: '',
+        nameProduct: '',
         category: '',
         quantity: 0,
         costPrice: 0,
-        sellingPrice: 0,
-        supplier: '',
+        salePrice: 0,
         description: '',
+        createdAt: new Date(),
+        supplier: '',
       });
 
       alert('Produto criado com sucesso!');
@@ -154,9 +157,9 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={formData.name}
+                id="nameProduct"
+                name="nameProduct"
+                value={formData.nameProduct}
                 onChange={handleInputChange}
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -177,9 +180,11 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               >
                 <option value="">Selecione uma categoria</option>
+                {categoriesLoading && <option>Carregando categorias...</option>}
+                {categoriesError && <option>Erro ao carregar categorias</option>}
                 {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
+                  <option key={category.id} value={category.id}>
+                    {category.name}
                   </option>
                 ))}
               </select>
@@ -221,14 +226,14 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
             </div>
 
             <div>
-              <label htmlFor="sellingPrice" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700 mb-2">
                 Preço de Venda *
               </label>
               <input
                 type="number"
-                id="sellingPrice"
-                name="sellingPrice"
-                value={formData.sellingPrice}
+                id="salePrice"
+                name="salePrice"
+                value={formData.salePrice}
                 onChange={handleInputChange}
                 required
                 min="0"
