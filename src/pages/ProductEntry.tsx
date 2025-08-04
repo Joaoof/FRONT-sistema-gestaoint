@@ -1,4 +1,3 @@
-// components/ProductEntry.tsx
 import React, { useState } from 'react';
 import { Plus, Package } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
