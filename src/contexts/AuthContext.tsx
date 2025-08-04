@@ -4,6 +4,8 @@ import type React from "react"
 import { createContext, useContext, useReducer, useEffect } from "react"
 import type { Company, User, AuthState } from "../types/auth"
 import { MockAuthService } from "../auth/MockAuthService"
+import { useNavigate } from "react-router-dom"; // ✅
+
 
 interface AuthContextState extends AuthState {
     user: User | null;
@@ -88,6 +90,10 @@ function authReducer(state: AuthContextState, action: AuthAction): AuthContextSt
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [state, dispatch] = useReducer(authReducer, initialState)
     const authService = MockAuthService.getInstance()
+    const navigate = useNavigate(); // ✅ agora sim
+
+
+
 
     useEffect(() => {
         initializeAuth()
@@ -215,10 +221,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err: any) {
             dispatch({ type: "SET_ERROR", payload: err.message || "Erro no login" })
             console.error("Erro no login:", err);
+        } finally {
+            dispatch({ type: "SET_LOADING", payload: false });
         }
     }
     const logout = async () => {
-        await authService.logout()
+        await authService.logout();
+        localStorage.removeItem("accessToken");
+        dispatch({ type: "LOGOUT" });
+        navigate("/");
         dispatch({ type: "LOGOUT" })
     }
 

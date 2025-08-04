@@ -4,35 +4,54 @@ import { useState, useEffect } from "react"
 import { Dashboard } from "./Dashboard"
 import { ProductEntry } from "./ProductEntry"
 import { ProductExit } from "./ProductExit"
-import { Sidebar } from "./Sidebar"
+import { Sidebar } from "../components/Sidebar"
 import { useInventory } from "../hooks/useInventory"
-import { CategoriesRegistration } from "./Register/CategoriesRegistration"
-import { CustomersRegistration } from "./Register/CustomersRegistration"
-import { ProductsRegistration } from "./Register/ProductsRegistration"
-import { SupplierRegistration } from "./Register/SupplierRegistration"
 import { useAuth } from "../contexts/AuthContext"
-import { UpgradeModal } from "./UpgradeModal"
+import { EntryMovement } from "./EntryMovement"
+import { NewEntryMovement } from "./Movement/NewEntryMovement"
+import { NewExitMovement } from "./Movement/NewExitMovement"
+import { MovementHistory } from "./Movement/MovementHistory"
+import { HomeMovement } from "./Movement/HomeMovements"
+import { useLocation, useNavigate } from "react-router-dom"
+import { MovementDashboard } from "../components/MovementDashboard"
+// import { UpgradeModal } from "./UpgradeModal"
 
-export type View =
-    | "dashboard"
-    | "cadastros"
-    | "estoque"
-    | "vendas"
-    | "fiscal"
-    | "financeiro"
-    | "ecommerce"
-    | "consultas"
+export type  View =
+    | 'dashboard'
+    | 'cadastros'
+    | 'estoque'
+    | 'vendas'
+    | 'fiscal'
+    | 'fiscal-a-pagar'
+    | 'fiscal-a-receber'
+    | 'financeiro'
+    | 'ecommerce'
+    | 'consultas'
+    | 'entrada'
+    | 'movimentacoes'
+    | 'movimentacoes-entrada'
+    | 'movimentacoes-saida'
+    | 'movimentacoes-saida-despesas'
+    | 'movimentacoes-saida-retiradas'
+    | 'movimentacoes-saida-pagamentos'
+    | 'historico'
 
 const moduleNames: Record<View, string> = {
-    dashboard: "Dashboard",
-    cadastros: "Cadastros",
-    estoque: "Estoque",
-    vendas: "Vendas",
-    fiscal: "Fiscal",
-    financeiro: "Financeiro",
-    ecommerce: "E-commerce",
-    consultas: "Consultas",
-}
+    dashboard: 'Dashboard',
+    cadastros: 'Cadastros',
+    estoque: 'Estoque',
+    entrada: 'Entrada de Produtos',
+    'movimentacoes-entrada': 'Nova Entrada',
+    'movimentacoes-saida': 'Nova Saída',
+    historico: 'Histórico',
+    vendas: 'Vendas',
+    fiscal: 'Fiscal',
+    'fiscal-a-pagar': 'Pagar',
+    'fiscal-a-receber': 'Receber',
+    financeiro: 'Financeiro',
+    ecommerce: 'E-commerce',
+    consultas: 'Consultas',
+};
 
 export function AuthenticatedApp() {
     const [currentView, setCurrentView] = useState<View>("dashboard")
@@ -43,6 +62,8 @@ export function AuthenticatedApp() {
         isOpen: false,
         moduleName: "",
     })
+    const navigate = useNavigate();
+    const location = useLocation();
 
     console.log("User completo:", user);
     console.log("Plano do usuário:", user?.plan);
@@ -74,24 +95,18 @@ export function AuthenticatedApp() {
 
     // Check access when component mounts or view changes
     useEffect(() => {
-        if (!hasModuleAccess(currentView)) {
-            // If current view is not accessible, redirect to dashboard or first available module
-            const availableModules: View[] = [
-                "dashboard",
-                "estoque",
-                "vendas",
-                "cadastros",
-                "fiscal",
-                "financeiro",
-                "ecommerce",
-                "consultas",
-            ]
-            const firstAvailable = availableModules.find(hasModuleAccess)
-            if (firstAvailable) {
-                setCurrentView(firstAvailable);
+        const path = location.pathname.split("/").pop();
+        if (path && (path in moduleNames)) {
+            const view = path as View;
+            if (hasModuleAccess(view)) {
+                setCurrentView(view);
+            } else if (view !== "dashboard") {
+                // Se não tiver acesso, volta ao dashboard
+                navigate("/dashboard");
             }
         }
-    }, [user, currentView])
+    }, [location.pathname, hasModuleAccess, navigate]);
+
 
     const renderContent = () => {
         // Double check access before rendering
@@ -117,27 +132,31 @@ export function AuthenticatedApp() {
         }
 
         switch (currentView) {
-            case "dashboard":
-                return <Dashboard {...inventory} />
+            case 'dashboard':
+                return <Dashboard {...inventory} />;
 
-            case "estoque":
-                return <ProductEntry onAddEntry={inventory.addEntry} />
+            case 'estoque':
+                return <ProductEntry onAddEntry={inventory.addEntry} />;
 
-            case "vendas":
-                return <ProductExit onAddExit={inventory.addExit} products={inventory.products} />
+            case 'vendas':
+                return <ProductExit onAddExit={inventory.addExit} products={inventory.products} />;
 
-            case "cadastros":
-                return (
-                    <div className="space-y-4">
-                        <h1 className="text-xl font-bold">Cadastros</h1>
-                        <CategoriesRegistration />
-                        <CustomersRegistration />
-                        <ProductsRegistration />
-                        <SupplierRegistration />
-                    </div>
-                )
+            case 'entrada':
+                return <EntryMovement />;
 
-            case "fiscal":
+            case 'movimentacoes':
+                return <MovementDashboard />
+
+            case 'movimentacoes-entrada':
+                return <NewEntryMovement />
+
+            case 'movimentacoes-saida':
+                return <NewExitMovement />
+
+            case 'historico':
+                return <MovementHistory />
+
+            case 'fiscal':
                 return (
                     <div className="p-8 text-center">
                         <div className="max-w-md mx-auto">
@@ -152,73 +171,18 @@ export function AuthenticatedApp() {
                                 </svg>
                             </div>
                             <h3 className="text-lg font-medium text-gray-900 mb-2">Módulo Fiscal</h3>
-                            <p className="text-gray-600">Em desenvolvimento - Em breve disponível!</p>
+                            <p className="text-gray-600">Em breve disponível!</p>
                         </div>
                     </div>
-                )
+                );
 
-            case "financeiro":
-                return (
-                    <div className="p-8 text-center">
-                        <div className="max-w-md mx-auto">
-                            <div className="text-green-500 mb-4">
-                                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                                    />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Módulo Financeiro</h3>
-                            <p className="text-gray-600">Em desenvolvimento - Em breve disponível!</p>
-                        </div>
-                    </div>
-                )
+            case 'financeiro':
+                return <HomeMovement />;
 
-            case "ecommerce":
-                return (
-                    <div className="p-8 text-center">
-                        <div className="max-w-md mx-auto">
-                            <div className="text-purple-500 mb-4">
-                                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                                    />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Módulo E-commerce</h3>
-                            <p className="text-gray-600">Em desenvolvimento - Em breve disponível!</p>
-                        </div>
-                    </div>
-                )
-
-            case "consultas":
-                return (
-                    <div className="p-8 text-center">
-                        <div className="max-w-md mx-auto">
-                            <div className="text-indigo-500 mb-4">
-                                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                    />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Módulo Consultas</h3>
-                            <p className="text-gray-600">Em desenvolvimento - Em breve disponível!</p>
-                        </div>
-                    </div>
-                )
-
+            case 'ecommerce':
+            case 'consultas':
             default:
-                return <Dashboard {...inventory} />
+                return <Dashboard {...inventory} />;
         }
     }
 
@@ -288,11 +252,11 @@ export function AuthenticatedApp() {
                 <div className="p-4 lg:p-6">{renderContent()}</div>
             </main>
 
-            <UpgradeModal
+            {/* <UpgradeModal
                 isOpen={upgradeModal.isOpen}
                 onClose={() => setUpgradeModal({ isOpen: false, moduleName: "" })}
                 moduleName={upgradeModal.moduleName}
-            />
+            /> */}
         </div>
     )
 }

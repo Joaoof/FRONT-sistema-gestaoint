@@ -2,6 +2,7 @@ import { MetricCard } from './MetricCard';
 import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
 import { InventoryData } from '../hooks/useInventory';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Dashboard({
   entries,
@@ -11,6 +12,7 @@ export function Dashboard({
 }: InventoryData) {
   const dailyRevenue = getDailyRevenue();
   const dailyProfit = getDailyProfit();
+  const { user, logout } = useAuth()
 
   // Dados para gráfico de linha (últimos 12 meses)
   const last12Months = Array.from({ length: 12 }, (_, i) => {
@@ -19,8 +21,8 @@ export function Dashboard({
     return date;
   });
 
-  const revenueData = last12Months.map(date => {
-    const monthEntries = entries.filter(entry => {
+  const revenueData = last12Months.map((date) => {
+    const monthEntries = entries.filter((entry) => {
       const entryDate = new Date(entry.date);
       return (
         entryDate.getMonth() === date.getMonth() &&
@@ -28,13 +30,13 @@ export function Dashboard({
       );
     });
     return monthEntries.reduce(
-      (sum, entry) => sum + (entry.sellingPrice * entry.quantity),
+      (sum, entry) => sum + entry.sellingPrice * entry.quantity,
       0
     );
   });
 
-  const spendingData = last12Months.map(date => {
-    const monthEntries = entries.filter(entry => {
+  const spendingData = last12Months.map((date) => {
+    const monthEntries = entries.filter((entry) => {
       const entryDate = new Date(entry.date);
       return (
         entryDate.getMonth() === date.getMonth() &&
@@ -42,7 +44,7 @@ export function Dashboard({
       );
     });
     return monthEntries.reduce(
-      (sum, entry) => sum + (entry.costPrice * entry.quantity),
+      (sum, entry) => sum + entry.costPrice * entry.quantity,
       0
     );
   });
@@ -61,12 +63,33 @@ export function Dashboard({
 
   return (
     <div className="space-y-4 lg:space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl lg:text-2xl font- font-serif text-gray-900">
-          Dashboard
-        </h1>
+      {/* Header com boas-vindas */}
+      <div className="bg-gradient-to-r from-white to-gray-50 border-b border-gray-200 px-4 lg:px-6 py-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl lg:text-2xl font-serif text-gray-900">
+              Dashboard
+            </h1>
+            <p className="text-sm text-gray-600 mt-1.5">
+              Olá, <span className="font-semibold text-gray-800">{user?.name}</span>!
+              {user?.role && (
+                <> Você está logado como{' '}
+                  <span className="capitalize font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full text-xs">
+                    {user.role}
+                  </span>.
+                </>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={logout}
+            className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm"
+          >
+            Sair
+          </button>
+        </div>
       </div>
+
 
       {/* Cards de Métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
@@ -85,10 +108,7 @@ export function Dashboard({
         />
         <MetricCard
           title="CUSTO TOTAL DO ESTOQUE"
-          value={products.reduce(
-            (sum, p) => sum + (p.costPrice * p.stock),
-            0
-          )}
+          value={products.reduce((sum, p) => sum + p.costPrice * p.stock, 0)}
           color="green"
           icon="💰"
         />
@@ -171,7 +191,7 @@ export function Dashboard({
 
         {/* Coluna direita */}
         <div className="space-y-4">
-          {/* Card Preços de Ajuda */}
+          {/* Card de Ajuda */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-4 text-white">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -231,6 +251,6 @@ export function Dashboard({
           />
         </div>
       </div>
-    </div>
+    </div >
   );
 }

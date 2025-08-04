@@ -4,6 +4,8 @@ import { Plus, Package } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { CreateProductInput } from '../graphql/types';
 import { useCategories } from '../hooks/useCategories';
+import { useSuppliers } from '../hooks/useSuppliers';
+
 
 interface ProductEntryProps {
   onAddEntry: (entry: Omit<ProductEntry, 'id'>) => void;
@@ -24,6 +26,8 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
+  const { suppliers, loading: suppliersLoading, error: suppliersError } = useSuppliers();
+
 
 
   const handleInputChange = (
@@ -247,15 +251,24 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
               <label htmlFor="supplier" className="block text-sm font-medium text-gray-700 mb-2">
                 Fornecedor
               </label>
-              <input
-                type="text"
+              <select
                 id="supplier"
                 name="supplier"
                 value={formData.supplier}
                 onChange={handleInputChange}
+                required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                placeholder="Ex: Fornecedor XYZ Ltda"
-              />
+              >
+                <option value="">Selecione um fornecedor</option>
+                {suppliersLoading && <option>Carregando fornecedores...</option>}
+                {suppliersError && <option>Erro ao carregar fornecedores</option>}
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
+
             </div>
           </div>
 

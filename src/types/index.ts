@@ -31,3 +31,22 @@ export interface Product {
   supplier: string;
   description: string;
 }
+
+// src/types/index.ts
+export type MovementType =
+  | 'venda'
+  | 'troco'
+  | 'outros'
+  | 'despesa'
+  | 'retirada'
+  | 'pagamento';
+
+export type Movement = {
+  id: string;
+  value: number;
+  description: string;
+  type: MovementType;
+  subtype: string;
+  date: string;
+  createdAt: string;
+};

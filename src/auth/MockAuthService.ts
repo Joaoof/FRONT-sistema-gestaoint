@@ -267,7 +267,7 @@ export class MockAuthService {
     }
 
     async logout(): Promise<void> {
-        localStorage.removeItem("auth_token")
+        localStorage.removeItem("accessToken")
         localStorage.removeItem("company_id")
         localStorage.removeItem("user_data")
     }
