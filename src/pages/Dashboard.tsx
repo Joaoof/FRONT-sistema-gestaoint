@@ -67,7 +67,7 @@ export function Dashboard({
       <div className="bg-gradient-to-r from-white to-gray-50 border-b border-gray-200 px-4 lg:px-6 py-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl lg:text-2xl font-serif text-gray-900">
+            <h1 className="text-xl lg:text-2xl font-bold font-['Rubik'] text-gray-900">
               Dashboard
             </h1>
             <p className="text-sm text-gray-600 mt-1.5">
@@ -89,6 +89,8 @@ export function Dashboard({
           </button>
         </div>
       </div>
+
+      
 
 
       {/* Cards de Métricas */}

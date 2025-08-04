@@ -1,9 +1,6 @@
 // src/pages/FinancialManagement.tsx
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { DollarSign, FileText, CheckCircle, Clock, AlertTriangle, Search, Download } from 'lucide-react';
-import { exportToExcel } from '../utils/exportExcel';
-import { exportToPDF } from '../utils/exportPDF';
+import React, { useState } from 'react';
+import { DollarSign, FileText, CheckCircle, Clock, AlertTriangle, Search, Filter, Download } from 'lucide-react';
 
 // Tipos
 type Receivable = {
@@ -25,212 +22,179 @@ type Payable = {
 };
 
 export function FinancialManagement() {
-    const { user } = useAuth();
-    const [receivables, setReceivables] = useState<Receivable[]>([]);
-    const [payables, setPayables] = useState<Payable[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    // Dados mockados (falsos)
+    const [receivables] = useState<Receivable[]>([
+        { id: '1', clientName: 'João Silva', description: 'Venda de produtos', value: 1500, dueDate: '2025-04-10', status: 'pendente' },
+        { id: '2', clientName: 'Maria Oliveira', description: 'Serviço prestado', value: 800, dueDate: '2025-04-05', status: 'vencido' },
+        { id: '3', clientName: 'Carlos Souza', description: 'Consultoria', value: 2500, dueDate: '2025-04-15', status: 'pendente' },
+        { id: '4', clientName: 'Ana Lima', description: 'Venda online', value: 600, dueDate: '2025-04-01', status: 'pago' },
+    ]);
 
-    // Filtros
+    const [payables] = useState<Payable[]>([
+        { id: '1', supplierName: 'Fornecedor A', description: 'Compra de insumos', value: 3000, dueDate: '2025-04-12', status: 'pendente' },
+        { id: '2', supplierName: 'Fornecedor B', description: 'Aluguel', value: 1200, dueDate: '2025-04-05', status: 'vencido' },
+        { id: '3', supplierName: 'Fornecedor C', description: 'Energia', value: 450, dueDate: '2025-04-10', status: 'pendente' },
+        { id: '4', supplierName: 'Fornecedor D', description: 'Internet', value: 200, dueDate: '2025-04-01', status: 'pago' },
+    ]);
+
+    // Estados de filtro
     const [filterReceivable, setFilterReceivable] = useState<'all' | 'pendente' | 'pago' | 'vencido'>('all');
     const [filterPayable, setFilterPayable] = useState<'all' | 'pendente' | 'pago' | 'vencido'>('all');
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        const fetchFinancialData = async () => {
-            try {
-                const token = localStorage.getItem('accessToken');
-                if (!token) throw new Error('Sem token de autenticação');
-
-                const res = await fetch('http://localhost:3000/graphql', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        query: `
-              query GetFinancialData {
-                receivables {
-                  id
-                  clientName
-                  description
-                  value
-                  dueDate
-                  status
-                }
-                payables {
-                  id
-                  supplierName
-                  description
-                  value
-                  dueDate
-                  status
-                }
-              }
-            `,
-                    }),
-                });
-
-                const json = await res.json();
-                if (json.errors) throw new Error(json.errors[0].message);
-
-                setReceivables(json.data.receivables);
-                setPayables(json.data.payables);
-            } catch (err: any) {
-                setError(err.message || 'Erro ao carregar dados financeiros');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchFinancialData();
-    }, []);
-
-    // Função para atualizar status (ex: marcar como pago)
-    const handleMarkAsPaid = async (type: 'receivable' | 'payable', id: string) => {
-        try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-
-            const res = await fetch('http://localhost:3000/graphql', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    query: `
-            mutation UpdateStatus($id: String!, $type: String!) {
-              updateFinancialStatus(id: $id, type: $type) {
-                id
-                status
-              }
-            }
-          `,
-                    variables: { id, type },
-                }),
-            });
-
-            const json = await res.json();
-            if (json.errors) throw new Error(json.errors[0].message);
-
-            // Atualiza localmente
-            if (type === 'receivable') {
-                setReceivables((prev) =>
-                    prev.map((r) => (r.id === id ? { ...r, status: 'pago' } : r))
-                );
-            } else {
-                setPayables((prev) =>
-                    prev.map((p) => (p.id === id ? { ...p, status: 'pago' } : p))
-                );
-            }
-
-            alert('Status atualizado com sucesso!');
-        } catch (err: any) {
-            alert('Erro ao atualizar status');
-        }
-    };
-
-    // Filtra os dados com base nos filtros
-    const filteredReceivables = receivables
-        .filter((r) => filterReceivable === 'all' || r.status === filterReceivable)
-        .filter(
-            (r) =>
-                r.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                r.description.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
-    const filteredPayables = payables
-        .filter((p) => filterPayable === 'all' || p.status === filterPayable)
-        .filter(
-            (p) =>
-                p.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                p.description.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
-    // Formata data
+    // Função para formatar data
     const formatDate = (date: string) => new Date(date).toLocaleDateString('pt-BR');
 
-    // Calcula totais
+    // Filtrar contas a receber
+    const filteredReceivables = receivables
+        .filter(r => filterReceivable === 'all' || r.status === filterReceivable)
+        .filter(r =>
+            r.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+    // Filtrar contas a pagar
+    const filteredPayables = payables
+        .filter(p => filterPayable === 'all' || p.status === filterPayable)
+        .filter(p =>
+            p.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+    // Calcular totais
     const totalReceber = filteredReceivables.reduce((sum, r) => sum + r.value, 0);
     const totalPagar = filteredPayables.reduce((sum, p) => sum + p.value, 0);
     const saldo = totalReceber - totalPagar;
 
-    if (loading) return <div className="p-8 text-center">Carregando dados financeiros...</div>;
-    if (error) return <div className="p-4 bg-red-50 text-red-700 rounded mb-4">{error}</div>;
+    // ✅ Função para exportar em CSV
+    const exportToCSV = (data: any[], filename: string, type: 'receber' | 'pagar') => {
+        const headers = type === 'receber'
+            ? ['Cliente', 'Descrição', 'Valor', 'Vencimento', 'Status']
+            : ['Fornecedor', 'Descrição', 'Valor', 'Vencimento', 'Status'];
+
+        const rows = data.map(item => [
+            type === 'receber' ? item.clientName : item.supplierName,
+            item.description,
+            `R$ ${item.value.toFixed(2)}`,
+            formatDate(item.dueDate),
+            item.status === 'pago' ? 'Pago' : item.status === 'pendente' ? 'Pendente' : 'Vencido'
+        ]);
+
+        const csvContent = [headers, ...rows].map(e => e.join(',')).join('\n');
+        const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `${filename}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // ✅ Função para exportar em PDF (com jspdf e jspdf-autotable)
+    const exportToPDF = (data: any[], filename: string, type: 'receber' | 'pagar') => {
+        import('jspdf').then(jsPDF => {
+            import('jspdf-autotable').then(() => {
+                const doc = new jsPDF.default();
+                const title = type === 'receber' ? 'Contas a Receber' : 'Contas a Pagar';
+                const headers = type === 'receber'
+                    ? [['Cliente', 'Descrição', 'Valor', 'Vencimento', 'Status']]
+                    : [['Fornecedor', 'Descrição', 'Valor', 'Vencimento', 'Status']];
+
+                const rows = data.map(item => [
+                    type === 'receber' ? item.clientName : item.supplierName,
+                    item.description,
+                    `R$ ${item.value.toFixed(2)}`,
+                    formatDate(item.dueDate),
+                    item.status === 'pago' ? 'Pago' : item.status === 'pendente' ? 'Pendente' : 'Vencido'
+                ]);
+
+                doc.setFontSize(18);
+                doc.text(title, 14, 20);
+                (doc as any).autoTable({
+                    head: headers,
+                    body: rows,
+                    startY: 30,
+                });
+                doc.save(`${filename}.pdf`);
+            });
+        });
+    };
 
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">Gestão Financeira</h1>
-                <p className="text-gray-600">Controle suas contas a receber e a pagar</p>
+                <h1 className="text-3xl font-serif text-gray-900 mb-2">Gestão Financeira</h1>
+                <p className="text-gray-600">Controle de contas a receber e a pagar</p>
             </div>
 
-            <div className="flex gap-4">
+            {/* Botões de Exportação */}
+            <div className="flex flex-wrap gap-4">
                 <button
-                    onClick={() => exportToExcel(filteredReceivables, filteredPayables)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    onClick={() => exportToCSV(filteredReceivables, 'contas_a_receber', 'receber')}
+                    className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white hover:bg-green-700 transition-colors"
                 >
-                    <Download className="w-4 h-4" />
-                    Exportar Excel
+                    <Download className="w-5 h-5" />
+                    Exportar contas a receber (CSV)
                 </button>
                 <button
-                    onClick={() => exportToPDF(filteredReceivables, filteredPayables)}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    onClick={() => exportToPDF(filteredReceivables, 'contas_a_receber', 'receber')}
+                    className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white hover:bg-red-700 transition-colors font-medium font-['Manrope']"
                 >
-                    <Download className="w-4 h-4" />
-                    Exportar PDF
+                    <Download className="w-5 h-5" />
+                    Exportar contas a receber (PDF)
+                </button>
+                <button
+                    onClick={() => exportToCSV(filteredPayables, 'contas_a_pagar', 'pagar')}
+                    className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white hover:bg-green-700 transition-colors"
+                >
+                    <Download className="w-5 h-5" />
+                    Exportar contas a pagar (CSV)
+                </button>
+                <button
+                    onClick={() => exportToPDF(filteredPayables, 'contas_a_pagar', 'pagar')}
+                    className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white hover:bg-red-700 transition-colors"
+                >
+                    <Download className="w-5 h-5" />
+                    Exportar contas a pagar (PDF)
                 </button>
             </div>
 
-
-            {/* Barra de busca e filtros */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 text-gray-400 -translate-y-1/2" />
-                        <input
-                            type="text"
-                            placeholder="Buscar cliente ou descrição..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
+            {/* Barra de busca */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Buscar cliente ou fornecedor..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 p-3 border border-gray-300"
+                    />
                 </div>
             </div>
 
             {/* Resumo */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                    <div className="flex items-center mb-2">
-                        <DollarSign className="w-5 h-5 text-blue-600 mr-2" />
-                        <h3 className="font-semibold text-blue-900">A Receber</h3>
-                    </div>
-                    <p className="text-2xl font-bold text-blue-900">R$ {totalReceber.toFixed(2)}</p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                    <DollarSign className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                    <p className="text-sm text-blue-800">A Receber</p>
+                    <p className="text-2xl font-bold font-['Rajdhani'] text-blue-600">R$ {totalReceber.toFixed(2)}</p>
                 </div>
-
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                    <div className="flex items-center mb-2">
-                        <FileText className="w-5 h-5 text-red-600 mr-2" />
-                        <h3 className="font-semibold text-red-900">A Pagar</h3>
-                    </div>
-                    <p className="text-2xl font-bold text-red-900">R$ {totalPagar.toFixed(2)}</p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                    <FileText className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                    <p className="text-sm text-red-800">A Pagar</p>
+                    <p className="text-2xl font-bold font-['Rajdhani'] text-red-900">R$ {totalPagar.toFixed(2)}</p>
                 </div>
-
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                    <div className="flex items-center mb-2">
-                        <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                        <h3 className="font-semibold text-green-900">Saldo</h3>
-                    </div>
-                    <p className={`text-2xl font-bold ${saldo >= 0 ? 'text-green-900' : 'text-red-900'}`}>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                    <CheckCircle className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                    <p className="text-sm text-green-800">Saldo Final</p>
+                    <p className={`text-2xl font-bold font-['Rajdhani'] ${saldo >= 0 ? 'text-green-900' : 'text-red-900'}`}>
                         R$ {saldo.toFixed(2)}
                     </p>
                 </div>
             </div>
 
-            {/* Tabela de Contas a Receber */}
+            {/* Tabela: Contas a Receber */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between">
                     <h2 className="text-xl font-semibold text-gray-900">Contas a Receber</h2>
@@ -251,18 +215,17 @@ export function FinancialManagement() {
                     <table className="w-full">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vencimento</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="divide-y divide-gray-200">
                             {filteredReceivables.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">Nenhuma conta encontrada</td>
+                                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">Nenhuma conta encontrada.</td>
                                 </tr>
                             ) : (
                                 filteredReceivables.map((r) => (
@@ -288,16 +251,6 @@ export function FinancialManagement() {
                                                 {r.status === 'pago' ? 'Pago' : r.status === 'pendente' ? 'Pendente' : 'Vencido'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            {r.status !== 'pago' && (
-                                                <button
-                                                    onClick={() => handleMarkAsPaid('receivable', r.id)}
-                                                    className="text-blue-600 hover:text-blue-900 font-medium"
-                                                >
-                                                    Marcar como pago
-                                                </button>
-                                            )}
-                                        </td>
                                     </tr>
                                 ))
                             )}
@@ -306,7 +259,7 @@ export function FinancialManagement() {
                 </div>
             </div>
 
-            {/* Tabela de Contas a Pagar */}
+            {/* Tabela: Contas a Pagar */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between">
                     <h2 className="text-xl font-semibold text-gray-900">Contas a Pagar</h2>
@@ -327,18 +280,17 @@ export function FinancialManagement() {
                     <table className="w-full">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedor</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fornecedor</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vencimento</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="divide-y divide-gray-200">
                             {filteredPayables.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">Nenhuma conta encontrada</td>
+                                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">Nenhuma conta encontrada.</td>
                                 </tr>
                             ) : (
                                 filteredPayables.map((p) => (
@@ -363,16 +315,6 @@ export function FinancialManagement() {
                                                 {p.status === 'vencido' && <AlertTriangle className="w-3 h-3 mr-1" />}
                                                 {p.status === 'pago' ? 'Pago' : p.status === 'pendente' ? 'Pendente' : 'Vencido'}
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            {p.status !== 'pago' && (
-                                                <button
-                                                    onClick={() => handleMarkAsPaid('payable', p.id)}
-                                                    className="text-blue-600 hover:text-blue-900 font-medium"
-                                                >
-                                                    Marcar como pago
-                                                </button>
-                                            )}
                                         </td>
                                     </tr>
                                 ))

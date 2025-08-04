@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.dark {
+  color-scheme: dark;
+}
+
+.dark .dark\:invert {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+header, .header, .fixed {
+  z-index: 50;
+}
+
+.notification-bell {
+  z-index: 60;
+}

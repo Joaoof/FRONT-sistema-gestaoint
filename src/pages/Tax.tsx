@@ -330,7 +330,7 @@ export function FiscalPage() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
                     <div className="flex items-center mb-6">
                         <FileText className="w-6 h-6 text-red-600 mr-3" />
-                        <h2 className="text-xl font-semibold text-gray-900">Contas a Pagar</h2>
+                        <h2 className="text-xl font-serif text-gray-900">Contas a Pagar</h2>
                     </div>
 
                     <form onSubmit={handlePayableSubmit} className="space-y-6">

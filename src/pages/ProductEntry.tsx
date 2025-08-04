@@ -137,14 +137,14 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">Entrada de Produtos</h1>
+        <h1 className="text-3xl font-bold font-['Merriweather'] text-gray-900 mb-2">Entrada de Produtos</h1>
         <p className="text-gray-600">Registre novos produtos no seu estoque</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <div className="flex items-center mb-6">
           <Package className="w-6 h-6 text-blue-600 mr-3" />
-          <h2 className="text-xl font-semibold text-gray-900">Novo Produto</h2>
+          <h2 className="text-xl font-bold font-['Montserrat'] text-gray-900">Novo Produto</h2>
         </div>
 
         {error && (

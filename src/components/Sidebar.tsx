@@ -1,4 +1,3 @@
-// src/components/Sidebar.tsx
 import {
   LayoutDashboard,
   Users,
@@ -12,6 +11,7 @@ import {
   ArrowDownCircle,
   CreditCard,
   PlusCircle,
+  Settings,
 } from 'lucide-react';
 import { View } from '../pages/AuthenticatedApp';
 import { useNavigate } from 'react-router-dom';
@@ -34,10 +34,8 @@ interface SidebarProps {
 export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: SidebarProps) {
   const navigate = useNavigate();
 
-  // ✅ Estado para controlar expansão dos grupos
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  // ✅ Sincroniza com a URL para abrir o grupo correto
   useEffect(() => {
     const path = currentView.split('-')[0]; // ex: 'movimentacoes-entrada' → 'movimentacoes'
     if (['movimentacoes'].includes(path)) {
@@ -58,9 +56,11 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
       ],
 
       fiscal: [
-        'fiscal-a-pagar',
-        'fiscal-a-receber'
-      ]
+        'fiscal-pagar',
+        'fiscal-pagar-criar',
+        'fiscal-receber',
+        'fiscal-receber-criar',
+      ],
     };
 
 
@@ -84,7 +84,7 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
       if (!expandedItems[view]) {
         const firstSubItem = groupItems[view][0];
         onViewChange(firstSubItem);
-        navigate(`/app/${firstSubItem}`);
+        navigate(`/${firstSubItem}`);
       }
       return;
     }
@@ -100,8 +100,22 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
     { id: 'cadastros', label: 'Cadastros', icon: Users },
     { id: 'estoque', label: 'Estoque', icon: Package },
     { id: 'vendas', label: 'Vendas', icon: ShoppingCart },
-    { id: 'fiscal', label: 'Fiscal', icon: FileText },
-    { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
+    {
+      id: 'fiscal',
+      label: 'Fiscal',
+      icon: FileText,
+      children: [
+        { id: 'fiscal-receber', label: 'Contas a Receber', icon: ArrowUpCircle },
+        { id: 'fiscal-receber-criar', label: 'Nova Receita', icon: PlusCircle },
+        { id: 'fiscal-pagar', label: 'Contas a Pagar', icon: ArrowDownCircle },
+        { id: 'fiscal-pagar-criar', label: 'Nova Despesa', icon: CreditCard },
+      ],
+    },
+    {
+      id: 'financeiro', label: 'Financeiro',
+      icon: DollarSign,
+
+    },
     { id: 'ecommerce', label: 'E-commerce', icon: ShoppingBag },
     { id: 'consultas', label: 'Consultas', icon: Search },
     {
@@ -111,11 +125,14 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
       children: [
         { id: 'movimentacoes-entrada', label: 'Nova Entrada', icon: ArrowUpCircle },
         { id: 'movimentacoes-saida', label: 'Nova Saída', icon: ArrowDownCircle },
-        { id: 'movimentacoes-saida-despesas', label: 'Despesas', icon: FileText },
-        { id: 'movimentacoes-saida-retiradas', label: 'Retiradas', icon: Users },
-        { id: 'movimentacoes-saida-pagamentos', label: 'Pagamentos', icon: CreditCard },
       ],
     },
+    {
+      id: 'configuracoes' as View,
+      label: 'Configurações',
+      icon: Settings, // importe Settings do lucide-react
+    }
+
   ];
 
   return (

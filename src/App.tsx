@@ -1,10 +1,9 @@
 // src/App.tsx
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
 import { ProductEntry } from './pages/ProductEntry';
 import { ProductExit } from './pages/ProductExit';
-import { EntryMovement } from './pages/EntryMovement';
 import { CategoriesRegistration, CustomersRegistration, ProductsRegistration, SupplierRegistration } from './pages/Register';
 import { Sidebar } from './components/Sidebar';
 import { useInventory } from './hooks/useInventory';
@@ -12,11 +11,18 @@ import { LoginForm } from './pages/LoginForm';
 import { AuthProvider } from './contexts/AuthContext';
 import { FiscalPage } from './pages/Tax';
 import { FinancialManagement } from './pages/FinancialManagement';
-import { HomeMovement } from './pages/Movement/HomeMovements';
 import { NewEntryMovement } from './pages/Movement/NewEntryMovement';
 import { NewExitMovement } from './pages/Movement/NewExitMovement';
 import { MovementHistory } from './pages/Movement/MovementHistory';
 import { MovementDashboard } from './components/MovementDashboard';
+import { CreatePayable } from './pages/Tax/AccountsPayable/Create';
+import { AccountsReceivableDashboard } from './pages/Tax/AccountsReceivable/Dashboard';
+import { CreateReceivable } from './pages/Tax/AccountsReceivable/Create';
+import { AccountsPayableDashboard } from './pages/Tax/AccountsPayable/Dashboard';
+import { ReceivablesList } from './pages/Tax/AccountsReceivable/List';
+import { SearchPage } from './pages/SearchPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { NotificationContext, NotificationProvider } from './contexts/NotificationContext';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -37,35 +43,44 @@ function AppContent() {
       )}
 
       <main className={showSidebar ? 'flex-1 lg:ml-64 p-6' : 'w-full p-6'}>
-        <Routes>
-          <Route path="/" element={<LoginForm />} />
-          <Route path="/dashboard" element={<Dashboard {...inventory} />} />
-          <Route path="/estoque" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
-          <Route path="/saida" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
-          <Route path="/fiscal" element={<FiscalPage />} />
-          <Route path="/financeiro" element={<FinancialManagement />} />
+        <NotificationProvider>
+          <Routes>
+            <Route path="/" element={<LoginForm />} />
+            <Route path="/dashboard" element={<Dashboard {...inventory} />} />
+            <Route path="/estoque" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
+            <Route path="/vendas" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
+            <Route path="/fiscal" element={<FiscalPage />} />
+            <Route path="/fiscal-receber" element={<AccountsReceivableDashboard />} />
+            <Route path="/fiscal-receber-cria" element={<CreateReceivable />} />
+            <Route path="/fiscal-pagar" element={<AccountsPayableDashboard />} />
+            <Route path="/fiscal-pagar-criar" element={<CreatePayable />} />
+            <Route path="/listar-contas-pagas" element={<ReceivablesList />} />
+            <Route path="/financeiro" element={<FinancialManagement />} />
+            <Route path="/consultas" element={<SearchPage />} />
           // src/App.tsx
-          <Route path="/movimentacoes" element={<MovementDashboard />} />
-          <Route path="/movimentacoes-entrada" element={<NewEntryMovement />} />
-          <Route path="/movimentacoes-saida" element={<NewExitMovement />} />
-          <Route path="/historico" element={<MovementHistory />} />
+            <Route path="/movimentacoes" element={<MovementDashboard />} />
+            <Route path="/movimentacoes-entrada" element={<NewEntryMovement />} />
+            <Route path="/movimentacoes-saida" element={<NewExitMovement />} />
+            <Route path="/historico" element={<MovementHistory />} />
 
-          <Route
-            path="/cadastros"
-            element={
-              <div className="space-y-4">
-                <h1 className="text-xl font-bold">Cadastros</h1>
-                <CategoriesRegistration />
-                <CustomersRegistration />
-                <ProductsRegistration />
-                <SupplierRegistration />
-              </div>
-            }
-          />
+            <Route
+              path="/cadastros"
+              element={
+                <div className="space-y-4">
+                  <h1 className="text-xl font-['Rajdhani'] font-bold">Cadastros</h1>
+                  <CategoriesRegistration />
+                  <CustomersRegistration />
+                  <ProductsRegistration />
+                  <SupplierRegistration />
+                </div>
+              }
+            />
 
+            <Route path="/configuracoes" element={<SettingsPage />} />
 
-          <Route path="*" element={<div>Página não encontrada</div>} />
-        </Routes>
+            <Route path="*" element={<div>Página não encontrada</div>} />
+          </Routes>
+        </NotificationProvider>
       </main>
     </div>
   );
