@@ -6,13 +6,15 @@ import App from './App.tsx';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext.tsx';
 import { NotificationProvider } from './contexts/NotificationContext.tsx';
+import { Footer } from './components/Footer.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ApolloProvider client={apolloClient}>
-        <NotificationProvider>
-          <App />
-        </NotificationProvider>
+      <NotificationProvider>
+        <App />
+        <Footer />
+      </NotificationProvider>
     </ApolloProvider>
   </StrictMode>
 );

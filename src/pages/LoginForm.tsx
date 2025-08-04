@@ -1,5 +1,5 @@
 import type React from "react"
-import { useState, useCallback } from "react"
+import { useState } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 
@@ -29,7 +29,7 @@ export const LoginForm = () => {
                     <img
                         src="images/logo.png"
                         alt="Logo"
-                        className="h-36 w-auto sm:h-30"
+                        className="h-56 w-auto sm:h-30"
                     />
                 </div>
 

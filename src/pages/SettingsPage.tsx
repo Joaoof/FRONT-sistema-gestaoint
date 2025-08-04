@@ -17,7 +17,7 @@ export function SettingsPage() {
     const [companyData, setCompanyData] = useState({
         name: company?.name || 'Minha Empresa',
         cnpj: company?.cnpj || '00.000.000/0000-00',
-        address: company?.address || 'Rua Exemplo, 123 - Cidade, UF',
+        address: company?.address  || 'Rua Exemplo, 123 - Cidade, UF',
     });
 
     // Senha

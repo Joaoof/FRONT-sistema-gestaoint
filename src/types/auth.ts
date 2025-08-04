@@ -27,6 +27,8 @@ export type ModuleDto = {
 export interface Company {
     id: string
     name: string
+    address: string
+    cnpj: string
     modules: ModuleAccess[]
     settings: CompanySettings
 }

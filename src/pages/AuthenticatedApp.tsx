@@ -17,6 +17,7 @@ import { NewEntryMovement } from './Movement/NewEntryMovement';
 import { NewExitMovement } from './Movement/NewExitMovement';
 import { MovementHistory } from './Movement/MovementHistory';
 import { SettingsPage } from './SettingsPage';
+import { Footer } from '../components/Footer';
 
 
 
@@ -63,7 +64,7 @@ const moduleNames: Record<View, string> = {
     ecommerce: 'E-commerce',
     consultas: 'Consultas',
     configuracoes: 'Configurações',
-} as AnalyserOptions;
+} as any;
 
 // Dados mockados (substitua com GraphQL depois)
 const mockMovements = [
@@ -255,7 +256,7 @@ export function AuthenticatedApp() {
     };
 
     return (
-        
+
         <div className={`flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 ${darkMode ? 'dark' : ''}`}>
             <Sidebar
                 currentView={currentView}
@@ -324,6 +325,7 @@ export function AuthenticatedApp() {
                 <div className="p-6">
                     {renderContent()}
                 </div>
+                <Footer />
             </main>
         </div>
     );
