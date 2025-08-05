@@ -96,7 +96,7 @@ export const LoginForm = () => {
 
                                 {/* Campo de Senha */}
                                 <div>
-                                    <label htmlFor="password_hash" className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label htmlFor="password_hash" className="block text-sm font-bold text-gray-700 mb-2">
                                         Senha
                                     </label>
                                     <div className="relative">
