@@ -13,8 +13,6 @@ import { EntryMovement } from './EntryMovement';
 import { FiscalPage } from './Tax';
 import { FinancialManagement } from './FinancialManagement';
 import { HomeMovement } from './Movement/HomeMovements';
-import { NewEntryMovement } from './Movement/NewEntryMovement';
-import { NewExitMovement } from './Movement/NewExitMovement';
 import { MovementHistory } from './Movement/MovementHistory';
 import { SettingsPage } from './SettingsPage';
 import { Footer } from '../components/Footer';
@@ -39,10 +37,7 @@ export type View =
     | 'entrada'
     | 'movimentacoes'
     | 'formulario-movimentacao'
-    | 'movimentacoes-saida'
-    | 'movimentacoes-saida-despesas'
-    | 'movimentacoes-saida-retiradas'
-    | 'movimentacoes-saida-pagamentos'
+    | 'historico-movimentacao'
     | 'historico'
     | 'configuracoes';
 
@@ -72,7 +67,7 @@ export function AuthenticatedApp() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const inventory = useInventory();
-    const { user, company, logout } = useAuth();
+    const { user, company } = useAuth();
     const { addNotification } = useNotification(); // ✅ Hook usado
     const navigate = useNavigate();
     const location = useLocation();
@@ -135,9 +130,9 @@ export function AuthenticatedApp() {
                         break;
                     case 's':
                         e.preventDefault();
-                        if (hasModuleAccess('movimentacoes-saida')) {
-                            handleViewChange('movimentacoes-saida');
-                            navigate('/movimentacoes-saida');
+                        if (hasModuleAccess('historico-movimentacao')) {
+                            handleViewChange('historico-movimentacao');
+                            navigate('historico-movimentacao');
                         }
                         break;
                     case 'f':
@@ -194,8 +189,8 @@ export function AuthenticatedApp() {
                 return <HomeMovement />;
             case 'formulario-movimentacao':
                 return <CashMovementForm />;
-            case 'movimentacoes-saida':
-                return <NewExitMovement />;
+            case 'historico-movimentacao':
+                return <MovementHistory />;
             case 'historico':
                 return <MovementHistory />;
             case 'configuracoes':

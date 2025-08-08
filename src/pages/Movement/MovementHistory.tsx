@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Calendar, DollarSign, CreditCard, Banknote, Download } from 'lucide-react';
+import { Search, Filter, DollarSign, Banknote, Download } from 'lucide-react';
 import { Movement } from '../../types';
 import { generateMovementsPdf } from '../../utils/generatePDF';
 
@@ -24,9 +24,9 @@ export function MovementHistory() {
     const [valueMin, setValueMin] = useState('');
     const [valueMax, setValueMax] = useState('');
     const [showFilters, setShowFilters] = useState(false);
-    const [periodFilter, setPeriodFilter] = useState<'all' | 'month' | 'year'>('all');
-    const [selectedMonth, setSelectedMonth] = useState('');
-    const [selectedYear, setSelectedYear] = useState('');
+    const [periodFilter] = useState<'all' | 'month' | 'year'>('all');
+    const [selectedMonth] = useState('');
+    const [selectedYear] = useState('');
 
     // Mapeamento de tipos
     const typeLabels: Record<Subtype, string> = {
@@ -72,25 +72,7 @@ export function MovementHistory() {
     const totalEntries = filtered.filter(m => isEntry(m.type as Subtype)).reduce((sum, m) => sum + m.value, 0);
     const totalExits = filtered.filter(m => !isEntry(m.type as Subtype)).reduce((sum, m) => sum + m.value, 0);
     const balance = totalEntries - totalExits;
-
-    // Exportar Excel
-    const exportToExcel = () => {
-        import('xlsx').then(XLSX => {
-            const data = filtered.map(m => ({
-                Data: new Date(m.date).toLocaleDateString('pt-BR'),
-                Hora: new Date(m.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                Descrição: m.description,
-                Tipo: typeLabels[m.type as Subtype],
-                Valor: `${isEntry(m.type as Subtype) ? '+' : '-'} R$ ${m.value.toFixed(2)}`
-            }));
-
-            const worksheet = XLSX.utils.json_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Movimentações');
-            XLSX.writeFile(workbook, 'historico_movimentacoes.xlsx');
-        });
-    };
-
+    
     return (
         <div className="space-y-8 px-6 py-6 bg-gray-50 min-h-screen w-full">
             {/* Cabeçalho */}
@@ -224,106 +206,86 @@ export function MovementHistory() {
                         </div>
                     </div>
                 )}
-                {/* Blocos de Exportação - Estilo Moderno */}
-                {/* Blocos de Exportação - Com Seleção Manual de Mês/Ano */}
+
                 <div className="mt-8">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                         <Download className="w-5 h-5 text-indigo-600" />
-                        Exportar Relatórios
+                        Exportar Relatório PDF
                     </h3>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {/* Exportar Tudo */}
-                        <div
-                            onClick={() => generateMovementsPdf(movements, 'all')}
-                            className="group cursor-pointer"
+                    <div className="relative max-w-md">
+                        <select
+                            value=""
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === 'all') {
+                                    generateMovementsPdf(movements, 'all');
+                                } else if (value.startsWith('month-')) {
+                                    const monthYear = value.replace('month-', '');
+                                    generateMovementsPdf(movements, 'month', monthYear);
+                                } else if (value.startsWith('year-')) {
+                                    const year = value.replace('year-', '');
+                                    generateMovementsPdf(movements, 'year', undefined, year);
+                                }
+                                e.target.value = ""; // Reseta visualmente
+                            }}
+                            className="w-full p-3 pl-4 pr-12 border border-gray-300 rounded-xl bg-white text-gray-700 
+                focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 
+                appearance-none cursor-pointer shadow-sm hover:border-gray-400 transition-all"
                         >
-                            <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-indigo-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                                <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                                    <Download className="w-6 h-6" />
-                                </div>
-                                <h4 className="font-bold text-gray-800 mb-1">Completo</h4>
-                                <p className="text-sm text-gray-500">Todo o histórico</p>
-                            </div>
-                        </div>
+                            <option value="" disabled selected>
+                                Selecione uma opção de exportação...
+                            </option>
+                            <option value="all">📥 Exportar tudo (histórico completo)</option>
 
-                        {/* Exportar por Mês - com seleção */}
-                        <div className="group">
-                            <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-blue-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                                <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white">
-                                    <Calendar className="w-6 h-6" />
-                                </div>
-                                <h4 className="font-bold text-gray-800 mb-2">Por Mês</h4>
-                                <div className="space-y-2">
-                                    <input
-                                        type="month"
-                                        value={selectedMonth}
-                                        onChange={(e) => setSelectedMonth(e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                                    />
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (selectedMonth) {
-                                                generateMovementsPdf(movements, 'month', selectedMonth);
-                                            } else {
-                                                alert('Selecione um mês');
-                                            }
-                                        }}
-                                        className="w-full px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition"
-                                    >
-                                        Exportar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                            {/* Geração dinâmica de anos e meses */}
+                            {(() => {
+                                // Extrair e organizar dados
+                                const yearsMap = new Map<string, Set<string>>();
+                                const yearsSet = new Set<string>();
 
-                        {/* Exportar por Ano - com seleção */}
-                        <div className="group">
-                            <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-green-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                                <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-white">
-                                    <DollarSign className="w-6 h-6" />
-                                </div>
-                                <h4 className="font-bold text-gray-800 mb-2">Por Ano</h4>
-                                <div className="space-y-2">
-                                    <input
-                                        type="number"
-                                        placeholder="2025"
-                                        value={selectedYear}
-                                        onChange={(e) => setSelectedYear(e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500"
-                                        min="2000"
-                                        max="2100"
-                                    />
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (selectedYear) {
-                                                generateMovementsPdf(movements, 'year', undefined, selectedYear);
-                                            } else {
-                                                alert('Selecione um ano');
-                                            }
-                                        }}
-                                        className="w-full px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition"
-                                    >
-                                        Exportar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                                movements.forEach((m) => {
+                                    const date = new Date(m.date);
+                                    const year = date.getFullYear().toString();
+                                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                                    const monthYear = `${year}-${month}`;
 
-                        {/* Exportar Excel */}
-                        <div
-                            onClick={exportToExcel}
-                            className="group cursor-pointer"
-                        >
-                            <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-purple-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                                <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                                    <CreditCard className="w-6 h-6" />
-                                </div>
-                                <h4 className="font-bold text-gray-800 mb-1">Excel</h4>
-                                <p className="text-sm text-gray-500">Planilha .xlsx</p>
-                            </div>
+                                    yearsSet.add(year);
+                                    if (!yearsMap.has(year)) yearsMap.set(year, new Set());
+                                    yearsMap.get(year)!.add(monthYear);
+                                });
+
+                                // Ordenar anos em ordem decrescente
+                                const sortedYears = Array.from(yearsSet).sort((a, b) => parseInt(b) - parseInt(a));
+
+                                return sortedYears.flatMap((year) => {
+                                    const months = Array.from(yearsMap.get(year)!).sort().reverse();
+                                    const monthOptions = months.map((monthYear) => {
+                                        const [y, m] = monthYear.split('-');
+                                        const monthName = new Date(parseInt(y), parseInt(m) - 1, 1)
+                                            .toLocaleDateString('pt-BR', { month: 'long' });
+                                        return (
+                                            <option key={monthYear} value={`month-${monthYear}`}>
+                                                📆 {monthName.charAt(0).toUpperCase() + monthName.slice(1)} {y}
+                                            </option>
+                                        );
+                                    });
+
+                                    return [
+                                        <option key={`divider-${year}`} disabled>
+                                            ──────────────────
+                                        </option>,
+                                        <option key={`year-${year}`} value={`year-${year}`}>
+                                            📅 Ano {year}
+                                        </option>,
+                                        ...monthOptions,
+                                    ];
+                                });
+                            })()}
+                        </select>
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                         </div>
                     </div>
                 </div>

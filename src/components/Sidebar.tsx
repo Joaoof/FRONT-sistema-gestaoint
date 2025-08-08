@@ -49,10 +49,7 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
       movimentacoes: [
         'movimentacoes',
         'formulario-movimentacao',
-        'movimentacoes-saida',
-        'movimentacoes-saida-despesas',
-        'movimentacoes-saida-retiradas',
-        'movimentacoes-saida-pagamentos',
+        'historico-movimentacao',
       ],
 
       fiscal: [
@@ -124,7 +121,7 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
       icon: DollarSign,
       children: [
         { id: 'formulario-movimentacao', label: 'Formulario de Movimentação', icon: ArrowUpCircle },
-        { id: 'movimentacoes-saida', label: 'Nova Saída', icon: ArrowDownCircle },
+        { id: 'historico-movimentacao', label: 'Histórico de Movimentação', icon: ArrowDownCircle },
       ],
     },
     {

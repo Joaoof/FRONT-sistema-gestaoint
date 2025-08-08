@@ -52,18 +52,18 @@ export function MovementDashboard() {
             {/* Ações rápidas */}
             <div className="flex flex-wrap gap-4">
                 <button
-                    onClick={() => navigate('/movimentacoes')}
+                    onClick={() => navigate('/formulario-movimentacao')}
                     className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm"
                 >
                     <ArrowUpCircle className="w-5 h-5" />
                     Nova Entrada
                 </button>
                 <button
-                    onClick={() => navigate('/app/movimentacoes-saida')}
+                    onClick={() => navigate('/historico-movimentacao')}
                     className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-sm"
                 >
                     <ArrowDownCircle className="w-5 h-5" />
-                    Nova Saída
+                    Histórico de Saídas
                 </button>
             </div>
 

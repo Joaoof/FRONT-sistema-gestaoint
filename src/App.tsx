@@ -11,7 +11,6 @@ import { LoginForm } from './pages/LoginForm';
 import { AuthProvider } from './contexts/AuthContext';
 import { FiscalPage } from './pages/Tax';
 import { FinancialManagement } from './pages/FinancialManagement';
-import { NewExitMovement } from './pages/Movement/NewExitMovement';
 import { MovementHistory } from './pages/Movement/MovementHistory';
 import { MovementDashboard } from './components/MovementDashboard';
 import { CreatePayable } from './pages/Tax/AccountsPayable/Create';
@@ -69,7 +68,7 @@ function AppContent() {
           // src/App.tsx
             <Route path="/movimentacoes" element={<MovementDashboard />} />
             <Route path="/formulario-movimentacao" element={<CashMovementForm />} />
-            <Route path="/movimentacoes-saida" element={<NewExitMovement />} />
+            <Route path="/historico-movimentacao" element={<MovementHistory />} />
             <Route path="/historico" element={<MovementHistory />} />
 
             <Route
