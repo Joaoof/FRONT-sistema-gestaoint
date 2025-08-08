@@ -17,12 +17,9 @@ export const LoginForm = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        try {
-            await login(email, password_hash);
-            navigate('/dashboard', { replace: true });
-        } catch (err) {
-            console.error('Erro no login:', err);
-        }
+        setError(""); // Limpa erro anterior
+        await login(email, password_hash);
+        navigate('/dashboard', { replace: true });
     }
 
     const handleRecoverySubmit = async (e: React.FormEvent) => {

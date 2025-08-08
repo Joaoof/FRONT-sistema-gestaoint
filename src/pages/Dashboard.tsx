@@ -4,6 +4,8 @@ import { PieChart } from './PieChart';
 import { InventoryData } from '../hooks/useInventory';
 import { useAuth } from '../contexts/AuthContext';
 
+console.log('AQUI ENTRA');
+
 export function Dashboard({
   entries,
   products,
@@ -14,6 +16,8 @@ export function Dashboard({
   const dailyProfit = getDailyProfit();
   const { user, logout } = useAuth()
 
+  console.log('DASHBOARDDDDDDDDDDDDDDDDDDDDDDD');
+  
   // Dados para gráfico de linha (últimos 12 meses)
   const last12Months = Array.from({ length: 12 }, (_, i) => {
     const date = new Date();

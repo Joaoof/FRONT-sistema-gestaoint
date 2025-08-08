@@ -48,7 +48,7 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
     const groupItems: Record<string, View[]> = {
       movimentacoes: [
         'movimentacoes',
-        'movimentacoes-entrada',
+        'formulario-movimentacao',
         'movimentacoes-saida',
         'movimentacoes-saida-despesas',
         'movimentacoes-saida-retiradas',
@@ -123,7 +123,7 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
       label: 'Movimentações',
       icon: DollarSign,
       children: [
-        { id: 'movimentacoes-entrada', label: 'Nova Entrada', icon: ArrowUpCircle },
+        { id: 'formulario-movimentacao', label: 'Formulario de Movimentação', icon: ArrowUpCircle },
         { id: 'movimentacoes-saida', label: 'Nova Saída', icon: ArrowDownCircle },
       ],
     },

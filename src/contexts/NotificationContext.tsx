@@ -1,5 +1,4 @@
-// src/contexts/NotificationContext.tsx
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback } from 'react';
 
 type NotificationType = 'success' | 'error' | 'info' | 'warning';
 
@@ -39,13 +38,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     );
 }
 
-function NotificationList({ notifications, onRemove }: { notifications: Notification[]; onRemove: (id: string) => void }) {
+function NotificationList({
+    notifications,
+    onRemove
+}: {
+    notifications: Notification[];
+    onRemove: (id: string) => void
+}) {
     return (
         <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm w-full">
             {notifications.map(n => (
                 <div
                     key={n.id}
-                    className={`p-4 rounded-lg shadow-lg text-sm text-white flex items-center gap-2 animate-slide-in ${n.type === 'success'
+                    className={`p-4 rounded-lg shadow-lg text-sm text-white flex items-center justify-between gap-2 animate-slide-in relative
+            ${n.type === 'success'
                             ? 'bg-green-600'
                             : n.type === 'error'
                                 ? 'bg-red-600'
@@ -55,11 +61,23 @@ function NotificationList({ notifications, onRemove }: { notifications: Notifica
                         }`}
                     style={{ animation: 'slide-in 0.3s ease-out' }}
                 >
-                    {n.type === 'success' && <span>✅</span>}
-                    {n.type === 'error' && <span>❌</span>}
-                    {n.type === 'warning' && <span>⚠️</span>}
-                    {n.type === 'info' && <span>ℹ️</span>}
-                    <span>{n.message}</span>
+                    <div className="flex items-center gap-2 flex-1">
+                        {n.type === 'success' && <span>✅</span>}
+                        {n.type === 'error' && <span>❌</span>}
+                        {n.type === 'warning' && <span>⚠️</span>}
+                        {n.type === 'info' && <span>ℹ️</span>}
+                        <span className="font-medium">{n.message}</span>
+                    </div>
+
+                    {/* Botão X para fechar */}
+                    <button
+                        type="button"
+                        onClick={() => onRemove(n.id)}
+                        className="ml-2 flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full hover:bg-black hover:bg-opacity-20 transition-all"
+                        aria-label="Fechar notificação"
+                    >
+                        ✕
+                    </button>
                 </div>
             ))}
         </div>

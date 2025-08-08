@@ -1,10 +1,8 @@
-"use client"
-
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect } from "react"
 import type { Company, User, AuthState } from "../types/auth"
-import { MockAuthService } from "../auth/MockAuthService"
 import { useNavigate } from "react-router-dom"; // ✅
+import { useNotification } from "../hooks/useNotification"
 
 
 interface AuthContextState extends AuthState {
@@ -89,11 +87,8 @@ function authReducer(state: AuthContextState, action: AuthAction): AuthContextSt
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [state, dispatch] = useReducer(authReducer, initialState)
-    const authService = MockAuthService.getInstance()
     const navigate = useNavigate(); // ✅ agora sim
-
-
-
+    const { notifyError, notifySuccess } = useNotification()
 
     useEffect(() => {
         initializeAuth()
@@ -102,9 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
         try {
             const token = localStorage.getItem("accessToken")
-            console.log(token);
-
-            if (token) throw new Error("Sem token")
+            if (!token) {
+                dispatch({ type: "SET_LOADING", payload: false })
+                return
+            }
 
             const res = await fetch("http://localhost:3000/graphql", {
                 method: "POST",
@@ -114,49 +110,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 },
                 body: JSON.stringify({
                     query: `
-            query User {
-              accessToken
-              ex
-              user {
+          query GetUser {
+            user {
+              id
+              name
+              email
+              role
+              company {
                 id
                 name
                 email
-                role
-                 company {
-                    id
-                    name
-                    email
-                 }
-                 plan {
-  name
-  description
-  modules {
-    module_key
-    name
-    description
-    permission
-    isActive
-  }
+              }
+              plan {
+                name
+                description
+                modules {
+                  module_key
+                  name
+                  description
+                  permission
+                  isActive
+                }
               }
             }
-          `,
+          }
+        `,
                 }),
             })
 
-            console.log(res);
+            const json = await res.json()
 
-
-            const data = await res.json();
-            if (data.data?.login?.accessToken) {
-                localStorage.setItem('accessToken', data.data.login.accessToken);
-                // Pode atualizar contexto ou estado do user aqui também
-            } else {
-                // tratar erro
-                console.log('Login falhou:', data.errors || 'Sem token retornado');
+            if (json.errors || !json.data?.user) {
+                localStorage.removeItem("accessToken")
+                dispatch({ type: "LOGOUT" })
+                return
             }
-            dispatch({ type: "SET_AUTH_DATA", payload: { user: data, company: data.company } })
+
+            const { user } = json.data
+            dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })
         } catch (error) {
+            console.error("Erro ao inicializar auth:", error)
             dispatch({ type: "LOGOUT" })
+        } finally {
+            dispatch({ type: "SET_LOADING", payload: false }) // ✅ Garantido
         }
     }
 
@@ -211,27 +207,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             })
 
             const json = await res.json()
-            if (json.errors) throw new Error(json.errors[0].message)
+
+            console.log("Resposta completa do GraphQL:", json) // ✅ Agora sim, você verá os erros
+            if (json.errors) {
+                const error = json.errors[0];
+                const code = error.extensions?.code;
+
+                // ✅ 1. Erro com detalhes por campo (validação)
+                if (code === 'DOMAIN_VALIDATION_ERROR' && Array.isArray(error.extensions?.errors)) {
+                    const validationErrors = error.extensions.errors;
+
+                    // Extraia as mensagens
+                    const errorMessage = validationErrors.map((e: { message: any; }) => e.message).join('\n');
+
+                    notifyError(errorMessage, 2000);
+                    dispatch({ type: "SET_ERROR", payload: errorMessage });
+                    return;
+                }
+
+                // ✅ 2. Outros erros (ex: credenciais inválidas)
+                const message = error.message;
+                notifyError(message, 5000);
+                dispatch({ type: "SET_ERROR", payload: message });
+            }
+
+            if (!json.data?.login) {
+                notifyError("Resposta inválida do servidor", 3000);
+                dispatch({ type: "SET_ERROR", payload: "Resposta inválida" });
+                return;
+            }
 
 
             const { accessToken, user } = json.data.login;
 
+            notifySuccess('Login realizado com sucesso!', 5000)
+
+            if (!user) {
+                notifyError('Usuário inválido')
+                dispatch({ type: "LOGOUT" })
+                return
+            }
+
+
             localStorage.setItem("accessToken", accessToken);
             dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })
         } catch (err: any) {
-            dispatch({ type: "SET_ERROR", payload: err.message || "Erro no login" })
-            console.error("Erro no login:", err);
+            const message = err.message || "Erro de conexão com o servidor";
+            dispatch({ type: "SET_ERROR", payload: message });
+            notifyError(message, 5000);
+            throw err;
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
     }
     const logout = async () => {
-        await authService.logout();
+        // Limpa o token
         localStorage.removeItem("accessToken");
+
+        notifySuccess('Você saiu com sucesso!', 5000);
+
         dispatch({ type: "LOGOUT" });
+
         navigate("/");
-        dispatch({ type: "LOGOUT" })
-    }
+    };
 
     const contextValue: AuthContextState = {
         ...state,

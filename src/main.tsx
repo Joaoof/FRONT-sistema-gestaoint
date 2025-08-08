@@ -4,7 +4,6 @@ import { ApolloProvider } from '@apollo/client';
 import { apolloClient } from './lib/apollo-client';
 import App from './App.tsx';
 import './index.css';
-import { AuthProvider } from './contexts/AuthContext.tsx';
 import { NotificationProvider } from './contexts/NotificationContext.tsx';
 import { Footer } from './components/Footer.tsx';
 

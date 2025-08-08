@@ -18,6 +18,7 @@ import { NewExitMovement } from './Movement/NewExitMovement';
 import { MovementHistory } from './Movement/MovementHistory';
 import { SettingsPage } from './SettingsPage';
 import { Footer } from '../components/Footer';
+import { CashMovementForm } from './CashMovementForm';
 
 
 
@@ -37,7 +38,7 @@ export type View =
     | 'consultas'
     | 'entrada'
     | 'movimentacoes'
-    | 'movimentacoes-entrada'
+    | 'formulario-movimentacao'
     | 'movimentacoes-saida'
     | 'movimentacoes-saida-despesas'
     | 'movimentacoes-saida-retiradas'
@@ -50,7 +51,7 @@ const moduleNames: Record<View, string> = {
     cadastros: 'Cadastros',
     estoque: 'Estoque',
     entrada: 'Entrada de Produtos',
-    'movimentacoes-entrada': 'Nova Entrada',
+    'formulario-movimentacao': 'Formulário de Movimentação',
     'movimentacoes-saida': 'Nova Saída',
     'movimentacoes-saida-despesas': 'Despesas',
     historico: 'Histórico',
@@ -65,12 +66,6 @@ const moduleNames: Record<View, string> = {
     consultas: 'Consultas',
     configuracoes: 'Configurações',
 } as any;
-
-// Dados mockados (substitua com GraphQL depois)
-const mockMovements = [
-    { id: '1', value: 1500, description: 'Venda de produtos', type: 'venda', date: '2025-04-05T10:30' },
-    { id: '2', value: 50, description: 'Troco de cliente', type: 'troco', date: '2025-04-05T11:15' },
-];
 
 export function AuthenticatedApp() {
     const [currentView, setCurrentView] = useState<View>('dashboard');
@@ -108,6 +103,13 @@ export function AuthenticatedApp() {
         }
     }, [location.pathname, hasModuleAccess, navigate]);
 
+
+    useEffect(() => {
+        if (!user) {
+            navigate('/login');
+        }
+    }, [user, navigate]);
+
     const handleViewChange = (view: View) => {
         if (!hasModuleAccess(view)) {
             setUpgradeModal({
@@ -119,52 +121,6 @@ export function AuthenticatedApp() {
         setCurrentView(view);
         navigate(`${view}`);
     };
-
-    // ✅ Backup de dados
-    const handleBackup = () => {
-        const backupData = {
-            timestamp: new Date().toISOString(),
-            user: { name: user?.name, email: user?.email, role: user?.role },
-            company: { name: company?.name, cnpj: company?.cnpj },
-            inventory: inventory.products,
-            movements: mockMovements,
-            settings: { darkMode },
-        };
-
-        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `backup-estoque-nuvem-${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-
-        addNotification('success', 'Backup exportado com sucesso!');
-    };
-
-    // ✅ Restaurar backup
-    const handleRestore = () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = (e: any) => {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (event: any) => {
-                try {
-                    const data = JSON.parse(event.target.result as string);
-                    console.log('Backup restaurado:', data);
-                    addNotification('success', 'Dados restaurados com sucesso!');
-                    // Aqui você atualizaria o estado global (ex: inventory.setProducts(data.inventory))
-                } catch (err) {
-                    addNotification('error', 'Erro ao ler o arquivo de backup.');
-                }
-            };
-            reader.readAsText(file);
-        };
-        input.click();
-    };
-
     // ✅ Atalhos de teclado
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
@@ -172,9 +128,9 @@ export function AuthenticatedApp() {
                 switch (e.key) {
                     case 'n':
                         e.preventDefault();
-                        if (hasModuleAccess('movimentacoes-entrada')) {
-                            handleViewChange('movimentacoes-entrada');
-                            navigate('/app/movimentacoes-entrada');
+                        if (hasModuleAccess('formulario-movimentacao')) {
+                            handleViewChange('formulario-movimentacao');
+                            navigate('/app/formulario-movimentacao');
                         }
                         break;
                     case 's':
@@ -196,12 +152,6 @@ export function AuthenticatedApp() {
                         addNotification('info', 'Pressione Ctrl+Shift+B para exportar backup');
                         break;
                 }
-            }
-
-            // Ctrl + Shift + B → Backup
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'B') {
-                e.preventDefault();
-                handleBackup();
             }
         };
 
@@ -242,8 +192,8 @@ export function AuthenticatedApp() {
                 return <FinancialManagement />;
             case 'movimentacoes':
                 return <HomeMovement />;
-            case 'movimentacoes-entrada':
-                return <NewEntryMovement />;
+            case 'formulario-movimentacao':
+                return <CashMovementForm />;
             case 'movimentacoes-saida':
                 return <NewExitMovement />;
             case 'historico':

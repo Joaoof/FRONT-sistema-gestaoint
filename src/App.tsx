@@ -11,7 +11,6 @@ import { LoginForm } from './pages/LoginForm';
 import { AuthProvider } from './contexts/AuthContext';
 import { FiscalPage } from './pages/Tax';
 import { FinancialManagement } from './pages/FinancialManagement';
-import { NewEntryMovement } from './pages/Movement/NewEntryMovement';
 import { NewExitMovement } from './pages/Movement/NewExitMovement';
 import { MovementHistory } from './pages/Movement/MovementHistory';
 import { MovementDashboard } from './components/MovementDashboard';
@@ -22,7 +21,10 @@ import { AccountsPayableDashboard } from './pages/Tax/AccountsPayable/Dashboard'
 import { ReceivablesList } from './pages/Tax/AccountsReceivable/List';
 import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { NotificationContext, NotificationProvider } from './contexts/NotificationContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { PrivateRoute } from './components/ProtectedRoute';
+import { CompanyProvider } from './contexts/CompanyContext';
+import { CashMovementForm } from './pages/CashMovementForm';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -46,7 +48,14 @@ function AppContent() {
         <NotificationProvider>
           <Routes>
             <Route path="/" element={<LoginForm />} />
-            <Route path="/dashboard" element={<Dashboard {...inventory} />} />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute moduleId="dashboard">
+                  <Dashboard {...inventory} />
+                </PrivateRoute>
+              }
+            />
             <Route path="/estoque" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
             <Route path="/vendas" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
             <Route path="/fiscal" element={<FiscalPage />} />
@@ -59,7 +68,7 @@ function AppContent() {
             <Route path="/consultas" element={<SearchPage />} />
           // src/App.tsx
             <Route path="/movimentacoes" element={<MovementDashboard />} />
-            <Route path="/movimentacoes-entrada" element={<NewEntryMovement />} />
+            <Route path="/formulario-movimentacao" element={<CashMovementForm />} />
             <Route path="/movimentacoes-saida" element={<NewExitMovement />} />
             <Route path="/historico" element={<MovementHistory />} />
 
@@ -90,7 +99,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider> {/* ✅ Esse é o problema principal */}
-        <AppContent />
+        <CompanyProvider>
+          <AppContent />
+        </CompanyProvider>
       </AuthProvider>
     </BrowserRouter>
   );

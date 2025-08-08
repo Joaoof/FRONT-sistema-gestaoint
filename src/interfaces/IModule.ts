@@ -3,9 +3,11 @@ import { Company } from "../types/auth"
 
 export interface IModule {
     id: string
+    module_key: string
     name: string
     description: string
-    requiredPermissions: string[]
+    permission: string[]
+    isActive: true
 }
 
 export interface IModuleComponent {
