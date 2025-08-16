@@ -23,6 +23,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { PrivateRoute } from './components/ProtectedRoute';
 import { CompanyProvider } from './contexts/CompanyContext';
 import { CashMovementForm } from './pages/CashMovementForm';
+import { PayablesList } from './pages/Tax/AccountsPayable/List';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,6 +62,7 @@ function AppContent() {
             <Route path="/fiscal-pagar" element={<AccountsPayableDashboard />} />
             <Route path="/fiscal-pagar-criar" element={<CreatePayable />} />
             <Route path="/listar-contas-pagas" element={<ReceivablesList />} />
+            <Route path="/listar-contas-receber" element={<PayablesList />} />
             <Route path="/financeiro" element={<FinancialManagement />} />
             <Route path="/consultas" element={<SearchPage />} />
           // src/App.tsx

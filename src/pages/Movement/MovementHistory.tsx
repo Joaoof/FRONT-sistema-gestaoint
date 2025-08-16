@@ -72,7 +72,7 @@ export function MovementHistory() {
     const totalEntries = filtered.filter(m => isEntry(m.type as Subtype)).reduce((sum, m) => sum + m.value, 0);
     const totalExits = filtered.filter(m => !isEntry(m.type as Subtype)).reduce((sum, m) => sum + m.value, 0);
     const balance = totalEntries - totalExits;
-    
+
     return (
         <div className="space-y-8 px-6 py-6 bg-gray-50 min-h-screen w-full">
             {/* Cabeçalho */}

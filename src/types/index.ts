@@ -60,3 +60,12 @@ export interface Receivable {
   interestRate?: number; // % ao dia (ex: 0.033 = 1% ao mês)
   notes?: string;
 }
+
+export type Payable = {
+  id: string;
+  supplierName: string;
+  description: string;
+  value: number;
+  dueDate: string;
+  status: 'pendente' | 'pago' | 'vencido';
+};
