@@ -9,7 +9,6 @@ import { Sidebar } from './components/Sidebar';
 import { useInventory } from './hooks/useInventory';
 import { LoginForm } from './pages/LoginForm';
 import { AuthProvider } from './contexts/AuthContext';
-import { FiscalPage } from './pages/Tax';
 import { FinancialManagement } from './pages/FinancialManagement';
 import { MovementHistory } from './pages/Movement/MovementHistory';
 import { MovementDashboard } from './components/MovementDashboard';
@@ -57,7 +56,6 @@ function AppContent() {
             />
             <Route path="/estoque" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
             <Route path="/vendas" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
-            <Route path="/fiscal" element={<FiscalPage />} />
             <Route path="/fiscal-receber" element={<AccountsReceivableDashboard />} />
             <Route path="/fiscal-receber-cria" element={<CreateReceivable />} />
             <Route path="/fiscal-pagar" element={<AccountsPayableDashboard />} />

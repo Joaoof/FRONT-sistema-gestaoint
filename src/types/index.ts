@@ -1,6 +1,6 @@
-export interface ProductEntry {
+export interface ProductEntryType {
   id: string;
-  name: string;
+  nameProduct: string;
   category: string;
   quantity: number;
   costPrice: number;
@@ -50,3 +50,13 @@ export type Movement = {
   date: string;
   createdAt: string;
 };
+
+export interface Receivable {
+  id: string;
+  client: string;
+  amount: number;
+  dueDate: string;
+  status: 'pending' | 'paid' | 'overdue';
+  interestRate?: number; // % ao dia (ex: 0.033 = 1% ao mês)
+  notes?: string;
+}
