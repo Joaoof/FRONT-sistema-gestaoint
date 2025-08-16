@@ -29,7 +29,7 @@ import {
 } from 'recharts';
 
 // Framer Motion
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 type Movement = {
     id: string;
