@@ -28,6 +28,9 @@ import {
     ResponsiveContainer,
 } from 'recharts';
 
+// Framer Motion
+import { motion, AnimatePresence } from 'framer-motion';
+
 type Movement = {
     id: string;
     value: number;
@@ -141,17 +144,13 @@ export function MovementDashboard() {
     const crescimentoDiario = '+12.5%';
 
     // ===== 2️⃣ Previsão de Caixa =====
-    const forecastData = Array.from({ length: 14 }, (_, i) => {
-        return {
-            day: i + 1,
-            saldo: Math.max(0, 1000 + i * 50 + (Math.random() - 0.5) * 150), // crescimento leve com ruído
-        };
-    });
+    const forecastData = Array.from({ length: 14 }, (_, i) => ({
+        day: i + 1,
+        saldo: Math.max(0, 1000 + i * 50 + (Math.random() - 0.5) * 150),
+    }));
 
     // ===== 3️⃣ Heatmap por Hora (simulado) =====
-    // Heatmap por Hora (0h até 23h)
     const heatmapData = Array.from({ length: 24 }, (_, hour) => {
-        // Pico no almoço (12h-14h) e final de tarde (17h-19h)
         const base = 50;
         const picoAlmoco = hour >= 12 && hour <= 14 ? 100 : 0;
         const picoTarde = hour >= 17 && hour <= 19 ? 80 : 0;
@@ -194,96 +193,119 @@ export function MovementDashboard() {
         a.click();
     };
 
+    // Variantes de animação
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.15,
+            },
+        },
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+    };
+
+    const chartVariants = {
+        hidden: { opacity: 0, scale: 0.98 },
+        show: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
+    };
+
+    const buttonVariants = {
+        hover: { scale: 1.03 },
+        tap: { scale: 0.98 },
+    };
+
     return (
-        <div className="space-y-8 p-6">
-            <div>
+        <motion.div
+            className="space-y-8 p-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+        >
+            {/* Título */}
+            <motion.div variants={itemVariants}>
                 <h1 className="text-3xl font-serif text-gray-900 mb-2">Dashboard de Movimentações</h1>
                 <p className="text-gray-600 font-light">Controle completo de entradas e saídas do caixa</p>
-            </div>
+            </motion.div>
 
             {/* Ações rápidas */}
-            <div className="flex flex-wrap gap-4">
-                <button
+            <motion.div className="flex flex-wrap gap-4" variants={containerVariants} initial="hidden" animate="show">
+                <motion.button
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                     onClick={() => navigate('/formulario-movimentacao')}
                     className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm"
                 >
                     <ArrowUpCircle className="w-5 h-5" />
                     Nova Entrada
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                     onClick={() => navigate('/historico-movimentacao')}
                     className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-sm"
                 >
                     <ArrowDownCircle className="w-5 h-5" />
                     Histórico de Saídas
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                     onClick={handleExport}
                     className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 shadow-sm"
                 >
                     <Download className="w-5 h-5" />
                     Exportar CSV
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
 
-            {/* Filtro de data */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex flex-col sm:flex-row gap-4 items-center">
-                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Filtrar por data:</label>
-                    <div className="relative flex-1 max-w-md">
-                        <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                        <input
-                            type="date"
-                            value={filterDate}
-                            onChange={(e) => setFilterDate(e.target.value)}
-                            className="w-full pl-10 p-2 border border-gray-300 rounded-lg text-sm"
-                        />
+            {/* Filtro */}
+            <motion.div variants={itemVariants}>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center">
+                        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Filtrar por </label>
+                        <div className="relative flex-1 max-w-md">
+                            <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                            <input
+                                type="date"
+                                value={filterDate}
+                                onChange={(e) => setFilterDate(e.target.value)}
+                                className="w-full pl-10 p-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
-            {/* KPIs de Performance */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                <div className="bg-white border-l-4 border-green-500 rounded-lg p-6 shadow-sm">
-                    <p className="text-sm font-medium text-gray-600">Margem de Lucro</p>
-                    <p className="text-2xl font-bold text-gray-900">{margemLucro}%</p>
-                    <TrendingUp className="w-5 h-5 text-green-600 inline mt-1" />{' '}
-                    <span className="text-sm text-green-600">+3.2%</span>
-                </div>
-
-                <div className="bg-white border-l-4 border-blue-500 rounded-lg p-6 shadow-sm">
-                    <p className="text-sm font-medium text-gray-600">Ticket Médio</p>
-                    <p className="text-2xl font-bold text-gray-900">R$ {ticketMedio}</p>
-                    <TrendingUp className="w-5 h-5 text-green-600 inline mt-1" />{' '}
-                    <span className="text-sm text-green-600">+12%</span>
-                </div>
-
-                <div className="bg-white border-l-4 border-purple-500 rounded-lg p-6 shadow-sm">
-                    <p className="text-sm font-medium text-gray-600">Crescimento Diário</p>
-                    <p className="text-2xl font-bold text-gray-900">{crescimentoDiario}</p>
-                    <TrendingUp className="w-5 h-5 text-green-600 inline mt-1" />
-                </div>
-
-                <div className="bg-white border-l-4 border-orange-500 rounded-lg p-6 shadow-sm">
-                    <p className="text-sm font-medium text-gray-600">Total Vendas</p>
-                    <p className="text-2xl font-bold text-gray-900">{allVendas.length}</p>
-                    <TrendingUp className="w-5 h-5 text-green-600 inline mt-1" />{' '}
-                    <span className="text-sm text-green-600">+5</span>
-                </div>
-
-                <div className="bg-white border-l-4 border-red-500 rounded-lg p-6 shadow-sm relative">
-                    {hasAlert && (
-                        <AlertTriangle className="w-5 h-5 text-red-500 absolute top-2 right-2" />
-                    )}
-                    <p className="text-sm font-medium text-gray-600">Alertas</p>
-                    <p className="text-2xl font-bold text-gray-900">{hasAlert ? '1' : '0'}</p>
-                    <span className="text-xs text-red-500">{hasAlert ? 'Saldo negativo' : 'Tudo OK'}</span>
-                </div>
-            </div>
+            {/* KPIs */}
+            <motion.div className="grid grid-cols-1 md:grid-cols-5 gap-6" variants={containerVariants} initial="hidden" animate="show">
+                {[
+                    { label: 'Margem de Lucro', value: `${margemLucro}%`, icon: TrendingUp, color: 'green' },
+                    { label: 'Ticket Médio', value: `R$ ${ticketMedio}`, icon: DollarSign, color: 'blue' },
+                    { label: 'Crescimento Diário', value: crescimentoDiario, icon: TrendingUp, color: 'purple' },
+                    { label: 'Total Vendas', value: allVendas.length, icon: Calendar, color: 'orange' },
+                    { label: 'Alertas', value: hasAlert ? '1' : '0', icon: AlertTriangle, color: 'red' },
+                ].map((kpi, i) => (
+                    <motion.div key={i} variants={itemVariants} className={`bg-white border-l-4 border-${kpi.color}-500 rounded-lg p-6 shadow-sm`}>
+                        <p className="text-sm font-medium text-gray-600">{kpi.label}</p>
+                        <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
+                        <kpi.icon className={`w-5 h-5 inline mt-1 text-${kpi.color}-600`} />
+                        {kpi.label !== 'Alertas' && <span className="text-sm text-green-600 ml-1">+3.2%</span>}
+                    </motion.div>
+                ))}
+            </motion.div>
 
             {/* Resumo */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-6">
+            <motion.div className="grid grid-cols-1 md:grid-cols-4 gap-6" variants={containerVariants} initial="hidden" animate="show">
+                <motion.div variants={itemVariants} className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-green-800">Entradas do Dia</p>
@@ -291,9 +313,9 @@ export function MovementDashboard() {
                         </div>
                         <TrendingUp className="w-8 h-8 text-green-600 opacity-70" />
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-6">
+                <motion.div variants={itemVariants} className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-red-800">Saídas do Dia</p>
@@ -301,9 +323,9 @@ export function MovementDashboard() {
                         </div>
                         <TrendingDown className="w-8 h-8 text-red-600 opacity-70" />
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6">
+                <motion.div variants={itemVariants} className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-blue-800">Saldo do Dia</p>
@@ -313,9 +335,9 @@ export function MovementDashboard() {
                         </div>
                         <DollarSign className="w-8 h-8 text-blue-600 opacity-70" />
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-6">
+                <motion.div variants={itemVariants} className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-purple-800">Total do Mês</p>
@@ -323,214 +345,229 @@ export function MovementDashboard() {
                         </div>
                         <Calendar className="w-8 h-8 text-purple-600 opacity-70" />
                     </div>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
 
-            {/* Painel de Meta */}
             {/* Painel de Meta Editável */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <Target className="w-5 h-5 text-purple-600" />
-                        <h3 className="text-lg font-semibold text-gray-900">Meta de Faturamento Mensal</h3>
-                    </div>
-                    {!isEditing ? (
-                        <button
-                            onClick={handleEdit}
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                            Editar
-                        </button>
-                    ) : null}
-                </div>
-
-                <div className="flex items-center gap-2 mb-4">
-                    {isEditing ? (
-                        <div className="flex gap-2 items-center">
-                            <input
-                                type="number"
-                                step="100"
-                                value={inputValue}
-                                onChange={(e) => setInputValue(e.target.value)}
-                                onBlur={handleSave}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSave()}
-                                autoFocus
-                                className="px-3 py-1 border border-blue-300 rounded text-sm w-32 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <span className="text-gray-500">R$/mês</span>
+            <motion.div variants={itemVariants}>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <Target className="w-5 h-5 text-purple-600" />
+                            <h3 className="text-lg font-semibold text-gray-900">Meta de Faturamento Mensal</h3>
                         </div>
-                    ) : (
-                        <p className="text-2xl font-bold text-gray-900">R$ {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    )}
-                </div>
+                        {!isEditing ? (
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleEdit}
+                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                                Editar
+                            </motion.button>
+                        ) : null}
+                    </div>
 
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                    <div
-                        className={`h-2.5 rounded-full ${totalMes >= metaMensal
-                            ? 'bg-green-500'
-                            : totalMes / metaMensal >= 0.7
-                                ? 'bg-yellow-500'
-                                : 'bg-red-500'
-                            }`}
-                        style={{ width: `${Math.min((totalMes / metaMensal) * 100, 100)}%` }}
-                    ></div>
+                    <div className="flex items-center gap-2 mb-4">
+                        {isEditing ? (
+                            <div className="flex gap-2 items-center">
+                                <input
+                                    type="number"
+                                    step="100"
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    onBlur={handleSave}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSave()}
+                                    autoFocus
+                                    className="px-3 py-1 border border-blue-300 rounded text-sm w-32 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <span className="text-gray-500">R$/mês</span>
+                            </div>
+                        ) : (
+                            <p className="text-2xl font-bold text-gray-900">
+                                R$ {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                        )}
+                    </div>
+
+                    <motion.div
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: totalMes / metaMensal > 0 ? 1 : 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        style={{ originX: 0 }}
+                        className="w-full bg-gray-200 rounded-full h-2.5 mb-2 overflow-hidden inline-block"
+                    >
+                        <div
+                            className={`h-2.5 rounded-full ${totalMes >= metaMensal
+                                ? 'bg-green-500'
+                                : totalMes / metaMensal >= 0.7
+                                    ? 'bg-yellow-500'
+                                    : 'bg-red-500'
+                                }`}
+                            style={{ width: `${Math.min((totalMes / metaMensal) * 100, 100)}%` }}
+                        ></div>
+                    </motion.div>
+                    <p className="text-sm text-gray-600">
+                        R$ {totalMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de{' '}
+                        R$ {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}{' '}
+                        ({((totalMes / metaMensal) * 100).toFixed(1)}%)
+                    </p>
                 </div>
-                <p className="text-sm text-gray-600">
-                    R$ {totalMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de{' '}
-                    R$ {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}{' '}
-                    ({((totalMes / metaMensal) * 100).toFixed(1)}%)
-                </p>
-            </div>
+            </motion.div>
 
             {/* Gráficos */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Previsão de Caixa */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Previsão de Caixa (14 dias)</h3>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={forecastData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="day" />
-                            <YAxis />
-                            <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                            <Area
-                                type="monotone"
-                                dataKey="saldo"
-                                stroke="#8b5cf6"
-                                fill="url(#colorForecast)"
-                                name="Saldo Previsto"
-                            />
-                            <defs>
-                                <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.5} />
-                                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.1} />
-                                </linearGradient>
-                            </defs>
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
+            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants} initial="hidden" animate="show">
+                <motion.div variants={chartVariants}>
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Previsão de Caixa (14 dias)</h3>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={forecastData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="day" />
+                                <YAxis />
+                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                                <Area type="monotone" dataKey="saldo" stroke="#8b5cf6" fill="url(#colorForecast)" />
+                                <defs>
+                                    <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.5} />
+                                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.1} />
+                                    </linearGradient>
+                                </defs>
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
 
-                {/* Heatmap por Hora */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Heatmap de Vendas por Hora</h3>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={heatmapData}>
-                            <XAxis dataKey="hour" tickFormatter={(hour) => `${hour}h`} />
-                            <YAxis hide />
-                            <Tooltip formatter={(value: number) => [`${value} vendas`, 'Volume']} />
-                            <Bar
-                                dataKey="value"
-                                fill="#059669"
-                                radius={[4, 4, 0, 0]}
-                                background={{ fill: '#f3f4f6' }}
-                            />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
+                <motion.div variants={chartVariants}>
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Heatmap de Vendas por Hora</h3>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={heatmapData}>
+                                <XAxis dataKey="hour" tickFormatter={(hour) => `${hour}h`} />
+                                <YAxis hide />
+                                <Tooltip formatter={(value: number) => [`${value} vendas`, 'Volume']} />
+                                <Bar dataKey="value" fill="#059669" radius={[4, 4, 0, 0]} background={{ fill: '#f3f4f6' }} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
 
-                {/* Ranking de Produtos */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Produtos</h3>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart layout="vertical" data={topProducts} margin={{ left: 80 }}>
-                            <XAxis type="number" hide />
-                            <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
-                            <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                            <Bar dataKey="value" fill="#6366f1" radius={[0, 4, 4, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
+                <motion.div variants={chartVariants}>
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Produtos</h3>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart layout="vertical" data={topProducts} margin={{ left: 80 }}>
+                                <XAxis type="number" hide />
+                                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
+                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                                <Bar dataKey="value" fill="#6366f1" radius={[0, 4, 4, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
 
-                {/* Insights */}
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-blue-200">
-                    <h3 className="text-lg font-semibold text-blue-900 mb-4">💡 Insights Inteligentes</h3>
-                    <ul className="space-y-3 text-sm text-blue-800">
-                        {insights.map((text, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                                <TrendingUp className="w-4 h-4 mt-0.5 text-blue-600" />
-                                {text}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </div>
+                <motion.div variants={itemVariants}>
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-blue-200">
+                        <h3 className="text-lg font-semibold text-blue-900 mb-4">💡 Insights Inteligentes</h3>
+                        <ul className="space-y-3 text-sm text-blue-800">
+                            {insights.map((text, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                    <TrendingUp className="w-4 h-4 mt-0.5 text-blue-600" />
+                                    {text}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </motion.div>
+            </motion.div>
 
-            {/* Gráficos existentes (Entradas/Saídas, Evolução, etc.) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Entradas vs Saídas</h3>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={[{ name: 'Hoje', entradas, saidas }]}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                            <Legend />
-                            <Bar dataKey="entradas" fill={COLORS.entrada} name="Entradas" />
-                            <Bar dataKey="saidas" fill={COLORS.saida} name="Saídas" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
+            {/* Gráficos menores */}
+            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants} initial="hidden" animate="show">
+                <motion.div variants={chartVariants}>
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Entradas vs Saídas</h3>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={[{ name: 'Hoje', entradas, saidas }]}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                                <Legend />
+                                <Bar dataKey="entradas" fill={COLORS.entrada} name="Entradas" />
+                                <Bar dataKey="saidas" fill={COLORS.saida} name="Saídas" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Evolução Diária</h3>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={monthlyData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="day" />
-                            <YAxis />
-                            <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                            <Legend />
-                            <Line type="monotone" dataKey="entradas" stroke={COLORS.entrada} name="Entradas" />
-                            <Line type="monotone" dataKey="saidas" stroke={COLORS.saida} name="Saídas" />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
+                <motion.div variants={chartVariants}>
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Evolução Diária</h3>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={monthlyData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="day" />
+                                <YAxis />
+                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                                <Legend />
+                                <Line type="monotone" dataKey="entradas" stroke={COLORS.entrada} name="Entradas" />
+                                <Line type="monotone" dataKey="saidas" stroke={COLORS.saida} name="Saídas" />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
+            </motion.div>
 
             {/* Histórico */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                        Movimentações de {new Date(filterDate).toLocaleDateString('pt-BR')}
-                    </h2>
-                </div>
-                <div className="divide-y divide-gray-200">
-                    {filteredMovements.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">Nenhuma movimentação registrada nesta data.</div>
-                    ) : (
-                        filteredMovements.map((m) => (
-                            <div
-                                key={m.id}
-                                className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                            >
-                                <div className="flex items-center space-x-3">
-                                    <span
-                                        className={`w-3 h-3 rounded-full ${['venda', 'troco', 'outros'].includes(m.type) ? 'bg-green-500' : 'bg-red-500'}`}
-                                    ></span>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">{m.description}</p>
-                                        <p className="text-xs text-gray-500">{new Date(m.date).toLocaleTimeString('pt-BR')}</p>
-                                    </div>
-                                </div>
-                                <p
-                                    className={`text-sm font-semibold ${['venda', 'troco', 'outros'].includes(m.type) ? 'text-green-600' : 'text-red-600'}`}
+            <motion.div variants={itemVariants}>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="p-6 border-b border-gray-200">
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            Movimentações de {new Date(filterDate).toLocaleDateString('pt-BR')}
+                        </h2>
+                    </div>
+                    <div className="divide-y divide-gray-200">
+                        {filteredMovements.length === 0 ? (
+                            <div className="p-8 text-center text-gray-500">Nenhuma movimentação registrada nesta data.</div>
+                        ) : (
+                            filteredMovements.map((m) => (
+                                <motion.div
+                                    key={m.id}
+                                    variants={itemVariants}
+                                    initial="hidden"
+                                    animate="show"
+                                    className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                                 >
-                                    {['venda', 'troco', 'outros'].includes(m.type) ? '+' : '-'} R$ {m.value.toFixed(2)}
-                                </p>
-                            </div>
-                        ))
-                    )}
+                                    <div className="flex items-center space-x-3">
+                                        <span
+                                            className={`w-3 h-3 rounded-full ${['venda', 'troco', 'outros'].includes(m.type) ? 'bg-green-500' : 'bg-red-500'}`}
+                                        ></span>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900">{m.description}</p>
+                                            <p className="text-xs text-gray-500">{new Date(m.date).toLocaleTimeString('pt-BR')}</p>
+                                        </div>
+                                    </div>
+                                    <p
+                                        className={`text-sm font-semibold ${['venda', 'troco', 'outros'].includes(m.type) ? 'text-green-600' : 'text-red-600'}`}
+                                    >
+                                        {['venda', 'troco', 'outros'].includes(m.type) ? '+' : '-'} R$ {m.value.toFixed(2)}
+                                    </p>
+                                </motion.div>
+                            ))
+                        )}
+                    </div>
+                    <div className="p-4 bg-gray-50 border-t border-gray-200 text-right">
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => navigate('/historico')}
+                            className="text-blue-600 hover:underline text-sm font-medium"
+                        >
+                            Ver todo histórico
+                        </motion.button>
+                    </div>
                 </div>
-                <div className="p-4 bg-gray-50 border-t border-gray-200 text-right">
-                    <button
-                        onClick={() => navigate('/historico')}
-                        className="text-blue-600 hover:underline text-sm font-medium"
-                    >
-                        Ver todo histórico
-                    </button>
-                </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }
