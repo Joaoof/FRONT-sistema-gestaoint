@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
     DollarSign,
     ArrowUpCircle,
-    ArrowDownCircle,
     Calendar,
     TrendingUp,
     TrendingDown,
@@ -53,7 +52,6 @@ const mockMovements: Movement[] = [
     { id: '10', value: 90, description: 'Material de escritório', type: 'despesa', date: '2025-04-03T16:00' },
 ];
 
-// Dados mensais (simulação: últimos 7 dias)
 const monthlyData = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
@@ -75,18 +73,7 @@ const monthlyData = Array.from({ length: 7 }, (_, i) => {
     };
 });
 
-// Paleta de cores
-const COLORS = {
-    entrada: '#22c55e',
-    saida: '#ef4444',
-    venda: '#6366f1',
-    despesa: '#f97316',
-    troco: '#10b981',
-    retirada: '#ec4899',
-    outros: '#8b5cf6',
-};
-
-// Produtos simulados (para ranking)
+// Produtos simulados
 const mockProducts = [
     { name: 'Produto A', revenue: 1500 },
     { name: 'Produto B', revenue: 1200 },
@@ -98,12 +85,13 @@ export function MovementDashboard() {
     const navigate = useNavigate();
     const today = new Date().toISOString().split('T')[0];
     const [filterDate, setFilterDate] = useState<string>(today);
+    const [metaMensal, setMetaMensal] = useState<number>(20000);
+    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [inputValue, setInputValue] = useState<string>(metaMensal.toFixed(2));
 
-    // Filtra movimentações pela data
     const filteredMovements = mockMovements.filter((m) => m.date.startsWith(filterDate));
     const allVendas = mockMovements.filter((m) => m.type === 'venda');
 
-    // Calcula resumo do dia
     const entradas = filteredMovements
         .filter((m) => ['venda', 'troco', 'outros'].includes(m.type))
         .reduce((sum, m) => sum + m.value, 0);
@@ -113,43 +101,17 @@ export function MovementDashboard() {
         .reduce((sum, m) => sum + m.value, 0);
 
     const saldo = entradas - saidas;
-
     const totalMes = 15000;
-    const [metaMensal, setMetaMensal] = useState<number>(20000); // Meta inicial
-    const [isEditing, setIsEditing] = useState<boolean>(false);
-    const [inputValue, setInputValue] = useState<string>(metaMensal.toFixed(2));
 
-    // Função para iniciar edição
-    const handleEdit = () => {
-        setInputValue(metaMensal.toFixed(2));
-        setIsEditing(true);
-    };
-
-    // Função para salvar
-    const handleSave = () => {
-        const value = parseFloat(inputValue);
-        if (!isNaN(value) && value > 0) {
-            setMetaMensal(value);
-        } else {
-            setInputValue(metaMensal.toFixed(2)); // Reverte se inválido
-        }
-        setIsEditing(false);
-    };
-
-    // ===== 1️⃣ KPIs de Performance =====
     const margemLucro = entradas > 0 ? ((saldo / entradas) * 100).toFixed(1) : '0.0';
     const ticketMedio = allVendas.length > 0 ? (allVendas.reduce((sum, v) => sum + v.value, 0) / allVendas.length).toFixed(2) : '0.00';
-
-    // Crescimento diário (simulado)
     const crescimentoDiario = '+12.5%';
 
-    // ===== 2️⃣ Previsão de Caixa =====
     const forecastData = Array.from({ length: 14 }, (_, i) => ({
         day: i + 1,
         saldo: Math.max(0, 1000 + i * 50 + (Math.random() - 0.5) * 150),
     }));
 
-    // ===== 3️⃣ Heatmap por Hora (simulado) =====
     const heatmapData = Array.from({ length: 24 }, (_, hour) => {
         const base = 50;
         const picoAlmoco = hour >= 12 && hour <= 14 ? 100 : 0;
@@ -160,23 +122,19 @@ export function MovementDashboard() {
         };
     });
 
-    // ===== 4️⃣ Ranking de Produtos =====
     const topProducts = mockProducts.slice(0, 3).map(p => ({
         name: p.name,
         value: p.revenue,
     }));
 
-    // ===== 5️⃣ Alertas =====
     const hasAlert = saldo < 0;
 
-    // ===== 8️⃣ Insights Inteligentes =====
     const insights = [
         "Despesa com transporte subiu 45% esta semana.",
         "Ticket médio aumentou 12% vs semana passada.",
         "Horário de pico: 12h-14h e 17h-19h.",
     ];
 
-    // Função de exportação
     const handleExport = () => {
         const csv = [
             ['Data', 'Descrição', 'Tipo', 'Valor'],
@@ -193,15 +151,27 @@ export function MovementDashboard() {
         a.click();
     };
 
-    // Variantes de animação
+    const handleEdit = () => {
+        setInputValue(metaMensal.toFixed(2));
+        setIsEditing(true);
+    };
+
+    const handleSave = () => {
+        const value = parseFloat(inputValue);
+        if (!isNaN(value) && value > 0) {
+            setMetaMensal(value);
+        } else {
+            setInputValue(metaMensal.toFixed(2));
+        }
+        setIsEditing(false);
+    };
+
+    // Variants de animação
     const containerVariants = {
         hidden: { opacity: 0 },
         show: {
             opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.15,
-            },
+            transition: { staggerChildren: 0.1, delayChildren: 0.15 },
         },
     };
 
@@ -216,51 +186,41 @@ export function MovementDashboard() {
     };
 
     const buttonVariants = {
-        hover: { scale: 1.03 },
+        hover: { scale: 1.03, boxShadow: "0px 8px 24px rgba(0,0,0,0.1)" },
         tap: { scale: 0.98 },
     };
 
     return (
         <motion.div
-            className="space-y-8 p-6"
+            className="space-y-8 p-6 bg-gray-50 min-h-screen"
             variants={containerVariants}
             initial="hidden"
             animate="show"
         >
             {/* Título */}
             <motion.div variants={itemVariants}>
-                <h1 className="text-3xl font-serif text-gray-900 mb-2">Dashboard de Movimentações</h1>
-                <p className="text-gray-600 font-light">Controle completo de entradas e saídas do caixa</p>
+                <h1 className="text-3xl font-serif tracking-tight text-gray-900 mb-2">Dashboard de Movimentações</h1>
+                <p className="text-gray-600 text-sm">Controle completo de entradas e saídas do caixa</p>
             </motion.div>
 
             {/* Ações rápidas */}
-            <motion.div className="flex flex-wrap gap-4" variants={containerVariants} initial="hidden" animate="show">
+            <motion.div className="flex flex-wrap gap-6" variants={containerVariants}>
                 <motion.button
                     variants={buttonVariants}
                     whileHover="hover"
                     whileTap="tap"
                     onClick={() => navigate('/formulario-movimentacao')}
-                    className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl hover:from-green-600 hover:to-green-700 shadow-md hover:shadow-lg transition-all duration-200"
                 >
                     <ArrowUpCircle className="w-5 h-5" />
-                    Nova Entrada
-                </motion.button>
-                <motion.button
-                    variants={buttonVariants}
-                    whileHover="hover"
-                    whileTap="tap"
-                    onClick={() => navigate('/historico-movimentacao')}
-                    className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-sm"
-                >
-                    <ArrowDownCircle className="w-5 h-5" />
-                    Histórico de Saídas
+                    Registrar Movimentações
                 </motion.button>
                 <motion.button
                     variants={buttonVariants}
                     whileHover="hover"
                     whileTap="tap"
                     onClick={handleExport}
-                    className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 shadow-sm"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-2xl hover:from-gray-600 hover:to-gray-700 shadow-md hover:shadow-lg transition-all duration-200"
                 >
                     <Download className="w-5 h-5" />
                     Exportar CSV
@@ -269,7 +229,7 @@ export function MovementDashboard() {
 
             {/* Filtro */}
             <motion.div variants={itemVariants}>
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-lg">
                     <div className="flex flex-col sm:flex-row gap-4 items-center">
                         <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Filtrar por </label>
                         <div className="relative flex-1 max-w-md">
@@ -278,15 +238,15 @@ export function MovementDashboard() {
                                 type="date"
                                 value={filterDate}
                                 onChange={(e) => setFilterDate(e.target.value)}
-                                className="w-full pl-10 p-2 border border-gray-300 rounded-lg text-sm"
+                                className="w-full pl-10 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             />
                         </div>
                     </div>
                 </div>
             </motion.div>
 
-            {/* KPIs */}
-            <motion.div className="grid grid-cols-1 md:grid-cols-5 gap-6" variants={containerVariants} initial="hidden" animate="show">
+            {/* KPIs com ícones em badge e tipografia refinada */}
+            <motion.div className="grid grid-cols-1 md:grid-cols-5 gap-6" variants={containerVariants}>
                 {[
                     { label: 'Margem de Lucro', value: `${margemLucro}%`, icon: TrendingUp, color: 'green' },
                     { label: 'Ticket Médio', value: `R$ ${ticketMedio}`, icon: DollarSign, color: 'blue' },
@@ -294,78 +254,99 @@ export function MovementDashboard() {
                     { label: 'Total Vendas', value: allVendas.length, icon: Calendar, color: 'orange' },
                     { label: 'Alertas', value: hasAlert ? '1' : '0', icon: AlertTriangle, color: 'red' },
                 ].map((kpi, i) => (
-                    <motion.div key={i} variants={itemVariants} className={`bg-white border-l-4 border-${kpi.color}-500 rounded-lg p-6 shadow-sm`}>
-                        <p className="text-sm font-medium text-gray-600">{kpi.label}</p>
-                        <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
-                        <kpi.icon className={`w-5 h-5 inline mt-1 text-${kpi.color}-600`} />
-                        {kpi.label !== 'Alertas' && <span className="text-sm text-green-600 ml-1">+3.2%</span>}
+                    <motion.div
+                        key={i}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.03 }}
+                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow min-h-48 flex flex-col justify-between"
+                    >
+                        <div>
+                            <p className="text-xs uppercase tracking-wide text-gray-500">{kpi.label}</p>
+                            <p className="text-4xl font-sans font-extrabold text-gray-800 tabular-nums mt-1">{kpi.value}</p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-3">
+                            <div className={`p-2 rounded-full bg-${kpi.color}-100 text-${kpi.color}-600`}>
+                                <kpi.icon className="w-5 h-5" />
+                            </div>
+                            {kpi.label !== 'Alertas' && (
+                                <span className="text-sm text-green-600">+3.2%</span>
+                            )}
+                        </div>
                     </motion.div>
                 ))}
             </motion.div>
 
-            {/* Resumo */}
-            <motion.div className="grid grid-cols-1 md:grid-cols-4 gap-6" variants={containerVariants} initial="hidden" animate="show">
-                <motion.div variants={itemVariants} className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-6">
-                    <div className="flex items-center justify-between">
+            {/* Resumo com gradientes vibrantes e badges */}
+            <motion.div className="grid grid-cols-1 md:grid-cols-4 gap-6" variants={containerVariants}>
+                {[
+                    {
+                        label: 'Entradas do Dia',
+                        value: `R$ ${entradas.toFixed(2)}`,
+                        icon: TrendingUp,
+                        color: 'green',
+                        gradient: 'from-green-400/20 to-emerald-200/40',
+                    },
+                    {
+                        label: 'Saídas do Dia',
+                        value: `R$ ${saidas.toFixed(2)}`,
+                        icon: TrendingDown,
+                        color: 'red',
+                        gradient: 'from-red-400/20 to-rose-200/40',
+                    },
+                    {
+                        label: 'Saldo do Dia',
+                        value: `R$ ${saldo.toFixed(2)}`,
+                        icon: DollarSign,
+                        color: saldo >= 0 ? 'blue' : 'red',
+                        gradient: saldo >= 0 ? 'from-blue-400/20 to-sky-200/40' : 'from-red-400/20 to-pink-200/40',
+                    },
+                    {
+                        label: 'Total do Mês',
+                        value: `R$ ${totalMes.toFixed(2)}`,
+                        icon: Calendar,
+                        color: 'purple',
+                        gradient: 'from-purple-400/20 to-violet-200/40',
+                    },
+                ].map((item, i) => (
+                    <motion.div
+                        key={i}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.02 }}
+                        className={`bg-gradient-to-br ${item.gradient} border border-${item.color}-200/40 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all min-h-48 flex flex-col justify-between`}
+                    >
                         <div>
-                            <p className="text-sm font-medium text-green-800">Entradas do Dia</p>
-                            <p className="text-xl font-bold text-green-900">R$ {entradas.toFixed(2)}</p>
-                        </div>
-                        <TrendingUp className="w-8 h-8 text-green-600 opacity-70" />
-                    </div>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-red-800">Saídas do Dia</p>
-                            <p className="text-xl font-bold text-red-900">R$ {saidas.toFixed(2)}</p>
-                        </div>
-                        <TrendingDown className="w-8 h-8 text-red-600 opacity-70" />
-                    </div>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-blue-800">Saldo do Dia</p>
-                            <p className={`text-xl font-bold ${saldo >= 0 ? 'text-blue-900' : 'text-red-900'}`}>
-                                R$ {saldo.toFixed(2)}
+                            <p className="text-sm font-medium text-gray-700">{item.label}</p>
+                            <p className={`text-3xl font-extrabold text-${item.color}-900 tabular-nums mt-1`}>
+                                {item.value}
                             </p>
                         </div>
-                        <DollarSign className="w-8 h-8 text-blue-600 opacity-70" />
-                    </div>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-purple-800">Total do Mês</p>
-                            <p className="text-xl font-bold text-purple-900">R$ {totalMes.toFixed(2)}</p>
+                        <div className={`p-2 rounded-full bg-${item.color}-100 text-${item.color}-600 w-fit`}>
+                            <item.icon className="w-6 h-6" />
                         </div>
-                        <Calendar className="w-8 h-8 text-purple-600 opacity-70" />
-                    </div>
-                </motion.div>
+                    </motion.div>
+                ))}
             </motion.div>
 
-            {/* Painel de Meta Editável */}
+            {/* Meta Editável com efeito premium */}
             <motion.div variants={itemVariants}>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow min-h-48">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <Target className="w-5 h-5 text-purple-600" />
-                            <h3 className="text-lg font-semibold text-gray-900">Meta de Faturamento Mensal</h3>
+                            <div className="p-2 rounded-full bg-purple-100 text-purple-600">
+                                <Target className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-lg font-extrabold tracking-tight text-gray-900">Meta de Faturamento Mensal</h3>
                         </div>
-                        {!isEditing ? (
+                        {!isEditing && (
                             <motion.button
-                                whileHover={{ scale: 1.05 }}
+                                whileHover={{ scale: 1.05, rotate: 5 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleEdit}
-                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
                             >
-                                Editar
+                                ✏️ Editar
                             </motion.button>
-                        ) : null}
+                        )}
                     </div>
 
                     <div className="flex items-center gap-2 mb-4">
@@ -379,96 +360,116 @@ export function MovementDashboard() {
                                     onBlur={handleSave}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSave()}
                                     autoFocus
-                                    className="px-3 py-1 border border-blue-300 rounded text-sm w-32 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="px-3 py-1 border border-blue-300 rounded-lg text-sm w-32 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                                 <span className="text-gray-500">R$/mês</span>
                             </div>
                         ) : (
-                            <p className="text-2xl font-bold text-gray-900">
+                            <p className="text-3xl font-extrabold text-gray-900 tabular-nums">
                                 R$ {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                         )}
                     </div>
 
-                    <motion.div
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: totalMes / metaMensal > 0 ? 1 : 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        style={{ originX: 0 }}
-                        className="w-full bg-gray-200 rounded-full h-2.5 mb-2 overflow-hidden inline-block"
-                    >
-                        <div
-                            className={`h-2.5 rounded-full ${totalMes >= metaMensal
-                                ? 'bg-green-500'
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-1 overflow-hidden ring-1 ring-white/40">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min((totalMes / metaMensal) * 100, 100)}%` }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className={`h-full rounded-full ${totalMes >= metaMensal
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-600'
                                 : totalMes / metaMensal >= 0.7
-                                    ? 'bg-yellow-500'
-                                    : 'bg-red-500'
+                                    ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                                    : 'bg-gradient-to-r from-red-500 to-pink-600'
                                 }`}
-                            style={{ width: `${Math.min((totalMes / metaMensal) * 100, 100)}%` }}
-                        ></div>
-                    </motion.div>
+                        ></motion.div>
+                    </div>
                     <p className="text-sm text-gray-600">
-                        R$ {totalMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de{' '}
-                        R$ {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}{' '}
+                        {totalMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} /{' '}
+                        {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}{' '}
                         ({((totalMes / metaMensal) * 100).toFixed(1)}%)
                     </p>
                 </div>
             </motion.div>
 
-            {/* Gráficos */}
-            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants} initial="hidden" animate="show">
+            {/* Gráficos com hover suave */}
+            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
                 <motion.div variants={chartVariants}>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Previsão de Caixa (14 dias)</h3>
-                        <ResponsiveContainer width="100%" height="100%">
+                    <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
+                    >
+                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Previsão de Caixa (14 dias)</h3>
+                        <ResponsiveContainer width="100%" height={200}>
                             <AreaChart data={forecastData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="day" />
                                 <YAxis />
-                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                                <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Saldo']} />
                                 <Area type="monotone" dataKey="saldo" stroke="#8b5cf6" fill="url(#colorForecast)" />
                                 <defs>
                                     <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.5} />
+                                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.6} />
                                         <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.1} />
                                     </linearGradient>
                                 </defs>
                             </AreaChart>
                         </ResponsiveContainer>
-                    </div>
+                    </motion.div>
                 </motion.div>
 
                 <motion.div variants={chartVariants}>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Heatmap de Vendas por Hora</h3>
-                        <ResponsiveContainer width="100%" height="100%">
+                    <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
+                    >
+                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Heatmap de Vendas por Hora</h3>
+                        <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={heatmapData}>
                                 <XAxis dataKey="hour" tickFormatter={(hour) => `${hour}h`} />
                                 <YAxis hide />
                                 <Tooltip formatter={(value: number) => [`${value} vendas`, 'Volume']} />
-                                <Bar dataKey="value" fill="#059669" radius={[4, 4, 0, 0]} background={{ fill: '#f3f4f6' }} />
+                                <Bar dataKey="value" fill="url(#heatGradient)" radius={[4, 4, 0, 0]} background={{ fill: '#f3f4f6' }} />
+                                <defs>
+                                    <linearGradient id="heatGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#059669" stopOpacity={0.8} />
+                                        <stop offset="100%" stopColor="#059669" stopOpacity={0.3} />
+                                    </linearGradient>
+                                </defs>
                             </BarChart>
                         </ResponsiveContainer>
-                    </div>
+                    </motion.div>
                 </motion.div>
 
                 <motion.div variants={chartVariants}>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Produtos</h3>
-                        <ResponsiveContainer width="100%" height="100%">
+                    <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
+                    >
+                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Top Produtos</h3>
+                        <ResponsiveContainer width="100%" height={200}>
                             <BarChart layout="vertical" data={topProducts} margin={{ left: 80 }}>
-                                <XAxis type="number" hide />
                                 <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
-                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                                <Bar dataKey="value" fill="#6366f1" radius={[0, 4, 4, 0]} />
+                                <XAxis hide />
+                                <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Receita']} />
+                                <Bar dataKey="value" fill="url(#productGradient)" radius={[0, 4, 4, 0]} />
+                                <defs>
+                                    <linearGradient id="productGradient" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.9} />
+                                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.6} />
+                                    </linearGradient>
+                                </defs>
                             </BarChart>
                         </ResponsiveContainer>
-                    </div>
+                    </motion.div>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-xl shadow-sm border border-blue-200">
-                        <h3 className="text-lg font-semibold text-blue-900 mb-4">💡 Insights Inteligentes</h3>
+                    <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        className="bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 rounded-2xl p-6 shadow-lg min-h-48"
+                    >
+                        <h3 className="text-lg font-extrabold tracking-tight text-blue-900 mb-4">💡 Insights Inteligentes</h3>
                         <ul className="space-y-3 text-sm text-blue-800">
                             {insights.map((text, i) => (
                                 <li key={i} className="flex items-start gap-2">
@@ -477,52 +478,78 @@ export function MovementDashboard() {
                                 </li>
                             ))}
                         </ul>
-                    </div>
+                    </motion.div>
                 </motion.div>
             </motion.div>
 
             {/* Gráficos menores */}
-            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants} initial="hidden" animate="show">
+            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
                 <motion.div variants={chartVariants}>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Entradas vs Saídas</h3>
-                        <ResponsiveContainer width="100%" height="100%">
+                    <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
+                    >
+                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Entradas vs Saídas</h3>
+                        <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={[{ name: 'Hoje', entradas, saidas }]}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
                                 <YAxis />
                                 <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
                                 <Legend />
-                                <Bar dataKey="entradas" fill={COLORS.entrada} name="Entradas" />
-                                <Bar dataKey="saidas" fill={COLORS.saida} name="Saídas" />
+                                <Bar dataKey="entradas" fill="url(#entryGradient)" name="Entradas" />
+                                <Bar dataKey="saidas" fill="url(#exitGradient)" name="Saídas" />
+                                <defs>
+                                    <linearGradient id="entryGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
+                                        <stop offset="100%" stopColor="#22c55e" stopOpacity={0.3} />
+                                    </linearGradient>
+                                    <linearGradient id="exitGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
+                                        <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3} />
+                                    </linearGradient>
+                                </defs>
                             </BarChart>
                         </ResponsiveContainer>
-                    </div>
+                    </motion.div>
                 </motion.div>
 
                 <motion.div variants={chartVariants}>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-64">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Evolução Diária</h3>
-                        <ResponsiveContainer width="100%" height="100%">
+                    <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
+                    >
+                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Evolução Diária</h3>
+                        <ResponsiveContainer width="100%" height={200}>
                             <LineChart data={monthlyData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="day" />
                                 <YAxis />
                                 <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
                                 <Legend />
-                                <Line type="monotone" dataKey="entradas" stroke={COLORS.entrada} name="Entradas" />
-                                <Line type="monotone" dataKey="saidas" stroke={COLORS.saida} name="Saídas" />
+                                <Line type="monotone" dataKey="entradas" stroke="url(#lineEntry)" strokeWidth={3} dot={false} />
+                                <Line type="monotone" dataKey="saidas" stroke="url(#lineExit)" strokeWidth={3} dot={false} />
+                                <defs>
+                                    <linearGradient id="lineEntry" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="lineExit" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
                             </LineChart>
                         </ResponsiveContainer>
-                    </div>
+                    </motion.div>
                 </motion.div>
             </motion.div>
 
             {/* Histórico */}
             <motion.div variants={itemVariants}>
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="p-6 border-b border-gray-200">
-                        <h2 className="text-xl font-semibold text-gray-900">
+                <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-shadow min-h-48">
+                    <div className="p-6 border-b border-white/20">
+                        <h2 className="text-xl font-extrabold tracking-tight text-gray-900">
                             Movimentações de {new Date(filterDate).toLocaleDateString('pt-BR')}
                         </h2>
                     </div>
@@ -536,7 +563,8 @@ export function MovementDashboard() {
                                     variants={itemVariants}
                                     initial="hidden"
                                     animate="show"
-                                    className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    whileHover={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
+                                    className="p-4 flex items-center justify-between transition-colors"
                                 >
                                     <div className="flex items-center space-x-3">
                                         <span
@@ -548,7 +576,7 @@ export function MovementDashboard() {
                                         </div>
                                     </div>
                                     <p
-                                        className={`text-sm font-semibold ${['venda', 'troco', 'outros'].includes(m.type) ? 'text-green-600' : 'text-red-600'}`}
+                                        className={`text-sm font-semibold tabular-nums ${['venda', 'troco', 'outros'].includes(m.type) ? 'text-green-600' : 'text-red-600'}`}
                                     >
                                         {['venda', 'troco', 'outros'].includes(m.type) ? '+' : '-'} R$ {m.value.toFixed(2)}
                                     </p>
@@ -556,7 +584,7 @@ export function MovementDashboard() {
                             ))
                         )}
                     </div>
-                    <div className="p-4 bg-gray-50 border-t border-gray-200 text-right">
+                    <div className="p-4 bg-white/10 border-t border-white/20 text-right">
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
