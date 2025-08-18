@@ -6,11 +6,13 @@ import App from './App.tsx';
 import './index.css';
 import { NotificationProvider } from './contexts/NotificationContext.tsx';
 import { Footer } from './components/Footer.tsx';
+import { ToastProvider } from './components/ToastProvider.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ApolloProvider client={apolloClient}>
       <NotificationProvider>
+        <ToastProvider />
         <App />
         <Footer />
       </NotificationProvider>

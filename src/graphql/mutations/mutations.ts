@@ -1,5 +1,6 @@
-// /src/graphql/mutations.ts
-export const CREATE_CASH_MOVEMENT = `
+import { gql } from '@apollo/client';
+
+export const CREATE_CASH_MOVEMENT = gql`
   mutation CreateCashMovement($input: CreateCashMovementInput!) {
     createCashMovement(input: $input) {
       id
@@ -8,6 +9,8 @@ export const CREATE_CASH_MOVEMENT = `
       value
       description
       date
+      user_id
+      message
     }
   }
 `;

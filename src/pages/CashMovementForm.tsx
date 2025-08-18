@@ -1,5 +1,5 @@
-// /components/CashMovementForm.tsx
 import React, { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import {
     DollarSign,
     XCircle,
@@ -44,6 +44,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null); // ✅ Nova mensagem de sucesso
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -67,14 +68,14 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
         const value = parseFloat(formData.value);
 
-        if (!formData.value || value <= 0) {
-            setError('O valor deve ser maior que zero.');
+        if (!formData.value || isNaN(value) || value <= 0) {
+            toast.error('O valor deve ser maior que zero.');
             setLoading(false);
             return;
         }
 
         if (!formData.description.trim()) {
-            setError('A descrição é obrigatória.');
+            toast.error('A descrição é obrigatória.');
             setLoading(false);
             return;
         }
@@ -88,10 +89,15 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 category: categoryMap[formData.type],
             };
 
-            await apolloClient.mutate({
-                mutation: CREATE_CASH_MOVEMENT as any,
+            const response = await apolloClient.mutate({
+                mutation: CREATE_CASH_MOVEMENT,
                 variables: { input },
             });
+
+            const backendMessage = response.data?.createCashMovement?.message;
+            console.log(backendMessage);
+            
+            toast.success(backendMessage || 'Movimentação registrada com sucesso!');
 
             // Limpa formulário
             setFormData({
@@ -104,10 +110,8 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             onSuccess?.();
         } catch (err: any) {
             console.error('[CashMovementForm] Erro ao registrar movimentação:', err);
-            setError(
-                err?.graphQLErrors?.[0]?.message ||
-                'Não foi possível registrar a movimentação. Tente novamente.'
-            );
+            const errorMsg = err?.graphQLErrors?.[0]?.message || 'Erro ao registrar movimentação.';
+            toast.error(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -116,7 +120,6 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
             <h2 className="text-2xl font-serif text-gray-900 mb-6">Formulário de Movimentação</h2>
-
             <form onSubmit={handleSubmit} className="space-y-6">
                 {error && (
                     <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm flex items-center gap-2">

@@ -6,7 +6,7 @@ export const GET_ALL_MOVEMENTS = `
       category
       value
       description
-      date
+      user_id
     }
   }
 `;

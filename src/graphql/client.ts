@@ -1,22 +1,60 @@
-// /src/graphql/client.ts
-import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
+// /graphql/client.ts
 
-const httpLink = createHttpLink({
-    uri: 'http://localhost:3000/graphql',
+import { ApolloClient, InMemoryCache, HttpLink, ApolloLink, concat } from '@apollo/client';
+import { onError } from '@apollo/client/link/error';
+
+// client.ts
+const GRAPHQL_URI =
+    typeof process !== "undefined" && process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
+        ? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
+        : "http://localhost:3000/graphql";
+
+const httpLink = new HttpLink({
+    uri: GRAPHQL_URI,
 });
 
-const authLink = setContext((_, { headers }) => {
+
+
+const authMiddleware = new ApolloLink((operation, forward) => {
+    // Se você usar autenticação (ex: JWT)
     const token = localStorage.getItem('accessToken');
-    return {
+
+    operation.setContext({
         headers: {
-            ...headers,
             authorization: token ? `Bearer ${token}` : '',
         },
-    };
+    });
+
+    return forward(operation);
+});
+
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+    if (graphQLErrors)
+        graphQLErrors.forEach(({ message, locations, path }) =>
+            console.error(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`)
+        );
+    if (networkError) console.error(`[Network error]: ${networkError}`);
 });
 
 export const apolloClient = new ApolloClient({
-    link: authLink.concat(httpLink),
-    cache: new InMemoryCache(),
+    link: concat(authMiddleware, concat(errorLink, httpLink)),
+    cache: new InMemoryCache({
+        typePolicies: {
+            Query: {
+                fields: {
+                    cashMovements: {
+                        keyArgs: ['input'],
+                        merge(existing = [], incoming) {
+                            return [...existing, ...incoming];
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    defaultOptions: {
+        mutate: {
+            errorPolicy: 'all',
+        },
+    },
 });
