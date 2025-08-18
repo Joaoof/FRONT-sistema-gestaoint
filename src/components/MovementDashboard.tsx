@@ -246,24 +246,67 @@ export function MovementDashboard() {
             </motion.div>
 
             {/* KPIs com ícones em badge e tipografia refinada */}
+            {/* KPIs com barra lateral decorativa */}
+            {/* KPIs com barra lateral decorativa à esquerda */}
             <motion.div className="grid grid-cols-1 md:grid-cols-5 gap-6" variants={containerVariants}>
                 {[
-                    { label: 'Margem de Lucro', value: `${margemLucro}%`, icon: TrendingUp, color: 'green' },
-                    { label: 'Ticket Médio', value: `R$ ${ticketMedio}`, icon: DollarSign, color: 'blue' },
-                    { label: 'Crescimento Diário', value: crescimentoDiario, icon: TrendingUp, color: 'purple' },
-                    { label: 'Total Vendas', value: allVendas.length, icon: Calendar, color: 'orange' },
-                    { label: 'Alertas', value: hasAlert ? '1' : '0', icon: AlertTriangle, color: 'red' },
+                    {
+                        label: 'Margem de Lucro',
+                        value: `${margemLucro}%`,
+                        icon: TrendingUp,
+                        color: 'green',
+                        borderColor: 'border-green-900',
+                        bgColor: 'bg-green-700',
+                    },
+                    {
+                        label: 'Ticket Médio',
+                        value: `R$ ${ticketMedio}`,
+                        icon: DollarSign,
+                        color: 'blue',
+                        borderColor: 'border-blue-900',
+                        bgColor: 'bg-blue-700',
+                    },
+                    {
+                        label: 'Crescimento Diário',
+                        value: crescimentoDiario,
+                        icon: TrendingUp,
+                        color: 'purple',
+                        borderColor: 'border-purple-900',
+                        bgColor: 'bg-purple-700',
+                    },
+                    {
+                        label: 'Total Vendas',
+                        value: allVendas.length,
+                        icon: Calendar,
+                        color: 'orange',
+                        borderColor: 'border-orange-900',
+                        bgColor: 'bg-orange-700',
+                    },
+                    {
+                        label: 'Alertas',
+                        value: hasAlert ? '1' : '0',
+                        icon: AlertTriangle,
+                        color: 'red',
+                        borderColor: 'border-red-900',
+                        bgColor: 'bg-red-700',
+                    },
                 ].map((kpi, i) => (
                     <motion.div
                         key={i}
                         variants={itemVariants}
                         whileHover={{ scale: 1.03 }}
-                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow min-h-48 flex flex-col justify-between"
+                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col justify-between relative overflow-hidden"
                     >
+                        {/* Barra vertical à esquerda - estilo premium */}
+                        <div
+                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${kpi.borderColor} ${kpi.bgColor} rounded-r-lg`}
+                        ></div>
+
                         <div>
                             <p className="text-xs uppercase tracking-wide text-gray-500">{kpi.label}</p>
-                            <p className="text-4xl font-sans font-extrabold text-gray-800 tabular-nums mt-1">{kpi.value}</p>
+                            <p className="text-4xl font-extrabold text-gray-900 tabular-nums mt-1">{kpi.value}</p>
                         </div>
+
                         <div className="flex items-center gap-2 mt-3">
                             <div className={`p-2 rounded-full bg-${kpi.color}-100 text-${kpi.color}-600`}>
                                 <kpi.icon className="w-5 h-5" />
