@@ -44,7 +44,6 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null); // ✅ Nova mensagem de sucesso
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
