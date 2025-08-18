@@ -280,7 +280,7 @@ export function MovementDashboard() {
                         icon: Calendar,
                         color: 'orange',
                         borderColor: 'border-orange-900',
-                        bgColor: 'bg-orange-700',
+                        bgColor: 'bg-orange-500',
                     },
                     {
                         label: 'Alertas',
