@@ -34,21 +34,39 @@ export interface Product {
 
 // src/types/index.ts
 export type MovementType =
-  | 'venda'
-  | 'troco'
-  | 'outros'
-  | 'despesa'
-  | 'retirada'
-  | 'pagamento';
+  | 'ENTRY'
+  | 'EXIT';
+
+
+export type CategoryType =
+  | 'VENDA'
+  | 'TROCO'
+  | 'OUTROS'
+  | 'DEPESAS'
+  | 'SAQUE'
+  | 'PAGAMENTO';
+
+
+
+export type FilterType =
+  | 'ALL'
+  | 'ENTRY'
+  | 'EXIT'
+  | 'SALE'
+  | 'CHANGE'
+  | 'OTHER_IN'
+  | 'EXPENSE'
+  | 'WITHDRAWAL'
+  | 'PAYMENT';
+
 
 export type Movement = {
   id: string;
+  category: CategoryType;
+  type: MovementType;
   value: number;
   description: string;
-  type: MovementType;
-  subtype: string;
   date: string;
-  createdAt: string;
 };
 
 export interface Receivable {
@@ -69,3 +87,4 @@ export type Payable = {
   dueDate: string;
   status: 'pendente' | 'pago' | 'vencido';
 };
+

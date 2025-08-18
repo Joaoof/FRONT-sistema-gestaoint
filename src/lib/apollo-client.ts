@@ -9,7 +9,7 @@ const httpLink = createHttpLink({
 
 // Auth Link
 const authLink = setContext((_, { headers }) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('accessToken');
     return {
         headers: {
             ...headers,
@@ -33,7 +33,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
         // Handle authentication errors
         if ('statusCode' in networkError && networkError.statusCode === 401) {
-            localStorage.removeItem('auth_token');
+            localStorage.removeItem('accessToken');
             window.location.href = '/login';
         }
     }

@@ -16,8 +16,9 @@ const httpLink = new HttpLink({
 
 
 const authMiddleware = new ApolloLink((operation, forward) => {
-    // Se você usar autenticação (ex: JWT)
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken'); // ou 'auth_token'
+
+    console.log('[Apollo Auth] Token encontrado:', token ? 'Sim' : 'Não');
 
     operation.setContext({
         headers: {
