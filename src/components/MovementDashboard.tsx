@@ -33,6 +33,7 @@ import { useQuery } from '@apollo/client';
 import { GET_DASHBOARD_STATS } from '../graphql/queries/dashboard';
 import { LoadingSpinner } from './common/LoadingSpinner';
 import { formatCurrency } from '../utils/formatValue';
+import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
 
 export function MovementDashboard() {
     const navigate = useNavigate();
@@ -46,6 +47,9 @@ export function MovementDashboard() {
         variables: { input: { date: filterDate } },
         pollInterval: 30000, // Atualiza a cada 30s
     });
+
+    const errorMessage = error ? getGraphQLErrorMessages(error) : null;
+
 
     if (loading) return <LoadingSpinner />;
     if (error) return <div className="p-8 text-center text-red-600">Erro: {error.message}</div>;

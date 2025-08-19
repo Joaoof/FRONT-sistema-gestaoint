@@ -5,7 +5,6 @@ import {
     DollarSign,
     Banknote,
     Download,
-    Plus,
     Edit,
     X,
     Check,

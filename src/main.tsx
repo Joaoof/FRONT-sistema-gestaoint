@@ -6,10 +6,8 @@ import App from './App.tsx';
 import './index.css';
 import { NotificationProvider } from './contexts/NotificationContext.tsx';
 import { Footer } from './components/Footer.tsx';
-import { ToastProvider } from './components/ToastProvider.tsx';
-
-// main.tsx
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
+import { SonnerToaster } from './components/SonnerToaster.tsx';
 
 if (process.env.NODE_ENV !== "production") {
   loadDevMessages();
@@ -20,7 +18,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ApolloProvider client={apolloClient}>
       <NotificationProvider>
-        <ToastProvider />
+        <SonnerToaster />
         <App />
         <Footer />
       </NotificationProvider>

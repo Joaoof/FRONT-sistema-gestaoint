@@ -17,3 +17,19 @@ header, .header, .fixed {
 .notification-bell {
   z-index: 60;
 }
+
+/* globals.css */
+#root,
+body,
+html {
+  overflow: visible !important;
+}
+
+/* Garante que o toast apareça acima de tudo */
+[data-headlessui-portal] {
+  z-index: 99999 !important;
+}
+
+.toast {
+  z-index: 99999 !important;
+}

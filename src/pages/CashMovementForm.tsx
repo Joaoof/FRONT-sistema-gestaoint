@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
     DollarSign,
     XCircle,
@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import { apolloClient } from '../graphql/client';
 import { CREATE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
+import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
+import { getUserIdFromToken } from '../utils/getToken';
+import { formatLocalDateTime, parseLocalDateTime } from '../utils/formatDate';
 
 // Mapeamento para backend (Prisma/GraphQL)
 const movementTypeMap = {
@@ -39,11 +42,12 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         type: 'venda' as MovementType,
         value: '',
         description: '',
-        date: new Date().toISOString().slice(0, 16), // datetime-local
+        date: formatLocalDateTime(new Date()), // ✅ Usa a função
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -67,6 +71,22 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
         const value = parseFloat(formData.value);
 
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            toast.error('Sessão expirada. Faça login novamente.');
+            setError('Sem autenticação');
+            setLoading(false);
+            return;
+        }
+
+        const userId = getUserIdFromToken();
+        if (!userId) {
+            toast.error('Usuário inválido. Faça login novamente.');
+            setError('ID de usuário não encontrado.');
+            setLoading(false);
+            return;
+        }
+
         if (!formData.value || isNaN(value) || value <= 0) {
             toast.error('O valor deve ser maior que zero.');
             setLoading(false);
@@ -83,7 +103,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             const input = {
                 value,
                 description: formData.description.trim(),
-                date: formData.date,
+                date: parseLocalDateTime(formData.date),
                 type: movementTypeMap[formData.type],
                 category: categoryMap[formData.type],
             };
@@ -93,11 +113,39 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 variables: { input },
             });
 
-            const backendMessage = response.data?.createCashMovement?.message;
-            console.log(backendMessage);
-            
-            toast.success(backendMessage || 'Movimentação registrada com sucesso!');
+            if (response.errors && response.errors.length > 0) {
+                const messages = response.errors.flatMap(({ message, extensions }: any) => {
+                    const issues = extensions?.issues;
+                    if (Array.isArray(issues)) return issues.map((i: any) => i.message);
+                    return [message];
+                });
 
+                const deduped = Array.from(new Set(messages));
+
+                // ✅ Mostra um toast por erro
+                deduped.forEach(msg => {
+                    const cleanMsg = msg.replace(/,$/, '').trim();
+                    toast.error(cleanMsg);
+                });
+
+                setError(deduped.join(' • '));
+                return;
+            }
+
+            const result = response.data?.createCashMovement.message;
+
+            console.log(result);
+
+
+            if (!result || result.success === false) {
+                const errorMsg = result?.message || 'Falha ao registrar movimentação.';
+                toast.error(errorMsg);
+                setError(errorMsg);
+                return;
+            }
+
+            // ✅ Agora sim: sucesso
+            toast.success(result || 'Movimentação registrada com sucesso!');
             // Limpa formulário
             setFormData({
                 type: 'venda',
@@ -108,9 +156,10 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
             onSuccess?.();
         } catch (err: any) {
-            console.error('[CashMovementForm] Erro ao registrar movimentação:', err);
-            const errorMsg = err?.graphQLErrors?.[0]?.message || 'Erro ao registrar movimentação.';
-            toast.error(errorMsg);
+            console.log('🔴 Erro capturado no catch:', err); // 🔥 ESSE É O MAIS IMPORTANTE
+            const messages = getGraphQLErrorMessages(err);
+            messages.forEach((msg: any) => toast.error(msg));
+            setError(messages.join(' • '));
         } finally {
             setLoading(false);
         }
@@ -120,13 +169,6 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
             <h2 className="text-2xl font-serif text-gray-900 mb-6">Formulário de Movimentação</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
-                {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm flex items-center gap-2">
-                        <XCircle className="w-4 h-4" />
-                        {error}
-                    </div>
-                )}
-
                 {/* Grupo: Entradas */}
                 <div>
                     <h3 className="text-lg font-semibold text-green-700 mb-3">💰 Entrada</h3>
