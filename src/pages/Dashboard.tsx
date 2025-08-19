@@ -3,8 +3,30 @@ import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
 import { InventoryData } from '../hooks/useInventory';
 import { useAuth } from '../contexts/AuthContext';
+import { User, Package, BarChart3, ShoppingCart, Headphones, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
-console.log('AQUI ENTRA');
+// Função utilitária DRY para calcular dados mensais
+const getMonthlyData = (
+  entries: InventoryData['entries'],
+  key: 'sellingPrice' | 'costPrice'
+) => {
+  const last12Months = Array.from({ length: 12 }, (_, i) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - (11 - i));
+    return date;
+  });
+
+  return last12Months.map((date) =>
+    entries
+      .filter((e) => {
+        const d = new Date(e.date);
+        return d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear();
+      })
+      .reduce((sum, e) => sum + e[key] * e.quantity, 0)
+  );
+};
 
 export function Dashboard({
   entries,
@@ -14,44 +36,17 @@ export function Dashboard({
 }: InventoryData) {
   const dailyRevenue = getDailyRevenue();
   const dailyProfit = getDailyProfit();
-  const { user, logout } = useAuth()
+  const { user, logout } = useAuth();
 
-  console.log('DASHBOARDDDDDDDDDDDDDDDDDDDDDDD');
-  
-  // Dados para gráfico de linha (últimos 12 meses)
-  const last12Months = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - (11 - i));
-    return date;
-  });
+  const [mounted, setMounted] = useState(false);
 
-  const revenueData = last12Months.map((date) => {
-    const monthEntries = entries.filter((entry) => {
-      const entryDate = new Date(entry.date);
-      return (
-        entryDate.getMonth() === date.getMonth() &&
-        entryDate.getFullYear() === date.getFullYear()
-      );
-    });
-    return monthEntries.reduce(
-      (sum, entry) => sum + entry.sellingPrice * entry.quantity,
-      0
-    );
-  });
+  useEffect(() => {
+    setMounted(true); // Para ativar animações ao carregar
+  }, []);
 
-  const spendingData = last12Months.map((date) => {
-    const monthEntries = entries.filter((entry) => {
-      const entryDate = new Date(entry.date);
-      return (
-        entryDate.getMonth() === date.getMonth() &&
-        entryDate.getFullYear() === date.getFullYear()
-      );
-    });
-    return monthEntries.reduce(
-      (sum, entry) => sum + entry.costPrice * entry.quantity,
-      0
-    );
-  });
+  // Dados para gráficos
+  const revenueData = getMonthlyData(entries, 'sellingPrice');
+  const spendingData = getMonthlyData(entries, 'costPrice');
 
   // Dados para gráfico de pizza
   const categorySpending = entries.reduce((acc, entry) => {
@@ -65,198 +60,252 @@ export function Dashboard({
     value: amount,
   }));
 
+  // Últimos 12 meses (para eixo X)
+  const last12Months = Array.from({ length: 12 }, (_, i) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - (11 - i));
+    return date;
+  });
+
+  // Placeholder animado para gráficos vazios
+  const isEmptyData = revenueData.every(v => v === 0) && spendingData.every(v => v === 0);
+
   return (
-    <div className="space-y-4 lg:space-y-6">
-      {/* Header com boas-vindas */}
-      <div className="bg-gradient-to-r from-white to-gray-50 border-b border-gray-200 px-4 lg:px-6 py-4 shadow-sm">
+    <div className="space-y-8 px-4 lg:px-8 py-6 w-full">
+      {/* Header com Avatar */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white border-b border-gray-200 px-6 py-5 rounded-xl shadow-sm"
+      >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl lg:text-2xl font-bold font-['Rubik'] text-gray-900">
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 font-['Rubik']">
               Dashboard
             </h1>
             <p className="text-sm text-gray-600 mt-1.5">
-              Olá, <span className="font-semibold text-gray-800">{user?.name}</span>!
+              Olá,{' '}
+              <span className="font-semibold text-gray-800">{user?.name}</span>!
               {user?.role && (
-                <> Você está logado como{' '}
-                  <span className="capitalize font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full text-xs">
-                    {user.role}
-                  </span>.
-                </>
+                <span className="ml-1 capitalize font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full text-xs">
+                  {user.role}
+                </span>
               )}
             </p>
           </div>
-          <button
-            onClick={logout}
-            className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm"
-          >
-            Sair
-          </button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <User className="w-5 h-5 text-gray-500" />
+              <span>{user?.email}</span>
+            </div>
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
+              {user?.name?.charAt(0).toUpperCase()}
+            </div>
+            <button
+              onClick={logout}
+              className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm"
+            >
+              Sair
+            </button>
+          </div>
         </div>
-      </div>
-
-      
-
+      </motion.div>
 
       {/* Cards de Métricas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <MetricCard
-          title="VENDAS DO DIA"
-          value={dailyRevenue}
-          color="orange"
-          icon="⚠"
-        />
-        <MetricCard
-          title="PRODUTOS EM ESTOQUE"
-          value={products.length}
-          color="blue"
-          icon="📦"
-          isCount={true}
-        />
-        <MetricCard
-          title="CUSTO TOTAL DO ESTOQUE"
-          value={products.reduce((sum, p) => sum + p.costPrice * p.stock, 0)}
-          color="green"
-          icon="💰"
-        />
-        <MetricCard
-          title="LUCRO DO DIA"
-          value={dailyProfit}
-          color="red"
-          icon="📈"
-        />
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={mounted ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-1">
+          <MetricCard
+            title="VENDAS DO DIA"
+            value={dailyRevenue}
+            color="orange"
+            icon="💰"
+            isCount={false}
+          />
+          <MetricCard
+            title="PRODUTOS EM ESTOQUE"
+            value={products.length}
+            color="blue"
+            icon="📦"
+            isCount={true}
+          />
+          <MetricCard
+            title="CUSTO TOTAL DO ESTOQUE"
+            value={products.reduce((sum, p) => sum + p.costPrice * p.stock, 0)}
+            color="green"
+            icon="💸"
+            isCount={false}
+          />
+          <MetricCard
+            title="LUCRO DO DIA"
+            value={dailyProfit}
+            color="red"
+            icon="📈"
+            isCount={false}
+          />
+        </div>
+      </motion.div>
 
       {/* Seção Atalhos */}
-      <div>
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Atalhos</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center hover:shadow-md transition-shadow cursor-pointer">
-            <div className="w-16 h-16 bg-blue-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-              <span className="text-2xl">📦</span>
-            </div>
-            <h3 className="font-medium text-gray-900 mb-2">Cadastrar um novo produto</h3>
-            <p className="text-sm text-gray-500">Adicione produtos ao seu estoque</p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={mounted ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <div className="space-y-4 px-1">
+          <div className="flex items-center justify-between border-b pb-2">
+            <h2 className="text-lg font-semibold text-gray-900">Atalhos Rápidos</h2>
+            <button className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition">
+              <Plus className="w-4 h-4" />
+              <span>Novo Produto</span>
+            </button>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
+            >
+              <div className="w-16 h-16 bg-blue-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
+                <Package className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">Cadastrar Produto</h3>
+              <p className="text-sm text-gray-500">Adicione ao seu estoque</p>
+            </motion.div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center hover:shadow-md transition-shadow cursor-pointer">
-            <div className="w-16 h-16 bg-green-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-              <span className="text-2xl">📊</span>
-            </div>
-            <h3 className="font-medium text-gray-900 mb-2">Gerar um novo relatório de vendas</h3>
-            <p className="text-sm text-gray-500">Visualize relatórios detalhados</p>
-          </div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
+            >
+              <div className="w-16 h-16 bg-green-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
+                <BarChart3 className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">Gerar Relatório</h3>
+              <p className="text-sm text-gray-500">Relatórios detalhados</p>
+            </motion.div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center hover:shadow-md transition-shadow cursor-pointer">
-            <div className="w-16 h-16 bg-purple-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-              <span className="text-2xl">🛒</span>
-            </div>
-            <h3 className="font-medium text-gray-900 mb-2">Registrar uma nova venda</h3>
-            <p className="text-sm text-gray-500">Registre vendas e saídas</p>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
+                <ShoppingCart className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">Registrar Venda</h3>
+              <p className="text-sm text-gray-500">Registre saídas e vendas</p>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Gráficos - Layout responsivo */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Gráfico de Receita x Despesas */}
+      {/* Gráficos */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={mounted ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="grid grid-cols-1 xl:grid-cols-3 gap-6 px-1"
+      >
+        {/* Gráfico de Linha - Receita x Despesas */}
         <div className="xl:col-span-2">
-          <div className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-              <div>
-                <h3 className="text-sm lg:text-base font-medium text-gray-900">
-                  Receita x Despesas
-                </h3>
-                <p className="text-xs text-gray-500">(2021-2023)</p>
-              </div>
-              <div className="flex items-center space-x-4 text-xs mt-2 sm:mt-0">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-purple-400 rounded-full mr-1"></div>
-                  <span>2021</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-400 rounded-full mr-1"></div>
-                  <span>2022</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-red-400 rounded-full mr-1"></div>
-                  <span>2023</span>
-                </div>
-              </div>
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm h-full">
+            <div className="border-b pb-3 mb-4">
+              <h3 className="text-base font-semibold text-gray-900">Receita vs Despesas</h3>
+              <p className="text-sm text-gray-500">Últimos 12 meses</p>
             </div>
-            <div className="h-48 lg:h-64">
+            {isEmptyData ? (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                <Package className="w-12 h-12 mb-3 opacity-50" />
+                <p className="text-sm">Sem dados ainda</p>
+              </div>
+            ) : (
+              <div className="h-64">
+                <LineChart
+                  data={last12Months.map((date, index) => ({
+                    name: date.toLocaleDateString('pt-BR', { month: 'short' }),
+                    receita: revenueData[index],
+                    despesas: spendingData[index],
+                  }))}
+                  colors={{ receita: '#3B82F6', despesas: '#EF4444' }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Coluna Direita */}
+        <div className="space-y-6">
+          {/* Card de Ajuda */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5 text-white cursor-pointer hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h4 className="text-sm font-medium">Precisa de ajuda?</h4>
+                <p className="text-xs mt-1 opacity-90">Fale com nossos consultores especializados.</p>
+                <button className="mt-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-xs font-medium transition">
+                  Entrar em contato
+                </button>
+              </div>
+              <Headphones className="w-8 h-8 bg-white bg-opacity-20 rounded-full p-1" />
+            </div>
+          </motion.div>
+
+          {/* Gráfico de Pizza */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="border-b pb-3 mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">Despesas por Categoria</h3>
+              <p className="text-xs text-gray-500">Últimos 12 meses</p>
+            </div>
+            {pieData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+                <Package className="w-8 h-8 mb-2 opacity-50" />
+                <p className="text-xs">Sem dados ainda</p>
+              </div>
+            ) : (
+              <PieChart data={pieData} />
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Gráfico de Vendas x Compras */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={mounted ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm px-1">
+          <div className="border-b pb-3 mb-4">
+            <h3 className="text-base font-semibold text-gray-900">Vendas vs Compras</h3>
+            <p className="text-sm text-gray-500">Comparativo mensal (últimos 12 meses)</p>
+          </div>
+          {isEmptyData ? (
+            <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+              <BarChart3 className="w-8 h-8 mb-2 opacity-50" />
+              <p className="text-sm">Sem dados ainda</p>
+            </div>
+          ) : (
+            <div className="h-40">
               <LineChart
                 data={last12Months.map((date, index) => ({
                   name: date.toLocaleDateString('pt-BR', { month: 'short' }),
-                  receita: revenueData[index],
-                  despesas: spendingData[index],
+                  receita: revenueData[index] * 0.7,
+                  despesas: spendingData[index] * 0.9,
                 }))}
+                height={160}
+                colors={{ receita: '#10B981', despesas: '#8B5CF6' }}
               />
             </div>
-          </div>
+          )}
         </div>
-
-        {/* Coluna direita */}
-        <div className="space-y-4">
-          {/* Card de Ajuda */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-4 text-white">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h4 className="text-sm font-medium leading-tight">
-                  Precisa de Ajuda? Fale com os nossos consultores →
-                </h4>
-                <p className="text-xs mt-2 opacity-90">☎ (55) 63.99102-1043</p>
-              </div>
-              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center ml-2">
-                <span className="text-lg">🎯</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Gráfico de Pizza */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-gray-900">
-                Despesas por Categoria
-              </h3>
-              <p className="text-xs text-gray-500">(RECEITAS E DESPESAS)</p>
-            </div>
-            <PieChart data={pieData} />
-          </div>
-        </div>
-      </div>
-
-      {/* Gráfico de Vendas x Compras */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-          <h3 className="text-sm lg:text-base font-medium text-gray-900">
-            Vendas x Compras (2021-2023)
-          </h3>
-          <div className="flex items-center space-x-4 text-xs mt-2 sm:mt-0">
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-purple-400 rounded-full mr-1"></div>
-              <span>2021</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-blue-400 rounded-full mr-1"></div>
-              <span>2022</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-red-400 rounded-full mr-1"></div>
-              <span>2023</span>
-            </div>
-          </div>
-        </div>
-        <div className="h-32 lg:h-40">
-          <LineChart
-            data={last12Months.map((date, index) => ({
-              name: date.toLocaleDateString('pt-BR', { month: 'short' }),
-              receita: revenueData[index] * 0.7,
-              despesas: spendingData[index] * 0.9,
-            }))}
-            height={120}
-          />
-        </div>
-      </div>
-    </div >
+      </motion.div>
+    </div>
   );
 }

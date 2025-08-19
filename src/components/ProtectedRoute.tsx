@@ -36,10 +36,10 @@ export const PrivateRoute = ({
         return <Navigate to="/" state={{ from: location }} replace />;
     }
 
-    if (moduleId && !canAccessModule(moduleId)) {
-        console.warn(`Bloqueado: módulo "${moduleId}" não acessível.`);
-        return <>{fallback}</>;
-    }
+    // if (moduleId && !canAccessModule(moduleId)) {
+    //     console.warn(`Bloqueado: módulo "${moduleId}" não acessível.`);
+    //     return <>{fallback}</>;
+    // }
 
     if (permissions.length > 0 && !hasAnyPermission(permissions)) {
         console.warn(`Bloqueado: permissões necessárias não atendidas: [${permissions.join(", ")}]`);
