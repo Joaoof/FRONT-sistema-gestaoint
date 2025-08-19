@@ -57,6 +57,15 @@ type Subtype =
     | 'WITHDRAWAL'
     | 'PAYMENT';
 
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        minimumFractionDigits: 2,
+    }).format(value);
+};
+
+
 const mapCategoryToSubtype = (category: string): Subtype => {
     const map: Record<string, Subtype> = {
         'VENDA': 'SALE',
@@ -269,6 +278,9 @@ export function MovementHistory() {
                     />
                     <SummaryCard
                         title="Saídas"
+                        decimal=","
+                        decimals={2}
+                        separator="."
                         value={totalExits}
                         icon={<Banknote className="w-6 h-6" />}
                         bg="from-red-100 to-red-50"
@@ -280,7 +292,13 @@ export function MovementHistory() {
                             <div>
                                 <p className="text-sm font-medium text-gray-800">Saldo</p>
                                 <p className={`text-2xl font-bold ${balance >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                    <CountUp end={balance} decimal="," decimals={2} prefix="R$ " />
+                                    <CountUp
+                                        end={balance}
+                                        decimal=","
+                                        decimals={2}
+                                        prefix="R$ "
+                                        separator='.'
+                                    />
                                 </p>
                             </div>
                             <div className={`p-3 ${balance >= 0 ? 'bg-green-500' : 'bg-red-500'} rounded-full text-white`}>
@@ -308,8 +326,8 @@ export function MovementHistory() {
                             <PieChart>
                                 <Pie
                                     data={[
-                                        { name: 'Entradas', value: totalEntries, color: '#10b981' },
-                                        { name: 'Saídas', value: totalExits, color: '#ef4444' },
+                                        { name: "Entradas", value: totalEntries, color: "#10b981" },
+                                        { name: "Saídas", value: totalExits, color: "#ef4444" },
                                     ]}
                                     cx="50%"
                                     cy="50%"
@@ -320,18 +338,23 @@ export function MovementHistory() {
                                     nameKey="name"
                                 >
                                     {[
-                                        { name: 'Entradas', value: totalEntries, color: '#10b981' },
-                                        { name: 'Saídas', value: totalExits, color: '#ef4444' },
+                                        { name: "Entradas", value: totalEntries, color: "#10b981" },
+                                        { name: "Saídas", value: totalExits, color: "#ef4444" },
                                     ].map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                                <Legend />
+                                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                                <Legend
+                                    formatter={(value: string, entry: any) =>
+                                        `${value}: ${formatCurrency(entry.payload.value)}`
+                                    }
+                                />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
+
 
                 {/* Filtros */}
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
@@ -470,7 +493,7 @@ export function MovementHistory() {
                                                     className={`inline-flex items-center gap-1 ${m.type === 'ENTRY' ? 'text-green-600' : 'text-red-600'
                                                         }`}
                                                 >
-                                                    {m.type === 'ENTRY' ? '+' : '-'} R$ {m.value.toFixed(2)}
+                                                    {m.type === 'ENTRY' ? '+' : '-'} R$ {formatCurrency(m.value)}
                                                 </span>
                                             </td>
                                         </tr>
@@ -504,7 +527,13 @@ function SummaryCard({ title, value, icon, bg, text, onClick }: any) {
                 <div>
                     <p className="text-sm font-medium text-gray-800">{title}</p>
                     <p className={`text-2xl font-bold ${text}`}>
-                        <CountUp end={value} decimal="," decimals={2} prefix="R$ " />
+                        <CountUp
+                            end={value}
+                            decimal=","
+                            decimals={2}
+                            prefix="R$ "
+                            separator="." // ← isso é o thousandsSeparator
+                        />
                     </p>
                 </div>
                 <div className={`${text.replace('text-', 'bg-')}200 p-3 rounded-full ${text}`}>

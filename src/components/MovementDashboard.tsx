@@ -32,6 +32,7 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@apollo/client';
 import { GET_DASHBOARD_STATS } from '../graphql/queries/dashboard';
 import { LoadingSpinner } from './common/LoadingSpinner';
+import { formatCurrency } from '../utils/formatValue';
 
 export function MovementDashboard() {
     const navigate = useNavigate();
@@ -286,28 +287,28 @@ export function MovementDashboard() {
                 {[
                     {
                         label: 'Entradas do Dia',
-                        value: `R$ ${entries.toFixed(2)}`,
+                        value: formatCurrency(entries),
                         icon: TrendingUp,
                         color: 'green',
                         gradient: 'from-green-400/20 to-emerald-200/40',
                     },
                     {
                         label: 'Saídas do Dia',
-                        value: `R$ ${exits.toFixed(2)}`,
+                        value: formatCurrency(exits),
                         icon: TrendingDown,
                         color: 'red',
                         gradient: 'from-red-400/20 to-rose-200/40',
                     },
                     {
                         label: 'Saldo do Dia',
-                        value: `R$ ${balance.toFixed(2)}`,
+                        value: formatCurrency(balance),
                         icon: DollarSign,
                         color: balance >= 0 ? 'blue' : 'red',
                         gradient: balance >= 0 ? 'from-blue-400/20 to-sky-200/40' : 'from-red-400/20 to-pink-200/40',
                     },
                     {
                         label: 'Total do Mês',
-                        value: `R$ ${totalMes.toFixed(2)}`,
+                        value: formatCurrency(totalMes),
                         icon: Calendar,
                         color: 'purple',
                         gradient: 'from-purple-400/20 to-violet-200/40',
@@ -321,7 +322,7 @@ export function MovementDashboard() {
                     >
                         <div>
                             <p className="text-sm font-medium text-gray-700">{item.label}</p>
-                            <p className={`text-3xl font-extrabold text-${item.color}-900 tabular-nums mt-1`}>
+                            <p className={`text-3xl tabular-nums font-extrabold text-${item.color}-900 tabular-nums mt-1`}>
                                 {item.value}
                             </p>
                         </div>
