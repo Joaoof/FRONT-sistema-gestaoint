@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     DollarSign,
     ArrowUpCircle,
@@ -29,6 +29,9 @@ import {
 
 // Framer Motion
 import { motion } from 'framer-motion';
+import { useQuery } from '@apollo/client';
+import { GET_DASHBOARD_STATS } from '../graphql/queries/dashboard';
+import { LoadingSpinner } from './common/LoadingSpinner';
 
 type Movement = {
     id: string;
@@ -38,48 +41,15 @@ type Movement = {
     date: string;
 };
 
-// Dados mockados
-const mockMovements: Movement[] = [
-    { id: '1', value: 1500, description: 'Venda de produtos', type: 'venda', date: '2025-04-05T10:30' },
-    { id: '2', value: 50, description: 'Troco de cliente', type: 'troco', date: '2025-04-05T11:15' },
-    { id: '3', value: 200, description: 'Pagamento de energia', type: 'despesa', date: '2025-04-05T09:00' },
-    { id: '4', value: 300, description: 'Retirada de sócio', type: 'retirada', date: '2025-04-04T17:00' },
-    { id: '5', value: 80, description: 'Compra de insumos', type: 'despesa', date: '2025-04-04T14:20' },
-    { id: '6', value: 700, description: 'Venda no almoço', type: 'venda', date: '2025-04-04T12:30' },
-    { id: '7', value: 100, description: 'Despesa com transporte', type: 'despesa', date: '2025-04-03T10:00' },
-    { id: '8', value: 400, description: 'Venda final de semana', type: 'venda', date: '2025-04-06T16:00' },
-    { id: '9', value: 1200, description: 'Venda de eletrônicos', type: 'venda', date: '2025-04-05T15:45' },
-    { id: '10', value: 90, description: 'Material de escritório', type: 'despesa', date: '2025-04-03T16:00' },
-];
-
-const monthlyData = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
-    const dayStr = date.toISOString().split('T')[0];
-
-    const dayMovements = mockMovements.filter((m) => m.date.startsWith(dayStr));
-    const entradasDia = dayMovements
-        .filter((m) => ['venda', 'troco', 'outros'].includes(m.type))
-        .reduce((sum, m) => sum + m.value, 0);
-    const saidasDia = dayMovements
-        .filter((m) => ['despesa', 'retirada', 'pagamento'].includes(m.type))
-        .reduce((sum, m) => sum + m.value, 0);
-
-    return {
-        day: i + 1,
-        entradas: entradasDia,
-        saidas: saidasDia,
-        saldo: entradasDia - saidasDia,
-    };
-});
-
-// Produtos simulados
-const mockProducts = [
-    { name: 'Produto A', revenue: 1500 },
-    { name: 'Produto B', revenue: 1200 },
-    { name: 'Produto C', revenue: 700 },
-    { name: 'Produto D', revenue: 400 },
-];
+const isToday = (dateString: string): boolean => {
+    const date = new Date(dateString);
+    const today = new Date();
+    return (
+        date.getDate() === today.getDate() &&
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear()
+    );
+};
 
 export function MovementDashboard() {
     const navigate = useNavigate();
@@ -89,28 +59,31 @@ export function MovementDashboard() {
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [inputValue, setInputValue] = useState<string>(metaMensal.toFixed(2));
 
-    const filteredMovements = mockMovements.filter((m) => m.date.startsWith(filterDate));
-    const allVendas = mockMovements.filter((m) => m.type === 'venda');
+    const { data, loading, error, refetch } = useQuery(GET_DASHBOARD_STATS, {
+        pollInterval: 30000
+    });
 
-    const entradas = filteredMovements
-        .filter((m) => ['venda', 'troco', 'outros'].includes(m.type))
-        .reduce((sum, m) => sum + m.value, 0);
+    useEffect(() => {
+        const interval = setInterval(() => refetch(), 60000);
+        return () => clearInterval(interval);
+    }, [refetch])
 
-    const saidas = filteredMovements
-        .filter((m) => ['despesa', 'retirada', 'pagamento'].includes(m.type))
-        .reduce((sum, m) => sum + m.value, 0);
+    if (loading) return <LoadingSpinner />;
+    if (error) return <div className="p-8 text-center text-red-600">Erro: {error.message}</div>;
 
-    const saldo = entradas - saidas;
-    const totalMes = 15000;
+    const { entries, exits, balance } = data?.dashboardStats.today;
+    const totalMes = data?.dashboardStats.monthlyTotal;
 
-    const margemLucro = entradas > 0 ? ((saldo / entradas) * 100).toFixed(1) : '0.0';
-    const ticketMedio = allVendas.length > 0 ? (allVendas.reduce((sum, v) => sum + v.value, 0) / allVendas.length).toFixed(2) : '0.00';
-    const crescimentoDiario = '+12.5%';
 
-    const forecastData = Array.from({ length: 14 }, (_, i) => ({
-        day: i + 1,
-        saldo: Math.max(0, 1000 + i * 50 + (Math.random() - 0.5) * 150),
-    }));
+    const monthlyData = Array.from({ length: 7 }, (_, i) => {
+        const base = Math.random() > 0.5 ? 1 : -1;
+        return {
+            day: i + 1,
+            entradas: Number((Math.random() * 1000).toFixed(2)),
+            saidas: Number((Math.random() * 600).toFixed(2)),
+            saldo: Number((Math.random() * 800 * base).toFixed(2)),
+        };
+    });
 
     const heatmapData = Array.from({ length: 24 }, (_, hour) => {
         const base = 50;
@@ -122,12 +95,21 @@ export function MovementDashboard() {
         };
     });
 
-    const topProducts = mockProducts.slice(0, 3).map(p => ({
-        name: p.name,
-        value: p.revenue,
-    }));
+    const topProducts = [
+        { name: 'Produto A', value: 4200 },
+        { name: 'Produto B', value: 3100 },
+        { name: 'Produto C', value: 2200 },
+    ];
+    const hasAlert = balance < 0;
 
-    const hasAlert = saldo < 0;
+    const margemLucro = entries > 0 ? ((balance / entries) * 100).toFixed(1) : '0.0';
+    const ticketMedio = '85,50';
+    const crescimentoDiario = '+12.5%';
+
+    const forecastData = Array.from({ length: 14 }, (_, i) => ({
+        day: i + 1,
+        saldo: Math.max(0, 1000 + i * 50 + (Math.random() - 0.5) * 150),
+    }));
 
     const insights = [
         "Despesa com transporte subiu 45% esta semana.",
@@ -137,8 +119,9 @@ export function MovementDashboard() {
 
     const handleExport = () => {
         const csv = [
-            ['Data', 'Descrição', 'Tipo', 'Valor'],
-            ...filteredMovements.map(m => [m.date, m.description, m.type, m.value]),
+            ['Data', 'Hora', 'Descrição', 'Tipo', 'Valor'],
+            ['Hoje', '10:30', 'Venda de produtos', 'Entrada', 'R$ 1500,00'],
+            ['Hoje', '11:15', 'Troco', 'Saída', 'R$ 50,00'],
         ]
             .map(row => row.join(','))
             .join('\n');
@@ -276,7 +259,7 @@ export function MovementDashboard() {
                     },
                     {
                         label: 'Total Vendas',
-                        value: allVendas.length,
+                        value: '24',
                         icon: Calendar,
                         color: 'orange',
                         borderColor: 'border-orange-900',
@@ -324,24 +307,24 @@ export function MovementDashboard() {
                 {[
                     {
                         label: 'Entradas do Dia',
-                        value: `R$ ${entradas.toFixed(2)}`,
+                        value: `R$ ${entries.toFixed(2)}`,
                         icon: TrendingUp,
                         color: 'green',
                         gradient: 'from-green-400/20 to-emerald-200/40',
                     },
                     {
                         label: 'Saídas do Dia',
-                        value: `R$ ${saidas.toFixed(2)}`,
+                        value: `R$ ${exits.toFixed(2)}`,
                         icon: TrendingDown,
                         color: 'red',
                         gradient: 'from-red-400/20 to-rose-200/40',
                     },
                     {
                         label: 'Saldo do Dia',
-                        value: `R$ ${saldo.toFixed(2)}`,
+                        value: `R$ ${balance.toFixed(2)}`,
                         icon: DollarSign,
-                        color: saldo >= 0 ? 'blue' : 'red',
-                        gradient: saldo >= 0 ? 'from-blue-400/20 to-sky-200/40' : 'from-red-400/20 to-pink-200/40',
+                        color: balance >= 0 ? 'blue' : 'red',
+                        gradient: balance >= 0 ? 'from-blue-400/20 to-sky-200/40' : 'from-red-400/20 to-pink-200/40',
                     },
                     {
                         label: 'Total do Mês',
@@ -534,7 +517,7 @@ export function MovementDashboard() {
                     >
                         <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Entradas vs Saídas</h3>
                         <ResponsiveContainer width="100%" height={200}>
-                            <BarChart data={[{ name: 'Hoje', entradas, saidas }]}>
+                            <BarChart data={[{ name: 'Hoje', entries, exits }]}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
                                 <YAxis />
@@ -596,45 +579,16 @@ export function MovementDashboard() {
                             Movimentações de {new Date(filterDate).toLocaleDateString('pt-BR')}
                         </h2>
                     </div>
-                    <div className="divide-y divide-gray-200">
-                        {filteredMovements.length === 0 ? (
-                            <div className="p-8 text-center text-gray-500">Nenhuma movimentação registrada nesta data.</div>
-                        ) : (
-                            filteredMovements.map((m) => (
-                                <motion.div
-                                    key={m.id}
-                                    variants={itemVariants}
-                                    initial="hidden"
-                                    animate="show"
-                                    whileHover={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
-                                    className="p-4 flex items-center justify-between transition-colors"
-                                >
-                                    <div className="flex items-center space-x-3">
-                                        <span
-                                            className={`w-3 h-3 rounded-full ${['venda', 'troco', 'outros'].includes(m.type) ? 'bg-green-500' : 'bg-red-500'}`}
-                                        ></span>
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-900">{m.description}</p>
-                                            <p className="text-xs text-gray-500">{new Date(m.date).toLocaleTimeString('pt-BR')}</p>
-                                        </div>
-                                    </div>
-                                    <p
-                                        className={`text-sm font-semibold tabular-nums ${['venda', 'troco', 'outros'].includes(m.type) ? 'text-green-600' : 'text-red-600'}`}
-                                    >
-                                        {['venda', 'troco', 'outros'].includes(m.type) ? '+' : '-'} R$ {m.value.toFixed(2)}
-                                    </p>
-                                </motion.div>
-                            ))
-                        )}
-                    </div>
-                    <div className="p-4 bg-white/10 border-t border-white/20 text-right">
+                    <div className="p-8 text-center text-gray-500">
+                        <p>Este painel exibe apenas métricas gerais.</p>
+                        <p className="text-sm mt-1">Para ver movimentações detalhadas, vá ao histórico.</p>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => navigate('/historico')}
-                            className="text-blue-600 hover:underline text-sm font-medium"
+                            className="mt-4 text-blue-600 hover:underline text-sm font-medium"
                         >
-                            Ver todo histórico
+                            Ver histórico completo
                         </motion.button>
                     </div>
                 </div>
