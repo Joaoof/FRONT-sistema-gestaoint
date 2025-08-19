@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
     DollarSign,
     ArrowUpCircle,
@@ -33,24 +33,6 @@ import { useQuery } from '@apollo/client';
 import { GET_DASHBOARD_STATS } from '../graphql/queries/dashboard';
 import { LoadingSpinner } from './common/LoadingSpinner';
 
-type Movement = {
-    id: string;
-    value: number;
-    description: string;
-    type: 'venda' | 'troco' | 'outros' | 'despesa' | 'retirada' | 'pagamento';
-    date: string;
-};
-
-const isToday = (dateString: string): boolean => {
-    const date = new Date(dateString);
-    const today = new Date();
-    return (
-        date.getDate() === today.getDate() &&
-        date.getMonth() === today.getMonth() &&
-        date.getFullYear() === today.getFullYear()
-    );
-};
-
 export function MovementDashboard() {
     const navigate = useNavigate();
     const today = new Date().toISOString().split('T')[0];
@@ -59,21 +41,18 @@ export function MovementDashboard() {
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [inputValue, setInputValue] = useState<string>(metaMensal.toFixed(2));
 
-    const { data, loading, error, refetch } = useQuery(GET_DASHBOARD_STATS, {
-        pollInterval: 30000
+    const { data, loading, error } = useQuery(GET_DASHBOARD_STATS, {
+        variables: { input: { date: filterDate } },
+        pollInterval: 30000, // Atualiza a cada 30s
     });
-
-    useEffect(() => {
-        const interval = setInterval(() => refetch(), 60000);
-        return () => clearInterval(interval);
-    }, [refetch])
 
     if (loading) return <LoadingSpinner />;
     if (error) return <div className="p-8 text-center text-red-600">Erro: {error.message}</div>;
 
-    const { entries, exits, balance } = data?.dashboardStats.today;
-    const totalMes = data?.dashboardStats.monthlyTotal;
-
+    const entries = data?.dashboardStats.todayEntries || 0;
+    const exits = data?.dashboardStats.todayExits || 0;
+    const balance = data?.dashboardStats.todayBalance || 0;
+    const totalMes = data?.dashboardStats.monthlyTotal || 0;
 
     const monthlyData = Array.from({ length: 7 }, (_, i) => {
         const base = Math.random() > 0.5 ? 1 : -1;
