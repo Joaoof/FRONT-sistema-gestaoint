@@ -8,7 +8,7 @@ import { CategoriesRegistration, CustomersRegistration, ProductsRegistration, Su
 import { Sidebar } from './components/Sidebar';
 import { useInventory } from './hooks/useInventory';
 import { LoginForm } from './pages/LoginForm';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { FinancialManagement } from './pages/FinancialManagement';
 import { MovementHistory } from './pages/Movement/MovementHistory';
 import { MovementDashboard } from './components/MovementDashboard';
@@ -28,6 +28,7 @@ import { PayablesList } from './pages/Tax/AccountsPayable/List';
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+    const { user } = useAuth(); // ✅ Pega o user com permissions
   const inventory = useInventory(); // ✅ Dados do estoque
 
   const showSidebar = location.pathname !== '/';
@@ -36,11 +37,12 @@ function AppContent() {
     <div className="flex min-h-screen bg-gray-50">
       {showSidebar && (
         <PrivateRoute>
-          <Sidebar  
+          <Sidebar
             isOpen={sidebarOpen}
             onToggle={() => setSidebarOpen(!sidebarOpen)}
             currentView={location.pathname.slice(1) as any}
             onViewChange={() => { }}
+            userPermissions={user?.permissions || []} // ✅ ESSE CAMPO É OBRIGATÓRIO
           />
         </PrivateRoute>
       )}

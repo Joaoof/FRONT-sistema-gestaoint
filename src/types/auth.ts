@@ -3,7 +3,7 @@ export interface User {
     id: string
     email: string
     name: string
-    companyId: string
+    company_id: string
     role: UserRole
     plan?: PlanDto; // ✅ Corrigido: é um objeto, não uma string
     permissions: PermissionDto[]
@@ -36,6 +36,7 @@ export interface Company {
     cnpj: string
     modules: ModuleAccess[]
     settings: CompanySettings
+    logoUrl: string
 }
 
 export interface ModuleAccess {
@@ -70,3 +71,4 @@ export interface AuthState {
     isAuthenticated: boolean
     isLoading: boolean
 }
+

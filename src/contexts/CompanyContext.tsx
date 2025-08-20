@@ -108,26 +108,26 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         console.log("[CompanyContext] Usuário detectado:", user)
 
         async function loadCompany() {
-            dispatch({ type: "SET_LOADING", payload: true })
+            dispatch({ type: "SET_LOADING", payload: true });
 
             try {
-                const company = await fetchCompanyData(user?.companyId ?? '')
-                const modules = user?.plan?.modules ?? []
+                console.log("[CompanyProvider] user.company_id:", user?.company_id); // 🔥
 
-                console.log("[CompanyContext] Empresa carregada:", company)
-                console.log("[CompanyContext] Módulos do plano do usuário:", modules)
+                // ✅ Garanta que companyId existe
+                if (!user?.company_id) {
+                    throw new Error("Usuário sem company_id vinculado");
+                }
+
+                const company = await fetchCompanyData(user.company_id); // ✅ Use o campo certo
+                const modules = user?.plan?.modules ?? [];
 
                 dispatch({
                     type: "SET_AUTH_DATA",
-                    payload: {
-                        user,
-                        company,
-                        modules,
-                    },
-                })
+                    payload: { user, company, modules },
+                });
             } catch (error) {
-                console.error("[CompanyContext] Erro ao carregar empresa:", error)
-                dispatch({ type: "LOGOUT" })
+                console.error("[CompanyContext] Erro ao carregar empresa:", error);
+                dispatch({ type: "LOGOUT" });
             }
         }
 
@@ -167,7 +167,7 @@ export const useCompany = () => {
 }
 
 // 🚀 Busca empresa (sem módulos)
-async function fetchCompanyData(companyId: string): Promise<Company> {
+async function fetchCompanyData(company_id: string): Promise<Company> {
     const token = localStorage.getItem("accessToken")
     if (!token) throw new Error("Usuário não autenticado")
 
@@ -183,29 +183,29 @@ async function fetchCompanyData(companyId: string): Promise<Company> {
                 company(id: $id) {
                     id
                     name
-                    email
-                    phone
-                    address
-                    modules {
-                        module_key
-                        name
-                        description
-                        permissions  // <-- plural, se for seu schema
-                        isActive
-                    }
+                    logoUrl
                 }
             }
         `,
-            variables: { id: companyId },
+            variables: { id: company_id },
         }),
     });
 
+    console.log("[fetchCompanyData] Resposta HTTP:", response); // 🔥
 
     const json = await response.json()
 
-    if (json.errors || !json.data?.company) {
-        throw new Error("Erro ao buscar dados da empresa")
+    console.log("[fetchCompanyData] Resposta completa do GraphQL:", json); // ✅ ESSE É O MAIS IMPORTANTE
+
+
+    if (json.errors) {
+        console.error("[fetchCompanyData] Erros do GraphQL:", json.errors);
+        throw new Error("Erro no GraphQL: " + json.errors.map((e: { message: any }) => e.message).join(", "));
     }
 
-    return json.data.company
+    if (!json.data?.company) {
+        throw new Error("Empresa não encontrada");
+    }
+
+    return json.data.company;
 }

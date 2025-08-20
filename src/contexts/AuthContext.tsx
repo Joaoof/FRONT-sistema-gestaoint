@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "CLEAR_ERROR" })
 
         try {
-            const res = await fetch("http://localhost:3000/graphql", {
+            const resLogin = await fetch("http://localhost:3000/graphql", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -173,11 +173,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }),
             })
 
-            const json = await res.json()
+            const loginData = await resLogin.json();
 
-            console.log("Resposta completa do GraphQL:", json) // ✅ Agora sim, você verá os erros
-            if (json.errors) {
-                const error = json.errors[0];
+            console.log("Resposta completa do GraphQL:", loginData) // ✅ Agora sim, você verá os erros
+            if (loginData.errors) {
+                const error = loginData.errors[0];
                 const code = error.extensions?.code;
 
                 // ✅ 1. Erro com detalhes por campo (validação)
@@ -198,14 +198,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 dispatch({ type: "SET_ERROR", payload: message });
             }
 
-            if (!json.data?.login) {
+            if (!loginData.data?.login) {
                 notifyError("Resposta inválida do servidor", 3000);
                 dispatch({ type: "SET_ERROR", payload: "Resposta inválida" });
                 return;
             }
 
 
-            const { accessToken, user } = json.data.login;
+            const { accessToken } = loginData.data.login;
+
+
+            const resMe = await fetch("http://localhost:3000/graphql", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    query: GET_USER_QUERY,
+                }),
+            });
+
+            const meData = await resMe.json();
 
             if (!accessToken) {
                 notifyError("Token não recebido do servidor", 3000);
@@ -215,12 +229,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             notifySuccess('Login realizado com sucesso!', 5000)
 
-            if (!user) {
+            if (!meData) {
                 notifyError('Usuário inválido')
                 dispatch({ type: "LOGOUT" })
                 return
             }
 
+            const user = meData.data.me;
 
             localStorage.setItem("accessToken", accessToken);
             dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })

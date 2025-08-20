@@ -79,10 +79,9 @@ export function AuthenticatedApp() {
     });
 
     // Verifica acesso ao módulo
-    const hasModuleAccess = (moduleId: string) => {
-        return user?.plan?.modules?.some(
-            (module) => module.module_key === moduleId && module.isActive
-        ) ?? false;
+    // Em AuthenticatedApp.tsx
+    const hasModuleAccess = (moduleId: string): boolean => {
+        return user?.permissions?.some(p => p.module_key === moduleId) ?? false;
     };
 
     // Sincroniza currentView com a URL
@@ -106,15 +105,12 @@ export function AuthenticatedApp() {
     }, [user, navigate]);
 
     const handleViewChange = (view: View) => {
-        if (!hasModuleAccess(view)) {
-            setUpgradeModal({
-                isOpen: true,
-                moduleName: moduleNames[view],
-            });
-            return;
+        if (!hasModuleAccess(currentView)) {
+            navigate('/dashboard');
+            addNotification('info', 'Você foi redirecionado. Este módulo não está disponível.');
         }
         setCurrentView(view);
-        navigate(`${view}`);
+        navigate(`/${view}`);
     };
     // ✅ Atalhos de teclado
     useEffect(() => {
@@ -154,19 +150,21 @@ export function AuthenticatedApp() {
         return () => window.removeEventListener('keydown', handleKey);
     }, [hasModuleAccess, navigate, handleViewChange, addNotification]);
 
-    // Renderiza conteúdo
     const renderContent = () => {
-        if (!hasModuleAccess(currentView)) {
+        const canAccess = hasModuleAccess(currentView);
+
+        if (!canAccess) {
             return (
-                <div className="flex items-center justify-center h-64">
-                    <div className="text-center">
-                        <div className="text-gray-400 mb-4">
+                <div className="flex items-center justify-center h-64 bg-red-50">
+                    <div className="text-center p-6 rounded-lg shadow">
+                        <div className="text-red-500 mb-4">
                             <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H10" />
                             </svg>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Módulo não disponível</h3>
-                        <p className="text-gray-600">Este módulo não está disponível no seu plano atual.</p>
+                        <h3 className="text-xl font-bold text-red-700 mb-2">Módulo indisponível</h3>
+                        <p className="text-gray-600 mb-2">O módulo <strong>{currentView}</strong> não está disponível no seu plano.</p>
+                        <p className="text-sm text-gray-500">Contate o administrador ou atualize seu plano.</p>
                     </div>
                 </div>
             );

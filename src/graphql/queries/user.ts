@@ -5,6 +5,7 @@ export const GET_USER_QUERY = `
     name
     email
     role
+    company_id
     plan {
       name
       modules {
@@ -32,6 +33,7 @@ export const LOGIN_MUTATION = `
       name
       email
       role
+      company_id  # ✅
       company {
         id
         name
