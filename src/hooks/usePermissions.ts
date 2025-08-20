@@ -1,34 +1,33 @@
-import { useCompany } from "../contexts/CompanyContext"
+import { useAuth } from '../contexts/AuthContext';
 
-export const usePermissions = () => {
-    const { permissionService, permissions } = useCompany()
+export type ModuleKey =
+    | 'dashboard'
+    | 'estoque'
+    | 'vendas'
+    | 'fiscal'
+    | 'financeiro'
+    | 'ecommerce'
+    | 'consultas'
+    | 'movimentacoes'
+    | 'configuracoes'
+    | 'cadastros';
 
-    const hasPermission = (permission: string): boolean => {
-        return permissionService?.hasPermission(permission) || false
-    }
+export function usePermissions() {
+    const { user } = useAuth();
+
+    // ✅ Garanta que permissions é um array
+    const permissions = user?.permissions || [];
+
+    const canAccessModule = (moduleKey: ModuleKey): boolean => {
+        return permissions.some(p => p.module_key === moduleKey);
+    };
 
     const hasAnyPermission = (requiredPermissions: string[]): boolean => {
-        return permissionService?.hasAnyPermission(requiredPermissions) || false
-    }
+        if (requiredPermissions.length === 0) return true;
+        return permissions.some(p =>
+            requiredPermissions.some(rp => p.permissions.includes(rp))
+        );
+    };
 
-    const hasAllPermissions = (requiredPermissions: string[]): boolean => {
-        return permissionService?.hasAllPermissions(requiredPermissions) || false
-    }
-
-    const canAccessModule = (moduleId: string): boolean => {
-        return permissionService?.canAccessModule(moduleId) || false
-    }
-
-    const canPerformAction = (moduleId: string, action: string, resource: string): boolean => {
-        return permissionService?.canPerformAction(moduleId, action, resource) || false
-    }
-
-    return {
-        permissions,
-        hasPermission,
-        hasAnyPermission,
-        hasAllPermissions,
-        canAccessModule,
-        canPerformAction,
-    }
+    return { canAccessModule, hasAnyPermission, permissions };
 }

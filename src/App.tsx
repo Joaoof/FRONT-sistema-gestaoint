@@ -35,12 +35,14 @@ function AppContent() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {showSidebar && (
-        <Sidebar
-          isOpen={sidebarOpen}
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-          currentView={location.pathname.slice(1) as any}
-          onViewChange={() => { }}
-        />
+        <PrivateRoute>
+          <Sidebar  
+            isOpen={sidebarOpen}
+            onToggle={() => setSidebarOpen(!sidebarOpen)}
+            currentView={location.pathname.slice(1) as any}
+            onViewChange={() => { }}
+          />
+        </PrivateRoute>
       )}
 
       <main className={showSidebar ? 'flex-1 lg:ml-64 p-6' : 'w-full p-6'}>

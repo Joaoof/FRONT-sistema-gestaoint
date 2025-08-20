@@ -3,7 +3,7 @@ import { createContext, useContext, useReducer, useEffect } from "react"
 import type { Company, User, AuthState } from "../types/auth"
 import { useNavigate } from "react-router-dom"; // ✅
 import { useNotification } from "../hooks/useNotification"
-import { GET_USER_QUERY } from "../graphql/queries/user";
+import { GET_USER_QUERY, LOGIN_MUTATION } from "../graphql/queries/user";
 
 
 interface AuthContextState extends AuthState {
@@ -14,9 +14,9 @@ interface AuthContextState extends AuthState {
     error: string | null;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
-    modules: Module[]; // ✅ Adicione isso
+    modules: Module[]; // ✅ Remove ou mantém, mas não use para permissões
+    permissions: { module_key: string; permissions: string[] }[]; // ✅ Adicione isso
 }
-
 type Module = {
     module_key: string;
     name: string;
@@ -38,7 +38,8 @@ const initialState: AuthContextState = {
     isAuthenticated: false,
     isLoading: true,
     error: null,
-    modules: [], // ✅
+    modules: [],
+    permissions: [],
     login: async () => { },
     logout: async () => { },
 };
@@ -57,6 +58,7 @@ function authReducer(state: AuthContextState, action: AuthAction): AuthContextSt
                 user,
                 company,
                 modules: user.plan?.modules || [],
+                permissions: user.permissions || [], // ✅ Use permissions
                 isAuthenticated: true,
                 isLoading: false,
                 error: null,
@@ -114,13 +116,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    query: GET_USER_QUERY.trim(),
+                    query: GET_USER_QUERY,
                 }),
             });
 
             const json = await res.json();
             console.log('MEU JSONNNNNNNNNNNNNN', json);
-            
+
 
             if (json.errors) {
                 console.error("[Auth] Erros no GraphQL:", json.errors);
@@ -138,8 +140,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             const { me: user } = json.data;  // ✅ desestrutura `me`
-            console.log("[Auth] Usuário carregado:", user);
-
             dispatch({
                 type: "SET_AUTH_DATA",
                 payload: { user, company: user.company },
@@ -164,37 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    query: `
-                                mutation Login($loginUserInput: LoginUserInput!) {
-            login(loginUserInput: $loginUserInput) {
-                accessToken
-                expiresIn
-                user {
-                id
-                name
-                email
-                role
-                company {
-                    id
-                    name
-                    email
-                    phone
-                    address
-                }
-                plan {
-                    name
-                    description
-                    modules {
-                    module_key
-                    name
-                    description
-                    permission
-                    isActive
-                    }
-                }
-                }
-            }
-            }`,
+                    query: LOGIN_MUTATION,
                     variables: {
                         loginUserInput: {
                             email, password_hash
@@ -278,6 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...state,
         login,
         logout,
+        permissions: state.permissions, // garantido
     }
 
     return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>

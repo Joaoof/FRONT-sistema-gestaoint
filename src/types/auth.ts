@@ -6,8 +6,13 @@ export interface User {
     companyId: string
     role: UserRole
     plan?: PlanDto; // ✅ Corrigido: é um objeto, não uma string
+    permissions: PermissionDto[]
 }
 
+export type PermissionDto = {
+    module_key: string;
+    permissions: string[];
+}
 
 export type PlanDto = {
     id: string;

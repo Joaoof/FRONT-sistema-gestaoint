@@ -208,6 +208,7 @@ export function AuthenticatedApp() {
                 onViewChange={handleViewChange}
                 isOpen={sidebarOpen}
                 onToggle={() => setSidebarOpen(!sidebarOpen)}
+                userPermissions={user?.permissions || []} // ✅ passa as permissões
             />
 
             {sidebarOpen && (

@@ -1,21 +1,22 @@
-import {
-  LayoutDashboard,
-  Users,
-  Package,
-  ShoppingCart,
-  FileText,
-  DollarSign,
-  ShoppingBag,
-  Search,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  CreditCard,
-  PlusCircle,
-  Settings,
-} from 'lucide-react';
+// src/components/Sidebar.tsx
 import { View } from '../pages/AuthenticatedApp';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  CreditCard,
+  DollarSign,
+  FileText,
+  LayoutDashboard,
+  Package,
+  PlusCircle,
+  Search,
+  Settings,
+  ShoppingBag,
+  ShoppingCart,
+  Users,
+} from 'lucide-react';
 
 interface MenuItem {
   id: View;
@@ -29,29 +30,105 @@ interface SidebarProps {
   onViewChange: (view: View) => void;
   isOpen: boolean;
   onToggle: () => void;
+  userPermissions: { module_key: string; permissions: string[] }[];
 }
 
-export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: SidebarProps) {
-  const navigate = useNavigate();
+// ✅ Mapeamento entre View e módulo
+const VIEW_TO_MODULE: Record<View, string> = {
+  dashboard: 'dashboard',
+  cadastros: 'cadastros',
+  estoque: 'estoque',
+  vendas: 'vendas',
+  fiscal: 'fiscal',
+  'fiscal-receber': 'fiscal',
+  'fiscal-receber-criar': 'fiscal',
+  'fiscal-pagar': 'fiscal',
+  'fiscal-pagar-criar': 'fiscal',
+  financeiro: 'financeiro',
+  ecommerce: 'ecommerce',
+  consultas: 'consultas',
+  movimentacoes: 'movimentacoes',
+  'formulario-movimentacao': 'movimentacoes',
+  'historico-movimentacao': 'movimentacoes',
+  configuracoes: 'configuracoes',
+  entrada: '',
+  historico: ''
+};
 
+function hasPermission(
+  permissions: { module_key: string; permissions: string[] }[],
+  view: View
+): boolean {
+  const moduleKey = VIEW_TO_MODULE[view];
+  if (!moduleKey) return false;
+  return permissions.some((p) => p.module_key === moduleKey);
+}
+
+// ✅ menuItems definido fora, acessível globalmente
+const menuItems: MenuItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'cadastros', label: 'Cadastros', icon: Users },
+  { id: 'estoque', label: 'Estoque', icon: Package },
+  { id: 'vendas', label: 'Vendas', icon: ShoppingCart },
+  {
+    id: 'fiscal',
+    label: 'Fiscal',
+    icon: FileText,
+    children: [
+      { id: 'fiscal-receber', label: 'Contas a Receber', icon: ArrowUpCircle },
+      { id: 'fiscal-receber-criar', label: 'Nova Receita', icon: PlusCircle },
+      { id: 'fiscal-pagar', label: 'Contas a Pagar', icon: ArrowDownCircle },
+      { id: 'fiscal-pagar-criar', label: 'Nova Despesa', icon: CreditCard },
+    ],
+  },
+  {
+    id: 'financeiro',
+    label: 'Financeiro',
+    icon: DollarSign,
+  },
+  { id: 'ecommerce', label: 'E-commerce', icon: ShoppingBag },
+  { id: 'consultas', label: 'Consultas', icon: Search },
+  {
+    id: 'movimentacoes' as View,
+    label: 'Movimentações',
+    icon: DollarSign,
+    children: [
+      { id: 'formulario-movimentacao', label: 'Formulario de Movimentação', icon: ArrowUpCircle },
+      { id: 'historico-movimentacao', label: 'Histórico de Movimentação', icon: ArrowDownCircle },
+    ],
+  },
+  {
+    id: 'configuracoes' as View,
+    label: 'Configurações',
+    icon: Settings,
+  },
+];
+
+export function Sidebar({
+  currentView,
+  onViewChange,
+  isOpen,
+  onToggle,
+  userPermissions = [],
+}: SidebarProps) {
+  const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const path = currentView.split('-')[0]; // ex: 'movimentacoes-entrada' → 'movimentacoes'
-    if (['movimentacoes'].includes(path)) {
-      setExpandedItems(prev => ({ ...prev, [path]: true }));
+    const path = currentView.split('-')[0];
+    if (['movimentacoes', 'fiscal'].includes(path)) {
+      setExpandedItems((prev) => ({ ...prev, [path]: true }));
     }
   }, [currentView]);
 
+  // ✅ Função de clique
   const handleItemClick = (view: View) => {
-    // Verifica se é um item com filhos
     const groupItems: Record<string, View[]> = {
       movimentacoes: [
         'movimentacoes',
         'formulario-movimentacao',
         'historico-movimentacao',
       ],
-
       fiscal: [
         'fiscal-pagar',
         'fiscal-pagar-criar',
@@ -60,24 +137,20 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
       ],
     };
 
-
-    const group = Object.keys(groupItems).find(g => groupItems[g].includes(view));
+    const group = Object.keys(groupItems).find((g) => groupItems[g].includes(view));
     if (group) {
-      // Se for um subitem, fecha todos e vai direto
       setExpandedItems({ [group]: true });
       onViewChange(view);
-      navigate(`${view}`);
+      navigate(`/${view}`);
       if (window.innerWidth < 1024) onToggle();
       return;
     }
 
-    // Se for um grupo (ex: 'movimentacoes')
     if (groupItems[view]) {
-      setExpandedItems(prev => ({
+      setExpandedItems((prev) => ({
         ...prev,
         [view]: !prev[view],
       }));
-      // Navega para o primeiro subitem ou mantém no grupo
       if (!expandedItems[view]) {
         const firstSubItem = groupItems[view][0];
         onViewChange(firstSubItem);
@@ -86,52 +159,26 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
       return;
     }
 
-    // Item normal
     onViewChange(view);
-    navigate(`${view}`);
+    navigate(`/${view}`);
     if (window.innerWidth < 1024) onToggle();
   };
 
-  const menuItems: MenuItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'cadastros', label: 'Cadastros', icon: Users },
-    { id: 'estoque', label: 'Estoque', icon: Package },
-    { id: 'vendas', label: 'Vendas', icon: ShoppingCart },
-    {
-      id: 'fiscal',
-      label: 'Fiscal',
-      icon: FileText,
-      children: [
-        { id: 'fiscal-receber', label: 'Contas a Receber', icon: ArrowUpCircle },
-        { id: 'fiscal-receber-criar', label: 'Nova Receita', icon: PlusCircle },
-        { id: 'fiscal-pagar', label: 'Contas a Pagar', icon: ArrowDownCircle },
-        { id: 'fiscal-pagar-criar', label: 'Nova Despesa', icon: CreditCard },
-      ],
-    },
-    {
-      id: 'financeiro', label: 'Financeiro',
-      icon: DollarSign,
+  console.log('🎯 userPermissions:', userPermissions);
+  console.log('📋 menuItems:', menuItems);
 
-    },
-    { id: 'ecommerce', label: 'E-commerce', icon: ShoppingBag },
-    { id: 'consultas', label: 'Consultas', icon: Search },
-    {
-      id: 'movimentacoes' as View,
-      label: 'Movimentações',
-      icon: DollarSign,
-      children: [
-        { id: 'formulario-movimentacao', label: 'Formulario de Movimentação', icon: ArrowUpCircle },
-        { id: 'historico-movimentacao', label: 'Histórico de Movimentação', icon: ArrowDownCircle },
-      ],
-    },
-    {
-      id: 'configuracoes' as View,
-      label: 'Configurações',
-      icon: Settings, // importe Settings do lucide-react
+  // ✅ Filtra os itens com base nas permissões
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (!item.children) {
+      const hasPerm = hasPermission(userPermissions, item.id);
+      console.log(`🔍 ${item.id} -> ${hasPerm ? '✓' : '✗'}`);
+      return hasPerm;
     }
-
-  ];
-
+    const hasPerm = item.children.some((child) => hasPermission(userPermissions, child.id));
+    console.log(`🔍 ${item.id} (grupo) -> ${hasPerm ? '✓' : '✗'}`);
+    return hasPerm
+  });
+  console.log('✅ filteredMenuItems:', filteredMenuItems);
   return (
     <div
       className={`fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -145,21 +192,29 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
             </div>
             <span className="font-semibold text-gray-900">Estoque Nuvem</span>
           </div>
-          <button onClick={onToggle} className="lg:hidden p-1 rounded text-gray-500 hover:bg-gray-100">
+          <button
+            onClick={onToggle}
+            className="lg:hidden p-1 rounded text-gray-500 hover:bg-gray-100"
+          >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
       </div>
 
       <nav className="mt-4">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
-          const isGroupActive = item.children?.some(child => child.id === currentView);
+          const isGroupActive = item.children?.some((child) => child.id === currentView);
+          const isExpanded = expandedItems[item.id] || false;
 
-          // ✅ Item sem filhos
           if (!item.children) {
             return (
               <button
@@ -170,14 +225,13 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
                   : 'text-gray-600 hover:bg-gray-50'
                   }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                <Icon
+                  className={`w-4 h-4 ${isActive ? 'text-blue-600' : 'text-gray-400'}`}
+                />
                 <span>{item.label}</span>
               </button>
             );
           }
-
-          // ✅ Item com filhos (grupo)
-          const isExpanded = expandedItems[item.id] || false;
 
           return (
             <div key={item.id} className="space-y-1">
@@ -202,7 +256,6 @@ export function Sidebar({ currentView, onViewChange, isOpen, onToggle }: Sidebar
                 </span>
               </button>
 
-              {/* Subitens com animação */}
               <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                   }`}
