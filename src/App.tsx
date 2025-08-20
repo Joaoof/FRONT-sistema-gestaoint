@@ -24,7 +24,6 @@ import { PrivateRoute } from './components/ProtectedRoute';
 import { CompanyProvider } from './contexts/CompanyContext';
 import { CashMovementForm } from './pages/CashMovementForm';
 import { PayablesList } from './pages/Tax/AccountsPayable/List';
-import { Toaster } from 'react-hot-toast';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

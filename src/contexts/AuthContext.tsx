@@ -3,6 +3,7 @@ import { createContext, useContext, useReducer, useEffect } from "react"
 import type { Company, User, AuthState } from "../types/auth"
 import { useNavigate } from "react-router-dom"; // ✅
 import { useNotification } from "../hooks/useNotification"
+import { GET_USER_QUERY } from "../graphql/queries/user";
 
 
 interface AuthContextState extends AuthState {
@@ -95,12 +96,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const initializeAuth = async () => {
+        dispatch({ type: "SET_LOADING", payload: true }); // 👈 Garanta que começa como true
+
         try {
-            const token = localStorage.getItem("accessToken")
+            const token = localStorage.getItem("accessToken");
             if (!token) {
-                dispatch({ type: "SET_LOADING", payload: false })
-                return
+                console.log("[Auth] Sem token no localStorage");
+                return; // Vai manter user = null, isLoading = false no finally
             }
+
+            console.log("[Auth] Token encontrado, consultando usuário...");
 
             const res = await fetch("http://localhost:3000/graphql", {
                 method: "POST",
@@ -109,52 +114,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    query: `
-          query GetUser {
-            user {
-              id
-              name
-              email
-              role
-              company {
-                id
-                name
-                email
-              }
-              plan {
-                name
-                description
-                modules {
-                  module_key
-                  name
-                  description
-                  permission
-                  isActive
-                }
-              }
-            }
-          }
-        `,
+                    query: GET_USER_QUERY.trim(),
                 }),
-            })
+            });
 
-            const json = await res.json()
+            const json = await res.json();
+            console.log('MEU JSONNNNNNNNNNNNNN', json);
+            
 
-            if (json.errors || !json.data?.user) {
-                localStorage.removeItem("accessToken")
-                dispatch({ type: "LOGOUT" })
-                return
+            if (json.errors) {
+                console.error("[Auth] Erros no GraphQL:", json.errors);
+                // Exemplo: token expirado, usuário bloqueado, etc.
+                localStorage.removeItem("accessToken");
+                dispatch({ type: "LOGOUT" });
+                return;
             }
 
-            const { user } = json.data
-            dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })
+            if (!json.data?.me) {
+                console.warn("[Auth] Resposta sem usuário");
+                localStorage.removeItem("accessToken");
+                dispatch({ type: "LOGOUT" });
+                return;
+            }
+
+            const { me: user } = json.data;  // ✅ desestrutura `me`
+            console.log("[Auth] Usuário carregado:", user);
+
+            dispatch({
+                type: "SET_AUTH_DATA",
+                payload: { user, company: user.company },
+            });
         } catch (error) {
-            console.error("Erro ao inicializar auth:", error)
-            dispatch({ type: "LOGOUT" })
+            console.error("[Auth] Erro ao inicializar auth:", error);
+            localStorage.removeItem("accessToken");
+            dispatch({ type: "LOGOUT" });
         } finally {
-            dispatch({ type: "SET_LOADING", payload: false }) // ✅ Garantido
+            dispatch({ type: "SET_LOADING", payload: false }); // ✅ Único lugar onde vira false
         }
-    }
+    };
 
     const login = async (email: string, password_hash: string) => {
         dispatch({ type: "SET_LOADING", payload: true })
@@ -239,6 +236,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
             const { accessToken, user } = json.data.login;
+
+            if (!accessToken) {
+                notifyError("Token não recebido do servidor", 3000);
+                dispatch({ type: "SET_ERROR", payload: "Token ausente" });
+                return;
+            }
 
             notifySuccess('Login realizado com sucesso!', 5000)
 
