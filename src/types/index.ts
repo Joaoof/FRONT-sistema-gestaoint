@@ -88,3 +88,19 @@ export type Payable = {
   status: 'pendente' | 'pago' | 'vencido';
 };
 
+// types/DeliveryTypes.ts
+export interface Delivery {
+  id: string;
+  orderId: string;
+  driver: string;
+  vehicle: string;
+  route: string;
+  category: string; // Ex: "Alimentos", "Materiais Brutos", "Produtos Acabados"
+  status: 'pendente' | 'em rota' | 'entregue' | 'atrasado';
+  scheduledDate: string; // ISO date
+  deliveryDate?: string;
+  origin: string;
+  destination: string;
+  distanceKm: number;
+  estimatedTimeHours: number;
+}

@@ -4,7 +4,7 @@ interface BadgeProps {
   status: 'pendente' | 'pago' | 'vencido';
 }
 
-export function StatusBadge({ status }: BadgeProps) {
+export function StatusBadge({ status }: any) {
   const config = {
     pago: { bg: 'bg-green-100', text: 'text-green-800', icon: CheckCircle },
     pendente: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: Clock },

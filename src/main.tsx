@@ -8,6 +8,8 @@ import { NotificationProvider } from './contexts/NotificationContext.tsx';
 import { Footer } from './components/Footer.tsx';
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
 import { SonnerToaster } from './components/SonnerToaster.tsx';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/react-query';
 
 if (process.env.NODE_ENV !== "production") {
   loadDevMessages();
@@ -16,12 +18,14 @@ if (process.env.NODE_ENV !== "production") {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ApolloProvider client={apolloClient}>
-      <NotificationProvider>
-        <SonnerToaster />
-        <App />
-        <Footer />
-      </NotificationProvider>
-    </ApolloProvider>
+    <QueryClientProvider client={queryClient}>
+      <ApolloProvider client={apolloClient}>
+        <NotificationProvider>
+          <SonnerToaster />
+          <App />
+          <Footer />
+        </NotificationProvider>
+      </ApolloProvider>
+    </QueryClientProvider>
   </StrictMode>
 );

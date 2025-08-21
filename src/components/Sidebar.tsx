@@ -5,9 +5,11 @@ import { useState, useEffect } from 'react';
 import {
   ArrowDownCircle,
   ArrowUpCircle,
+  CarTaxiFrontIcon,
   CreditCard,
   DollarSign,
   FileText,
+  FolderDotIcon,
   LayoutDashboard,
   Package,
   PlusCircle,
@@ -39,6 +41,7 @@ interface SidebarProps {
 // ✅ Mapeamento entre View e módulo
 const VIEW_TO_MODULE: Record<View, string> = {
   dashboard: 'dashboard',
+  entregas: 'entregas',
   cadastros: 'cadastros',
   estoque: 'estoque',
   vendas: 'vendas',
@@ -70,6 +73,7 @@ function hasPermission(
 // ✅ menuItems definido fora, acessível globalmente
 const menuItems: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'entregas', label: 'Entregas', icon: CarTaxiFrontIcon },
   { id: 'cadastros', label: 'Cadastros', icon: Users },
   { id: 'estoque', label: 'Estoque', icon: Package },
   { id: 'vendas', label: 'Vendas', icon: ShoppingCart },

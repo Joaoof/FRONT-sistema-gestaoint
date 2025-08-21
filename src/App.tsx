@@ -24,11 +24,16 @@ import { PrivateRoute } from './components/ProtectedRoute';
 import { CompanyProvider } from './contexts/CompanyContext';
 import { CashMovementForm } from './pages/CashMovementForm';
 import { PayablesList } from './pages/Tax/AccountsPayable/List';
+import { DeliveriesPage } from './pages/DeliveriesPage';
+import { NewDeliveryPage } from './pages/NewDeliveryPage';
+import { ScheduleRoutePage } from './pages/ScheduleRoutePage';
+import { DeliveryReportsPage } from './pages/DeliveryReportsPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-    const { user } = useAuth(); // ✅ Pega o user com permissions
+  const { user } = useAuth(); // ✅ Pega o user com permissions
   const inventory = useInventory(); // ✅ Dados do estoque
 
   const showSidebar = location.pathname !== '/';
@@ -59,6 +64,17 @@ function AppContent() {
                 </PrivateRoute>
               }
             />
+            <Route path='/entregas' element={<DeliveriesPage />} />
+            <Route path="/entregas/cadastrar" element={<NewDeliveryPage />} />
+            <Route
+              path="/entregas/agendar"
+              element={
+                <ErrorBoundary fallback={<div>Ocorreu um erro ao carregar a página de rotas.</div>}>
+                  <ScheduleRoutePage />
+                </ErrorBoundary>
+              }
+            />
+            <Route path="/entregas/relatorios" element={<DeliveryReportsPage />} />
             <Route path="/estoque" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
             <Route path="/vendas" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
             <Route path="/fiscal-receber" element={<AccountsReceivableDashboard />} />

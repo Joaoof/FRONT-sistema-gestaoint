@@ -17,12 +17,14 @@ import { MovementHistory } from './Movement/MovementHistory';
 import { SettingsPage } from './SettingsPage';
 import { Footer } from '../components/Footer';
 import { CashMovementForm } from './CashMovementForm';
+import { DeliveriesPage } from './DeliveriesPage';
 
 
 
 // Tipos
 export type View =
     | 'dashboard'
+    | 'entregas'
     | 'cadastros'
     | 'estoque'
     | 'vendas'
@@ -43,6 +45,7 @@ export type View =
 
 const moduleNames: Record<View, string> = {
     dashboard: 'Dashboard',
+    entregas: 'Entregas',
     cadastros: 'Cadastros',
     estoque: 'Estoque',
     entrada: 'Entrada de Produtos',
@@ -72,14 +75,6 @@ export function AuthenticatedApp() {
     const navigate = useNavigate();
     const location = useLocation();
 
-
-    const [upgradeModal, setUpgradeModal] = useState<{ isOpen: boolean; moduleName: string }>({
-        isOpen: false,
-        moduleName: '',
-    });
-
-    // Verifica acesso ao módulo
-    // Em AuthenticatedApp.tsx
     const hasModuleAccess = (moduleId: string): boolean => {
         return user?.permissions?.some(p => p.module_key === moduleId) ?? false;
     };
@@ -173,6 +168,8 @@ export function AuthenticatedApp() {
         switch (currentView) {
             case 'dashboard':
                 return <Dashboard {...inventory} />;
+            case 'entregas':
+                return <DeliveriesPage />;
             case 'estoque':
                 return <ProductEntry onAddEntry={inventory.addEntry} />;
             case 'vendas':
