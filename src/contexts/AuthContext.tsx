@@ -4,6 +4,7 @@ import type { Company, User, AuthState } from "../types/auth"
 import { useNavigate } from "react-router-dom"; // ✅
 import { useNotification } from "../hooks/useNotification"
 import { GET_USER_QUERY, LOGIN_MUTATION } from "../graphql/queries/user";
+import { toast } from "sonner";
 
 
 interface AuthContextState extends AuthState {
@@ -109,7 +110,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             console.log("[Auth] Token encontrado, consultando usuário...");
 
-            const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
+            const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+            if (!endpoint) {
+                toast.error("❌ VITE_GRAPHQL_ENDPOINT não definido!");
+                dispatch({ type: "SET_ERROR", payload: "Erro de configuração" });
+                return;
+            }
+
+            const res = await fetch(endpoint ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -157,8 +165,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_LOADING", payload: true })
         dispatch({ type: "CLEAR_ERROR" })
 
+        const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+        if (!endpoint) {
+            toast.error("❌ VITE_GRAPHQL_ENDPOINT não definido!");
+            dispatch({ type: "SET_ERROR", payload: "Erro de configuração" });
+            return;
+        }
+
         try {
-            const resLogin = await fetch(import.meta.env.VITE_GRAPHQL_ENDPOINT ?? '', {
+            const resLogin = await fetch(endpoint ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
