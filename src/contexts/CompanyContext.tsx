@@ -95,72 +95,87 @@ function companyReducer(state: CompanyContextState, action: CompanyAction): Comp
 
 
 export function CompanyProvider({ children }: { children: React.ReactNode }) {
-    const [state, dispatch] = useReducer(companyReducer, initialState)
-    const { user } = useAuth()
+    const [state, dispatch] = useReducer(companyReducer, initialState);
+    const { user } = useAuth();
 
+    // Efeito principal: carrega a empresa quando o usuário ou company_id mudar
     useEffect(() => {
         if (!user) {
-            console.log("[CompanyContext] Nenhum usuário logado")
-            dispatch({ type: "SET_LOADING", payload: false })
-            dispatch({ type: "LOGOUT" })
-            return
+            console.log("[CompanyContext] Nenhum usuário logado");
+            dispatch({ type: "SET_LOADING", payload: false });
+            dispatch({ type: "LOGOUT" });
+            return;
         }
 
-        console.log("[CompanyContext] Usuário detectado:", user)
+        console.log("[CompanyContext] Usuário detectado:", user);
+        console.log("[CompanyProvider] user.company_id:", user.company_id);
+
+        const abortController = new AbortController();
 
         async function loadCompany() {
+            if (state.isLoading) return; // Evita múltiplas chamadas
+
             dispatch({ type: "SET_LOADING", payload: true });
 
             try {
-                console.log("[CompanyProvider] user.company_id:", user?.company_id);
-
                 if (!user?.company_id) {
                     throw new Error("Usuário sem company_id vinculado");
                 }
 
-                const company = await fetchCompanyData(user.company_id);
+                const company = await fetchCompanyData(user?.company_id ?? '');
                 const modules = user?.plan?.modules ?? [];
+
+                // Verifica se foi cancelado antes de atualizar estado
+                if (abortController.signal.aborted) return;
 
                 dispatch({
                     type: "SET_AUTH_DATA",
                     payload: { user, company, modules },
                 });
             } catch (error) {
-                console.error("[CompanyContext] Erro ao carregar empresa:", error);
-                dispatch({ type: "LOGOUT" });
+                if (!abortController.signal.aborted) {
+                    console.error("[CompanyContext] Erro ao carregar empresa:", error);
+                    dispatch({ type: "LOGOUT" });
+                }
             } finally {
-                // ✅ GARANTE QUE O LOADING SEMPRE TERMINA
-                console.log("[CompanyContext] SET_LOADING: false (finally)");
-                dispatch({ type: "SET_LOADING", payload: false });
+                if (!abortController.signal.aborted) {
+                    dispatch({ type: "SET_LOADING", payload: false });
+                }
             }
         }
-        loadCompany()
-    }, [user])
 
+        loadCompany();
 
-    async function switchCompany(companyId: string) {
-        dispatch({ type: "SET_LOADING", payload: true })
+        return () => {
+            abortController.abort();
+        };
+    }, [user?.company_id]); // ✅ Apenas dispara quando company_id mudar
+
+    // Função para trocar de empresa
+    const switchCompany = async (companyId: string) => {
+        dispatch({ type: "SET_LOADING", payload: true });
         try {
-            const company = await fetchCompanyData(companyId)
-            const modules = user?.plan?.modules ?? [] // assume o mesmo plano ao trocar de empresa
+            const company = await fetchCompanyData(companyId);
+            const modules = user?.plan?.modules ?? [];
 
-            localStorage.setItem("company_id", companyId)
+            localStorage.setItem("company_id", companyId);
 
             dispatch({
                 type: "SWITCH_COMPANY",
                 payload: { company, modules },
-            })
+            });
         } catch (error) {
-            dispatch({ type: "SET_LOADING", payload: false })
-            throw error
+            dispatch({ type: "SET_LOADING", payload: false });
+            throw error;
         }
-    }
+    };
 
+    // ✅ Retorno correto do componente
     return (
         <CompanyContext.Provider value={{ ...state, switchCompany }}>
             {children}
         </CompanyContext.Provider>
-    )
+    );
 }
 
 export const useCompany = () => {

@@ -118,7 +118,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider> {/* ✅ Esse é o problema principal */}
-        <CompanyProvider>
+        <CompanyProvider >
           <AppContent />
         </CompanyProvider>
       </AuthProvider>
