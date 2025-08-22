@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "CLEAR_ERROR" })
 
         try {
-            const resLogin = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
+            const resLogin = await fetch(import.meta.env.VITE_GRAPHQL_ENDPOINT ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -208,7 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const { accessToken } = loginData.data.login;
 
 
-            const resMe = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
+            const resMe = await fetch(import.meta.env.VITE_GRAPHQL_ENDPOINT ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
