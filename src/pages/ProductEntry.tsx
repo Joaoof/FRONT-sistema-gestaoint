@@ -167,7 +167,13 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
         supplierId: formData.supplier || undefined,
       };
 
-      const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
+      const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+      if (!endpoint) {
+        toast.error("env nullo. Contactar o desenvolvedo");
+        return;
+      }
+
+      const res = await fetch(endpoint ?? '', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -322,8 +328,14 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
     setImportProgress({ processed: 0, total: validProducts.length });
 
     // Enviar em lote (otimizado)
+
+    const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+    if (!endpoint) {
+      toast.error("env nullo. Contactar o desenvolvedo");
+      return;
+    }
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
+      const res = await fetch(endpoint ?? '', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

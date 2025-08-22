@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DollarSign, FileText, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface ReceivableForm {
     value: number;
@@ -73,8 +74,14 @@ export function FiscalPage() {
                 return;
             }
 
+            const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+            if (!endpoint) {
+                toast.error("env nullo. Contactar o desenvolvedo");
+                return;
+            }
+
             // Simulando requisição GraphQL
-            const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
+            const res = await fetch(endpoint ?? '', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -140,7 +147,13 @@ export function FiscalPage() {
                 return;
             }
 
-            const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
+            const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+            if (!endpoint) {
+                toast.error("env nullo. Contactar o desenvolvedo");
+                return;
+            }
+
+            const res = await fetch(endpoint ?? '', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

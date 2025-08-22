@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 type Category = {
     id: string;
@@ -34,7 +35,13 @@ export const CategoryProvider = ({ children }: { children: React.ReactNode }) =>
             const token = localStorage.getItem("accessToken");
             if (!token) throw new Error("Sem token");
 
-            const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
+            const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+            if (!endpoint) {
+                toast.error("env nullo. Contactar o desenvolvedor");
+                return;
+            }
+
+            const res = await fetch(endpoint ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

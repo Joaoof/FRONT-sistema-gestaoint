@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 type Category = {
     id: string;
@@ -19,7 +20,13 @@ export function useCategories() {
             try {
                 const token = localStorage.getItem('accessToken');
 
-                const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
+                const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+                if (!endpoint) {
+                    toast.error("env nullo. Contactar o desenvolvedo");
+                    return;
+                }
+
+                const res = await fetch(endpoint ?? '', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

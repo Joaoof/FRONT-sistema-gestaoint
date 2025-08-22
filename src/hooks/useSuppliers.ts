@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Supplier {
     id: string;
@@ -13,12 +14,18 @@ export function useSuppliers() {
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
-            setError('Usuário não autenticado');
+            toast.error('Usuário não autenticado');
             setLoading(false);
             return;
         }
 
-        fetch('http://localhost:3000/graphql', {
+        const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+        if (!endpoint) {
+            toast.error("env nullo. Contactar o desenvolvedo");
+            return;
+        }
+
+        fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

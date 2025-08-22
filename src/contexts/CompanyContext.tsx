@@ -3,6 +3,7 @@ import type { Company, User } from "../types/auth"
 import type { ICompanyContext, IModule } from "../interfaces/IModule"
 import { PermissionService } from "../permissions/PermissionsService"
 import { useAuth } from "./AuthContext"
+import { toast } from "sonner"
 
 interface CompanyContextState extends ICompanyContext {
     user: User | null
@@ -169,9 +170,14 @@ export const useCompany = () => {
 // 🚀 Busca empresa (sem módulos)
 async function fetchCompanyData(company_id: string): Promise<Company> {
     const token = localStorage.getItem("accessToken")
-    if (!token) throw new Error("Usuário não autenticado")
+    if (!token) toast.error("Usuário com token inválido. Logue novamente")
 
-    const response = await fetch("http://localhost:3000/graphql", {
+    const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+    if (!endpoint) {
+        toast.error("env nullo. Contactar o desenvolvedo");
+    }
+
+    const response = await fetch(endpoint, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
