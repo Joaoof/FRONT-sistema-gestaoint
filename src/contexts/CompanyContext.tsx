@@ -112,14 +112,13 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
             dispatch({ type: "SET_LOADING", payload: true });
 
             try {
-                console.log("[CompanyProvider] user.company_id:", user?.company_id); // 🔥
+                console.log("[CompanyProvider] user.company_id:", user?.company_id);
 
-                // ✅ Garanta que companyId existe
                 if (!user?.company_id) {
                     throw new Error("Usuário sem company_id vinculado");
                 }
 
-                const company = await fetchCompanyData(user.company_id); // ✅ Use o campo certo
+                const company = await fetchCompanyData(user.company_id);
                 const modules = user?.plan?.modules ?? [];
 
                 dispatch({
@@ -129,9 +128,12 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
             } catch (error) {
                 console.error("[CompanyContext] Erro ao carregar empresa:", error);
                 dispatch({ type: "LOGOUT" });
+            } finally {
+                // ✅ GARANTE QUE O LOADING SEMPRE TERMINA
+                console.log("[CompanyContext] SET_LOADING: false (finally)");
+                dispatch({ type: "SET_LOADING", payload: false });
             }
         }
-
         loadCompany()
     }, [user])
 
