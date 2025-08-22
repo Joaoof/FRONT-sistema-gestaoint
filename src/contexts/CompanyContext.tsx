@@ -147,7 +147,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
 
                 dispatch({
                     type: "SET_AUTH_DATA",
-                    payload: { user , company, modules },
+                    payload: { user, company, modules },
                 });
             } catch (error) {
                 if (!abortController.signal.aborted) {
@@ -230,6 +230,7 @@ async function fetchCompanyData(company_id: string): Promise<Company> {
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "x-apollo-operation-name": "GetCompany", // ✅ Evita bloqueio CSRF
         },
         body: JSON.stringify({
             query: `
