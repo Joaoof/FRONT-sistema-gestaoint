@@ -167,7 +167,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         return () => {
             abortController.abort();
         };
-    }, [user?.company_id]);
+    }, [user?.company_id, user]);
 
     const switchCompany = async (companyId: string) => {
         dispatch({ type: "SET_LOADING", payload: true });
