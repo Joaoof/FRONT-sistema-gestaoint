@@ -50,7 +50,7 @@ export function EntryMovement() {
                 return;
             }
 
-            const res = await fetch('http://localhost:3000/graphql', {
+            const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

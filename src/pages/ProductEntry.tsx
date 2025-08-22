@@ -167,7 +167,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
         supplierId: formData.supplier || undefined,
       };
 
-      const res = await fetch('http://localhost:3000/graphql', {
+      const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -323,7 +323,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
 
     // Enviar em lote (otimizado)
     try {
-      const res = await fetch('http://localhost:3000/graphql', {
+      const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

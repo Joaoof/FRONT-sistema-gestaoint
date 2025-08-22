@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             console.log("[Auth] Token encontrado, consultando usuário...");
 
-            const res = await fetch("http://localhost:3000/graphql", {
+            const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "CLEAR_ERROR" })
 
         try {
-            const resLogin = await fetch("http://localhost:3000/graphql", {
+            const resLogin = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -208,7 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const { accessToken } = loginData.data.login;
 
 
-            const resMe = await fetch("http://localhost:3000/graphql", {
+            const resMe = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

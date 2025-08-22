@@ -34,7 +34,7 @@ export const CategoryProvider = ({ children }: { children: React.ReactNode }) =>
             const token = localStorage.getItem("accessToken");
             if (!token) throw new Error("Sem token");
 
-            const res = await fetch("http://localhost:3000/graphql", {
+            const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

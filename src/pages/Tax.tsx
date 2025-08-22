@@ -74,7 +74,7 @@ export function FiscalPage() {
             }
 
             // Simulando requisição GraphQL
-            const res = await fetch('http://localhost:3000/graphql', {
+            const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export function FiscalPage() {
                 return;
             }
 
-            const res = await fetch('http://localhost:3000/graphql', {
+            const res = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
