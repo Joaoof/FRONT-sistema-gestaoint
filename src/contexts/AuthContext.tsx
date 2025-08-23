@@ -150,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_LOADING", payload: true });
         dispatch({ type: "SET_ERROR", payload: "" });
 
+
         try {
             const res = await fetch(import.meta.env.VITE_GRAPHQL_ENDPOINT, {
                 method: "POST",
@@ -176,6 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await fetchUser(accessToken);
 
             notifySuccess("Login realizado com sucesso!");
+            navigate("/dashboard", { replace: true }); // ✅ Isso deve funcionar
         } catch (err) {
             notifyError("Erro de conexão");
             dispatch({ type: "SET_ERROR", payload: "Erro de rede" });
