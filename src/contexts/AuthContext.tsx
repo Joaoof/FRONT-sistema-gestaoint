@@ -1,8 +1,23 @@
-import { createContext, useContext, useReducer, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useNotification } from "../hooks/useNotification";
+import type React from "react"
+import { createContext, useContext, useReducer, useEffect } from "react"
+import type { Company, User, AuthState } from "../types/auth"
+import { useNavigate } from "react-router-dom"; // ✅
+import { useNotification } from "../hooks/useNotification"
+import { GET_USER_QUERY, LOGIN_MUTATION } from "../graphql/queries/user";
+import { toast } from "sonner";
 
-// Tipos
+
+interface AuthContextState extends AuthState {
+    user: User | null;
+    company: Company | null;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    error: string | null;
+    login: (email: string, password: string) => Promise<void>;
+    logout: () => Promise<void>;
+    modules: Module[]; // ✅ Remove ou mantém, mas não use para permissões
+    permissions: { module_key: string; permissions: string[] }[]; // ✅ Adicione isso
+}
 type Module = {
     module_key: string;
     name: string;
@@ -11,197 +26,268 @@ type Module = {
     isActive: boolean;
 };
 
-export type User = {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    company_id: string;
-    company: Company;
-    plan: Plan;
-    permissions: { module_key: string; permissions: string[] }[];
-};
+type AuthAction =
+    | { type: "SET_LOADING"; payload: boolean }
+    | { type: "SET_AUTH_DATA"; payload: { user: User; company: Company } }
+    | { type: "SET_ERROR"; payload: string }
+    | { type: "CLEAR_ERROR" }
+    | { type: "LOGOUT" }
 
-export type Company = {
-    id: string;
-    name: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    logoUrl?: string;
-};
-
-type Plan = {
-    id: string;
-    name: string;
-    description?: string;
-    modules: Module[];
-};
-
-interface AuthState {
-    user: User | null;
-    company: Company | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    error: string | null;
-    permissions: { module_key: string; permissions: string[] }[];
-    login: (email: string, password: string) => Promise<void>;
-    logout: () => Promise<void>;
-}
-
-// GraphQL
-const GET_USER_QUERY = `query { me { id name email role company_id company { id name } plan { id name } permissions { module_key permissions } } }`;
-const LOGIN_MUTATION = `mutation Login($loginUserInput: LoginUserInput!) { login(loginUserInput: $loginUserInput) { accessToken } }`;
-
-// Estado inicial
-const initialState: AuthState = {
+const initialState: AuthContextState = {
     user: null,
     company: null,
     isAuthenticated: false,
     isLoading: true,
     error: null,
+    modules: [],
     permissions: [],
     login: async () => { },
     logout: async () => { },
 };
 
-const AuthContext = createContext<AuthState>(initialState);
+const AuthContext = createContext<AuthContextState>(initialState)
 
-type AuthAction =
-    | { type: "SET_LOADING"; payload: boolean }
-    | { type: "SET_AUTH_DATA"; payload: { user: User; company: Company } }
-    | { type: "SET_ERROR"; payload: string }
-    | { type: "LOGOUT" };
-
-function authReducer(state: AuthState, action: AuthAction): AuthState {
+function authReducer(state: AuthContextState, action: AuthAction): AuthContextState {
     switch (action.type) {
         case "SET_LOADING":
-            return { ...state, isLoading: action.payload };
+            return { ...state, isLoading: action.payload }
+
         case "SET_AUTH_DATA":
+            const { user, company } = action.payload
             return {
                 ...state,
-                user: action.payload.user,
-                company: action.payload.company,
-                permissions: action.payload.user.permissions,
+                user,
+                company,
+                modules: user.plan?.modules || [],
+                permissions: user.permissions || [], // ✅ Use permissions
                 isAuthenticated: true,
                 isLoading: false,
                 error: null,
-            };
+            }
+
         case "SET_ERROR":
-            return { ...state, error: action.payload, isLoading: false };
+            return {
+                ...state,
+                error: action.payload,
+                isLoading: false,
+            }
+
+        case "CLEAR_ERROR":
+            return {
+                ...state,
+                error: null,
+            }
+
         case "LOGOUT":
-            return { ...initialState, isLoading: false };
+            return {
+                ...initialState,
+                isLoading: false,
+            }
+
         default:
-            return state;
+            return state
     }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [state, dispatch] = useReducer(authReducer, initialState);
-    const navigate = useNavigate();
-    const { notifyError, notifySuccess } = useNotification();
+    const [state, dispatch] = useReducer(authReducer, initialState)
+    const navigate = useNavigate(); // ✅ agora sim
+    const { notifyError, notifySuccess } = useNotification()
 
     useEffect(() => {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-            dispatch({ type: "SET_LOADING", payload: false });
-            return;
-        }
+        initializeAuth()
+    }, [])
 
-        // ✅ Pré-carregamento: inicie a consulta ao usuário imediatamente
-        fetchUser(token);
-    }, []);
-
-    const fetchUser = async (token: string) => {
-        dispatch({ type: "SET_LOADING", payload: true });
+    const initializeAuth = async () => {
+        dispatch({ type: "SET_LOADING", payload: true }); // 👈 Garanta que começa como true
 
         try {
-            const res = await fetch(import.meta.env.VITE_GRAPHQL_ENDPOINT, {
+            const token = localStorage.getItem("accessToken");
+            if (!token) {
+                console.log("[Auth] Sem token no localStorage");
+                return; // Vai manter user = null, isLoading = false no finally
+            }
+
+            console.log("[Auth] Token encontrado, consultando usuário...");
+
+            const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+            if (!endpoint) {
+                toast.error("❌ VITE_GRAPHQL_ENDPOINT não definido!");
+                dispatch({ type: "SET_ERROR", payload: "Erro de configuração" });
+                return;
+            }
+
+            const res = await fetch(endpoint ?? '', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ query: GET_USER_QUERY }),
+                body: JSON.stringify({
+                    query: GET_USER_QUERY,
+                }),
             });
 
             const json = await res.json();
+            console.log('MEU JSONNNNNNNNNNNNNN', json);
 
-            if (json.errors || !json.data?.me) {
+
+            if (json.errors) {
+                console.error("[Auth] Erros no GraphQL:", json.errors);
+                // Exemplo: token expirado, usuário bloqueado, etc.
                 localStorage.removeItem("accessToken");
                 dispatch({ type: "LOGOUT" });
                 return;
             }
 
-            const user = json.data.me;
+            if (!json.data?.me) {
+                console.warn("[Auth] Resposta sem usuário");
+                localStorage.removeItem("accessToken");
+                dispatch({ type: "LOGOUT" });
+                return;
+            }
+
+            const { me: user } = json.data;  // ✅ desestrutura `me`
             dispatch({
                 type: "SET_AUTH_DATA",
                 payload: { user, company: user.company },
             });
-        } catch (err) {
+        } catch (error) {
+            console.error("[Auth] Erro ao inicializar auth:", error);
             localStorage.removeItem("accessToken");
             dispatch({ type: "LOGOUT" });
         } finally {
-            dispatch({ type: "SET_LOADING", payload: false });
+            dispatch({ type: "SET_LOADING", payload: false }); // ✅ Único lugar onde vira false
         }
     };
 
-    const login = async (email: string, password: string) => {
-        dispatch({ type: "SET_LOADING", payload: true });
-        dispatch({ type: "SET_ERROR", payload: "" });
+    const login = async (email: string, password_hash: string) => {
+        dispatch({ type: "SET_LOADING", payload: true })
+        dispatch({ type: "CLEAR_ERROR" })
 
+        const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+        if (!endpoint) {
+            toast.error("❌ VITE_GRAPHQL_ENDPOINT não definido!");
+            dispatch({ type: "SET_ERROR", payload: "Erro de configuração" });
+            return;
+        }
 
         try {
-            const res = await fetch(import.meta.env.VITE_GRAPHQL_ENDPOINT, {
+            const resLogin = await fetch(endpoint ?? '', {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                },
                 body: JSON.stringify({
                     query: LOGIN_MUTATION,
-                    variables: { loginUserInput: { email, password_hash: password } },
+                    variables: {
+                        loginUserInput: {
+                            email, password_hash
+                        }
+                    }
                 }),
-            });
+            })
 
-            const data = await res.json();
+            const loginData = await resLogin.json();
 
-            if (data.errors) {
-                const msg = data.errors[0].message || "Credenciais inválidas";
-                notifyError(msg);
-                dispatch({ type: "SET_ERROR", payload: msg });
+            console.log("Resposta completa do GraphQL:", loginData) // ✅ Agora sim, você verá os erros
+            if (loginData.errors) {
+                const error = loginData.errors[0];
+                const code = error.extensions?.code;
+
+                // ✅ 1. Erro com detalhes por campo (validação)
+                if (code === 'DOMAIN_VALIDATION_ERROR' && Array.isArray(error.extensions?.errors)) {
+                    const validationErrors = error.extensions.errors;
+
+                    // Extraia as mensagens
+                    const errorMessage = validationErrors.map((e: { message: any; }) => e.message).join('\n');
+
+                    notifyError(errorMessage, 2000);
+                    dispatch({ type: "SET_ERROR", payload: errorMessage });
+                    return;
+                }
+
+                // ✅ 2. Outros erros (ex: credenciais inválidas)
+                const message = error.message;
+                notifyError(message, 5000);
+                dispatch({ type: "SET_ERROR", payload: message });
+            }
+
+            if (!loginData.data?.login) {
+                notifyError("Resposta inválida do servidor", 3000);
+                dispatch({ type: "SET_ERROR", payload: "Resposta inválida" });
                 return;
             }
 
-            const { accessToken } = data.data.login;
+
+            const { accessToken } = loginData.data.login;
+
+
+            const resMe = await fetch(import.meta.env.VITE_GRAPHQL_ENDPOINT ?? '', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    query: GET_USER_QUERY,
+                }),
+            });
+
+            const meData = await resMe.json();
+
+            if (!accessToken) {
+                notifyError("Token não recebido do servidor", 3000);
+                dispatch({ type: "SET_ERROR", payload: "Token ausente" });
+                return;
+            }
+
+            notifySuccess('Login realizado com sucesso!', 5000)
+
+            if (!meData) {
+                notifyError('Usuário inválido')
+                dispatch({ type: "LOGOUT" })
+                return
+            }
+
+            const user = meData.data.me;
+
             localStorage.setItem("accessToken", accessToken);
-
-            // ✅ Carregue o usuário imediatamente
-            await fetchUser(accessToken);
-
-            notifySuccess("Login realizado com sucesso!");
-            navigate("/dashboard", { replace: true }); // ✅ Isso deve funcionar
-        } catch (err) {
-            notifyError("Erro de conexão");
-            dispatch({ type: "SET_ERROR", payload: "Erro de rede" });
+            dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })
+        } catch (err: any) {
+            const message = err.message || "Erro de conexão com o servidor";
+            dispatch({ type: "SET_ERROR", payload: message });
+            notifyError(message, 5000);
+            throw err;
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
-    };
-
+    }
     const logout = async () => {
+        // Limpa o token
         localStorage.removeItem("accessToken");
-        notifySuccess("Você saiu com sucesso!");
+
+        notifySuccess('Você saiu com sucesso!', 5000);
+
         dispatch({ type: "LOGOUT" });
+
         navigate("/");
     };
 
-    return (
-        <AuthContext.Provider value={{ ...state, login, logout }}>
-            {children}
-        </AuthContext.Provider>
-    );
+    const contextValue: AuthContextState = {
+        ...state,
+        login,
+        logout,
+        permissions: state.permissions, // garantido
+    }
+
+    return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
 }
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) throw new Error("useAuth must be used within AuthProvider");
-    return context;
-};
+    const context = useContext(AuthContext)
+    if (!context) {
+        throw new Error("useAuth must be used within an AuthProvider")
+    }
+    return context
+}
