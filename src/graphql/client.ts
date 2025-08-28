@@ -2,8 +2,8 @@ import { ApolloClient, InMemoryCache, HttpLink, ApolloLink, concat } from '@apol
 import { errorLink } from '../apollo/ErrorLink'; // seu link de erro já criado
 
 const GRAPHQL_URI =
-    typeof process !== 'undefined' && process.env.VITE_GRAPHQL_ENDPOINT
-        ? process.env.VITE_GRAPHQL_ENDPOINT
+    typeof process !== 'undefined' && import.meta.env.VITE_GRAPHQL_ENDPOINT
+        ? import.meta.env.VITE_GRAPHQL_ENDPOINT
         : 'http://localhost:3000/graphql';
 
 const httpLink = new HttpLink({ uri: GRAPHQL_URI });
