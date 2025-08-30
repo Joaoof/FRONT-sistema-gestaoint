@@ -4,7 +4,7 @@ import { onError } from '@apollo/client/link/error';
 
 // HTTP Link
 const httpLink = createHttpLink({
-    uri: import.meta.env.VITE_GRAPHQL_URL,
+    uri: import.meta.env.VITE_GRAPHQL_ENDPOINT,
 });
 
 // Auth Link
