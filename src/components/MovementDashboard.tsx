@@ -57,6 +57,8 @@ export function MovementDashboard() {
         }
     });
 
+    console.log("GraphQL endpoint:", import.meta.env.VITE_GRAPHQL_ENDPOINT);
+
     const errorMessage = error ? getGraphQLErrorMessages(error) : null;
 
 
