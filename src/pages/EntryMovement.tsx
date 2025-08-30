@@ -57,6 +57,9 @@ export function EntryMovement() {
                 return;
             }
 
+            console.log("Endpoint GraphQL:", endpoint);
+
+
             const res = await fetch(endpoint ?? '', {
                 method: 'POST',
                 headers: {
