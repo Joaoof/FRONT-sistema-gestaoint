@@ -10,7 +10,7 @@ import {
     Database,
     Banknote,
 } from 'lucide-react';
-import { apolloClient } from '../graphql/client';
+import { apolloClient } from '../lib/apollo-client';
 import { CREATE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
 import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
 import { getUserIdFromToken } from '../utils/getToken';
@@ -113,6 +113,9 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 variables: { input },
             });
 
+            console.log(response);
+
+
             if (response.errors && response.errors.length > 0) {
                 const messages = response.errors.flatMap(({ message, extensions }: any) => {
                     const issues = extensions?.issues;
@@ -156,11 +159,18 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
             onSuccess?.();
         } catch (err: any) {
-            console.log('🔴 Erro capturado no catch:', err); // 🔥 ESSE É O MAIS IMPORTANTE
+            console.log('🔴 Erro capturado no catch:', err); // erro bruto
+            if (err.networkError) {
+                console.log('🌐 Network Error:', err.networkError);
+            }
+            if (err.graphQLErrors) {
+                console.log('🛠 GraphQL Errors:', err.graphQLErrors);
+            }
             const messages = getGraphQLErrorMessages(err);
             messages.forEach((msg: any) => toast.error(msg));
             setError(messages.join(' • '));
-        } finally {
+        }
+        finally {
             setLoading(false);
         }
     };
