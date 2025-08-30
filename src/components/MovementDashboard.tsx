@@ -34,7 +34,6 @@ import { GET_DASHBOARD_STATS } from '../graphql/queries/dashboard';
 import { LoadingSpinner } from './common/LoadingSpinner';
 import { formatCurrency } from '../utils/formatValue';
 import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
-import { useAuth } from '../contexts/AuthContext';
 
 export function MovementDashboard() {
     const navigate = useNavigate();
