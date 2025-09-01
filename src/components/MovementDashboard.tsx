@@ -97,7 +97,25 @@ export function MovementDashboard() {
     const hasAlert = balance < 0;
 
     const margemLucro = entries > 0 ? ((balance / entries) * 100).toFixed(1) : '0.0';
-    const ticketMedio = exits > 0 ? (entries / exits).toFixed(2) : '0.00';
+    const totalMovimentos = data?.dashboardStats.totalMovements || 1;
+    // Somar por categoria (caso tenha várias entradas da mesma categoria)
+    const entradasPorCategoria = entries.reduce((acc: any, item: any) => {
+        acc[item.categoria] = (acc[item.categoria] || 0) + item.valor;
+        return acc;
+    }, {});
+
+    // Transformar em array e ordenar do maior para o menor
+    type EntradaCategoria = { categoria: string; valor: number };
+
+    const topEntradas = Object.entries(entradasPorCategoria)
+        .map(([categoria, valor]) => ({ categoria, valor: valor as number } as EntradaCategoria))
+        .sort((a, b) => b.valor - a.valor);
+
+    // Pega os 3 maiores, por exemplo
+    const top3Entradas = topEntradas.slice(0, 3);
+
+    console.log(top3Entradas);
+
     const crescimentoDiario = monthlyData.length > 1
         ? (() => {
             const entradasAtual = monthlyData[monthlyData.length - 1].entradas;
@@ -247,16 +265,16 @@ export function MovementDashboard() {
                         bgColor: 'bg-green-700',
                     },
                     {
-                        label: 'Ticket Médio',
-                        value: `R$ ${ticketMedio}`,
+                        label: 'Total de Movimentos',
+                        value: `R$ ${totalMovimentos}`,
                         icon: DollarSign,
                         color: 'blue',
                         borderColor: 'border-blue-900',
                         bgColor: 'bg-blue-700',
                     },
                     {
-                        label: 'Crescimento Diário',
-                        value: crescimentoDiario,
+                        label: 'Top Categoria',
+                        value: top3Entradas,
                         icon: TrendingUp,
                         color: 'purple',
                         borderColor: 'border-purple-900',
@@ -292,7 +310,21 @@ export function MovementDashboard() {
 
                         <div>
                             <p className="text-xs uppercase tracking-wide text-gray-500">{kpi.label}</p>
-                            <p className="text-4xl font-extrabold text-gray-900 tabular-nums mt-1">{kpi.value}</p>
+                            <p className="text-4xl font-extrabold text-gray-900 tabular-nums mt-1">
+                                {Array.isArray(kpi.value)
+                                    ? (
+                                        <span>
+                                            {kpi.value.map((item, idx) => (
+                                                <span key={item.categoria}>
+                                                    {item.categoria}: {formatCurrency(item.valor)}
+                                                    {idx < kpi.value.length - 1 && ', '}
+                                                </span>
+                                            ))}
+                                        </span>
+                                    )
+                                    : kpi.value
+                                }
+                            </p>
                         </div>
 
                         <div className="flex items-center gap-2 mt-3">
