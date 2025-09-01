@@ -315,7 +315,7 @@ export function MovementDashboard() {
                                         <span>
                                             {kpi.value.map((item, idx) => (
                                                 <span key={item.categoria}>
-                                                    {item.categoria}: {formatCurrency(item.valor)}
+                                                    {item.categoria}: {formatCurrency(Number(item.valor))}
                                                     {idx < kpi.value.length - 1 && ', '}
                                                 </span>
                                             ))}
