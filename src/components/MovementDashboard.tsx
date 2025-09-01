@@ -266,7 +266,7 @@ export function MovementDashboard() {
             <motion.div className="grid grid-cols-1 md:grid-cols-5 gap-6" variants={containerVariants}>
                 {[
                     {
-                        label: 'Quantidade Movimentações',
+                        label: 'Margem de Lucro',
                         value: `${margemLucro}%`,
                         icon: TrendingUp,
                         color: 'green',
