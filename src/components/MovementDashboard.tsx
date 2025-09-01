@@ -64,7 +64,7 @@ export function MovementDashboard() {
     if (loading) return <LoadingSpinner />;
     if (error) return <div className="p-8 text-center text-red-600">Erro: {error.message}</div>;
 
-    const entries = data?.dashboardStats.todayEntries || 0;
+    const entries = data?.dashboardStats.todayEntries || [];
     const exits = data?.dashboardStats.todayExits || 0;
     const balance = data?.dashboardStats.todayBalance || 0;
     const totalMes = data?.dashboardStats.monthlyTotal || 0;
@@ -99,7 +99,7 @@ export function MovementDashboard() {
     const margemLucro = entries > 0 ? ((balance / entries) * 100).toFixed(1) : '0.0';
     const totalMovimentos = data?.dashboardStats.totalMovements || 1;
     // Somar por categoria (caso tenha várias entradas da mesma categoria)
-    const entradasPorCategoria = entries.reduce((acc: any, item: any) => {
+    const entradasPorCategoria = entries.reduce((acc: Record<string, number>, item: any) => {
         acc[item.categoria] = (acc[item.categoria] || 0) + item.valor;
         return acc;
     }, {});
