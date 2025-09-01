@@ -107,9 +107,8 @@ export function MovementDashboard() {
     // Transformar em array e ordenar do maior para o menor
     type EntradaCategoria = { categoria: string; valor: number };
 
-    const topEntradas = Object.entries(entradasPorCategoria)
-        .map(([categoria, valor]) => ({ categoria, valor: valor as number } as EntradaCategoria))
-        .sort((a, b) => b.valor - a.valor);
+    const topEntradas = Object.entries(entradasPorCategoria).map(([categoria, valor]) => ({ categoria, valor }));
+
 
     // Pega os 3 maiores, por exemplo
     const top3Entradas = topEntradas.slice(0, 3);
