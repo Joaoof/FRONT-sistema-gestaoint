@@ -98,7 +98,18 @@ export function MovementDashboard() {
 
     const margemLucro = entries > 0 ? ((balance / entries) * 100).toFixed(1) : '0.0';
     const ticketMedio = exits > 0 ? (entries / exits).toFixed(2) : '0.00';
-    const crescimentoDiario = '+12.5%';
+    const crescimentoDiario = monthlyData.length > 1
+        ? (() => {
+            const entradasAtual = monthlyData[monthlyData.length - 1].entradas;
+            const entradasAnterior = monthlyData[monthlyData.length - 2].entradas;
+
+            if (entradasAnterior === 0) return '0.0%'; // evita Infinity
+            return `${(((entradasAtual - entradasAnterior) / entradasAnterior) * 100).toFixed(1)}%`;
+        })()
+        : '0.0%';
+
+    console.log(crescimentoDiario);
+
 
     const forecastData = Array.from({ length: 14 }, (_, i) => ({
         day: i + 1,
