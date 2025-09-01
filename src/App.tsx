@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
 import { ProductEntry } from './pages/ProductEntry';
 import { ProductExit } from './pages/ProductExit';
-import { CategoriesRegistration, CustomersRegistration, ProductsRegistration, SupplierRegistration } from './pages/Register';
+import { CategoriesRegistration, CustomersRegistration, SupplierRegistration } from './pages/Register';
 import { Sidebar } from './components/Sidebar';
 import { useInventory } from './hooks/useInventory';
 import { LoginForm } from './pages/LoginForm';
@@ -98,7 +98,6 @@ function AppContent() {
                   <h1 className="text-xl font-['Rajdhani'] font-bold">Cadastros</h1>
                   <CategoriesRegistration />
                   <CustomersRegistration />
-                  <ProductsRegistration />
                   <SupplierRegistration />
                 </div>
               }
