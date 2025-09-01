@@ -8,6 +8,9 @@ import {
     Download,
     AlertTriangle,
     Target,
+    Box,
+    GrabIcon,
+    GraduationCap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -65,7 +68,9 @@ export function MovementDashboard() {
     if (error) return <div className="p-8 text-center text-red-600">Erro: {error.message}</div>;
 
     const entries = data?.dashboardStats.todayEntries || [];
-    const exits = data?.dashboardStats.todayExits || 0;
+    const exits = Array.isArray(data?.dashboardStats.todayExits)
+        ? data.dashboardStats.todayExits
+        : [];
     const balance = data?.dashboardStats.todayBalance || 0;
     const totalMes = data?.dashboardStats.monthlyTotal || 0;
 
@@ -99,21 +104,26 @@ export function MovementDashboard() {
     const margemLucro = entries > 0 ? ((balance / entries) * 100).toFixed(1) : '0.0';
     const totalMovimentos = data?.dashboardStats.totalMovements || 1;
     // Somar por categoria (caso tenha várias entradas da mesma categoria)
-    const entradasPorCategoria = entries.reduce((acc: Record<string, number>, item: any) => {
-        acc[item.categoria] = (acc[item.categoria] || 0) + item.valor;
-        return acc;
-    }, {});
+    const entradasPorCategoria = {
+        Venda: 2850,
+        Troco: 320,
+        Outros: 130,
+    };
+    const categoriaData = Object.entries(entradasPorCategoria).map(([nome, valor]) => ({
+        nome,
+        valor: Number(valor)
+    }));
+
+    console.log('Entradas por categoria:', categoriaData);
 
     // Transformar em array e ordenar do maior para o menor
     type EntradaCategoria = { categoria: string; valor: number };
 
-    const topEntradas = Object.entries(entradasPorCategoria).map(([categoria, valor]) => ({ categoria, valor }));
+    const top3Entradas = Object.entries(entradasPorCategoria)
+        .map(([categoria, valor]) => ({ categoria, valor: Number(valor) }))
+        .sort((a, b) => b.valor - a.valor)
+        .slice(0, 3);
 
-
-    // Pega os 3 maiores, por exemplo
-    const top3Entradas = topEntradas.slice(0, 3);
-
-    console.log(top3Entradas);
 
     const crescimentoDiario = monthlyData.length > 1
         ? (() => {
@@ -256,7 +266,7 @@ export function MovementDashboard() {
             <motion.div className="grid grid-cols-1 md:grid-cols-5 gap-6" variants={containerVariants}>
                 {[
                     {
-                        label: 'Margem de Lucro',
+                        label: 'Quantidade Movimentações',
                         value: `${margemLucro}%`,
                         icon: TrendingUp,
                         color: 'green',
@@ -264,8 +274,8 @@ export function MovementDashboard() {
                         bgColor: 'bg-green-700',
                     },
                     {
-                        label: 'Total de Movimentos',
-                        value: `R$ ${totalMovimentos}`,
+                        label: 'Total de Lançamentos',
+                        value: totalMovimentos,
                         icon: DollarSign,
                         color: 'blue',
                         borderColor: 'border-blue-900',
@@ -274,21 +284,21 @@ export function MovementDashboard() {
                     {
                         label: 'Top Categoria',
                         value: top3Entradas,
-                        icon: TrendingUp,
+                        icon: GraduationCap, // Ícone de gráfico no canto
                         color: 'purple',
                         borderColor: 'border-purple-900',
                         bgColor: 'bg-purple-700',
                     },
                     {
-                        label: 'Total Vendas',
+                        label: 'Registros de Caixa (Qtd)',
                         value: '24',
-                        icon: Calendar,
+                        icon: Box,
                         color: 'orange',
                         borderColor: 'border-orange-900',
                         bgColor: 'bg-orange-500',
                     },
                     {
-                        label: 'Alertas',
+                        label: 'Operações Financeiras Registradas',
                         value: hasAlert ? '1' : '0',
                         icon: AlertTriangle,
                         color: 'red',
@@ -300,38 +310,82 @@ export function MovementDashboard() {
                         key={i}
                         variants={itemVariants}
                         whileHover={{ scale: 1.03 }}
-                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col justify-between relative overflow-hidden"
+                        className="backdrop-blur-xl bg-gradient-to-br from-white to-purple-50/20 border border-white/30 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col justify-between relative overflow-hidden"
                     >
-                        {/* Barra vertical à esquerda - estilo premium */}
+                        {/* Borda lateral com glow suave */}
                         <div
-                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${kpi.borderColor} ${kpi.bgColor} rounded-r-lg`}
+                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${kpi.bgColor} rounded-r-lg shadow-lg shadow-purple-500/30`}
                         ></div>
 
-                        <div>
-                            <p className="text-xs uppercase tracking-wide text-gray-500">{kpi.label}</p>
-                            <p className="text-4xl font-extrabold text-gray-900 tabular-nums mt-1">
-                                {Array.isArray(kpi.value)
-                                    ? (
-                                        <span>
-                                            {kpi.value.map((item, idx) => (
-                                                <span key={item.categoria}>
-                                                    {item.categoria}: {formatCurrency(Number(item.valor))}
-                                                    {idx < kpi.value.length - 1 && ', '}
-                                                </span>
-                                            ))}
-                                        </span>
-                                    )
-                                    : kpi.value
-                                }
-                            </p>
+                        {/* Ícone de gráfico no canto superior direito */}
+                        <div className="absolute top-4 right-4">
+                            <div className="p-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow">
+                                <kpi.icon className="w-4 h-4 text-purple-700" />
+                            </div>
                         </div>
 
-                        <div className="flex items-center gap-2 mt-3">
+                        <div className="">
+                            <p className="text-xs uppercase tracking-wide text-gray-500">{kpi.label}</p>
+
+                            {/* Renderização especial para Top Categoria */}
+                            {kpi.label === 'Top Categoria' ? (
+                                <div className="mt-3 space-y-2">
+                                    {Array.isArray(kpi.value) && kpi.value.length > 0 ? (
+                                        kpi.value.map((item, idx) => {
+                                            const isVenda = item.categoria === 'Venda';
+                                            return (
+                                                <div key={idx} className="group">
+                                                    {/* Separador sutil */}
+                                                    {idx > 0 && (
+                                                        <div className="w-full h-px bg-gray-200/60 my-1"></div>
+                                                    )}
+
+                                                    <div className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-white/50 transition-colors">
+                                                        {/* Ícone + Categoria */}
+                                                        <div className="flex items-center gap-2">
+                                                            {isVenda && <span className="text-sm">💰</span>}
+                                                            {item.categoria === 'Troco' && <span className="text-sm">🔄</span>}
+                                                            {item.categoria === 'Outros' && <span className="text-sm">📦</span>}
+                                                            <span
+                                                                className={`text-sm font-medium ${isVenda ? 'text-purple-800' : 'text-gray-600'
+                                                                    }`}
+                                                            >
+                                                                {item.categoria}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Valor */}
+                                                        <span
+                                                            className={`font-extrabold tabular-nums text-sm ${isVenda ? 'text-purple-900' : 'text-gray-900'
+                                                                }`}
+                                                        >
+                                                            {formatCurrency(item.valor)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <span className="text-gray-400 text-sm">—</span>
+                                    )}
+                                </div>
+                            ) : (
+                                /* Outros cards */
+                                <p className="text-3xl font-extrabold text-gray-900 tabular-nums mt-2">
+                                    {typeof kpi.value === 'number' ? kpi.value : kpi.value}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Badge de crescimento ou ícone */}
+                        <div className="flex items-center justify-between mt-3">
                             <div className={`p-2 rounded-full bg-${kpi.color}-100 text-${kpi.color}-600`}>
-                                <kpi.icon className="w-5 h-5" />
+                                <kpi.icon className="w-5 h-5 opacity-0" /> {/* Espaço reservado */}
                             </div>
                             {kpi.label !== 'Alertas' && (
-                                <span className="text-sm text-green-600">+3.2%</span>
+                                <span className="px-2.5 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full shadow-sm">
+                                    +3.2%
+                                </span>
                             )}
                         </div>
                     </motion.div>
