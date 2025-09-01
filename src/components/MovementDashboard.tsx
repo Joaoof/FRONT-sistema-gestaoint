@@ -97,7 +97,7 @@ export function MovementDashboard() {
     const hasAlert = balance < 0;
 
     const margemLucro = entries > 0 ? ((balance / entries) * 100).toFixed(1) : '0.0';
-    const ticketMedio = '85,50';
+    const ticketMedio = exits > 0 ? (entries / exits).toFixed(2) : '0.00';
     const crescimentoDiario = '+12.5%';
 
     const forecastData = Array.from({ length: 14 }, (_, i) => ({
