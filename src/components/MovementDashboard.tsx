@@ -509,93 +509,74 @@ export function MovementDashboard() {
             </motion.div>
 
             {/* Gráficos com hover suave */}
+            {/* Gráficos substituídos por "Módulo em breve!" */}
             <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
-                <motion.div variants={chartVariants}>
+                {[
+                    {
+                        title: "Previsão de Caixa",
+                        icon: TrendingUp,
+                        color: "from-green-400 to-emerald-500",
+                    },
+                    {
+                        title: "Heatmap de Vendas",
+                        icon: Calendar,
+                        color: "from-orange-400 to-red-500",
+                    },
+                    {
+                        title: "Top Produtos",
+                        icon: Box,
+                        color: "from-purple-400 to-violet-500",
+                    },
+                    {
+                        title: "Insights Inteligentes",
+                        icon: GraduationCap,
+                        color: "from-blue-400 to-cyan-500",
+                    },
+                ].map((card, i) => (
                     <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
+                        key={i}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.02 }}
+                        className={`backdrop-blur-xl bg-gradient-to-br ${card.color}/20 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col items-center justify-center text-center`}
                     >
-                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Previsão de Caixa (14 dias)</h3>
-                        <ResponsiveContainer width="100%" height={200}>
-                            <AreaChart data={forecastData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="day" />
-                                <YAxis />
-                                <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Saldo']} />
-                                <Area type="monotone" dataKey="saldo" stroke="#8b5cf6" fill="url(#colorForecast)" />
-                                <defs>
-                                    <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.6} />
-                                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.1} />
-                                    </linearGradient>
-                                </defs>
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        <div className={`p-3 rounded-full bg-${card.color.split(" ")[0].replace("from-", "")}/10 mb-4`}>
+                            <card.icon className="w-8 h-8 text-gray-700" />
+                        </div>
+                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-2">{card.title}</h3>
+                        <p className="text-gray-600 text-sm font-medium">Módulo em breve!</p>
+                        <div className="mt-4 w-16 h-1 bg-gradient-to-r from-current to-transparent rounded-full opacity-30"></div>
                     </motion.div>
-                </motion.div>
+                ))}
+            </motion.div>
 
-                <motion.div variants={chartVariants}>
+            {/* Gráficos menores — também substituídos por "Módulo em breve!" */}
+            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
+                {[
+                    {
+                        title: "Entradas vs Saídas",
+                        icon: DollarSign,
+                        color: "from-green-400 to-red-400",
+                    },
+                    {
+                        title: "Evolução Diária",
+                        icon: TrendingUp,
+                        color: "from-blue-400 to-purple-400",
+                    },
+                ].map((card, i) => (
                     <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
+                        key={i}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.02 }}
+                        className={`backdrop-blur-xl bg-gradient-to-br ${card.color}/20 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col items-center justify-center text-center`}
                     >
-                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Heatmap de Vendas por Hora</h3>
-                        <ResponsiveContainer width="100%" height={200}>
-                            <BarChart data={heatmapData}>
-                                <XAxis dataKey="hour" tickFormatter={(hour) => `${hour}h`} />
-                                <YAxis hide />
-                                <Tooltip formatter={(value: number) => [`${value} vendas`, 'Volume']} />
-                                <Bar dataKey="value" fill="url(#heatGradient)" radius={[4, 4, 0, 0]} background={{ fill: '#f3f4f6' }} />
-                                <defs>
-                                    <linearGradient id="heatGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#059669" stopOpacity={0.8} />
-                                        <stop offset="100%" stopColor="#059669" stopOpacity={0.3} />
-                                    </linearGradient>
-                                </defs>
-                            </BarChart>
-                        </ResponsiveContainer>
+                        <div className={`p-3 rounded-full bg-${card.color.split(" ")[0].replace("from-", "")}/10 mb-4`}>
+                            <card.icon className="w-8 h-8 text-gray-700" />
+                        </div>
+                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-2">{card.title}</h3>
+                        <p className="text-gray-600 text-sm font-medium">Módulo em breve!</p>
+                        <div className="mt-4 w-16 h-1 bg-gradient-to-r from-current to-transparent rounded-full opacity-30"></div>
                     </motion.div>
-                </motion.div>
-
-                <motion.div variants={chartVariants}>
-                    <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
-                    >
-                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Top Produtos</h3>
-                        <ResponsiveContainer width="100%" height={200}>
-                            <BarChart layout="vertical" data={topProducts} margin={{ left: 80 }}>
-                                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
-                                <XAxis hide />
-                                <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Receita']} />
-                                <Bar dataKey="value" fill="url(#productGradient)" radius={[0, 4, 4, 0]} />
-                                <defs>
-                                    <linearGradient id="productGradient" x1="0" y1="0" x2="1" y2="0">
-                                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.9} />
-                                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.6} />
-                                    </linearGradient>
-                                </defs>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </motion.div>
-                </motion.div>
-
-                <motion.div variants={itemVariants}>
-                    <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        className="bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 rounded-2xl p-6 shadow-lg min-h-48"
-                    >
-                        <h3 className="text-lg font-extrabold tracking-tight text-blue-900 mb-4">💡 Insights Inteligentes</h3>
-                        <ul className="space-y-3 text-sm text-blue-800">
-                            {insights.map((text, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                    <TrendingUp className="w-4 h-4 mt-0.5 text-blue-600" />
-                                    {text}
-                                </li>
-                            ))}
-                        </ul>
-                    </motion.div>
-                </motion.div>
+                ))}
             </motion.div>
 
             {/* Gráficos menores */}

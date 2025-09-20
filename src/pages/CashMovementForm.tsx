@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import {
     DollarSign,
-    XCircle,
     Save,
     ArrowLeftRight,
     PlusCircle,
