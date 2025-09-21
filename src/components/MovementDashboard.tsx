@@ -150,20 +150,26 @@ export function MovementDashboard() {
     ];
 
     const handleExport = () => {
-        const csv = [
-            ['Data', 'Hora', 'Descrição', 'Tipo', 'Valor'],
-            ['Hoje', '10:30', 'Venda de produtos', 'Entrada', 'R$ 1500,00'],
-            ['Hoje', '11:15', 'Troco', 'Saída', 'R$ 50,00'],
+        const dataFormatada = new Date(filterDate).toLocaleDateString('pt-BR');
+
+        const csvContent = [
+            ['Data', 'Tipo', 'Valor (R$)'],
+            [dataFormatada, 'Entradas', entries.toFixed(2).replace('.', ',')],
+            [dataFormatada, 'Saídas', exits.toFixed(2).replace('.', ',')],
+            [dataFormatada, 'Saldo', balance.toFixed(2).replace('.', ',')],
         ]
-            .map(row => row.join(','))
+            .map(row => row.join(';')) // Usar ; para evitar conflito com ,
             .join('\n');
 
-        const blob = new Blob([csv], { type: 'text/csv' });
+        const blob = new Blob([`\uFEFF${    csvContent}`], { type: 'text/csv;charset=utf-8;' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `relatorio_${filterDate}.csv`;
+        a.download = `relatorio_movimentacoes_${filterDate}.csv`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
     };
 
     const handleEdit = () => {
@@ -267,7 +273,7 @@ export function MovementDashboard() {
                 {[
                     {
                         label: 'Margem de Lucro',
-                        value: `${margemLucro}%`,
+                        value: `EM BREVE`,
                         icon: TrendingUp,
                         color: 'green',
                         borderColor: 'border-green-900',
@@ -275,7 +281,7 @@ export function MovementDashboard() {
                     },
                     {
                         label: 'Total de Lançamentos',
-                        value: totalMovimentos,
+                        value: `EM BREVE`,
                         icon: DollarSign,
                         color: 'blue',
                         borderColor: 'border-blue-900',
@@ -291,7 +297,7 @@ export function MovementDashboard() {
                     },
                     {
                         label: 'Registros de Caixa (Qtd)',
-                        value: '24',
+                        value: `EM BREVE`,
                         icon: Box,
                         color: 'orange',
                         borderColor: 'border-orange-900',
@@ -299,7 +305,7 @@ export function MovementDashboard() {
                     },
                     {
                         label: 'Operações Financeiras Registradas',
-                        value: hasAlert ? '1' : '0',
+                        value: `EM BREVE`,
                         icon: AlertTriangle,
                         color: 'red',
                         borderColor: 'border-red-900',

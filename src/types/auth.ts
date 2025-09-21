@@ -5,7 +5,7 @@ export interface User {
     name: string
     company_id: string
     role: UserRole
-    plan?: PlanDto; // ✅ Corrigido: é um objeto, não uma string
+    plan: PlanDto; // ✅ Corrigido: é um objeto, não uma string
     permissions: PermissionDto[]
 }
 

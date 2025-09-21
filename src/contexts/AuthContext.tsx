@@ -251,6 +251,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             const user = meData.data.me;
+            console.log(user);
+            
 
             localStorage.setItem("accessToken", accessToken);
             dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })

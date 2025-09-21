@@ -177,7 +177,12 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
             const modules: IModule[] = rawModules.map((mod: any) => ({
                 ...mod,
                 id: mod.id || mod.module_key || Math.random().toString(36),
+                name: mod.name || "Sem nome",
+                description: mod.description || "",
+                permission: mod.permission || [],
+                isActive: mod.isActive ?? false,
             }));
+
 
             localStorage.setItem("company_id", companyId);
 
