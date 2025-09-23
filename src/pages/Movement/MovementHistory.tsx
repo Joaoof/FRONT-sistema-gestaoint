@@ -118,7 +118,8 @@ export function MovementHistory() {
     const [editingMovement, setEditingMovement] = useState<Movement | null>(null);
 
     const { data, loading, error, refetch } = useQuery(GET_CASH_MOVEMENTS, {
-        pollInterval: 10000,
+        fetchPolicy: 'cache-first',
+        notifyOnNetworkStatusChange: true,
     });
 
     const [createMovement] = useMutation(CREATE_CASH_MOVEMENT, {
