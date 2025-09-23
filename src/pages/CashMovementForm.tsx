@@ -14,6 +14,7 @@ import { CREATE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
 import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
 import { getUserIdFromToken } from '../utils/getToken';
 import { formatLocalDateTime, parseLocalDateTime } from '../utils/formatDate';
+import { GET_CASH_MOVEMENTS } from '../graphql/queries/queries';
 
 // Mapeamento para backend (Prisma/GraphQL)
 const movementTypeMap = {
@@ -110,6 +111,8 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             const response = await apolloClient.mutate({
                 mutation: CREATE_CASH_MOVEMENT,
                 variables: { input },
+                refetchQueries: [{ query: GET_CASH_MOVEMENTS }],
+                awaitRefetchQueries: true
             });
 
             console.log(response);
