@@ -145,7 +145,7 @@ export function MovementHistory() {
             filter === 'ALL' ||
             (filter === 'ENTRY' && m.type === 'ENTRY') ||
             (filter === 'EXIT' && m.type === 'EXIT') ||
-            m.category === filter;
+            (['SALE', 'CHANGE', 'OTHER_IN', 'EXPENSE', 'WITHDRAWAL', 'PAYMENT'].includes(filter as string) && mapCategoryToSubtype(m.category as string) === filter);
 
         const date = m.date ? new Date(m.date) : null;
         const from = dateFrom ? new Date(dateFrom) : null;
@@ -485,7 +485,7 @@ export function MovementHistory() {
                                                     className={`inline-flex px-3 py-1 rounded-full text-xs font-medium
                                                         ${m.type === 'ENTRY' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
                                                 >
-                                                    {typeLabels[m.category]}
+                                                    {typeLabels[mapCategoryToSubtype(m.category)]}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-sm font-semibold text-right">
