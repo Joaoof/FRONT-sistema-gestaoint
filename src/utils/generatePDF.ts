@@ -8,35 +8,30 @@ const toBRL = (n: number) =>
 const pad3 = (n: number) => String(n).padStart(3, "0")
 
 const fmtDateTime = (iso: string) =>
-    new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(
-        new Date(iso)
-    )
+    new Intl.DateTimeFormat("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short"
+    }).format(new Date(iso))
 
 function isEntrada(m: Movement) {
-    // Regras simples e legíveis:
-    // - Vendas e qualquer subtype contendo "entrada" contam como ENTRADA
-    // - Troco, despesa, saque contam como SAÍDA
-    const s = m.subtype?.toLowerCase() || ""
-    const t = m.type?.toLowerCase() || ""
-    if (t === "venda") return true
-    if (s.includes("entrada")) return true
-    return false
+    // ENTRADA se type === 'ENTRY'; caso contrário SAÍDA
+    return m.type === "ENTRY"
 }
 
 export async function generateMovementsPdf(
     movements: Movement[],
     filename: string = "movimentacoes.pdf",
-    selectedMonth: string = new Date().toISOString().slice(0, 7), // Formato YYYY-MM
-    selectedYear: string = new Date().getFullYear().toString() // Formato YYYY
+    selectedMonth: string = new Date().toISOString().slice(0, 7),
+    selectedYear: string = new Date().getFullYear().toString()
 ) {
     // Carrega pdfmake no navegador
     const pdfMakeMod = (await import("pdfmake/build/pdfmake")) as AnyMod
     const pdfFontsMod = (await import("pdfmake/build/vfs_fonts")) as AnyMod
     const pdfMake: AnyMod = pdfMakeMod.default || pdfMakeMod
-    pdfMake.vfs = (pdfFontsMod as AnyMod).vfs
+    pdfMake.vfs = pdfFontsMod.vfs
 
     // Ordena por data crescente
-    const rowsData = [...(movements || [])].sort(
+    const rowsData = [...movements].sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     )
 
@@ -48,7 +43,6 @@ export async function generateMovementsPdf(
         .reduce((acc, m) => acc + Math.abs(m.value || 0), 0)
     const saldo = entradas - saidas
 
-    // Tabela principal
     const tableRows = rowsData.map((m, idx) => [
         { text: pad3(idx + 1), alignment: "center" },
         { text: m.description || "-" },
@@ -57,7 +51,7 @@ export async function generateMovementsPdf(
         { text: toBRL(Math.abs(m.value || 0)), alignment: "right" },
     ])
 
-    const red = "#e53935" // um pouco mais suave e moderno
+    const red = "#e53935"
     const zebra = "#f7f7f7"
     const line = "#d0d0d0"
     const text = "#2f2f2f"
@@ -91,46 +85,27 @@ export async function generateMovementsPdf(
                     fontSize: 8,
                 },
             ],
-            canvas: [{ type: "line", x1: 0, y1: 0, x2: 539, y2: 0, lineWidth: 0.5, lineColor: line }],
+            canvas: [
+                { type: "line", x1: 0, y1: 0, x2: 539, y2: 0, lineWidth: 0.5, lineColor: line },
+            ],
         }),
 
         content: [
-            // Título simples
             {
                 columns: [
                     { text: "Relatório de Movimentações", style: "title", width: "*" },
-                    {
-                        text: "",
-                        width: "auto",
-                    },
+                    { text: "", width: "auto" },
                 ],
                 margin: [0, 0, 0, 8],
             },
-
-            // Resumo: Entradas / Saídas / Saldo
             {
                 table: {
                     widths: ["*", "*", "*"],
                     body: [
                         [
-                            {
-                                stack: [
-                                    { text: "Entradas", style: "chipLabel" },
-                                    { text: toBRL(entradas), style: "chipValue" },
-                                ],
-                            },
-                            {
-                                stack: [
-                                    { text: "Saídas", style: "chipLabel" },
-                                    { text: toBRL(saidas), style: "chipValue" },
-                                ],
-                            },
-                            {
-                                stack: [
-                                    { text: "Saldo", style: "chipLabel" },
-                                    { text: toBRL(saldo), style: "chipValue" },
-                                ],
-                            },
+                            { stack: [{ text: "Entradas", style: "chipLabel" }, { text: toBRL(entradas), style: "chipValue" }] },
+                            { stack: [{ text: "Saídas", style: "chipLabel" }, { text: toBRL(saidas), style: "chipValue" }] },
+                            { stack: [{ text: "Saldo", style: "chipLabel" }, { text: toBRL(saldo), style: "chipValue" }] },
                         ],
                     ],
                 },
@@ -147,29 +122,22 @@ export async function generateMovementsPdf(
                 },
                 margin: [0, 0, 0, 10],
             },
-
-            // Cabeçalho da seção
             {
                 table: { widths: ["*"], body: [[{ text: "Movimentos", style: "sectionBar" }]] },
                 layout: "noBorders",
                 margin: [0, 0, 0, 0],
             },
-
-            // Tabela dos movimentos
             {
                 table: {
                     headerRows: 1,
                     widths: [40, "*", 80, 120, 90],
-                    body: [
-                        [
-                            { text: "ITEM", style: "thead" },
-                            { text: "DESCRIÇÃO", style: "thead" },
-                            { text: "TIPO", style: "thead" },
-                            { text: "DATA", style: "thead" },
-                            { text: "VALOR", style: "thead" },
-                        ],
-                        ...tableRows,
-                    ],
+                    body: [[
+                        { text: "ITEM", style: "thead" },
+                        { text: "DESCRIÇÃO", style: "thead" },
+                        { text: "TIPO", style: "thead" },
+                        { text: "DATA", style: "thead" },
+                        { text: "VALOR", style: "thead" },
+                    ], ...tableRows],
                 },
                 layout: {
                     fillColor: (rowIndex: number) => (rowIndex === 0 ? red : rowIndex % 2 === 1 ? zebra : null),
@@ -184,8 +152,6 @@ export async function generateMovementsPdf(
                 },
                 margin: [0, 0, 0, 6],
             },
-
-            // Saldo final à direita
             {
                 columns: [
                     { text: "", width: "*" },
@@ -214,15 +180,7 @@ export async function generateMovementsPdf(
 
         styles: {
             title: { fontSize: 14, bold: true },
-            sectionBar: {
-                fontSize: 11,
-                bold: true,
-                color: "white",
-                alignment: "center",
-                margin: [0, 6, 0, 6],
-                fillColor: red,
-                characterSpacing: 0.3,
-            },
+            sectionBar: { fontSize: 11, bold: true, color: "white", alignment: "center", margin: [0, 6, 0, 6], fillColor: red, characterSpacing: 0.3 },
             thead: { bold: true, color: "white", alignment: "center" },
             chipLabel: { fontSize: 9, color: muted, margin: [0, 0, 0, 2] },
             chipValue: { fontSize: 12, bold: true },
