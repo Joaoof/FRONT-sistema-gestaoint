@@ -14,7 +14,6 @@ export default defineConfig({
       ]
     })
   ],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-  },
+  resolve: { extensions: [".mjs", ".js", ".ts", ".jsx", ".tsx"] },
+  optimizeDeps: { include: ["pdfmake/build/pdfmake.js", "pdfmake/build/vfs_fonts.js"], exclude: ['lucide-react'] },
 })
