@@ -1,8 +1,11 @@
 import type { Movement } from "../types"
+import pdfMake from "pdfmake/build/pdfmake"
+import pdfFonts from "pdfmake/build/vfs_fonts"
 
 type AnyMod = any
 
-const toBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n)
+const toBRL = (n: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n)
 
 const pad3 = (n: number) => String(n).padStart(3, "0")
 
@@ -17,23 +20,24 @@ function isEntrada(m: Movement) {
     return m.type === "ENTRY"
 }
 
-export async function generateMovementsPdf(
+// Configura as fontes do pdfMake
+pdfMake.vfs = (pdfFonts as AnyMod).vfs
+
+export function generateMovementsPdf(
     movements: Movement[],
-    filename = "movimentacoes.pdf",
-    selectedMonth: string = new Date().toISOString().slice(0, 7),
-    selectedYear: string = new Date().getFullYear().toString(),
+    filename = "movimentacoes.pdf"
 ) {
-    // Carrega pdfmake no navegador
-    const pdfMakeMod = (await import("pdfmake/build/pdfmake")) as AnyMod
-    const pdfFontsMod = (await import("pdfmake/build/vfs_fonts")) as AnyMod
-    const pdfMake: AnyMod = pdfMakeMod.default || pdfMakeMod
-    pdfMake.vfs = pdfFontsMod.vfs
-
     // Ordena por data crescente
-    const rowsData = [...movements].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    const rowsData = [...movements].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    )
 
-    const entradas = rowsData.filter((m) => isEntrada(m)).reduce((acc, m) => acc + Math.abs(m.value || 0), 0)
-    const saidas = rowsData.filter((m) => !isEntrada(m)).reduce((acc, m) => acc + Math.abs(m.value || 0), 0)
+    const entradas = rowsData
+        .filter(isEntrada)
+        .reduce((acc, m) => acc + Math.abs(m.value || 0), 0)
+    const saidas = rowsData
+        .filter((m) => !isEntrada(m))
+        .reduce((acc, m) => acc + Math.abs(m.value || 0), 0)
     const saldo = entradas - saidas
 
     const tableRows = rowsData.map((m, idx) => [
@@ -93,12 +97,20 @@ export async function generateMovementsPdf(
                                                     style: "headerDate",
                                                     alignment: "right",
                                                 },
-                                                { text: `${new Date().toLocaleTimeString("pt-BR")}`, style: "headerTime", alignment: "right" },
+                                                {
+                                                    text: `${new Date().toLocaleTimeString("pt-BR")}`,
+                                                    style: "headerTime",
+                                                    alignment: "right",
+                                                },
                                             ],
                                         },
                                     ],
                                 },
-                                { canvas: [{ type: "line", x1: 0, y1: 15, x2: 515, y2: 15, lineWidth: 2, lineColor: primaryBlue }] },
+                                {
+                                    canvas: [
+                                        { type: "line", x1: 0, y1: 15, x2: 515, y2: 15, lineWidth: 2, lineColor: primaryBlue },
+                                    ],
+                                },
                             ],
                             fillColor: lightBlue,
                             margin: [20, 15, 20, 15],
@@ -117,7 +129,11 @@ export async function generateMovementsPdf(
                     [
                         {
                             stack: [
-                                { canvas: [{ type: "line", x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: border }] },
+                                {
+                                    canvas: [
+                                        { type: "line", x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: border },
+                                    ],
+                                },
                                 {
                                     columns: [
                                         { text: "© 2025 Sistema Financeiro - Relatório Confidencial", style: "footerText" },
@@ -218,10 +234,8 @@ export async function generateMovementsPdf(
                     ],
                 },
                 layout: {
-                    fillColor: (rowIndex: number) => {
-                        if (rowIndex === 0) return headerBg
-                        return rowIndex % 2 === 1 ? zebra : null
-                    },
+                    fillColor: (rowIndex: number) =>
+                        rowIndex === 0 ? headerBg : rowIndex % 2 === 1 ? zebra : null,
                     hLineWidth: () => 0.5,
                     vLineWidth: () => 0.5,
                     hLineColor: () => border,

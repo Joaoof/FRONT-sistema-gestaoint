@@ -602,7 +602,7 @@ function ExportPdfDropdown({ movements }: { movements: Movement[] }) {
                             return (
                                 <DropdownMenu.Item
                                     key={ym}
-                                    onClick={() => generateMovementsPdf(movements, 'month', ym)}
+                                    onClick={() => generateMovementsPdf(movements, ym)}
                                     className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded"
                                 >
                                     📆 {monthName.charAt(0).toUpperCase() + monthName.slice(1)} {y}
@@ -614,7 +614,7 @@ function ExportPdfDropdown({ movements }: { movements: Movement[] }) {
                             <DropdownMenu.Separator key={`sep-${year}`} className="my-1 border-t border-gray-200" />,
                             <DropdownMenu.Item
                                 key={`y-${year}`}
-                                onClick={() => generateMovementsPdf(movements, 'year', undefined, year)}
+                                onClick={() => generateMovementsPdf(movements, year)}
                                 className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded font-medium"
                             >
                                 📅 Ano {year}
