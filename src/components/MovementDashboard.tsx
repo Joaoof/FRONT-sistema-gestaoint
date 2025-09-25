@@ -62,7 +62,7 @@ export function MovementDashboard() {
 
     const handleLogout = () => {
         localStorage.removeItem("accessToken");
-        navigate('/login'); // ou '/signin', dependendo da sua rota
+        navigate('/'); // ou '/signin', dependendo da sua rota
     };
 
     console.log("GraphQL endpoint:", import.meta.env.VITE_GRAPHQL_ENDPOINT);
@@ -256,15 +256,6 @@ export function MovementDashboard() {
                 >
                     <ArrowUpCircle className="w-5 h-5" />
                     Registrar Movimentações
-                </motion.button>
-                <motion.button
-                    variants={buttonVariants}
-                    whileHover="hover"
-                    whileTap="tap"
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-2xl hover:from-gray-600 hover:to-gray-700 shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                    <Download className="w-5 h-5" />
-                    Exportar CSV
                 </motion.button>
             </motion.div>
 
