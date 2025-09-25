@@ -11,6 +11,7 @@ import {
     Box,
     GrabIcon,
     GraduationCap,
+    LogOut,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -58,6 +59,11 @@ export function MovementDashboard() {
             }
         }
     });
+
+    const handleLogout = () => {
+        localStorage.removeItem("accessToken");
+        navigate('/login'); // ou '/signin', dependendo da sua rota
+    };
 
     console.log("GraphQL endpoint:", import.meta.env.VITE_GRAPHQL_ENDPOINT);
 
@@ -149,28 +155,28 @@ export function MovementDashboard() {
         "Horário de pico: 12h-14h e 17h-19h.",
     ];
 
-    const handleExport = () => {
-        const dataFormatada = new Date(filterDate).toLocaleDateString('pt-BR');
+    // const handleExport = () => {
+    //     const dataFormatada = new Date(filterDate).toLocaleDateString('pt-BR');
 
-        const csvContent = [
-            ['Data', 'Tipo', 'Valor (R$)'],
-            [dataFormatada, 'Entradas', entries.toFixed(2).replace('.', ',')],
-            [dataFormatada, 'Saídas', exits.toFixed(2).replace('.', ',')],
-            [dataFormatada, 'Saldo', balance.toFixed(2).replace('.', ',')],
-        ]
-            .map(row => row.join(';')) // Usar ; para evitar conflito com ,
-            .join('\n');
+    //     const csvContent = [
+    //         ['Data', 'Tipo', 'Valor (R$)'],
+    //         [dataFormatada, 'Entradas', entries.toFixed(2).replace('.', ',')],
+    //         [dataFormatada, 'Saídas', exits.toFixed(2).replace('.', ',')],
+    //         [dataFormatada, 'Saldo', balance.toFixed(2).replace('.', ',')],
+    //     ]
+    //         .map(row => row.join(';')) // Usar ; para evitar conflito com ,
+    //         .join('\n');
 
-        const blob = new Blob([`\uFEFF${    csvContent}`], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `relatorio_movimentacoes_${filterDate}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-    };
+    //     const blob = new Blob([`\uFEFF${    csvContent}`], { type: 'text/csv;charset=utf-8;' });
+    //     const url = window.URL.createObjectURL(blob);
+    //     const a = document.createElement('a');
+    //     a.href = url;
+    //     a.download = `relatorio_movimentacoes_${filterDate}.csv`;
+    //     document.body.appendChild(a);
+    //     a.click();
+    //     document.body.removeChild(a);
+    //     window.URL.revokeObjectURL(url);
+    // };
 
     const handleEdit = () => {
         setInputValue(metaMensal.toFixed(2));
@@ -219,9 +225,24 @@ export function MovementDashboard() {
             animate="show"
         >
             {/* Título */}
-            <motion.div variants={itemVariants}>
-                <h1 className="text-3xl font-serif tracking-tight text-gray-900 mb-2">Dashboard de Movimentações</h1>
-                <p className="text-gray-600 text-sm">Controle completo de entradas e saídas do caixa</p>
+            {/* Título e Logout */}
+            <motion.div
+                className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4"
+                variants={itemVariants}
+            >
+                <div>
+                    <h1 className="text-3xl font-serif tracking-tight text-gray-900 mb-2">Dashboard de Movimentações</h1>
+                    <p className="text-gray-600 text-sm">Controle completo de entradas e saídas do caixa</p>
+                </div>
+                <motion.button
+                    onClick={handleLogout}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors self-start"
+                >
+                    <span>Sair</span>
+                    <LogOut className="w-4 h-4" />
+                </motion.button>
             </motion.div>
 
             {/* Ações rápidas */}
@@ -240,7 +261,6 @@ export function MovementDashboard() {
                     variants={buttonVariants}
                     whileHover="hover"
                     whileTap="tap"
-                    onClick={handleExport}
                     className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-2xl hover:from-gray-600 hover:to-gray-700 shadow-md hover:shadow-lg transition-all duration-200"
                 >
                     <Download className="w-5 h-5" />
