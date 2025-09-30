@@ -4,8 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useCompany } from '../contexts/CompanyContext';
 
-// ... (Interfaces, VIEW_TO_MODULE, hasPermission e menuItems permanecem inalterados) ...
-
 interface MenuItem {
   id: View;
   label: string;
@@ -95,17 +93,8 @@ export function Sidebar({
 
   if (isLoading || !company) {
     return (
-      <div className="fixed left-0 top-0 h-full w-64 bg-gray-50 shadow-xl border-r border-gray-100 z-50 animate-pulse">
-        {/* Skeleton Loading State */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="w-16 h-13 bg-gray-200 rounded"></div>
-          <div className="h-4 bg-gray-200 mt-2 w-3/4"></div>
-        </div>
-        <div className="mt-4 space-y-3 px-4">
-          <div className="h-8 bg-gray-200 rounded"></div>
-          <div className="h-8 bg-gray-200 rounded"></div>
-          <div className="h-8 bg-gray-200 rounded"></div>
-        </div>
+      <div className="fixed left-0 top-0 h-full w-64 bg-gray-50/60 backdrop-blur-md shadow-xl border-r border-gray-100 z-50 animate-pulse">
+        {/* Skeleton Loading */}
       </div>
     );
   }
@@ -148,75 +137,95 @@ export function Sidebar({
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full w-64 bg-gray-50 shadow-xl border-r border-gray-100 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`} // Fundo mais suave e sombra mais profunda
+      className={`fixed left-0 top-0 h-full w-64 bg-gray-50/60 backdrop-blur-md shadow-xl border-r border-gray-100 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
     >
-      {/* Header da Sidebar */}
+      {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <div className="flex items-center space-x-3"> {/* Aumentado space-x para melhor espaçamento */}
+        <div className="flex items-center space-x-4">
           <img
             src={logo}
             alt="Logo da Empresa"
-            className="w-12 h-12 rounded-lg object-cover shadow-sm" // Logo um pouco maior e arredondado
+            className="w-12 h-12 rounded-lg object-cover shadow-sm"
             onError={e =>
             ((e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
               company.name
             )}&background=3B82F6&color=fff`)
             }
           />
-          <span className="font-sans text-lg font-bold text-gray-800 tracking-wide">{company.name}</span> {/* Fonte mais corporativa */}
+          <span className="font-sans text-lg font-bold text-gray-800 tracking-wide">
+            {company.name}
+          </span>
         </div>
-        <button onClick={onToggle} className="lg:hidden p-2 rounded-full text-gray-500 hover:bg-gray-200 transition duration-150">
-          ✕
+        <button
+          onClick={onToggle}
+          className="lg:hidden p-2 rounded-full text-gray-500 hover:bg-gray-200 transition-transform duration-200 transform hover:scale-110"
+        >
+          <svg
+            className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
 
-      {/* Navegação Principal */}
-      <nav className="mt-4 px-3 space-y-1"> {/* Adicionado padding horizontal e espaçamento vertical */}
+      {/* Navigation */}
+      <nav className="mt-4 px-3 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
         {filteredMenuItems.map(item => {
           const isActive = currentView === item.id;
           const isGroupActive = item.children?.some(c => c.id === currentView);
           const isExpanded = expandedItems[item.id] || false;
 
-          // Item Sem Sub-Menu
+          // Single Item
           if (!item.children) {
             return (
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150 ${isActive
-                  ? 'bg-blue-100 text-blue-700 shadow-sm' // Fundo mais claro e suave, sem borda lateral
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800' // Hover mais claro
-                  }`}
-              >
-                <img src={item.imageUrl} alt={item.label} className={`w-5 h-5 object-contain ${isActive ? 'filter-none' : 'opacity-75'}`} /> {/* Opacidade no ícone inativo */}
-                <span>{item.label}</span>
-              </button>
-            );
-          }
-
-          // Item Com Sub-Menu
-          return (
-            <div key={item.id} className="space-y-1">
-              <button
-                onClick={() => handleItemClick(item.id)}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150 ${isActive || isGroupActive
-                  ? 'bg-blue-100 text-blue-700 shadow-sm' // Fundo mais claro e suave, sem borda lateral
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800' // Hover mais claro
+                title={item.label}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150 active:bg-secondary active:text-white ${isActive
+                  ? 'bg-primary/20 text-primary border-l-4 border-primary'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
                   }`}
               >
                 <img
                   src={item.imageUrl}
                   alt={item.label}
-                  className={`w-5 h-5 object-contain ${isActive || isGroupActive ? 'filter-none' : 'opacity-75'}`}
+                  className={`w-5 h-5 object-contain ${isActive ? 'opacity-100' : 'opacity-75'}`}
+                />
+                <span>{item.label}</span>
+              </button>
+            );
+          }
+
+          // Group Item
+          return (
+            <div key={item.id} className="space-y-1">
+              <button
+                onClick={() => handleItemClick(item.id)}
+                title={item.label}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150 active:bg-secondary active:text-white ${isActive || isGroupActive
+                  ? 'bg-primary/20 text-primary border-l-4 border-primary'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                  }`}
+              >
+                <img
+                  src={item.imageUrl}
+                  alt={item.label}
+                  className={`w-5 h-5 object-contain ${isActive || isGroupActive ? 'opacity-100' : 'opacity-75'}`}
                 />
                 <span>{item.label}</span>
                 <span className={`ml-auto transform transition-transform duration-200 text-gray-400 ${isExpanded ? 'rotate-90' : 'rotate-0'}`}>
-                  {/* Ícone de chevron mais moderno */}
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
                 </span>
               </button>
-              {/* Sub-Menu */}
+
+              {/* Sub-menu */}
               <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                 {item.children.map(child => {
                   const isChildActive = currentView === child.id;
@@ -224,9 +233,10 @@ export function Sidebar({
                     <button
                       key={child.id}
                       onClick={() => handleItemClick(child.id)}
-                      className={`w-full flex items-center space-x-3 px-6 py-2 text-sm transition duration-150 rounded-lg ${isChildActive
-                        ? 'bg-blue-200 text-gray-900 font-semibold' // Destaque mais forte para o sub-item ativo
-                        : 'text-gray-600 hover:bg-gray-100' // Hover mais suave
+                      title={child.label}
+                      className={`w-full flex items-center space-x-3 px-6 py-2 text-sm font-medium transition duration-150 rounded-lg ${isChildActive
+                        ? 'bg-primary/30 text-primary border-l-4 border-primary'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
                         }`}
                     >
                       <img src={child.imageUrl} alt={child.label} className="w-4 h-4 object-contain" />
