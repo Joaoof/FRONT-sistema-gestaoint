@@ -5,7 +5,7 @@ import {
     Save,
     Tag,
     FileText,
-} from 'lucide-react'; // Ícones utilitários mantidos
+} from 'lucide-react';
 import { apolloClient } from '../lib/apollo-client';
 import { CREATE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
 import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
@@ -34,7 +34,7 @@ const categoryMap = {
 
 type MovementType = keyof typeof movementTypeMap;
 
-// Definição das categorias com o caminho para o arquivo de imagem (PLACEHOLDER)
+// Definição das categorias COM OS NOVOS URLS DE IMAGEM
 const categoryOptions: {
     type: MovementType;
     label: string;
@@ -176,7 +176,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const selectedCategory = categoryOptions.find(opt => opt.type === formData.type);
 
     // Classes de tema corporativo
-    const focusClass = `focus:border-blue-800 focus:ring-0`;
+    const focusClass = `focus:border-blue-800 focus:ring-0`; // Foco azul escuro, cor corporativa
     const buttonBg = isEntry ? 'bg-green-700 hover:bg-green-800' : 'bg-red-700 hover:bg-red-800';
 
     return (
