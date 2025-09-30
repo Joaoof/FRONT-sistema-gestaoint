@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { DollarSign, Save } from 'lucide-react'; // DollarSign mantido para o campo de valor
+import { DollarSign, Save, ArrowLeft } from 'lucide-react'; // Adicionado ArrowLeft
 import { apolloClient } from '../lib/apollo-client';
 import { CREATE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
 import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
@@ -19,11 +19,8 @@ const MOVEMENT_OPTIONS = [
     { type: 'pagamento', label: 'Pagamento', imagePath: 'https://cdn-icons-png.flaticon.com/512/4564/4564998.png', group: 'exit', description: 'Pagamento a fornecedores ou contas.' },
 ] as const;
 
-// 1. Defina o tipo de um ÚNICO objeto de opção de movimento
 type MovementOption = typeof MOVEMENT_OPTIONS[number];
 
-
-// Mapeamento para backend (Prisma/GraphQL)
 const movementTypeMap = {
     venda: 'ENTRY',
     troco: 'ENTRY',
@@ -42,8 +39,7 @@ const categoryMap = {
     pagamento: 'PAYMENT',
 } as const;
 
-// Define MovementType baseado nos tipos disponíveis no array de opções
-type MovementType = MovementOption['type']; // Usa o novo tipo MovementOption
+type MovementType = MovementOption['type'];
 
 export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const [formData, setFormData] = useState({
@@ -52,33 +48,26 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         description: '',
         date: formatLocalDateTime(new Date()),
     });
-
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Função para voltar à página anterior
+    const handleGoBack = () => window.history.back();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleTypeChange = (type: MovementType) => {
-        setFormData((prev) => ({
-            ...prev,
-            type,
-        }));
+        setFormData(prev => ({ ...prev, type }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
-
         const value = parseFloat(formData.value);
-
         const token = localStorage.getItem('accessToken');
         if (!token) {
             toast.error('Sessão expirada. Faça login novamente.');
@@ -86,7 +75,6 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             setLoading(false);
             return;
         }
-
         const userId = getUserIdFromToken();
         if (!userId) {
             toast.error('Usuário inválido. Faça login novamente.');
@@ -94,19 +82,16 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             setLoading(false);
             return;
         }
-
         if (!formData.value || isNaN(value) || value <= 0) {
             toast.error('O valor deve ser maior que zero.');
             setLoading(false);
             return;
         }
-
         if (!formData.description.trim()) {
             toast.error('A descrição é obrigatória.');
             setLoading(false);
             return;
         }
-
         try {
             const input = {
                 value,
@@ -115,80 +100,50 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 type: movementTypeMap[formData.type],
                 category: categoryMap[formData.type],
             };
-
             const response = await apolloClient.mutate({
                 mutation: CREATE_CASH_MOVEMENT,
                 variables: { input },
                 refetchQueries: [{ query: GET_CASH_MOVEMENTS }],
-                awaitRefetchQueries: true
+                awaitRefetchQueries: true,
             });
-
-            console.log(response);
-
-
-            if (response.errors && response.errors.length > 0) {
-                const messages = response.errors.flatMap(({ message, extensions }: any) => {
-                    const issues = extensions?.issues;
-                    if (Array.isArray(issues)) return issues.map((i: any) => i.message);
-                    return [message];
-                });
-
-                const deduped = Array.from(new Set(messages));
-
-                deduped.forEach(msg => {
-                    const cleanMsg = msg.replace(/,$/, '').trim();
-                    toast.error(cleanMsg);
-                });
-
-                setError(deduped.join(' • '));
+            if (response.errors?.length) {
+                const msgs = response.errors.flatMap(({ message, extensions }: any) =>
+                    Array.isArray(extensions?.issues)
+                        ? extensions.issues.map((i: any) => i.message)
+                        : [message]
+                );
+                Array.from(new Set(msgs)).forEach(m => toast.error(m.replace(/,$/, '').trim()));
+                setError(Array.from(new Set(msgs)).join(' • '));
                 return;
             }
-
             const result = response.data?.createCashMovement.message;
-
-            console.log(result);
-
-
-            if (!result || result.success === false) {
-                const errorMsg = result?.message || 'Falha ao registrar movimentação.';
-                toast.error(errorMsg);
-                setError(errorMsg);
+            if (!result?.success) {
+                const errMsg = result?.message || 'Falha ao registrar movimentação.';
+                toast.error(errMsg);
+                setError(errMsg);
                 return;
             }
-
             toast.success(result || 'Movimentação registrada com sucesso!');
-            setFormData({
-                type: 'venda',
-                value: '',
-                description: '',
-                date: new Date().toISOString().slice(0, 16),
-            });
-
+            setFormData({ type: 'venda', value: '', description: '', date: new Date().toISOString().slice(0, 16) });
             onSuccess?.();
         } catch (err: any) {
-            console.log('🔴 Erro capturado no catch:', err);
-            const messages = getGraphQLErrorMessages(err);
-            messages.forEach((msg: any) => toast.error(msg));
-            setError(messages.join(' • '));
-        }
-        finally {
+            const msgs = getGraphQLErrorMessages(err);
+            msgs.forEach(m => toast.error(m));
+            setError(msgs.join(' • '));
+        } finally {
             setLoading(false);
         }
     };
 
-    // Filtra as opções por grupo
-    // O .filter() retorna um array de tamanho dinâmico (MovementOption[])
-    const entryOptions = MOVEMENT_OPTIONS.filter(opt => opt.group === 'entry');
-    const exitOptions = MOVEMENT_OPTIONS.filter(opt => opt.group === 'exit');
+    const entryOptions = MOVEMENT_OPTIONS.filter(o => o.group === 'entry');
+    const exitOptions = MOVEMENT_OPTIONS.filter(o => o.group === 'exit');
 
-    // 2. CORREÇÃO DA TIPAGEM AQUI: Usa MovementOption[] para aceitar um array filtrado (tamanho dinâmico)
     const renderMovementButtons = (options: MovementOption[], colorClass: string) => (
         <div className="grid grid-cols-3 gap-4">
-            {options.map((opt) => {
+            {options.map(opt => {
                 const isSelected = formData.type === opt.type;
                 const baseClass = 'border-gray-200 hover:border-gray-300 text-gray-700';
                 const selectedClass = `border-${colorClass}-500 bg-${colorClass}-50 text-${colorClass}-900`;
-
                 return (
                     <button
                         key={opt.type}
@@ -198,17 +153,10 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                             }`}
                         disabled={loading}
                     >
-                        {/* 🔄 Usando a tag <img> com a URL do Flaticon */}
-                        <img
-                            src={opt.imagePath}
-                            className="w-8 h-8 object-contain mb-1"
-                            alt={opt.label} // Adicionado alt para acessibilidade
-                        />
+                        <img src={opt.imagePath} className="w-8 h-8 mb-1" alt={opt.label} />
                         <span className="mt-1 text-sm font-medium text-center">{opt.label}</span>
                         {isSelected && (
-                            <div
-                                className={`absolute inset-x-0 bottom-0 w-full h-1 bg-${colorClass}-500 opacity-100 animate-pulse`}
-                            ></div>
+                            <div className={`absolute inset-x-0 bottom-0 w-full h-1 bg-${colorClass}-500 animate-pulse`}></div>
                         )}
                     </button>
                 );
@@ -218,36 +166,36 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            {/* Botão Voltar */}
+            <div className="mb-6">
+                <button
+                    type="button"
+                    onClick={handleGoBack}
+                    className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                    disabled={loading}
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">Voltar</span>
+                </button>
+            </div>
+
             <h2 className="text-2xl font-serif text-gray-900 mb-6">Formulário de Movimentação</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
-
-                {/* Grupo: Entradas */}
+                {/* Entradas */}
                 <div style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>
-                    {/* 🔄 INÍCIO DA CORREÇÃO: Usando <img> antes do texto */}
                     <div className="flex items-center text-lg text-green-700 mb-3">
-                        <img
-                            src="https://cdn-icons-png.flaticon.com/512/4680/4680408.png"
-                            alt="Entrada"
-                            className="w-6 h-6 mr-2 object-contain"
-                        />
-                        <h3 style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>Entrada</h3>
+                        <img src="https://cdn-icons-png.flaticon.com/512/4680/4680408.png" alt="Entrada" className="w-6 h-6 mr-2" />
+                        <h3>Entrada</h3>
                     </div>
-                    {/* 🔄 FIM DA CORREÇÃO */}
                     {renderMovementButtons(entryOptions, 'green')}
                 </div>
 
-                {/* Grupo: Saídas */}
+                {/* Saídas */}
                 <div style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>
-                    {/* 🔄 INÍCIO DA CORREÇÃO: Usando <img> antes do texto */}
                     <div className="flex items-center text-lg text-red-700 mb-3">
-                        <img
-                            src="https://cdn-icons-png.flaticon.com/512/1828/1828407.png"
-                            alt="Saída"
-                            className="w-6 h-6 mr-2 object-contain"
-                        />
-                        <h3 style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>Saída</h3>
+                        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828407.png" alt="Saída" className="w-6 h-6 mr-2" />
+                        <h3>Saída</h3>
                     </div>
-                    {/* 🔄 FIM DA CORREÇÃO */}
                     {renderMovementButtons(exitOptions, 'red')}
                 </div>
 
@@ -309,7 +257,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                     />
                 </div>
 
-                {/* Botão de Envio */}
+                {/* Enviar */}
                 <div className="flex justify-end pt-4">
                     <button
                         type="submit"
