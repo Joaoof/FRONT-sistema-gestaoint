@@ -5,11 +5,12 @@ import {
     Calendar,
     TrendingUp,
     TrendingDown,
+    Target,
     Box,
     GraduationCap,
     LogOut,
     AlertTriangle,
-    Target,
+    Info, // <<-- Ícone Info adicionado
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,7 +30,6 @@ import {
 
 // Framer Motion
 import { motion } from 'framer-motion';
-// 💡 Correção: Assegura que o @apollo/client e demais módulos são importáveis.
 import { useQuery } from '@apollo/client';
 import { GET_DASHBOARD_STATS } from '../graphql/queries/dashboard';
 import { LoadingSpinner } from './common/LoadingSpinner';
@@ -57,7 +57,6 @@ export function MovementDashboard() {
 
     const { data, loading, error } = useQuery(GET_DASHBOARD_STATS, {
         variables: {
-            // 💡 Correção: Garante que userId é passado nas variáveis
             input: { date: filterDate, userId }
         },
         skip: shouldSkip, // Pula se user.id não estiver pronto
@@ -73,7 +72,6 @@ export function MovementDashboard() {
         await logout(); // Usa o logout do AuthContext
     };
 
-    // AVISO: O console.log com import.meta.env pode gerar warnings de build em alguns ambientes, mas será mantido se for útil.
     console.log("GraphQL endpoint:", import.meta.env.VITE_GRAPHQL_ENDPOINT);
 
     // Se a autenticação estiver carregando, mostre o spinner
@@ -84,7 +82,7 @@ export function MovementDashboard() {
 
     if (error) {
         const errorMessage = getGraphQLErrorMessages(error);
-        notifyError(errorMessage[]);
+        notifyError(errorMessage as any);
         return (
             <div className="p-8 text-center bg-red-50 border border-red-300 rounded-xl m-8">
                 <p className="text-xl font-bold text-red-700 mb-2">Ops, Ocorreu um Erro!</p>
@@ -130,7 +128,7 @@ export function MovementDashboard() {
     const margemLucroDisplay = `${margemLucroValue.toFixed(1)}%`;
 
 
-    // MOCK para Módulos não prontos (incluindo os novos cards)
+    // MOCK para Módulos (Cores neutras para 'EM BREVE')
     const mockModuleKpis = [
         {
             label: 'Margem de Lucro',
@@ -172,10 +170,10 @@ export function MovementDashboard() {
             label: 'Controle de Estoque',
             value: 'EM BREVE',
             icon: Box,
-            color: 'orange',
-            borderColor: 'border-orange-900',
-            bgColor: 'bg-orange-500',
-            isModuleReady: false,
+            color: 'gray', // Cor neutra
+            borderColor: 'border-gray-500',
+            bgColor: 'bg-gray-400',
+            isModuleReady: false, // Módulo não pronto
             valueClass: 'text-gray-500',
             subText: 'Gerenciamento e alertas de inventário.',
             badgeText: 'Módulo'
@@ -184,17 +182,17 @@ export function MovementDashboard() {
             label: 'Contas a Pagar/Receber',
             value: 'EM BREVE',
             icon: AlertTriangle,
-            color: 'red',
-            borderColor: 'border-red-900',
-            bgColor: 'bg-red-700',
-            isModuleReady: false,
+            color: 'gray', // Cor neutra
+            borderColor: 'border-gray-500',
+            bgColor: 'bg-gray-400',
+            isModuleReady: false, // Módulo não pronto
             valueClass: 'text-gray-500',
             subText: 'Gestão financeira avançada.',
             badgeText: 'Módulo'
         },
     ];
 
-    // Lógica para edição de meta mensal (Mantida)
+    // Lógica para edição de meta mensal
     const handleEdit = () => {
         setInputValue(metaMensal.toFixed(2));
         setIsEditing(true);
@@ -299,25 +297,33 @@ export function MovementDashboard() {
                     <motion.div
                         key={i}
                         variants={itemVariants}
-                        whileHover={{ scale: 1.03 }}
-                        className="backdrop-blur-xl bg-gradient-to-br from-white to-purple-50/20 border border-white/30 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col justify-between relative overflow-hidden"
+                        // Hover menos agressivo para módulos não prontos
+                        whileHover={{ scale: kpi.isModuleReady ? 1.03 : 1.01 }}
+                        // Aplica classes de cinza/opacidade se não estiver pronto
+                        className={`backdrop-blur-xl bg-gradient-to-br border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col justify-between relative overflow-hidden 
+                            ${kpi.isModuleReady
+                                ? 'from-white to-purple-50/20 border-white/30'
+                                : 'from-gray-50 to-gray-200/50 border-gray-200/50 grayscale opacity-70 hover:opacity-100 cursor-not-allowed'
+                            }
+                        `}
                     >
                         {/* Borda lateral com glow suave */}
                         <div
-                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${kpi.bgColor} rounded-r-lg shadow-lg shadow-purple-500/30`}
+                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${kpi.bgColor} rounded-r-lg shadow-lg ${kpi.isModuleReady ? 'shadow-purple-500/30' : 'shadow-gray-500/30'}`}
                         ></div>
 
                         {/* Ícone no canto superior direito */}
                         <div className="absolute top-4 right-4">
                             <div className="p-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow">
-                                <kpi.icon className={`w-4 h-4 text-${kpi.color}-700`} />
+                                {/* Cor do ícone no canto com fallback para cinza */}
+                                <kpi.icon className={`w-4 h-4 ${kpi.isModuleReady ? `text-${kpi.color}-700` : 'text-gray-500'}`} />
                             </div>
                         </div>
 
                         <div className="">
                             <p className="text-xs uppercase tracking-wide text-gray-500">{kpi.label}</p>
 
-                            {/* Renderização especial para Top Categoria (agora usa dados reais ou mock) */}
+                            {/* Conteúdo dinâmico */}
                             {kpi.label.includes('Top Categoria') && Array.isArray(kpi.value) ? (
                                 <div className="mt-3 space-y-2">
                                     {kpi.value.length > 0 ? (
@@ -361,11 +367,15 @@ export function MovementDashboard() {
                                     {kpi.value}
                                 </p>
                             ) : (
-                                /* Módulos em breve */
-                                <div className="mt-4 text-center p-3 bg-gray-100 rounded-lg">
-                                    <p className="text-xl font-black text-gray-400">EM BREVE</p>
-                                    <p className="text-xs text-gray-500 mt-1">{kpi.subText}</p>
-                                </div>
+                                /* Módulos em breve - NOVO LAYOUT COM ÍCONE CENTRAL */
+                                <motion.div
+                                    className="flex flex-col items-center justify-center h-28 w-full transition-opacity duration-300"
+                                    title="Módulo em breve" // Tooltip nativo
+                                >
+                                    <Info className="w-10 h-10 text-gray-500 mb-2" />
+                                    <p className="text-sm font-semibold text-gray-700">MÓDULO EM BREVE</p>
+                                    <p className="text-xs text-gray-500 mt-1 text-center">{kpi.subText}</p>
+                                </motion.div>
                             )}
                         </div>
 
@@ -374,7 +384,7 @@ export function MovementDashboard() {
                             <div className={`p-2 rounded-full bg-${kpi.color}-100 text-${kpi.color}-600`}>
                                 <kpi.icon className="w-5 h-5 opacity-0" /> {/* Espaço reservado */}
                             </div>
-                            <span className={`px-2.5 py-1 ${kpi.isModuleReady ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'} text-xs font-medium rounded-full shadow-sm`}>
+                            <span className={`px-2.5 py-1 ${kpi.isModuleReady ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-600'} text-xs font-medium rounded-full shadow-sm`}>
                                 {kpi.isModuleReady ? kpi.badgeText : 'Em Desenvolvimento'}
                             </span>
                         </div>
