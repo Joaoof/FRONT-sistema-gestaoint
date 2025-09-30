@@ -138,9 +138,9 @@ export function Sidebar({
     // Dentro do <Sidebar> substitua a div principal por:
     <div
       className={`fixed left-0 top-0 h-full w-64 
-    bg-gradient-to-b from-[#780087] to-[#580065]
+    bg-gradient-to-b from-[#780087] to-[#000000]
     dark:from-[#580065] dark:to-[#380047]
-    backdrop-blur-md shadow-xl border-r border-[#580065] z-50 
+    backdrop-blur-md shadow-xl border-r border-[#000000] z-50 
     transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
     >
