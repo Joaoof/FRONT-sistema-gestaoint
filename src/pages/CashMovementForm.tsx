@@ -39,20 +39,19 @@ const categoryMap = {
 
 type MovementType = keyof typeof movementTypeMap;
 
-// Definição dos botões de categoria
-const categoryButtons: {
+// Definição das categorias para o Select
+const categoryOptions: {
     type: MovementType;
     label: string;
-    icon: React.ElementType;
     group: 'entry' | 'exit';
     description: string;
 }[] = [
-        { type: 'venda', label: 'Venda', icon: DollarSign, group: 'entry', description: 'Receita de vendas.' },
-        { type: 'troco', label: 'Troco', icon: ArrowLeftRight, group: 'entry', description: 'Recebimento de troco.' },
-        { type: 'outros_entrada', label: 'Outras Entradas', icon: PlusCircle, group: 'entry', description: 'Receitas não classificadas.' },
-        { type: 'despesa', label: 'Despesa', icon: Banknote, group: 'exit', description: 'Gastos operacionais.' },
-        { type: 'saque', label: 'Saque', icon: Database, group: 'exit', description: 'Retirada de numerário.' },
-        { type: 'pagamento', label: 'Pagamento', icon: CreditCard, group: 'exit', description: 'Pagamentos diversos.' },
+        { type: 'venda', label: 'Venda', group: 'entry', description: 'Receita proveniente de vendas diretas.' },
+        { type: 'troco', label: 'Troco', group: 'entry', description: 'Recebimento de troco.' },
+        { type: 'outros_entrada', label: 'Outras Entradas', group: 'entry', description: 'Receitas não classificadas.' },
+        { type: 'despesa', label: 'Despesa', group: 'exit', description: 'Gastos operacionais ou de manutenção.' },
+        { type: 'saque', label: 'Saque', group: 'exit', description: 'Retirada de numerário do caixa.' },
+        { type: 'pagamento', label: 'Pagamento', group: 'exit', description: 'Pagamento a fornecedores ou contas.' },
     ];
 
 export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
@@ -170,165 +169,169 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     };
 
     const isEntry = movementTypeMap[formData.type] === 'ENTRY';
-    const selectedButton = categoryButtons.find(btn => btn.type === formData.type);
+    const selectedCategory = categoryOptions.find(opt => opt.type === formData.type);
 
-    // Cores dinâmicas para o tema principal
-    const themeColor = isEntry ? 'emerald' : 'red';
-    const textColor = isEntry ? 'text-emerald-700' : 'text-red-700';
-    const focusClass = `focus:border-${themeColor}-500 focus:ring-1 focus:ring-${themeColor}-200`;
-
-    // Função auxiliar para agrupar opções do select
-    const renderSelectOptions = (group: 'entry' | 'exit', label: string) => (
-        <optgroup label={label} key={group}>
-            {categoryButtons.filter(b => b.group === group).map(btn => (
-                <option key={btn.type} value={btn.type}>
-                    {btn.label} ({btn.group === 'entry' ? 'Entrada' : 'Saída'})
-                </option>
-            ))}
-        </optgroup>
-    );
+    // Classes de tema corporativo
+    const themeColorClass = isEntry ? 'border-green-700' : 'border-red-700';
+    const focusClass = `focus:border-blue-800 focus:ring-0`; // Foco azul escuro, cor corporativa
+    const buttonBg = isEntry ? 'bg-green-700 hover:bg-green-800' : 'bg-red-700 hover:bg-red-800';
 
     return (
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-8 max-w-xl mx-auto transition-all duration-300 transform hover:scale-[1.01]">
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-6 border-b pb-3 border-gray-200">
-                Novo Registro de Caixa
-            </h2>
+        <div className="bg-white rounded-lg shadow-xl border border-gray-400 max-w-4xl mx-auto overflow-hidden">
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Header (Barra de Título Simples) */}
+            <div className={`p-4 bg-gray-100 border-b border-gray-300 shadow-inner`}>
+                <h2 className="text-xl font-black text-gray-800 uppercase tracking-widest">
+                    REGISTRO DE MOVIMENTAÇÃO DE CAIXA
+                </h2>
+            </div>
 
-                {/* TIPO DE MOVIMENTAÇÃO (Select Simplificado) */}
-                <div>
-                    <label htmlFor="type" className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                        <Tag className="w-4 h-4 text-indigo-500" />
-                        TIPO / CATEGORIA <span className="text-red-600">*</span>
-                    </label>
-                    <select
-                        id="type"
-                        name="type"
-                        value={formData.type}
-                        onChange={handleChange}
-                        disabled={loading}
-                        className={`w-full px-4 py-3 border border-gray-400 text-lg ${focusClass} disabled:bg-gray-100 transition-colors rounded-lg appearance-none`}
-                    >
-                        {renderSelectOptions('entry', 'ENTRADAS (RECEITAS)')}
-                        {renderSelectOptions('exit', 'SAÍDAS (DESPESAS)')}
-                    </select>
+            <div className="p-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* Descrição da Categoria Ativa */}
-                    {selectedButton && (
-                        <div className={`mt-3 p-3 text-sm rounded-lg border-l-4 ${isEntry ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'}`}>
-                            <p className="font-semibold">{selectedButton.label}:</p>
-                            <p className="text-gray-600">{selectedButton.description}</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* VALOR e DATA */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Valor */}
-                    <div className="relative">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">
-                            VALOR (R$) <span className="text-red-600">*</span>
+                    {/* TIPO DE MOVIMENTAÇÃO (Select Tradicional) */}
+                    <div>
+                        <label htmlFor="type" className="block text-sm font-black text-gray-700 mb-2 uppercase flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-gray-600" />
+                            CATEGORIA DA TRANSAÇÃO <span className="text-red-600">*</span>
                         </label>
-                        <div className="relative">
-                            <DollarSign className={`absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 ${textColor}`} />
-                            <input
-                                type="text"
-                                id="value"
-                                name="value"
-                                value={formData.value}
-                                onChange={(e) => {
-                                    const rawValue = e.target.value.replace(/\D/g, '');
-                                    if (!rawValue) {
-                                        setFormData(prev => ({ ...prev, value: '' }));
-                                        return;
-                                    }
-                                    const valueInCents = parseInt(rawValue, 10);
-                                    const formattedValue = (valueInCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        <select
+                            id="type"
+                            name="type"
+                            value={formData.type}
+                            onChange={handleChange}
+                            disabled={loading}
+                            className={`w-full px-4 py-3 border border-gray-400 text-lg rounded-sm ${focusClass} disabled:bg-gray-100 transition-colors appearance-none shadow-sm`}
+                        >
+                            <optgroup label="ENTRADAS (RECEITAS)">
+                                {categoryOptions.filter(b => b.group === 'entry').map(btn => (
+                                    <option key={btn.type} value={btn.type}>
+                                        {btn.label}
+                                    </option>
+                                ))}
+                            </optgroup>
+                            <optgroup label="SAÍDAS (DESPESAS)">
+                                {categoryOptions.filter(b => b.group === 'exit').map(btn => (
+                                    <option key={btn.type} value={btn.type}>
+                                        {btn.label}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        </select>
 
-                                    setFormData(prev => ({ ...prev, value: formattedValue }));
-                                }}
+                        {/* Descrição da Categoria Ativa - Painel de Detalhes */}
+                        {selectedCategory && (
+                            <div className={`mt-3 p-3 text-sm rounded-sm shadow-inner ${isEntry ? 'bg-green-50 border border-green-300' : 'bg-red-50 border border-red-300'}`}>
+                                <p className="font-semibold text-gray-700">Detalhes: {selectedCategory.label}</p>
+                                <p className="text-gray-600 italic">{selectedCategory.description}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* VALOR e DATA */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Valor */}
+                        <div className="relative">
+                            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase">
+                                VALOR (R$) <span className="text-red-600">*</span>
+                            </label>
+                            <div className="relative">
+                                <DollarSign className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+                                <input
+                                    type="text"
+                                    id="value"
+                                    name="value"
+                                    value={formData.value}
+                                    onChange={(e) => {
+                                        const rawValue = e.target.value.replace(/\D/g, '');
+                                        if (!rawValue) {
+                                            setFormData(prev => ({ ...prev, value: '' }));
+                                            return;
+                                        }
+                                        const valueInCents = parseInt(rawValue, 10);
+                                        const formattedValue = (valueInCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                                        setFormData(prev => ({ ...prev, value: formattedValue }));
+                                    }}
+                                    required
+                                    disabled={loading}
+                                    placeholder="0,00"
+                                    className={`w-full pl-10 pr-4 py-3 border border-gray-400 text-lg font-mono rounded-sm shadow-sm ${focusClass} disabled:bg-gray-100 transition-colors`}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Data e Hora */}
+                        <div className="relative">
+                            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase">
+                                DATA E HORA <span className="text-red-600">*</span>
+                            </label>
+                            <input
+                                type="datetime-local"
+                                id="date"
+                                name="date"
+                                value={formData.date}
+                                onChange={handleChange}
                                 required
                                 disabled={loading}
-                                placeholder="0,00"
-                                className={`w-full pl-10 pr-4 py-3 border border-gray-300 text-lg font-mono rounded-lg ${focusClass} disabled:bg-gray-100 transition-colors`}
+                                className={`w-full px-4 py-3 border border-gray-400 text-lg rounded-sm shadow-sm ${focusClass} disabled:bg-gray-100 transition-colors`}
                             />
                         </div>
                     </div>
 
-                    {/* Data e Hora */}
-                    <div className="relative">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">
-                            DATA E HORA <span className="text-red-600">*</span>
+                    {/* Descrição */}
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2 uppercase">
+                            DESCRIÇÃO <span className="text-red-600">*</span>
                         </label>
-                        <input
-                            type="datetime-local"
-                            id="date"
-                            name="date"
-                            value={formData.date}
+                        <textarea
+                            id="description"
+                            name="description"
+                            value={formData.description}
                             onChange={handleChange}
                             required
                             disabled={loading}
-                            className={`w-full px-4 py-3 border border-gray-300 text-lg rounded-lg ${focusClass} disabled:bg-gray-100 transition-colors`}
+                            rows={3}
+                            className={`w-full p-3 border border-gray-400 rounded-sm shadow-sm ${focusClass} disabled:bg-gray-100 transition-colors resize-none`}
+                            placeholder="Descreva detalhadamente a movimentação financeira..."
                         />
                     </div>
-                </div>
 
-                {/* Descrição */}
-                <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-indigo-500" />
-                        DESCRIÇÃO <span className="text-red-600">*</span>
-                    </label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
-                        required
-                        disabled={loading}
-                        rows={3}
-                        className={`w-full p-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 disabled:bg-gray-100 transition-colors resize-none`}
-                        placeholder="Ex: Venda no PDV, compra de suprimentos..."
-                    />
-                </div>
+                    {/* Botão de Envio */}
+                    <div className="flex justify-end pt-4 border-t border-gray-300">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`flex items-center gap-2 px-6 py-3 text-white font-black text-base uppercase rounded-sm shadow-md transition-all duration-200 w-full sm:w-auto
+                                ${loading
+                                    ? 'bg-gray-500 cursor-not-allowed'
+                                    : buttonBg
+                                }
+                            `}
+                        >
+                            {loading ? (
+                                <>
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    PROCESSANDO...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-5 h-5" />
+                                    REGISTRAR MOVIMENTAÇÃO
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
 
-                {/* Botão de Envio */}
-                <div className="flex justify-end pt-4 border-t border-gray-100">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`flex items-center gap-3 px-8 py-3 text-white font-black text-lg uppercase rounded-lg transition-all duration-300 shadow-md w-full sm:w-auto transform hover:scale-[1.01] active:scale-95
-                            ${loading
-                                ? 'bg-gray-500 cursor-not-allowed shadow-gray-400/50'
-                                : isEntry
-                                    ? 'bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 shadow-emerald-500/50'
-                                    : 'bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 shadow-red-500/50'
-                            }
-                        `}
-                    >
-                        {loading ? (
-                            <>
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                PROCESSANDO...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="w-5 h-5" />
-                                REGISTRAR MOVIMENTAÇÃO
-                            </>
-                        )}
-                    </button>
-                </div>
-            </form>
-
-            {/* Error Display */}
-            {error && (
-                <div className="mt-6 p-4 bg-red-50 border border-red-300 text-red-800 rounded-lg">
-                    <p className="font-bold text-sm">ERRO:</p>
-                    <p className="text-sm mt-1">{error}</p>
-                </div>
-            )}
+                {/* Error Display */}
+                {error && (
+                    <div className="mt-6 p-4 bg-red-100 border border-red-500 text-red-800 rounded-sm">
+                        <p className="font-black text-sm">ERRO:</p>
+                        <p className="text-sm mt-1">{error}</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
