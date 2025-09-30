@@ -10,7 +10,7 @@ import {
     GraduationCap,
     LogOut,
     AlertTriangle,
-    Info, // <<-- Ícone Info adicionado
+    Info,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,7 +29,7 @@ import {
 } from 'recharts';
 
 // Framer Motion
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion'; // Importamos 'Variants' explicitamente
 import { useQuery } from '@apollo/client';
 import { GET_DASHBOARD_STATS } from '../graphql/queries/dashboard';
 import { LoadingSpinner } from './common/LoadingSpinner';
@@ -172,7 +172,7 @@ export function MovementDashboard() {
             icon: Box,
             color: 'gray', // Cor neutra
             borderColor: 'border-gray-500',
-            bgColor: 'bg-gray-400',
+            bgColor: 'bg-gray-200', // Fundo mais sutil para a borda lateral
             isModuleReady: false, // Módulo não pronto
             valueClass: 'text-gray-500',
             subText: 'Gerenciamento e alertas de inventário.',
@@ -184,7 +184,7 @@ export function MovementDashboard() {
             icon: AlertTriangle,
             color: 'gray', // Cor neutra
             borderColor: 'border-gray-500',
-            bgColor: 'bg-gray-400',
+            bgColor: 'bg-gray-200', // Fundo mais sutil para a borda lateral
             isModuleReady: false, // Módulo não pronto
             valueClass: 'text-gray-500',
             subText: 'Gestão financeira avançada.',
@@ -208,23 +208,31 @@ export function MovementDashboard() {
         setIsEditing(false);
     };
 
-    // Variantes de animação (Mantidas)
-    const containerVariants = {
-        hidden: { opacity: 0 },
+    // Variantes de animação ajustadas para Cubic Bezier
+    // Usando uma curva suave de "saída" para a flutuação
+    const cubicBezierFloating = [0.1, 0.6, 0.5, 1];
+    // Cubic Bezier para easeInOut (comum para barras de progresso)
+    const cubicBezierEaseInOut = [0.42, 0, 0.58, 1];
+
+    // O tipo Variants aceita o formato Cubic Bezier,
+    // garantindo que não haja erro de tipagem.
+    const containerVariants: Variants = {
+        hidden: { opacity: 0, y: 10 },
         show: {
             opacity: 1,
-            transition: { staggerChildren: 0.1, delayChildren: 0.15 },
+            y: 0,
+            transition: { staggerChildren: 0.08, delayChildren: 0.15 },
         },
     };
 
-    const itemVariants = {
-        hidden: { opacity: 0, y: 15 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+    const itemVariants: Variants = {
+        hidden: { opacity: 0, y: 10, scale: 0.99 },
+        show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6 } },
     };
 
-    const chartVariants = {
-        hidden: { opacity: 0, scale: 0.98 },
-        show: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
+    const chartVariants: Variants = {
+        hidden: { opacity: 0, scale: 0.95 },
+        show: { opacity: 1, scale: 1, transition: { duration: 0.7 } },
     };
 
     const buttonVariants = {
@@ -309,7 +317,7 @@ export function MovementDashboard() {
                     >
                         {/* Borda lateral com glow suave */}
                         <div
-                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${kpi.bgColor} rounded-r-lg shadow-lg ${kpi.isModuleReady ? 'shadow-purple-500/30' : 'shadow-gray-500/30'}`}
+                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${kpi.isModuleReady ? kpi.bgColor : 'bg-gray-300'} rounded-r-lg shadow-lg ${kpi.isModuleReady ? 'shadow-purple-500/30' : 'shadow-gray-400/30'}`}
                         ></div>
 
                         {/* Ícone no canto superior direito */}
@@ -324,48 +332,48 @@ export function MovementDashboard() {
                             <p className="text-xs uppercase tracking-wide text-gray-500">{kpi.label}</p>
 
                             {/* Conteúdo dinâmico */}
-                            {kpi.label.includes('Top Categoria') && Array.isArray(kpi.value) ? (
-                                <div className="mt-3 space-y-2">
-                                    {kpi.value.length > 0 ? (
-                                        kpi.value.map((item, idx) => {
-                                            const isVenda = item.categoria === 'Venda' || item.categoria === 'SALE';
-                                            return (
-                                                <div key={idx} className="group">
-                                                    {idx > 0 && (
-                                                        <div className="w-full h-px bg-gray-200/60 my-1"></div>
-                                                    )}
-
-                                                    <div className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-white/50 transition-colors">
-                                                        <div className="flex items-center gap-2">
-                                                            {isVenda && <span className="text-sm">💰</span>}
-                                                            {item.categoria === 'Troco' && <span className="text-sm">🔄</span>}
+                            {kpi.isModuleReady ? (
+                                kpi.label.includes('Top Categoria') && Array.isArray(kpi.value) ? (
+                                    <div className="mt-3 space-y-2">
+                                        {kpi.value.length > 0 ? (
+                                            kpi.value.map((item, idx) => {
+                                                const isVenda = item.categoria === 'Venda' || item.categoria === 'SALE';
+                                                return (
+                                                    <div key={idx} className="group">
+                                                        {idx > 0 && (
+                                                            <div className="w-full h-px bg-gray-200/60 my-1"></div>
+                                                        )}
+                                                        <div className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-white/50 transition-colors">
+                                                            <div className="flex items-center gap-2">
+                                                                {isVenda && <span className="text-sm">💰</span>}
+                                                                {item.categoria === 'Troco' && <span className="text-sm">🔄</span>}
+                                                                <span
+                                                                    className={`text-sm font-medium ${isVenda ? 'text-purple-800' : 'text-gray-600'
+                                                                        }`}
+                                                                >
+                                                                    {item.categoria}
+                                                                </span>
+                                                            </div>
                                                             <span
-                                                                className={`text-sm font-medium ${isVenda ? 'text-purple-800' : 'text-gray-600'
+                                                                className={`font-extrabold tabular-nums text-sm ${isVenda ? 'text-purple-900' : 'text-gray-900'
                                                                     }`}
                                                             >
-                                                                {item.categoria}
+                                                                {formatCurrency(item.valor)}
                                                             </span>
                                                         </div>
-
-                                                        <span
-                                                            className={`font-extrabold tabular-nums text-sm ${isVenda ? 'text-purple-900' : 'text-gray-900'
-                                                                }`}
-                                                        >
-                                                            {formatCurrency(item.valor)}
-                                                        </span>
                                                     </div>
-                                                </div>
-                                            );
-                                        })
-                                    ) : (
-                                        <span className="text-gray-400 text-sm">— Sem dados —</span>
-                                    )}
-                                </div>
-                            ) : kpi.isModuleReady ? (
-                                /* Outros cards prontos (Margem, Lançamentos) */
-                                <p className={`text-3xl font-extrabold tabular-nums mt-2 ${kpi.valueClass}`}>
-                                    {kpi.value}
-                                </p>
+                                                );
+                                            })
+                                        ) : (
+                                            <span className="text-gray-400 text-sm">— Sem dados —</span>
+                                        )}
+                                    </div>
+                                ) : (
+                                    /* Outros cards prontos (Margem, Lançamentos) */
+                                    <p className={`text-3xl font-extrabold tabular-nums mt-2 ${kpi.valueClass}`}>
+                                        {kpi.value}
+                                    </p>
+                                )
                             ) : (
                                 /* Módulos em breve - NOVO LAYOUT COM ÍCONE CENTRAL */
                                 <motion.div
@@ -373,13 +381,12 @@ export function MovementDashboard() {
                                     title="Módulo em breve" // Tooltip nativo
                                 >
                                     <Info className="w-10 h-10 text-gray-500 mb-2" />
-                                    <p className="text-sm font-semibold text-gray-700">MÓDULO EM BREVE</p>
                                     <p className="text-xs text-gray-500 mt-1 text-center">{kpi.subText}</p>
                                 </motion.div>
                             )}
                         </div>
 
-                        {/* Badge de Status/Crescimento */}
+                        {/* Badge de Status/Crescimento (posição e estilo mantidos) */}
                         <div className="flex items-center justify-between mt-3">
                             <div className={`p-2 rounded-full bg-${kpi.color}-100 text-${kpi.color}-600`}>
                                 <kpi.icon className="w-5 h-5 opacity-0" /> {/* Espaço reservado */}
@@ -491,7 +498,7 @@ export function MovementDashboard() {
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${Math.min((totalMes / metaMensal) * 100, 100)}%` }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            transition={{ duration: 0.8 }}
                             className={`h-full rounded-full ${totalMes >= metaMensal
                                 ? 'bg-gradient-to-r from-green-500 to-emerald-600'
                                 : totalMes / metaMensal >= 0.7
