@@ -124,6 +124,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 return;
             }
             toast.success(result || 'Movimentação registrada com sucesso!');
+            toast.success('Movimentação registrada com sucesso!');
             setFormData({ type: 'venda', value: '', description: '', date: new Date().toISOString().slice(0, 16) });
             onSuccess?.();
         } catch (err: any) {
