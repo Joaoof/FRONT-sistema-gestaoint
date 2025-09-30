@@ -135,8 +135,13 @@ export function Sidebar({
   );
 
   return (
+    // Dentro do <Sidebar> substitua a div principal por:
     <div
-      className={`fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-white/80 to-gray-100 dark:from-gray-900/80 dark:to-gray-800/80 backdrop-blur-md shadow-xl border-r border-gray-100 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+      className={`fixed left-0 top-0 h-full w-64 
+    bg-gradient-to-b from-[#780087] to-[#580065]
+    dark:from-[#580065] dark:to-[#380047]
+    backdrop-blur-md shadow-xl border-r border-[#580065] z-50 
+    transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
     >
       {/* Header */}
@@ -195,8 +200,8 @@ export function Sidebar({
                 onClick={() => handleItemClick(item.id)}
                 title={item.label}
                 className={`relative w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95 ${isActive
-                    ? 'bg-primary/20 text-primary'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
                   }`}
               >
                 <span
@@ -220,8 +225,8 @@ export function Sidebar({
                 onClick={() => handleItemClick(item.id)}
                 title={item.label}
                 className={`relative w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95 ${isActive || isSectionActive
-                    ? 'bg-primary/20 text-primary'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
                   }`}
               >
                 <span
@@ -281,8 +286,8 @@ export function Sidebar({
                           onClick={() => handleItemClick(child.id)}
                           title={child.label}
                           className={`relative w-full flex items-center space-x-3 px-6 py-2 text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95 ${isChildActive
-                              ? 'bg-primary/30 text-primary'
-                              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                            ? 'bg-primary/30 text-primary'
+                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
                             }`}
                         >
                           <span
