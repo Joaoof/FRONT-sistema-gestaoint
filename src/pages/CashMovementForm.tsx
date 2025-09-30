@@ -185,9 +185,15 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     };
 
     const isEntry = movementTypeMap[formData.type] === 'ENTRY';
+    // Usando cores mais claras para melhor visualização
     const mainColor = isEntry ? 'green' : 'red';
-    const accentColor = isEntry ? 'emerald' : 'rose';
-    const secondaryColor = isEntry ? 'red' : 'green';
+    const iconColor = isEntry ? 'text-emerald-500' : 'text-rose-500';
+    const focusRing = isEntry ? 'focus:ring-emerald-200' : 'focus:ring-rose-200';
+    const focusBorder = isEntry ? 'focus:border-emerald-500' : 'focus:border-rose-500';
+
+    const buttonGradient = isEntry
+        ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-emerald-500/30'
+        : 'bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 shadow-rose-500/30';
 
     return (
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 transform transition-all duration-300 hover:shadow-2xl">
@@ -204,7 +210,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                     <div className="grid grid-cols-2 gap-6 p-4 bg-gray-50 rounded-xl">
                         {/* ENTRADAS */}
                         <div className="space-y-3">
-                            <h4 className="text-sm font-semibold text-green-600 border-b border-green-200 pb-2">ENTRADA</h4>
+                            <h4 className="text-sm font-semibold text-green-700 border-b border-green-300 pb-2">ENTRADA</h4>
                             <div className="grid grid-cols-3 gap-3">
                                 {categoryButtons.filter(b => b.group === 'entry').map((btn) => (
                                     <CategoryButton
@@ -222,7 +228,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
                         {/* SAÍDAS */}
                         <div className="space-y-3">
-                            <h4 className="text-sm font-semibold text-red-600 border-b border-red-200 pb-2">SAÍDA</h4>
+                            <h4 className="text-sm font-semibold text-red-700 border-b border-red-300 pb-2">SAÍDA</h4>
                             <div className="grid grid-cols-3 gap-3">
                                 {categoryButtons.filter(b => b.group === 'exit').map((btn) => (
                                     <CategoryButton
@@ -241,7 +247,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 </div>
 
 
-                {/* VALOR E DESCRIÇÃO */}
+                {/* VALOR E DATA */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Valor */}
                     <div>
@@ -249,20 +255,18 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                             Valor (R$) <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                            <DollarSign className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-${mainColor}-500 transition-colors`} />
+                            <DollarSign className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${iconColor} transition-colors`} />
                             <input
-                                type="text" // Alterado para text para melhor manipulação de máscara, mas mantendo a validação
+                                type="text"
                                 id="value"
                                 name="value"
                                 value={formData.value}
                                 onChange={(e) => {
-                                    // Simples formatação de moeda para o input
-                                    const rawValue = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+                                    const rawValue = e.target.value.replace(/\D/g, '');
                                     if (!rawValue) {
                                         setFormData(prev => ({ ...prev, value: '' }));
                                         return;
                                     }
-                                    // Formata como moeda (ex: 12345 -> 123.45)
                                     const valueInCents = parseInt(rawValue, 10);
                                     const formattedValue = (valueInCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -271,7 +275,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                                 required
                                 disabled={loading}
                                 placeholder="0,00"
-                                className={`w-full pl-10 p-4 border border-gray-300 rounded-xl text-lg font-mono focus:ring-4 focus:ring-${accentColor}-200 focus:border-${mainColor}-500 disabled:bg-gray-50 disabled:cursor-not-allowed transition-all`}
+                                className={`w-full pl-10 p-4 border border-gray-300 rounded-xl text-lg font-mono focus:ring-4 ${focusRing} ${focusBorder} disabled:bg-gray-50 disabled:cursor-not-allowed transition-all`}
                             />
                         </div>
                     </div>
@@ -289,7 +293,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                             onChange={handleChange}
                             required
                             disabled={loading}
-                            className={`w-full p-4 border border-gray-300 rounded-xl text-lg focus:ring-4 focus:ring-${accentColor}-200 focus:border-${mainColor}-500 disabled:bg-gray-50 disabled:cursor-not-allowed transition-all`}
+                            className={`w-full p-4 border border-gray-300 rounded-xl text-lg ${focusRing} ${focusBorder} disabled:bg-gray-50 disabled:cursor-not-allowed transition-all`}
                         />
                     </div>
                 </div>
@@ -307,7 +311,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                         required
                         disabled={loading}
                         rows={3}
-                        className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 disabled:bg-gray-50 disabled:cursor-not-allowed transition-all resize-none"
+                        className={`w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 disabled:bg-gray-50 disabled:cursor-not-allowed transition-all resize-none`}
                         placeholder="Ex: Compra de materiais, venda no PDV..."
                     />
                 </div>
@@ -317,12 +321,10 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`flex items-center gap-3 px-8 py-4 text-white font-bold text-lg rounded-full shadow-lg transition-all duration-300 transform hover:scale-[1.02] 
+                        className={`flex items-center gap-3 px-8 py-4 text-white font-bold text-lg rounded-full shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]
                             ${loading ?
                                 'bg-gray-500 cursor-not-allowed' :
-                                isEntry ?
-                                    'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-green-500/30' :
-                                    'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-red-500/30'
+                                buttonGradient
                             }
                         `}
                     >
@@ -363,14 +365,21 @@ interface CategoryButtonProps {
 const CategoryButton: React.FC<CategoryButtonProps> = ({ type, label, icon: Icon, formData, handleTypeChange, loading }) => {
     const isActive = formData.type === type;
     const isEntry = movementTypeMap[type] === 'ENTRY';
-    const activeColor = isEntry ? 'green' : 'red';
-    const shadowColor = isEntry ? 'shadow-green-500/20' : 'shadow-red-500/20';
 
-    const baseClasses = `flex flex-col items-center justify-center p-3 border rounded-xl relative transition-all duration-300 text-sm font-semibold h-24 whitespace-nowrap overflow-hidden shadow-md`;
+    // Paleta mais suave para o estado ativo
+    const activeBg = isEntry ? 'bg-emerald-100' : 'bg-rose-100';
+    const activeBorder = isEntry ? 'border-emerald-500' : 'border-rose-500';
+    const activeText = isEntry ? 'text-emerald-900' : 'text-rose-900';
+    const activeRing = isEntry ? 'ring-emerald-200' : 'ring-rose-200';
 
-    const inactiveClasses = `bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-${activeColor}-300 hover:text-${activeColor}-600`;
+    // Paleta de inativo mais discreta
+    const hoverColor = isEntry ? 'hover:text-emerald-600' : 'hover:text-rose-600';
 
-    const activeClasses = `bg-${activeColor}-50 border-${activeColor}-500 text-${activeColor}-900 ring-2 ring-${activeColor}-200 shadow-lg ${shadowColor} transform scale-[1.01]`;
+    const baseClasses = `flex flex-col items-center justify-center p-3 border rounded-xl relative transition-all duration-200 text-sm font-semibold h-24 whitespace-nowrap overflow-hidden transform hover:scale-[1.03]`;
+
+    const inactiveClasses = `bg-white border-gray-300 text-gray-500 hover:bg-gray-50 ${hoverColor} hover:border-gray-400`;
+
+    const activeClasses = `${activeBg} ${activeBorder} ${activeText} ring-2 ${activeRing} shadow-inner shadow-gray-200`; // Sombra interna para profundidade
 
     return (
         <button
