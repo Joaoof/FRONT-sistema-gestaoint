@@ -222,30 +222,30 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             <form onSubmit={handleSubmit} className="space-y-6">
 
                 {/* Grupo: Entradas */}
-                <div>
+                <div style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>
                     {/* 🔄 INÍCIO DA CORREÇÃO: Usando <img> antes do texto */}
-                    <div className="flex items-center text-lg font-semibold text-green-700 mb-3">
+                    <div className="flex items-center text-lg text-green-700 mb-3">
                         <img
                             src="https://cdn-icons-png.flaticon.com/512/4680/4680408.png"
                             alt="Entrada"
-                            className="w-6 h-6 mr-2 object-contain" // Ajuste o tamanho conforme necessário
+                            className="w-6 h-6 mr-2 object-contain"
                         />
-                        <h3>Entrada</h3>
+                        <h3 style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>Entrada</h3>
                     </div>
                     {/* 🔄 FIM DA CORREÇÃO */}
                     {renderMovementButtons(entryOptions, 'green')}
                 </div>
 
                 {/* Grupo: Saídas */}
-                <div>
+                <div style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>
                     {/* 🔄 INÍCIO DA CORREÇÃO: Usando <img> antes do texto */}
-                    <div className="flex items-center text-lg font-semibold text-red-700 mb-3">
+                    <div className="flex items-center text-lg text-red-700 mb-3">
                         <img
                             src="https://cdn-icons-png.flaticon.com/512/1828/1828407.png"
                             alt="Saída"
-                            className="w-6 h-6 mr-2 object-contain" // Ajuste o tamanho conforme necessário
+                            className="w-6 h-6 mr-2 object-contain"
                         />
-                        <h3>Saída</h3>
+                        <h3 style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>Saída</h3>
                     </div>
                     {/* 🔄 FIM DA CORREÇÃO */}
                     {renderMovementButtons(exitOptions, 'red')}
