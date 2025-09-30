@@ -5,13 +5,11 @@ import {
     Calendar,
     TrendingUp,
     TrendingDown,
-    Download,
-    AlertTriangle,
-    Target,
     Box,
-    GrabIcon,
     GraduationCap,
     LogOut,
+    AlertTriangle,
+    Target,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,19 +24,19 @@ import {
     Legend,
     LineChart,
     Line,
-    AreaChart,
-    Area,
     ResponsiveContainer,
 } from 'recharts';
 
 // Framer Motion
 import { motion } from 'framer-motion';
+// 💡 Correção: Assegura que o @apollo/client e demais módulos são importáveis.
 import { useQuery } from '@apollo/client';
 import { GET_DASHBOARD_STATS } from '../graphql/queries/dashboard';
 import { LoadingSpinner } from './common/LoadingSpinner';
 import { formatCurrency } from '../utils/formatValue';
 import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotification } from '../hooks/useNotification';
 
 export function MovementDashboard() {
     const navigate = useNavigate();
@@ -47,16 +45,23 @@ export function MovementDashboard() {
     const [metaMensal, setMetaMensal] = useState<number>(20000);
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [inputValue, setInputValue] = useState<string>(metaMensal.toFixed(2));
+    const { notifyError } = useNotification();
 
-    const { user } = useAuth(); // <-- USE THE HOOK
-    const userId = user?.id; // <-- GET USER ID
-
+    const { user, isLoading: isAuthLoading, logout } = useAuth();
+    const userId = user?.id; // Obtém o ID do usuário
 
     const token = localStorage.getItem("accessToken");
 
+    // Condição para pular a execução da query se o userId não estiver disponível ou autenticação estiver carregando
+    const shouldSkip = !userId || isAuthLoading;
+
     const { data, loading, error } = useQuery(GET_DASHBOARD_STATS, {
-        variables: { input: { date: filterDate, userId } },
-        pollInterval: 30000, // Atualiza a cada 30s
+        variables: {
+            // 💡 Correção: Garante que userId é passado nas variáveis
+            input: { date: filterDate, userId }
+        },
+        skip: shouldSkip, // Pula se user.id não estiver pronto
+        pollInterval: 30000,
         context: {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -64,26 +69,41 @@ export function MovementDashboard() {
         }
     });
 
-    const handleLogout = () => {
-        localStorage.removeItem("accessToken");
-        navigate('/'); // ou '/signin', dependendo da sua rota
+    const handleLogout = async () => {
+        await logout(); // Usa o logout do AuthContext
     };
 
+    // AVISO: O console.log com import.meta.env pode gerar warnings de build em alguns ambientes, mas será mantido se for útil.
     console.log("GraphQL endpoint:", import.meta.env.VITE_GRAPHQL_ENDPOINT);
 
-    const errorMessage = error ? getGraphQLErrorMessages(error) : null;
+    // Se a autenticação estiver carregando, mostre o spinner
+    if (isAuthLoading) return <LoadingSpinner />;
 
-
+    // Mostra o spinner de loading se a query GraphQL estiver carregando (após a autenticação)
     if (loading) return <LoadingSpinner />;
-    if (error) return <div className="p-8 text-center text-red-600">Erro: {error.message}</div>;
 
-    const entries = data?.dashboardStats.todayEntries || [];
-    const exits = Array.isArray(data?.dashboardStats.todayExits)
-        ? data.dashboardStats.todayExits
-        : [];
-    const balance = data?.dashboardStats.todayBalance || 0;
-    const totalMes = data?.dashboardStats.monthlyTotal || 0;
+    if (error) {
+        const errorMessage = getGraphQLErrorMessages(error);
+        notifyError(errorMessage[]);
+        return (
+            <div className="p-8 text-center bg-red-50 border border-red-300 rounded-xl m-8">
+                <p className="text-xl font-bold text-red-700 mb-2">Ops, Ocorreu um Erro!</p>
+                <p className="text-red-600">Não foi possível carregar os dados do painel. Detalhes: {errorMessage}</p>
+                <p className="text-sm text-red-500 mt-2">Por favor, tente recarregar a página. Se o erro persistir, verifique a conexão com o servidor.</p>
+            </div>
+        );
+    }
 
+    const dashboardStats = data?.dashboardStats;
+
+    // Dados reais ou fallback
+    const entries = dashboardStats?.todayEntries || 0;
+    const exits = dashboardStats?.todayExits || 0;
+    const balance = dashboardStats?.todayBalance || 0;
+    const totalMes = dashboardStats?.monthlyTotal || 0;
+    const totalMovements = dashboardStats?.totalMovements || 0;
+
+    // Dados MOCK para Gráficos
     const monthlyData = Array.from({ length: 7 }, (_, i) => {
         const base = Math.random() > 0.5 ? 1 : -1;
         return {
@@ -94,94 +114,87 @@ export function MovementDashboard() {
         };
     });
 
-    const heatmapData = Array.from({ length: 24 }, (_, hour) => {
-        const base = 50;
-        const picoAlmoco = hour >= 12 && hour <= 14 ? 100 : 0;
-        const picoTarde = hour >= 17 && hour <= 19 ? 80 : 0;
-        return {
-            hour,
-            value: base + picoAlmoco + picoTarde + Math.random() * 30,
-        };
-    });
+    // MOCK para Entradas por Categoria (adaptado para o dashboardStats)
+    const entriesPerCategory = dashboardStats?.entriesPerCategory || {};
 
-    const topProducts = [
-        { name: 'Produto A', value: 4200 },
-        { name: 'Produto B', value: 3100 },
-        { name: 'Produto C', value: 2200 },
-    ];
-    const hasAlert = balance < 0;
-
-    const margemLucro = entries > 0 ? ((balance / entries) * 100).toFixed(1) : '0.0';
-    const totalMovimentos = data?.dashboardStats.totalMovements || 1;
-    // Somar por categoria (caso tenha várias entradas da mesma categoria)
-    const entradasPorCategoria = {
-        Venda: 2850,
-        Troco: 320,
-        Outros: 130,
-    };
-    const categoriaData = Object.entries(entradasPorCategoria).map(([nome, valor]) => ({
-        nome,
-        valor: Number(valor)
-    }));
-
-    console.log('Entradas por categoria:', categoriaData);
-
-    // Transformar em array e ordenar do maior para o menor
     type EntradaCategoria = { categoria: string; valor: number };
 
-    const top3Entradas = Object.entries(entradasPorCategoria)
+    const top3Entradas: EntradaCategoria[] = Object.entries(entriesPerCategory)
         .map(([categoria, valor]) => ({ categoria, valor: Number(valor) }))
         .sort((a, b) => b.valor - a.valor)
         .slice(0, 3);
 
-
-    const crescimentoDiario = monthlyData.length > 1
-        ? (() => {
-            const entradasAtual = monthlyData[monthlyData.length - 1].entradas;
-            const entradasAnterior = monthlyData[monthlyData.length - 2].entradas;
-
-            if (entradasAnterior === 0) return '0.0%'; // evita Infinity
-            return `${(((entradasAtual - entradasAnterior) / entradasAnterior) * 100).toFixed(1)}%`;
-        })()
-        : '0.0%';
-
-    console.log(crescimentoDiario);
+    // Cálculos de KPI
+    const margemLucroValue = entries > 0 ? ((balance / entries) * 100) : 0;
+    const isMargemPositiva = margemLucroValue >= 0;
+    const margemLucroDisplay = `${margemLucroValue.toFixed(1)}%`;
 
 
-    const forecastData = Array.from({ length: 14 }, (_, i) => ({
-        day: i + 1,
-        saldo: Math.max(0, 1000 + i * 50 + (Math.random() - 0.5) * 150),
-    }));
-
-    const insights = [
-        "Despesa com transporte subiu 45% esta semana.",
-        "Ticket médio aumentou 12% vs semana passada.",
-        "Horário de pico: 12h-14h e 17h-19h.",
+    // MOCK para Módulos não prontos (incluindo os novos cards)
+    const mockModuleKpis = [
+        {
+            label: 'Margem de Lucro',
+            value: margemLucroDisplay,
+            icon: TrendingUp,
+            color: isMargemPositiva ? 'green' : 'red',
+            borderColor: isMargemPositiva ? 'border-green-900' : 'border-red-900',
+            bgColor: isMargemPositiva ? 'bg-green-700' : 'bg-red-700',
+            isModuleReady: true,
+            valueClass: isMargemPositiva ? 'text-green-900' : 'text-red-900',
+            subText: 'Atualizado para o período selecionado',
+            badgeText: isMargemPositiva ? 'Positiva' : 'Atenção'
+        },
+        {
+            label: 'Total de Lançamentos',
+            value: totalMovements.toLocaleString('pt-BR'),
+            icon: DollarSign,
+            color: 'blue',
+            borderColor: 'border-blue-900',
+            bgColor: 'bg-blue-700',
+            isModuleReady: true,
+            valueClass: 'text-blue-900',
+            subText: 'Contagem de entradas e saídas',
+            badgeText: 'Contagem'
+        },
+        {
+            label: 'Top Categoria (Entradas)',
+            value: top3Entradas,
+            icon: GraduationCap,
+            color: 'purple',
+            borderColor: 'border-purple-900',
+            bgColor: 'bg-purple-700',
+            isModuleReady: true,
+            valueClass: 'text-purple-900',
+            subText: top3Entradas.length > 0 ? formatCurrency(top3Entradas[0].valor) : 'N/A',
+            badgeText: top3Entradas.length > 0 ? top3Entradas[0].categoria : 'Sem dados'
+        },
+        {
+            label: 'Controle de Estoque',
+            value: 'EM BREVE',
+            icon: Box,
+            color: 'orange',
+            borderColor: 'border-orange-900',
+            bgColor: 'bg-orange-500',
+            isModuleReady: false,
+            valueClass: 'text-gray-500',
+            subText: 'Gerenciamento e alertas de inventário.',
+            badgeText: 'Módulo'
+        },
+        {
+            label: 'Contas a Pagar/Receber',
+            value: 'EM BREVE',
+            icon: AlertTriangle,
+            color: 'red',
+            borderColor: 'border-red-900',
+            bgColor: 'bg-red-700',
+            isModuleReady: false,
+            valueClass: 'text-gray-500',
+            subText: 'Gestão financeira avançada.',
+            badgeText: 'Módulo'
+        },
     ];
 
-    // const handleExport = () => {
-    //     const dataFormatada = new Date(filterDate).toLocaleDateString('pt-BR');
-
-    //     const csvContent = [
-    //         ['Data', 'Tipo', 'Valor (R$)'],
-    //         [dataFormatada, 'Entradas', entries.toFixed(2).replace('.', ',')],
-    //         [dataFormatada, 'Saídas', exits.toFixed(2).replace('.', ',')],
-    //         [dataFormatada, 'Saldo', balance.toFixed(2).replace('.', ',')],
-    //     ]
-    //         .map(row => row.join(';')) // Usar ; para evitar conflito com ,
-    //         .join('\n');
-
-    //     const blob = new Blob([`\uFEFF${    csvContent}`], { type: 'text/csv;charset=utf-8;' });
-    //     const url = window.URL.createObjectURL(blob);
-    //     const a = document.createElement('a');
-    //     a.href = url;
-    //     a.download = `relatorio_movimentacoes_${filterDate}.csv`;
-    //     document.body.appendChild(a);
-    //     a.click();
-    //     document.body.removeChild(a);
-    //     window.URL.revokeObjectURL(url);
-    // };
-
+    // Lógica para edição de meta mensal (Mantida)
     const handleEdit = () => {
         setInputValue(metaMensal.toFixed(2));
         setIsEditing(true);
@@ -197,7 +210,7 @@ export function MovementDashboard() {
         setIsEditing(false);
     };
 
-    // Variants de animação
+    // Variantes de animação (Mantidas)
     const containerVariants = {
         hidden: { opacity: 0 },
         show: {
@@ -228,7 +241,6 @@ export function MovementDashboard() {
             initial="hidden"
             animate="show"
         >
-            {/* Título */}
             {/* Título e Logout */}
             <motion.div
                 className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4"
@@ -281,52 +293,9 @@ export function MovementDashboard() {
                 </div>
             </motion.div>
 
-            {/* KPIs com ícones em badge e tipografia refinada */}
-            {/* KPIs com barra lateral decorativa */}
-            {/* KPIs com barra lateral decorativa à esquerda */}
-            <motion.div className="grid grid-cols-1 md:grid-cols-5 gap-6" variants={containerVariants}>
-                {[
-                    {
-                        label: 'Margem de Lucro',
-                        value: `EM BREVE`,
-                        icon: TrendingUp,
-                        color: 'green',
-                        borderColor: 'border-green-900',
-                        bgColor: 'bg-green-700',
-                    },
-                    {
-                        label: 'Total de Lançamentos',
-                        value: `EM BREVE`,
-                        icon: DollarSign,
-                        color: 'blue',
-                        borderColor: 'border-blue-900',
-                        bgColor: 'bg-blue-700',
-                    },
-                    {
-                        label: 'Top Categoria',
-                        value: top3Entradas,
-                        icon: GraduationCap, // Ícone de gráfico no canto
-                        color: 'purple',
-                        borderColor: 'border-purple-900',
-                        bgColor: 'bg-purple-700',
-                    },
-                    {
-                        label: 'Registros de Caixa (Qtd)',
-                        value: `EM BREVE`,
-                        icon: Box,
-                        color: 'orange',
-                        borderColor: 'border-orange-900',
-                        bgColor: 'bg-orange-500',
-                    },
-                    {
-                        label: 'Operações Financeiras Registradas',
-                        value: `EM BREVE`,
-                        icon: AlertTriangle,
-                        color: 'red',
-                        borderColor: 'border-red-900',
-                        bgColor: 'bg-red-700',
-                    },
-                ].map((kpi, i) => (
+            {/* KPIs - Módulos */}
+            <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6" variants={containerVariants}>
+                {mockModuleKpis.map((kpi, i) => (
                     <motion.div
                         key={i}
                         variants={itemVariants}
@@ -338,35 +307,32 @@ export function MovementDashboard() {
                             className={`absolute left-0 top-0 bottom-0 w-1.5 ${kpi.bgColor} rounded-r-lg shadow-lg shadow-purple-500/30`}
                         ></div>
 
-                        {/* Ícone de gráfico no canto superior direito */}
+                        {/* Ícone no canto superior direito */}
                         <div className="absolute top-4 right-4">
                             <div className="p-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow">
-                                <kpi.icon className="w-4 h-4 text-purple-700" />
+                                <kpi.icon className={`w-4 h-4 text-${kpi.color}-700`} />
                             </div>
                         </div>
 
                         <div className="">
                             <p className="text-xs uppercase tracking-wide text-gray-500">{kpi.label}</p>
 
-                            {/* Renderização especial para Top Categoria */}
-                            {kpi.label === 'Top Categoria' ? (
+                            {/* Renderização especial para Top Categoria (agora usa dados reais ou mock) */}
+                            {kpi.label.includes('Top Categoria') && Array.isArray(kpi.value) ? (
                                 <div className="mt-3 space-y-2">
-                                    {Array.isArray(kpi.value) && kpi.value.length > 0 ? (
+                                    {kpi.value.length > 0 ? (
                                         kpi.value.map((item, idx) => {
-                                            const isVenda = item.categoria === 'Venda';
+                                            const isVenda = item.categoria === 'Venda' || item.categoria === 'SALE';
                                             return (
                                                 <div key={idx} className="group">
-                                                    {/* Separador sutil */}
                                                     {idx > 0 && (
                                                         <div className="w-full h-px bg-gray-200/60 my-1"></div>
                                                     )}
 
                                                     <div className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-white/50 transition-colors">
-                                                        {/* Ícone + Categoria */}
                                                         <div className="flex items-center gap-2">
                                                             {isVenda && <span className="text-sm">💰</span>}
                                                             {item.categoria === 'Troco' && <span className="text-sm">🔄</span>}
-                                                            {item.categoria === 'Outros' && <span className="text-sm">📦</span>}
                                                             <span
                                                                 className={`text-sm font-medium ${isVenda ? 'text-purple-800' : 'text-gray-600'
                                                                     }`}
@@ -375,7 +341,6 @@ export function MovementDashboard() {
                                                             </span>
                                                         </div>
 
-                                                        {/* Valor */}
                                                         <span
                                                             className={`font-extrabold tabular-nums text-sm ${isVenda ? 'text-purple-900' : 'text-gray-900'
                                                                 }`}
@@ -387,33 +352,37 @@ export function MovementDashboard() {
                                             );
                                         })
                                     ) : (
-                                        <span className="text-gray-400 text-sm">—</span>
+                                        <span className="text-gray-400 text-sm">— Sem dados —</span>
                                     )}
                                 </div>
-                            ) : (
-                                /* Outros cards */
-                                <p className="text-3xl font-extrabold text-gray-900 tabular-nums mt-2">
-                                    {typeof kpi.value === 'number' ? kpi.value : kpi.value}
+                            ) : kpi.isModuleReady ? (
+                                /* Outros cards prontos (Margem, Lançamentos) */
+                                <p className={`text-3xl font-extrabold tabular-nums mt-2 ${kpi.valueClass}`}>
+                                    {kpi.value}
                                 </p>
+                            ) : (
+                                /* Módulos em breve */
+                                <div className="mt-4 text-center p-3 bg-gray-100 rounded-lg">
+                                    <p className="text-xl font-black text-gray-400">EM BREVE</p>
+                                    <p className="text-xs text-gray-500 mt-1">{kpi.subText}</p>
+                                </div>
                             )}
                         </div>
 
-                        {/* Badge de crescimento ou ícone */}
+                        {/* Badge de Status/Crescimento */}
                         <div className="flex items-center justify-between mt-3">
                             <div className={`p-2 rounded-full bg-${kpi.color}-100 text-${kpi.color}-600`}>
                                 <kpi.icon className="w-5 h-5 opacity-0" /> {/* Espaço reservado */}
                             </div>
-                            {kpi.label !== 'Alertas' && (
-                                <span className="px-2.5 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full shadow-sm">
-                                    +3.2%
-                                </span>
-                            )}
+                            <span className={`px-2.5 py-1 ${kpi.isModuleReady ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'} text-xs font-medium rounded-full shadow-sm`}>
+                                {kpi.isModuleReady ? kpi.badgeText : 'Em Desenvolvimento'}
+                            </span>
                         </div>
                     </motion.div>
                 ))}
             </motion.div>
 
-            {/* Resumo com gradientes vibrantes e badges */}
+            {/* Resumo com gradientes vibrantes e badges (Mantido) */}
             <motion.div className="grid grid-cols-1 md:grid-cols-4 gap-6" variants={containerVariants}>
                 {[
                     {
@@ -464,7 +433,7 @@ export function MovementDashboard() {
                 ))}
             </motion.div>
 
-            {/* Meta Editável com efeito premium */}
+            {/* Meta Editável com efeito premium (Mantido) */}
             <motion.div variants={itemVariants}>
                 <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow min-h-48">
                     <div className="flex items-center justify-between mb-4">
@@ -529,8 +498,7 @@ export function MovementDashboard() {
                 </div>
             </motion.div>
 
-            {/* Gráficos com hover suave */}
-            {/* Gráficos substituídos por "Módulo em breve!" */}
+            {/* Gráficos de Módulos Futuros (Mantidos) */}
             <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
                 {[
                     {
@@ -570,37 +538,7 @@ export function MovementDashboard() {
                 ))}
             </motion.div>
 
-            {/* Gráficos menores — também substituídos por "Módulo em breve!" */}
-            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
-                {[
-                    {
-                        title: "Entradas vs Saídas",
-                        icon: DollarSign,
-                        color: "from-green-400 to-red-400",
-                    },
-                    {
-                        title: "Evolução Diária",
-                        icon: TrendingUp,
-                        color: "from-blue-400 to-purple-400",
-                    },
-                ].map((card, i) => (
-                    <motion.div
-                        key={i}
-                        variants={itemVariants}
-                        whileHover={{ scale: 1.02 }}
-                        className={`backdrop-blur-xl bg-gradient-to-br ${card.color}/20 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col items-center justify-center text-center`}
-                    >
-                        <div className={`p-3 rounded-full bg-${card.color.split(" ")[0].replace("from-", "")}/10 mb-4`}>
-                            <card.icon className="w-8 h-8 text-gray-700" />
-                        </div>
-                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-2">{card.title}</h3>
-                        <p className="text-gray-600 text-sm font-medium">Módulo em breve!</p>
-                        <div className="mt-4 w-16 h-1 bg-gradient-to-r from-current to-transparent rounded-full opacity-30"></div>
-                    </motion.div>
-                ))}
-            </motion.div>
-
-            {/* Gráficos menores */}
+            {/* Gráficos Menores (Mantidos) */}
             <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
                 <motion.div variants={chartVariants}>
                     <motion.div
@@ -615,8 +553,8 @@ export function MovementDashboard() {
                                 <YAxis />
                                 <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
                                 <Legend />
-                                <Bar dataKey="entradas" fill="url(#entryGradient)" name="Entradas" />
-                                <Bar dataKey="saidas" fill="url(#exitGradient)" name="Saídas" />
+                                <Bar dataKey="entries" fill="url(#entryGradient)" name="Entradas" />
+                                <Bar dataKey="exits" fill="url(#exitGradient)" name="Saídas" />
                                 <defs>
                                     <linearGradient id="entryGradient" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
@@ -663,7 +601,7 @@ export function MovementDashboard() {
                 </motion.div>
             </motion.div>
 
-            {/* Histórico */}
+            {/* Histórico (Mantido) */}
             <motion.div variants={itemVariants}>
                 <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-shadow min-h-48">
                     <div className="p-6 border-b border-white/20">
