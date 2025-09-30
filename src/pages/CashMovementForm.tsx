@@ -8,8 +8,6 @@ import {
     CreditCard,
     Database,
     Banknote,
-    Tag,
-    FileText,
 } from 'lucide-react';
 import { apolloClient } from '../lib/apollo-client';
 import { CREATE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
@@ -39,39 +37,31 @@ const categoryMap = {
 
 type MovementType = keyof typeof movementTypeMap;
 
-// Definição das categorias para o Select
-const categoryOptions: {
-    type: MovementType;
-    label: string;
-    group: 'entry' | 'exit';
-    description: string;
-}[] = [
-        { type: 'venda', label: 'Venda', group: 'entry', description: 'Receita proveniente de vendas diretas.' },
-        { type: 'troco', label: 'Troco', group: 'entry', description: 'Recebimento de troco.' },
-        { type: 'outros_entrada', label: 'Outras Entradas', group: 'entry', description: 'Receitas não classificadas.' },
-        { type: 'despesa', label: 'Despesa', group: 'exit', description: 'Gastos operacionais ou de manutenção.' },
-        { type: 'saque', label: 'Saque', group: 'exit', description: 'Retirada de numerário do caixa.' },
-        { type: 'pagamento', label: 'Pagamento', group: 'exit', description: 'Pagamento a fornecedores ou contas.' },
-    ];
-
 export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const [formData, setFormData] = useState({
         type: 'venda' as MovementType,
         value: '',
         description: '',
-        date: formatLocalDateTime(new Date()),
+        date: formatLocalDateTime(new Date()), // ✅ Usa a função
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
             [name]: value,
         }));
-        setError(null);
+    };
+
+    const handleTypeChange = (type: MovementType) => {
+        setFormData((prev) => ({
+            ...prev,
+            type,
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -79,11 +69,12 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         setError(null);
         setLoading(true);
 
-        const value = parseFloat(formData.value.replace('.', '').replace(',', '.'));
+        const value = parseFloat(formData.value);
 
         const token = localStorage.getItem('accessToken');
         if (!token) {
             toast.error('Sessão expirada. Faça login novamente.');
+            setError('Sem autenticação');
             setLoading(false);
             return;
         }
@@ -91,6 +82,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         const userId = getUserIdFromToken();
         if (!userId) {
             toast.error('Usuário inválido. Faça login novamente.');
+            setError('ID de usuário não encontrado.');
             setLoading(false);
             return;
         }
@@ -114,7 +106,6 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 date: parseLocalDateTime(formData.date),
                 type: movementTypeMap[formData.type],
                 category: categoryMap[formData.type],
-                userId: userId,
             };
 
             const response = await apolloClient.mutate({
@@ -124,6 +115,9 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 awaitRefetchQueries: true
             });
 
+            console.log(response);
+
+
             if (response.errors && response.errors.length > 0) {
                 const messages = response.errors.flatMap(({ message, extensions }: any) => {
                     const issues = extensions?.issues;
@@ -132,6 +126,8 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 });
 
                 const deduped = Array.from(new Set(messages));
+
+                // ✅ Mostra um toast por erro
                 deduped.forEach(msg => {
                     const cleanMsg = msg.replace(/,$/, '').trim();
                     toast.error(cleanMsg);
@@ -141,7 +137,10 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 return;
             }
 
-            const result = response.data?.createCashMovement;
+            const result = response.data?.createCashMovement.message;
+
+            console.log(result);
+
 
             if (!result || result.success === false) {
                 const errorMsg = result?.message || 'Falha ao registrar movimentação.';
@@ -150,188 +149,231 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 return;
             }
 
-            toast.success('Movimentação registrada com sucesso!');
-            setFormData(prev => ({
+            // ✅ Agora sim: sucesso
+            toast.success(result || 'Movimentação registrada com sucesso!');
+            // Limpa formulário
+            setFormData({
                 type: 'venda',
                 value: '',
                 description: '',
-                date: formatLocalDateTime(new Date()),
-            }));
+                date: new Date().toISOString().slice(0, 16),
+            });
 
             onSuccess?.();
         } catch (err: any) {
+            console.log('🔴 Erro capturado no catch:', err); // erro bruto
+            if (err.networkError) {
+                console.log('🌐 Network Error:', err.networkError);
+            }
+            if (err.graphQLErrors) {
+                console.log('🛠 GraphQL Errors:', err.graphQLErrors);
+            }
             const messages = getGraphQLErrorMessages(err);
             messages.forEach((msg: any) => toast.error(msg));
             setError(messages.join(' • '));
-        } finally {
+        }
+        finally {
             setLoading(false);
         }
     };
 
-    const isEntry = movementTypeMap[formData.type] === 'ENTRY';
-    const selectedCategory = categoryOptions.find(opt => opt.type === formData.type);
-
-    // Classes de tema corporativo
-    const themeColorClass = isEntry ? 'border-green-700' : 'border-red-700';
-    const focusClass = `focus:border-blue-800 focus:ring-0`; // Foco azul escuro, cor corporativa
-    const buttonBg = isEntry ? 'bg-green-700 hover:bg-green-800' : 'bg-red-700 hover:bg-red-800';
-
     return (
-        <div className="bg-white rounded-lg shadow-xl border border-gray-400 max-w-4xl mx-auto overflow-hidden">
-
-            {/* Header (Barra de Título Simples) */}
-            <div className={`p-4 bg-gray-100 border-b border-gray-300 shadow-inner`}>
-                <h2 className="text-xl font-black text-gray-800 uppercase tracking-widest">
-                    REGISTRO DE MOVIMENTAÇÃO DE CAIXA
-                </h2>
-            </div>
-
-            <div className="p-8">
-                <form onSubmit={handleSubmit} className="space-y-6">
-
-                    {/* TIPO DE MOVIMENTAÇÃO (Select Tradicional) */}
-                    <div>
-                        <label htmlFor="type" className="block text-sm font-black text-gray-700 mb-2 uppercase flex items-center gap-2">
-                            <Tag className="w-4 h-4 text-gray-600" />
-                            CATEGORIA DA TRANSAÇÃO <span className="text-red-600">*</span>
-                        </label>
-                        <select
-                            id="type"
-                            name="type"
-                            value={formData.type}
-                            onChange={handleChange}
-                            disabled={loading}
-                            className={`w-full px-4 py-3 border border-gray-400 text-lg rounded-sm ${focusClass} disabled:bg-gray-100 transition-colors appearance-none shadow-sm`}
-                        >
-                            <optgroup label="ENTRADAS (RECEITAS)">
-                                {categoryOptions.filter(b => b.group === 'entry').map(btn => (
-                                    <option key={btn.type} value={btn.type}>
-                                        {btn.label}
-                                    </option>
-                                ))}
-                            </optgroup>
-                            <optgroup label="SAÍDAS (DESPESAS)">
-                                {categoryOptions.filter(b => b.group === 'exit').map(btn => (
-                                    <option key={btn.type} value={btn.type}>
-                                        {btn.label}
-                                    </option>
-                                ))}
-                            </optgroup>
-                        </select>
-
-                        {/* Descrição da Categoria Ativa - Painel de Detalhes */}
-                        {selectedCategory && (
-                            <div className={`mt-3 p-3 text-sm rounded-sm shadow-inner ${isEntry ? 'bg-green-50 border border-green-300' : 'bg-red-50 border border-red-300'}`}>
-                                <p className="font-semibold text-gray-700">Detalhes: {selectedCategory.label}</p>
-                                <p className="text-gray-600 italic">{selectedCategory.description}</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* VALOR e DATA */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Valor */}
-                        <div className="relative">
-                            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase">
-                                VALOR (R$) <span className="text-red-600">*</span>
-                            </label>
-                            <div className="relative">
-                                <DollarSign className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
-                                <input
-                                    type="text"
-                                    id="value"
-                                    name="value"
-                                    value={formData.value}
-                                    onChange={(e) => {
-                                        const rawValue = e.target.value.replace(/\D/g, '');
-                                        if (!rawValue) {
-                                            setFormData(prev => ({ ...prev, value: '' }));
-                                            return;
-                                        }
-                                        const valueInCents = parseInt(rawValue, 10);
-                                        const formattedValue = (valueInCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-                                        setFormData(prev => ({ ...prev, value: formattedValue }));
-                                    }}
-                                    required
-                                    disabled={loading}
-                                    placeholder="0,00"
-                                    className={`w-full pl-10 pr-4 py-3 border border-gray-400 text-lg font-mono rounded-sm shadow-sm ${focusClass} disabled:bg-gray-100 transition-colors`}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Data e Hora */}
-                        <div className="relative">
-                            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase">
-                                DATA E HORA <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                type="datetime-local"
-                                id="date"
-                                name="date"
-                                value={formData.date}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                                className={`w-full px-4 py-3 border border-gray-400 text-lg rounded-sm shadow-sm ${focusClass} disabled:bg-gray-100 transition-colors`}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Descrição */}
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2 uppercase">
-                            DESCRIÇÃO <span className="text-red-600">*</span>
-                        </label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            required
-                            disabled={loading}
-                            rows={3}
-                            className={`w-full p-3 border border-gray-400 rounded-sm shadow-sm ${focusClass} disabled:bg-gray-100 transition-colors resize-none`}
-                            placeholder="Descreva detalhadamente a movimentação financeira..."
-                        />
-                    </div>
-
-                    {/* Botão de Envio */}
-                    <div className="flex justify-end pt-4 border-t border-gray-300">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <h2 className="text-2xl font-serif text-gray-900 mb-6">Formulário de Movimentação</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Grupo: Entradas */}
+                <div>
+                    <h3 className="text-lg font-semibold text-green-700 mb-3">💰 Entrada</h3>
+                    <div className="grid grid-cols-3 gap-4">
                         <button
-                            type="submit"
+                            onClick={() => handleTypeChange('venda')}
+                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'venda'
+                                ? 'border-green-500 bg-green-50 text-green-900'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                                }`}
                             disabled={loading}
-                            className={`flex items-center gap-2 px-6 py-3 text-white font-black text-base uppercase rounded-sm shadow-md transition-all duration-200 w-full sm:w-auto
-                                ${loading
-                                    ? 'bg-gray-500 cursor-not-allowed'
-                                    : buttonBg
-                                }
-                            `}
                         >
-                            {loading ? (
-                                <>
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    PROCESSANDO...
-                                </>
-                            ) : (
-                                <>
-                                    <Save className="w-5 h-5" />
-                                    REGISTRAR MOVIMENTAÇÃO
-                                </>
+                            <DollarSign className="w-6 h-6" />
+                            <span className="mt-1 text-sm font-medium">Venda</span>
+                            {formData.type === 'venda' && (
+                                <div
+                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-green-500 opacity-100 animate-pulse"
+                                ></div>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => handleTypeChange('troco')}
+                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'troco'
+                                ? 'border-green-500 bg-green-50 text-green-900'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                                }`}
+                            disabled={loading}
+                        >
+                            <ArrowLeftRight className="w-6 h-6" />
+                            <span className="mt-1 text-sm font-medium">Troco</span>
+                            {formData.type === 'troco' && (
+                                <div
+                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-green-500 opacity-100 animate-pulse"
+                                ></div>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => handleTypeChange('outros_entrada')}
+                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'outros_entrada'
+                                ? 'border-green-500 bg-green-50 text-green-900'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                                }`}
+                            disabled={loading}
+                        >
+                            <PlusCircle className="w-6 h-6" />
+                            <span className="mt-1 text-sm font-medium">Outros</span>
+                            {formData.type === 'outros_entrada' && (
+                                <div
+                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-green-500 opacity-100 animate-pulse"
+                                ></div>
                             )}
                         </button>
                     </div>
-                </form>
+                </div>
 
-                {/* Error Display */}
-                {error && (
-                    <div className="mt-6 p-4 bg-red-100 border border-red-500 text-red-800 rounded-sm">
-                        <p className="font-black text-sm">ERRO:</p>
-                        <p className="text-sm mt-1">{error}</p>
+                {/* Grupo: Saídas */}
+                <div>
+                    <h3 className="text-lg font-semibold text-red-700 mb-3">💸 Saída</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                        <button
+                            onClick={() => handleTypeChange('despesa')}
+                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'despesa'
+                                ? 'border-red-500 bg-red-50 text-red-900'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                                }`}
+                            disabled={loading}
+                        >
+                            <Banknote className="w-6 h-6" />
+                            <span className="mt-1 text-sm font-medium">Despesa</span>
+                            {formData.type === 'despesa' && (
+                                <div
+                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-red-500 opacity-100 animate-pulse"
+                                ></div>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => handleTypeChange('saque')}
+                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'saque'
+                                ? 'border-red-500 bg-red-50 text-red-900'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                                }`}
+                            disabled={loading}
+                        >
+                            <Database className="w-6 h-6" />
+                            <span className="mt-1 text-sm font-medium">Saque</span>
+                            {formData.type === 'saque' && (
+                                <div
+                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-red-500 opacity-100 animate-pulse"
+                                ></div>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => handleTypeChange('pagamento')}
+                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'pagamento'
+                                ? 'border-red-500 bg-red-50 text-red-900'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                                }`}
+                            disabled={loading}
+                        >
+                            <CreditCard className="w-6 h-6" />
+                            <span className="mt-1 text-sm font-medium">Pagamento</span>
+                            {formData.type === 'pagamento' && (
+                                <div
+                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-red-500 opacity-100 animate-pulse"
+                                ></div>
+                            )}
+                        </button>
                     </div>
-                )}
-            </div>
+                </div>
+
+                {/* Valor */}
+                <div>
+                    <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                        Valor (R$) *
+                    </label>
+                    <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="number"
+                            id="value"
+                            name="value"
+                            step="0.01"
+                            min="0.01"
+                            value={formData.value}
+                            onChange={handleChange}
+                            required
+                            disabled={loading}
+                            placeholder="0,00"
+                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                        />
+                    </div>
+                </div>
+
+                {/* Descrição */}
+                <div>
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        Descrição *
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        required
+                        disabled={loading}
+                        rows={3}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                        placeholder="Ex: Compra de materiais, venda no PDV..."
+                    />
+                </div>
+
+                {/* Data e Hora */}
+                <div>
+                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                        Data e Hora
+                    </label>
+                    <input
+                        type="datetime-local"
+                        id="date"
+                        name="date"
+                        value={formData.date}
+                        onChange={handleChange}
+                        required
+                        disabled={loading}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    />
+                </div>
+
+                {/* Botão de Envio */}
+                <div className="flex justify-end pt-4">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-80 disabled:cursor-not-allowed transition"
+                    >
+                        {loading ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Salvando...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="w-4 h-4" />
+                                Registrar Movimentação
+                            </>
+                        )}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };
