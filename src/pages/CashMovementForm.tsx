@@ -8,6 +8,7 @@ import {
     CreditCard,
     Database,
     Banknote,
+    Tag,
 } from 'lucide-react';
 import { apolloClient } from '../lib/apollo-client';
 import { CREATE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
@@ -37,12 +38,28 @@ const categoryMap = {
 
 type MovementType = keyof typeof movementTypeMap;
 
+// Definição dos botões de categoria
+const categoryButtons: {
+    type: MovementType;
+    label: string;
+    icon: React.ElementType;
+    group: 'entry' | 'exit';
+}[] = [
+        { type: 'venda', label: 'Venda', icon: DollarSign, group: 'entry' },
+        { type: 'troco', label: 'Troco', icon: ArrowLeftRight, group: 'entry' },
+        { type: 'outros_entrada', label: 'Outros', icon: PlusCircle, group: 'entry' },
+        { type: 'despesa', label: 'Despesa', icon: Banknote, group: 'exit' },
+        { type: 'saque', label: 'Saque', icon: Database, group: 'exit' },
+        { type: 'pagamento', label: 'Pagamento', icon: CreditCard, group: 'exit' },
+    ];
+
+
 export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const [formData, setFormData] = useState({
         type: 'venda' as MovementType,
         value: '',
         description: '',
-        date: formatLocalDateTime(new Date()), // ✅ Usa a função
+        date: formatLocalDateTime(new Date()),
     });
 
     const [loading, setLoading] = useState(false);
@@ -69,7 +86,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         setError(null);
         setLoading(true);
 
-        const value = parseFloat(formData.value);
+        const value = parseFloat(formData.value.replace('.', '').replace(',', '.')); // Garantir parse correto do valor
 
         const token = localStorage.getItem('accessToken');
         if (!token) {
@@ -106,6 +123,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 date: parseLocalDateTime(formData.date),
                 type: movementTypeMap[formData.type],
                 category: categoryMap[formData.type],
+                userId: userId, // Adicionando userId aqui
             };
 
             const response = await apolloClient.mutate({
@@ -127,7 +145,6 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
                 const deduped = Array.from(new Set(messages));
 
-                // ✅ Mostra um toast por erro
                 deduped.forEach(msg => {
                     const cleanMsg = msg.replace(/,$/, '').trim();
                     toast.error(cleanMsg);
@@ -137,10 +154,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 return;
             }
 
-            const result = response.data?.createCashMovement.message;
-
-            console.log(result);
-
+            const result = response.data?.createCashMovement;
 
             if (!result || result.success === false) {
                 const errorMsg = result?.message || 'Falha ao registrar movimentação.';
@@ -149,25 +163,18 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 return;
             }
 
-            // ✅ Agora sim: sucesso
-            toast.success(result || 'Movimentação registrada com sucesso!');
+            toast.success('Movimentação registrada com sucesso!');
             // Limpa formulário
             setFormData({
                 type: 'venda',
                 value: '',
                 description: '',
-                date: new Date().toISOString().slice(0, 16),
+                date: formatLocalDateTime(new Date()),
             });
 
             onSuccess?.();
         } catch (err: any) {
-            console.log('🔴 Erro capturado no catch:', err); // erro bruto
-            if (err.networkError) {
-                console.log('🌐 Network Error:', err.networkError);
-            }
-            if (err.graphQLErrors) {
-                console.log('🛠 GraphQL Errors:', err.graphQLErrors);
-            }
+            console.log('🔴 Erro capturado no catch:', err);
             const messages = getGraphQLErrorMessages(err);
             messages.forEach((msg: any) => toast.error(msg));
             setError(messages.join(' • '));
@@ -177,143 +184,112 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         }
     };
 
+    const isEntry = movementTypeMap[formData.type] === 'ENTRY';
+    const mainColor = isEntry ? 'green' : 'red';
+    const accentColor = isEntry ? 'emerald' : 'rose';
+    const secondaryColor = isEntry ? 'red' : 'green';
+
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-serif text-gray-900 mb-6">Formulário de Movimentação</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Grupo: Entradas */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 transform transition-all duration-300 hover:shadow-2xl">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-8 tracking-tight border-b pb-4 border-gray-100">
+                Registro de Movimentação
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* GRUPO DE SELEÇÃO */}
                 <div>
-                    <h3 className="text-lg font-semibold text-green-700 mb-3">💰 Entrada</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                        <button
-                            onClick={() => handleTypeChange('venda')}
-                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'venda'
-                                ? 'border-green-500 bg-green-50 text-green-900'
-                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                                }`}
-                            disabled={loading}
-                        >
-                            <DollarSign className="w-6 h-6" />
-                            <span className="mt-1 text-sm font-medium">Venda</span>
-                            {formData.type === 'venda' && (
-                                <div
-                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-green-500 opacity-100 animate-pulse"
-                                ></div>
-                            )}
-                        </button>
+                    <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                        <Tag className="w-5 h-5 text-indigo-500" />
+                        Tipo de Movimentação
+                    </h3>
+                    <div className="grid grid-cols-2 gap-6 p-4 bg-gray-50 rounded-xl">
+                        {/* ENTRADAS */}
+                        <div className="space-y-3">
+                            <h4 className="text-sm font-semibold text-green-600 border-b border-green-200 pb-2">ENTRADA</h4>
+                            <div className="grid grid-cols-3 gap-3">
+                                {categoryButtons.filter(b => b.group === 'entry').map((btn) => (
+                                    <CategoryButton
+                                        key={btn.type}
+                                        type={btn.type}
+                                        label={btn.label}
+                                        icon={btn.icon}
+                                        formData={formData}
+                                        handleTypeChange={handleTypeChange}
+                                        loading={loading}
+                                    />
+                                ))}
+                            </div>
+                        </div>
 
-                        <button
-                            onClick={() => handleTypeChange('troco')}
-                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'troco'
-                                ? 'border-green-500 bg-green-50 text-green-900'
-                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                                }`}
-                            disabled={loading}
-                        >
-                            <ArrowLeftRight className="w-6 h-6" />
-                            <span className="mt-1 text-sm font-medium">Troco</span>
-                            {formData.type === 'troco' && (
-                                <div
-                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-green-500 opacity-100 animate-pulse"
-                                ></div>
-                            )}
-                        </button>
-
-                        <button
-                            onClick={() => handleTypeChange('outros_entrada')}
-                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'outros_entrada'
-                                ? 'border-green-500 bg-green-50 text-green-900'
-                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                                }`}
-                            disabled={loading}
-                        >
-                            <PlusCircle className="w-6 h-6" />
-                            <span className="mt-1 text-sm font-medium">Outros</span>
-                            {formData.type === 'outros_entrada' && (
-                                <div
-                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-green-500 opacity-100 animate-pulse"
-                                ></div>
-                            )}
-                        </button>
+                        {/* SAÍDAS */}
+                        <div className="space-y-3">
+                            <h4 className="text-sm font-semibold text-red-600 border-b border-red-200 pb-2">SAÍDA</h4>
+                            <div className="grid grid-cols-3 gap-3">
+                                {categoryButtons.filter(b => b.group === 'exit').map((btn) => (
+                                    <CategoryButton
+                                        key={btn.type}
+                                        type={btn.type}
+                                        label={btn.label}
+                                        icon={btn.icon}
+                                        formData={formData}
+                                        handleTypeChange={handleTypeChange}
+                                        loading={loading}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Grupo: Saídas */}
-                <div>
-                    <h3 className="text-lg font-semibold text-red-700 mb-3">💸 Saída</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                        <button
-                            onClick={() => handleTypeChange('despesa')}
-                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'despesa'
-                                ? 'border-red-500 bg-red-50 text-red-900'
-                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                                }`}
-                            disabled={loading}
-                        >
-                            <Banknote className="w-6 h-6" />
-                            <span className="mt-1 text-sm font-medium">Despesa</span>
-                            {formData.type === 'despesa' && (
-                                <div
-                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-red-500 opacity-100 animate-pulse"
-                                ></div>
-                            )}
-                        </button>
 
-                        <button
-                            onClick={() => handleTypeChange('saque')}
-                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'saque'
-                                ? 'border-red-500 bg-red-50 text-red-900'
-                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                                }`}
-                            disabled={loading}
-                        >
-                            <Database className="w-6 h-6" />
-                            <span className="mt-1 text-sm font-medium">Saque</span>
-                            {formData.type === 'saque' && (
-                                <div
-                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-red-500 opacity-100 animate-pulse"
-                                ></div>
-                            )}
-                        </button>
+                {/* VALOR E DESCRIÇÃO */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Valor */}
+                    <div>
+                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                            Valor (R$) <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <DollarSign className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-${mainColor}-500 transition-colors`} />
+                            <input
+                                type="text" // Alterado para text para melhor manipulação de máscara, mas mantendo a validação
+                                id="value"
+                                name="value"
+                                value={formData.value}
+                                onChange={(e) => {
+                                    // Simples formatação de moeda para o input
+                                    const rawValue = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+                                    if (!rawValue) {
+                                        setFormData(prev => ({ ...prev, value: '' }));
+                                        return;
+                                    }
+                                    // Formata como moeda (ex: 12345 -> 123.45)
+                                    const valueInCents = parseInt(rawValue, 10);
+                                    const formattedValue = (valueInCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                        <button
-                            onClick={() => handleTypeChange('pagamento')}
-                            className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all ${formData.type === 'pagamento'
-                                ? 'border-red-500 bg-red-50 text-red-900'
-                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                                }`}
-                            disabled={loading}
-                        >
-                            <CreditCard className="w-6 h-6" />
-                            <span className="mt-1 text-sm font-medium">Pagamento</span>
-                            {formData.type === 'pagamento' && (
-                                <div
-                                    className="absolute inset-x-0 bottom-0 w-full h-1 bg-red-500 opacity-100 animate-pulse"
-                                ></div>
-                            )}
-                        </button>
+                                    setFormData(prev => ({ ...prev, value: formattedValue }));
+                                }}
+                                required
+                                disabled={loading}
+                                placeholder="0,00"
+                                className={`w-full pl-10 p-4 border border-gray-300 rounded-xl text-lg font-mono focus:ring-4 focus:ring-${accentColor}-200 focus:border-${mainColor}-500 disabled:bg-gray-50 disabled:cursor-not-allowed transition-all`}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                {/* Valor */}
-                <div>
-                    <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
-                        Valor (R$) *
-                    </label>
-                    <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    {/* Data e Hora */}
+                    <div>
+                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                            Data e Hora <span className="text-red-500">*</span>
+                        </label>
                         <input
-                            type="number"
-                            id="value"
-                            name="value"
-                            step="0.01"
-                            min="0.01"
-                            value={formData.value}
+                            type="datetime-local"
+                            id="date"
+                            name="date"
+                            value={formData.date}
                             onChange={handleChange}
                             required
                             disabled={loading}
-                            placeholder="0,00"
-                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                            className={`w-full p-4 border border-gray-300 rounded-xl text-lg focus:ring-4 focus:ring-${accentColor}-200 focus:border-${mainColor}-500 disabled:bg-gray-50 disabled:cursor-not-allowed transition-all`}
                         />
                     </div>
                 </div>
@@ -321,7 +297,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 {/* Descrição */}
                 <div>
                     <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                        Descrição *
+                        Descrição <span className="text-red-500">*</span>
                     </label>
                     <textarea
                         id="description"
@@ -331,49 +307,80 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                         required
                         disabled={loading}
                         rows={3}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                        className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 disabled:bg-gray-50 disabled:cursor-not-allowed transition-all resize-none"
                         placeholder="Ex: Compra de materiais, venda no PDV..."
                     />
                 </div>
 
-                {/* Data e Hora */}
-                <div>
-                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                        Data e Hora
-                    </label>
-                    <input
-                        type="datetime-local"
-                        id="date"
-                        name="date"
-                        value={formData.date}
-                        onChange={handleChange}
-                        required
-                        disabled={loading}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
-                    />
-                </div>
-
                 {/* Botão de Envio */}
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-center pt-4">
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-80 disabled:cursor-not-allowed transition"
+                        className={`flex items-center gap-3 px-8 py-4 text-white font-bold text-lg rounded-full shadow-lg transition-all duration-300 transform hover:scale-[1.02] 
+                            ${loading ?
+                                'bg-gray-500 cursor-not-allowed' :
+                                isEntry ?
+                                    'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-green-500/30' :
+                                    'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-red-500/30'
+                            }
+                        `}
                     >
                         {loading ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Salvando...
+                                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                                Processando...
                             </>
                         ) : (
                             <>
-                                <Save className="w-4 h-4" />
+                                <Save className="w-5 h-5" />
                                 Registrar Movimentação
                             </>
                         )}
                     </button>
                 </div>
             </form>
+            {error && (
+                <div className="mt-6 p-3 text-sm text-red-700 bg-red-100 rounded-lg border border-red-300">
+                    <p className="font-medium">Erro de Validação:</p>
+                    <p>{error}</p>
+                </div>
+            )}
         </div>
+    );
+};
+
+// Componente auxiliar para os botões de categoria
+interface CategoryButtonProps {
+    type: MovementType;
+    label: string;
+    icon: React.ElementType;
+    formData: { type: MovementType };
+    handleTypeChange: (type: MovementType) => void;
+    loading: boolean;
+}
+
+const CategoryButton: React.FC<CategoryButtonProps> = ({ type, label, icon: Icon, formData, handleTypeChange, loading }) => {
+    const isActive = formData.type === type;
+    const isEntry = movementTypeMap[type] === 'ENTRY';
+    const activeColor = isEntry ? 'green' : 'red';
+    const shadowColor = isEntry ? 'shadow-green-500/20' : 'shadow-red-500/20';
+
+    const baseClasses = `flex flex-col items-center justify-center p-3 border rounded-xl relative transition-all duration-300 text-sm font-semibold h-24 whitespace-nowrap overflow-hidden shadow-md`;
+
+    const inactiveClasses = `bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-${activeColor}-300 hover:text-${activeColor}-600`;
+
+    const activeClasses = `bg-${activeColor}-50 border-${activeColor}-500 text-${activeColor}-900 ring-2 ring-${activeColor}-200 shadow-lg ${shadowColor} transform scale-[1.01]`;
+
+    return (
+        <button
+            type="button"
+            onClick={() => handleTypeChange(type)}
+            className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+            disabled={loading}
+        >
+            <Icon className="w-6 h-6 mb-1" />
+            <span>{label}</span>
+        </button>
     );
 };
