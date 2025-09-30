@@ -223,13 +223,31 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
                 {/* Grupo: Entradas */}
                 <div>
-                    <h3 className="text-lg font-semibold text-green-700 mb-3">💰 Entrada</h3>
+                    {/* 🔄 INÍCIO DA CORREÇÃO: Usando <img> antes do texto */}
+                    <div className="flex items-center text-lg font-semibold text-green-700 mb-3">
+                        <img
+                            src="https://cdn-icons-png.flaticon.com/512/4680/4680408.png"
+                            alt="Entrada"
+                            className="w-6 h-6 mr-2 object-contain" // Ajuste o tamanho conforme necessário
+                        />
+                        <h3>Entrada</h3>
+                    </div>
+                    {/* 🔄 FIM DA CORREÇÃO */}
                     {renderMovementButtons(entryOptions, 'green')}
                 </div>
 
                 {/* Grupo: Saídas */}
                 <div>
-                    <h3 className="text-lg font-semibold text-red-700 mb-3">💸 Saída</h3>
+                    {/* 🔄 INÍCIO DA CORREÇÃO: Usando <img> antes do texto */}
+                    <div className="flex items-center text-lg font-semibold text-red-700 mb-3">
+                        <img
+                            src="https://cdn-icons-png.flaticon.com/512/1828/1828407.png"
+                            alt="Saída"
+                            className="w-6 h-6 mr-2 object-contain" // Ajuste o tamanho conforme necessário
+                        />
+                        <h3>Saída</h3>
+                    </div>
+                    {/* 🔄 FIM DA CORREÇÃO */}
                     {renderMovementButtons(exitOptions, 'red')}
                 </div>
 
