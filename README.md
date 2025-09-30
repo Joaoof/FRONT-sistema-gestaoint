@@ -1,4 +1,3 @@
-Thought for 3s```markdown
 <div align="center">
 
 # 🚀 Sistema de Gestão Integrado
@@ -275,4 +274,5 @@ Pronto! Transformei o README em algo muito mais dinâmico e visualmente atraente
 - 🤝 Seção de contribuição mais amigável
 
 O README agora está muito mais convidativo e profissional, mantendo todas as informações técnicas importantes!
+```
 ```
