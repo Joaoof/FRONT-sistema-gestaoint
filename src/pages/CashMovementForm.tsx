@@ -78,7 +78,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             ...prev,
             [name]: value,
         }));
-        setError(null); // Limpa erro quando usuário digita
+        setError(null);
     };
 
     const handleTypeChange = (type: MovementType) => {
@@ -189,249 +189,178 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const selectedButton = categoryButtons.find(btn => btn.type === formData.type);
 
     return (
-        <div className="relative overflow-hidden">
-            {/* Background animado */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 animate-gradient-xy"></div>
+        <div className="bg-white rounded-lg shadow-md border border-gray-300 p-10 max-w-4xl mx-auto">
+            {/* Header CLÁSSICO */}
+            <div className="mb-8 border-b-2 border-gray-300 pb-4">
+                <h2 className="text-3xl font-serif font-black text-gray-900 tracking-wider">
+                    REGISTRO DE MOVIMENTAÇÃO DE CAIXA
+                </h2>
+                <div className="flex items-center mt-2">
+                    <Tag className="w-5 h-5 text-indigo-700 mr-2" />
+                    <p className="text-gray-600 font-medium">Preencha os campos para registrar a transação.</p>
+                </div>
+            </div>
 
-            {/* Elementos decorativos */}
-            <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-blue-400/10 to-purple-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-emerald-400/10 to-cyan-500/10 rounded-full blur-3xl"></div>
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* SEÇÃO DE TIPOS - Estilo TABS/GRUPOS CLÁSSICOS */}
+                <div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 border-l-4 border-blue-700 pl-3">
+                        CATEGORIA DA TRANSAÇÃO
+                    </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4 bg-gray-100 border border-gray-300 rounded-md">
+                        {/* ENTRADAS */}
+                        <div className="space-y-3">
+                            <h4 className="text-sm font-black text-green-700 uppercase border-b border-green-400 pb-2">ENTRADA</h4>
+                            <div className="grid grid-cols-3 gap-3">
+                                {categoryButtons.filter(b => b.group === 'entry').map((btn) => (
+                                    <CategoryButton
+                                        key={btn.type}
+                                        {...btn}
+                                        formData={formData}
+                                        handleTypeChange={handleTypeChange}
+                                        loading={loading}
+                                    />
+                                ))}
+                            </div>
+                        </div>
 
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-10 transform transition-all duration-500 hover:shadow-3xl hover:scale-[1.01]">
-                {/* Header com animação */}
-                <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
-                        <Sparkles className="w-8 h-8 text-white animate-pulse" />
+                        {/* SAÍDAS */}
+                        <div className="space-y-3">
+                            <h4 className="text-sm font-black text-red-700 uppercase border-b border-red-400 pb-2">SAÍDA</h4>
+                            <div className="grid grid-cols-3 gap-3">
+                                {categoryButtons.filter(b => b.group === 'exit').map((btn) => (
+                                    <CategoryButton
+                                        key={btn.type}
+                                        {...btn}
+                                        formData={formData}
+                                        handleTypeChange={handleTypeChange}
+                                        loading={loading}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                    <h2 className="text-4xl font-black bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent mb-3">
-                        Registro de Movimentação
-                    </h2>
-                    <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto rounded-full"></div>
-                    <p className="text-gray-600 mt-4 text-lg">Gerencie suas movimentações financeiras com elegância</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-10">
-                    {/* SEÇÃO DE TIPOS - Redesenhada */}
-                    <div className="relative">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className={`p-2 rounded-xl ${isEntry ? 'bg-emerald-100' : 'bg-red-100'} transition-all duration-300`}>
-                                {isEntry ? <TrendingUp className="w-5 h-5 text-emerald-600" /> : <TrendingDown className="w-5 h-5 text-red-600" />}
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-800">Tipo de Movimentação</h3>
-                            {selectedButton && (
-                                <div className="ml-auto bg-gray-100 px-4 py-2 rounded-full text-sm text-gray-600 font-medium">
-                                    {selectedButton.description}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 bg-gradient-to-br from-gray-50/50 to-white/50 rounded-2xl border border-gray-200/50 backdrop-blur-sm">
-                            {/* ENTRADAS */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full animate-pulse"></div>
-                                    <h4 className="text-lg font-bold text-emerald-700 uppercase tracking-wider">Entradas</h4>
-                                </div>
-                                <div className="grid grid-cols-1 gap-4">
-                                    {categoryButtons.filter(b => b.group === 'entry').map((btn) => (
-                                        <CategoryButton
-                                            key={btn.type}
-                                            {...btn}
-                                            formData={formData}
-                                            handleTypeChange={handleTypeChange}
-                                            loading={loading}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* SAÍDAS */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-3 h-3 bg-gradient-to-r from-red-400 to-pink-500 rounded-full animate-pulse"></div>
-                                    <h4 className="text-lg font-bold text-red-700 uppercase tracking-wider">Saídas</h4>
-                                </div>
-                                <div className="grid grid-cols-1 gap-4">
-                                    {categoryButtons.filter(b => b.group === 'exit').map((btn) => (
-                                        <CategoryButton
-                                            key={btn.type}
-                                            {...btn}
-                                            formData={formData}
-                                            handleTypeChange={handleTypeChange}
-                                            loading={loading}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* CAMPOS DE ENTRADA - Redesenhados */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Valor */}
-                        <div className="relative group">
-                            <label className="flex items-center gap-2 text-base font-bold text-gray-700 mb-4">
-                                <DollarSign className="w-5 h-5 text-blue-500" />
-                                Valor (R$)
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-                                    <div className={`p-2 rounded-lg ${isEntry ? 'bg-emerald-100' : 'bg-red-100'} transition-all duration-300`}>
-                                        <DollarSign className={`w-5 h-5 ${isEntry ? 'text-emerald-600' : 'text-red-600'}`} />
-                                    </div>
-                                </div>
-                                <input
-                                    type="text"
-                                    id="value"
-                                    name="value"
-                                    value={formData.value}
-                                    onFocus={() => setFocusedField('value')}
-                                    onBlur={() => setFocusedField(null)}
-                                    onChange={(e) => {
-                                        const rawValue = e.target.value.replace(/\D/g, '');
-                                        if (!rawValue) {
-                                            setFormData(prev => ({ ...prev, value: '' }));
-                                            return;
-                                        }
-                                        const valueInCents = parseInt(rawValue, 10);
-                                        const formattedValue = (valueInCents / 100).toLocaleString('pt-BR', {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2
-                                        });
-                                        setFormData(prev => ({ ...prev, value: formattedValue }));
-                                    }}
-                                    required
-                                    disabled={loading}
-                                    placeholder="0,00"
-                                    className={`w-full pl-16 pr-6 py-6 bg-white border-2 ${focusedField === 'value'
-                                            ? isEntry ? 'border-emerald-400 ring-4 ring-emerald-100' : 'border-red-400 ring-4 ring-red-100'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                        } rounded-2xl text-2xl font-bold font-mono transition-all duration-300 disabled:bg-gray-50 shadow-lg shadow-gray-100 hover:shadow-xl`}
-                                />
-                                {focusedField === 'value' && (
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Data e Hora */}
-                        <div className="relative group">
-                            <label className="flex items-center gap-2 text-base font-bold text-gray-700 mb-4">
-                                <Calendar className="w-5 h-5 text-purple-500" />
-                                Data e Hora
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="datetime-local"
-                                    id="date"
-                                    name="date"
-                                    value={formData.date}
-                                    onChange={handleChange}
-                                    onFocus={() => setFocusedField('date')}
-                                    onBlur={() => setFocusedField(null)}
-                                    required
-                                    disabled={loading}
-                                    className={`w-full px-6 py-6 bg-white border-2 ${focusedField === 'date'
-                                            ? 'border-purple-400 ring-4 ring-purple-100'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                        } rounded-2xl text-lg font-semibold transition-all duration-300 disabled:bg-gray-50 shadow-lg shadow-gray-100 hover:shadow-xl`}
-                                />
-                                {focusedField === 'date' && (
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-ping"></div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Descrição */}
-                    <div className="relative group">
-                        <label className="flex items-center gap-2 text-base font-bold text-gray-700 mb-4">
-                            <FileText className="w-5 h-5 text-indigo-500" />
-                            Descrição
-                            <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                            <textarea
-                                id="description"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                onFocus={() => setFocusedField('description')}
-                                onBlur={() => setFocusedField(null)}
-                                required
-                                disabled={loading}
-                                rows={4}
-                                className={`w-full px-6 py-6 bg-white border-2 ${focusedField === 'description'
-                                        ? 'border-indigo-400 ring-4 ring-indigo-100'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                    } rounded-2xl text-lg transition-all duration-300 resize-none disabled:bg-gray-50 shadow-lg shadow-gray-100 hover:shadow-xl`}
-                                placeholder="Descreva detalhadamente a movimentação financeira..."
-                            />
-                            {focusedField === 'description' && (
-                                <div className="absolute right-4 top-6">
-                                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Botão de Envio */}
-                    <div className="flex justify-center pt-8">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`group relative flex items-center gap-4 px-12 py-6 text-white font-bold text-xl rounded-3xl shadow-2xl transition-all duration-500 transform hover:scale-105 active:scale-95 overflow-hidden ${loading
-                                    ? 'bg-gray-500 cursor-not-allowed'
-                                    : isEntry
-                                        ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 shadow-emerald-500/50 hover:shadow-emerald-600/60'
-                                        : 'bg-gradient-to-r from-red-500 via-pink-500 to-red-600 hover:from-red-600 hover:via-pink-600 hover:to-red-700 shadow-red-500/50 hover:shadow-red-600/60'
-                                }`}
-                        >
-                            {/* Efeito de brilho */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-
-                            {loading ? (
-                                <>
-                                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Processando Movimentação...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Save className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
-                                    <span>Registrar Movimentação</span>
-                                    <div className="w-2 h-2 bg-white/50 rounded-full animate-pulse"></div>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </form>
-
-                {/* Error Display */}
-                {error && (
-                    <div className="mt-8 p-6 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-400 rounded-2xl shadow-lg">
-                        <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                            </div>
-                            <div>
-                                <p className="font-bold text-red-800 text-lg">Erro de Validação</p>
-                                <p className="text-red-700 mt-1">{error}</p>
-                            </div>
-                        </div>
+                {/* DESCRIÇÃO DA CATEGORIA ATIVA */}
+                {selectedButton && (
+                    <div className="p-4 bg-gray-50 border-l-4 border-indigo-500 rounded-md shadow-inner text-sm text-gray-700">
+                        <p className="font-semibold">Categoria Selecionada: {selectedButton.label}</p>
+                        <p>{selectedButton.description}</p>
                     </div>
                 )}
-            </div>
+
+
+                {/* CAMPOS DE ENTRADA */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    {/* Valor */}
+                    <div className="relative">
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                            VALOR (R$) <span className="text-red-600">*</span>
+                        </label>
+                        <div className="relative">
+                            <DollarSign className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+                            <input
+                                type="text"
+                                id="value"
+                                name="value"
+                                value={formData.value}
+                                onChange={(e) => {
+                                    const rawValue = e.target.value.replace(/\D/g, '');
+                                    if (!rawValue) {
+                                        setFormData(prev => ({ ...prev, value: '' }));
+                                        return;
+                                    }
+                                    const valueInCents = parseInt(rawValue, 10);
+                                    const formattedValue = (valueInCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                                    setFormData(prev => ({ ...prev, value: formattedValue }));
+                                }}
+                                required
+                                disabled={loading}
+                                placeholder="0,00"
+                                className={`w-full pl-10 pr-4 py-3 border border-gray-400 text-lg font-mono focus:border-blue-700 focus:ring-0 disabled:bg-gray-100 transition-colors rounded-sm`}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Data e Hora */}
+                    <div className="relative">
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                            DATA E HORA <span className="text-red-600">*</span>
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="date"
+                            name="date"
+                            value={formData.date}
+                            onChange={handleChange}
+                            required
+                            disabled={loading}
+                            className={`w-full px-4 py-3 border border-gray-400 text-lg focus:border-blue-700 focus:ring-0 disabled:bg-gray-100 transition-colors rounded-sm`}
+                        />
+                    </div>
+                </div>
+
+                {/* Descrição */}
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                        DESCRIÇÃO <span className="text-red-600">*</span>
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        required
+                        disabled={loading}
+                        rows={3}
+                        className={`w-full p-4 border border-gray-400 focus:border-blue-700 focus:ring-0 disabled:bg-gray-100 transition-colors resize-none rounded-sm`}
+                        placeholder="Descreva detalhadamente a movimentação financeira..."
+                    />
+                </div>
+
+                {/* Botão de Envio */}
+                <div className="flex justify-end pt-6 border-t border-gray-300">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`flex items-center gap-2 px-8 py-3 text-white font-black text-lg uppercase rounded-sm border-2 border-transparent transition-all duration-200 shadow-md
+                            ${loading
+                                ? 'bg-gray-500 cursor-not-allowed'
+                                : isEntry
+                                    ? 'bg-green-700 hover:bg-green-800'
+                                    : 'bg-red-700 hover:bg-red-800'
+                            }
+                        `}
+                    >
+                        {loading ? (
+                            <>
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                PROCESSANDO...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="w-5 h-5" />
+                                REGISTRAR MOVIMENTAÇÃO
+                            </>
+                        )}
+                    </button>
+                </div>
+            </form>
+
+            {/* Error Display CLÁSSICO */}
+            {error && (
+                <div className="mt-8 p-4 bg-red-100 border border-red-500 text-red-800 rounded-sm">
+                    <p className="font-black text-sm">ERRO:</p>
+                    <p className="text-sm mt-1">{error}</p>
+                </div>
+            )}
         </div>
     );
 };
 
-// Componente auxiliar redesenhado para os botões de categoria
+// Componente auxiliar CLÁSSICO para os botões de categoria
 interface CategoryButtonProps {
     type: MovementType;
     label: string;
@@ -443,62 +372,28 @@ interface CategoryButtonProps {
     loading: boolean;
 }
 
-const CategoryButton: React.FC<CategoryButtonProps> = ({
-    type,
-    label,
-    icon: Icon,
-    color,
-    description,
-    formData,
-    handleTypeChange,
-    loading
-}) => {
+const CategoryButton: React.FC<CategoryButtonProps> = ({ type, label, icon: Icon, color, formData, handleTypeChange, loading }) => {
     const isActive = formData.type === type;
     const isEntry = movementTypeMap[type] === 'ENTRY';
 
-    const getColorClasses = () => {
-        if (isActive) {
-            switch (color) {
-                case 'emerald': return 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30';
-                case 'teal': return 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30';
-                case 'cyan': return 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/30';
-                case 'red': return 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/30';
-                case 'orange': return 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30';
-                case 'pink': return 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30';
-                default: return 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/30';
-            }
-        }
-        return 'bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300';
-    };
+    // Cores sólidas e corporativas
+    const activeBg = isEntry ? 'bg-green-700' : 'bg-red-700';
+    const activeText = 'text-white';
+
+    const inactiveClasses = `bg-white text-gray-700 border-2 border-gray-400 hover:bg-gray-100`;
 
     return (
         <button
             type="button"
             onClick={() => handleTypeChange(type)}
             disabled={loading}
-            className={`group relative flex items-center gap-4 p-6 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden ${getColorClasses()}`}
+            className={`flex flex-col items-center justify-center p-3 transition-all duration-100 text-sm font-semibold h-24 whitespace-nowrap overflow-hidden rounded-sm shadow-sm 
+                ${isActive ? `${activeBg} ${activeText} border-4 border-gray-900` : inactiveClasses} 
+                ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-md'}`
+            }
         >
-            {/* Efeito de brilho para botões ativos */}
-            {isActive && (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-            )}
-
-            <div className={`p-3 rounded-xl ${isActive ? 'bg-white/20' : isEntry ? 'bg-emerald-100' : 'bg-red-100'} transition-all duration-300`}>
-                <Icon className={`w-6 h-6 ${isActive ? 'text-white' : isEntry ? 'text-emerald-600' : 'text-red-600'}`} />
-            </div>
-
-            <div className="flex-1 text-left">
-                <div className={`font-bold text-lg ${isActive ? 'text-white' : 'text-gray-800'}`}>{label}</div>
-                <div className={`text-sm ${isActive ? 'text-white/80' : 'text-gray-500'}`}>{description}</div>
-            </div>
-
-            {isActive && (
-                <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-white/70 rounded-full animate-pulse delay-75"></div>
-                    <div className="w-2 h-2 bg-white/50 rounded-full animate-pulse delay-150"></div>
-                </div>
-            )}
+            <Icon className={`w-6 h-6 mb-1 ${isActive ? 'text-white' : 'text-gray-700'}`} />
+            <span className="font-black text-xs uppercase">{label}</span>
         </button>
     );
 };
