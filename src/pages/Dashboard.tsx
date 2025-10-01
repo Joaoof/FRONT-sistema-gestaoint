@@ -160,7 +160,7 @@ export function Dashboard({
           <div className="flex items-center justify-between border-b pb-2">
             <h2 className="text-lg font-semibold text-gray-900">Atalhos Rápidos</h2>
             <button className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition">
-              <img src="/icons/plus.png" alt="Novo Produto" className="w-4 h-4" />
+              <img src="https://cdn-icons-png.flaticon.com/512/7033/7033070.png" alt="Novo Produto" className="w-4 h-4" />
               <span>Novo Produto</span>
             </button>
           </div>
