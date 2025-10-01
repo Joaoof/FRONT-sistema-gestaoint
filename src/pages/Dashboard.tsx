@@ -3,7 +3,7 @@ import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
 import { InventoryData } from '../hooks/useInventory';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Package, BarChart3, ShoppingCart, Headphones, Plus } from 'lucide-react';
+import { User, Package, BarChart3, Headphones } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
@@ -160,42 +160,30 @@ export function Dashboard({
           <div className="flex items-center justify-between border-b pb-2">
             <h2 className="text-lg font-semibold text-gray-900">Atalhos Rápidos</h2>
             <button className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition">
-              <Plus className="w-4 h-4" />
+              <img src="/icons/plus.png" alt="Novo Produto" className="w-4 h-4" />
               <span>Novo Produto</span>
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
-            >
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer">
               <div className="w-16 h-16 bg-blue-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                <Package className="w-8 h-8 text-blue-600" />
+                <img src="https://cdn-icons-png.flaticon.com/512/1949/1949617.png" alt="Cadastrar Produto" className="w-8 h-8 object-contain" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Cadastrar Produto</h3>
               <p className="text-sm text-gray-500">Adicione ao seu estoque</p>
             </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
-            >
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer">
               <div className="w-16 h-16 bg-green-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                <BarChart3 className="w-8 h-8 text-green-600" />
+                <img src="https://cdn-icons-png.freepik.com/512/4041/4041233.png" alt="Gerar Relatório" className="w-8 h-8 object-contain" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Gerar Relatório</h3>
               <p className="text-sm text-gray-500">Relatórios detalhados</p>
             </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
-            >
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer">
               <div className="w-16 h-16 bg-purple-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                <ShoppingCart className="w-8 h-8 text-purple-600" />
+                <img src="https://cdn-icons-png.freepik.com/256/6573/6573825.png?semt=ais_white_label" alt="Registrar Venda" className="w-8 h-8 object-contain" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Registrar Venda</h3>
               <p className="text-sm text-gray-500">Registre saídas e vendas</p>
