@@ -59,7 +59,7 @@ const menuItems: MenuItem[] = [
     label: 'Fiscal',
     imageUrl: 'https://cdn-icons-png.flaticon.com/512/8655/8655421.png',
     children: [
-      { id: 'fiscal-receber', label: 'Contas a Receber', imageUrl: '/https://cdn-icons-png.flaticon.com/512/6397/6397689.png' },
+      { id: 'fiscal-receber', label: 'Contas a Receber', imageUrl: 'https://cdn-icons-png.flaticon.com/512/6397/6397689.png' },
       { id: 'fiscal-receber-criar', label: 'Nova Receita', imageUrl: 'https://cdn-icons-png.flaticon.com/512/1605/1605298.png' },
       { id: 'fiscal-pagar', label: 'Contas a Pagar', imageUrl: 'https://cdn-icons-png.flaticon.com/512/1999/1999210.png' },
       { id: 'fiscal-pagar-criar', label: 'Nova Despesa', imageUrl: 'https://cdn-icons-png.freepik.com/512/8910/8910710.png' },
