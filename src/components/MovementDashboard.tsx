@@ -458,18 +458,18 @@ export function MovementDashboard() {
                             <div className="p-2 rounded-full bg-purple-100 text-purple-600">
                                 <Target className="w-5 h-5" />
                             </div>
-                            <h3 className="text-lg font-extrabold tracking-tight text-gray-900">Meta de Faturamento Mensal</h3>
-                        </div>
-                        {!isEditing && (
-                            <motion.button
-                                whileHover={{ scale: 1.05, rotate: 5 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={handleEdit}
-                                className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                            <h3
+                                className="text-lg font-extrabold tracking-tight text-gray-900 font-['Open_Sans']"
                             >
-                                ✏️ Editar
-                            </motion.button>
-                        )}
+                                Meta de Faturamento Mensal
+                            </h3>
+                        </div>
+
+                        {/* Bloco substituído pelo novo texto "Módulo em breve" */}
+                        <span className="text-sm font-medium text-gray-500 italic">
+                            Módulo em breve
+                        </span>
+
                     </div>
 
                     <div className="flex items-center gap-2 mb-4">
