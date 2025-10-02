@@ -29,7 +29,7 @@ import { NewDeliveryPage } from './pages/NewDeliveryPage';
 import { ScheduleRoutePage } from './pages/ScheduleRoutePage';
 import { DeliveryReportsPage } from './pages/DeliveryReportsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { HelpPage } from './pages/Help';
+import HelpPage from './pages/Help';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
