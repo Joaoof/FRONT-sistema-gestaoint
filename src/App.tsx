@@ -29,6 +29,7 @@ import { NewDeliveryPage } from './pages/NewDeliveryPage';
 import { ScheduleRoutePage } from './pages/ScheduleRoutePage';
 import { DeliveryReportsPage } from './pages/DeliveryReportsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { HelpPage } from './pages/Help';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -104,6 +105,8 @@ function AppContent() {
             />
 
             <Route path="/configuracoes" element={<SettingsPage />} />
+
+            <Route path='/help' element={<HelpPage />} />
 
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>
