@@ -1,25 +1,23 @@
 import React from 'react';
 import {
     HelpCircle,
-    Keyboard,
     MessageSquare,
     Truck,
     DollarSign,
     Box,
-    AlertCircle,
-    User,
     ArrowLeft,
+    Layers, // Usando Layers para representar Fiscal/Financeiro
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-// --- Dados Fixos da Página de Ajuda ---
-
-const FAQ_ITEMS = [
+// Simulação de carregamento de arquivos JSON por módulo:
+// Conteúdo que viria de src/data/help/faq_fiscal.json, src/data/help/faq_estoque.json, etc.
+const FAQ_ITEMS_DATA = [
     {
         question: 'O que é o módulo Fiscal?',
         answer: 'O módulo Fiscal permite a gestão completa das Contas a Receber e Contas a Pagar (despesas, fornecedores) da sua empresa, centralizando o controle financeiro.',
-        icon: DollarSign,
+        icon: DollarSign, // LucideIcon Component
         color: 'blue',
         path: '/fiscal-receber',
     },
@@ -32,8 +30,8 @@ const FAQ_ITEMS = [
     },
     {
         question: 'Onde vejo o histórico detalhado do meu caixa?',
-        answer: 'O histórico detalhado de todas as movimentações (vendas, despesas, saques, etc.) pode ser acessado na página "Histórico de Movimentações" (atalho Ctrl+S).',
-        icon: DollarSign,
+        answer: 'O histórico detalhado de todas as movimentações (vendas, despesas, saques, etc.) pode ser acessado na página "Histórico de Movimentações".',
+        icon: Layers,
         color: 'red',
         path: '/historico-movimentacao',
     },
@@ -46,21 +44,15 @@ const FAQ_ITEMS = [
     },
 ];
 
-const SHORTCUTS = [
-    { key: 'Ctrl + N (ou Cmd + N)', action: 'Abrir formulário de Nova Movimentação de Caixa', module: 'Movimentações' }, //
-    { key: 'Ctrl + S (ou Cmd + S)', action: 'Ir para o Histórico de Movimentações', module: 'Movimentações' }, //
-    { key: 'Ctrl + F (ou Cmd + F)', action: 'Abrir a Central de Consultas e Relatórios', module: 'Consultas' }, //
-];
-
-// --- Componente Principal ---
-
 export function HelpPage() {
     const navigate = useNavigate();
 
     const handleContactClick = () => {
-        // Simulação de contato via WhatsApp (URL baseada no código do UpgradeModal)
+        // <<<<<<<<<<<<<<<<< LINHA ATUALIZADA >>>>>>>>>>>>>>>>>>>
+        const SUPPORT_PHONE_NUMBER = '5563991021043'; // Novo número: +55 63 99102-1043
+
         const message = 'Olá! Preciso de ajuda com o sistema de gestão. Meu usuário é o(a) [Seu Nome/Email].';
-        const whatsappUrl = `https://wa.me/5511999999999?text=${encodeURIComponent(message)}`; //
+        const whatsappUrl = `https://wa.me/${SUPPORT_PHONE_NUMBER}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
     };
 
@@ -107,63 +99,36 @@ export function HelpPage() {
                 </div>
             </motion.div>
 
-            {/* FAQ - Perguntas Frequentes */}
+            {/* FAQ - Perguntas Frequentes (Carregadas dos "Arquivos") */}
             <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
                     <HelpCircle className="w-6 h-6 text-blue-600" />
                     Perguntas Frequentes
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {FAQ_ITEMS.map((item, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 * index }}
-                            className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow cursor-pointer"
-                            onClick={() => navigate(item.path)}
-                        >
-                            <div className="flex items-start space-x-3">
-                                <div className={`p-2 rounded-lg bg-${item.color}-100 text-${item.color}-600`}>
-                                    <item.icon className="w-5 h-5" />
+                    {FAQ_ITEMS_DATA.map((item, index) => {
+                        const Icon = item.icon;
+                        return (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 * index }}
+                                className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow cursor-pointer"
+                                onClick={() => navigate(item.path)}
+                            >
+                                <div className="flex items-start space-x-3">
+                                    <div className={`p-2 rounded-lg bg-${item.color}-100 text-${item.color}-600`}>
+                                        <Icon className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-gray-900 mb-1">{item.question}</h3>
+                                        <p className="text-sm text-gray-600">{item.answer}</p>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="font-semibold text-gray-900 mb-1">{item.question}</h3>
-                                    <p className="text-sm text-gray-600">{item.answer}</p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Atalhos de Teclado */}
-            <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
-                    <Keyboard className="w-6 h-6 text-blue-600" />
-                    Atalhos de Teclado
-                </h2>
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Atalho</th>
-                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Ação</th>
-                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Módulo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {SHORTCUTS.map((item, index) => (
-                                <tr key={index} className="border-b hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-700">
-                                        {item.key}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-700">{item.action}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.module}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
 
