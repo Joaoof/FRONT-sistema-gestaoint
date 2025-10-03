@@ -172,6 +172,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
+            // 🚀 CORREÇÃO 1: Limpeza de espaços em branco (trimming) nos dados de entrada
+            const cleanedEmail = email.trim();
+            const cleanedPassword = password_hash.trim();
+
             const resLogin = await fetch(endpoint ?? '', {
                 method: "POST",
                 headers: {
@@ -181,7 +185,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     query: LOGIN_MUTATION,
                     variables: {
                         loginUserInput: {
-                            email, password_hash
+                            email: cleanedEmail, // Usando o email limpo
+                            password_hash: cleanedPassword // Usando a senha limpa
                         }
                     }
                 }),
@@ -189,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const loginData = await resLogin.json();
 
-            // ALTERAÇÃO CRÍTICA PARA DEPURAR A RESPOSTA
+            // Mensagens de depuração mantidas para referência futura
             console.log("-----------------------------------------");
             console.log("1. Resposta da LOGIN_MUTATION:", loginData);
             console.log("-----------------------------------------");
@@ -197,6 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (loginData.errors) {
                 const error = loginData.errors[0];
                 const code = error.extensions?.code;
+                const statusCode = error.extensions?.statusCode;
 
                 let message = "Erro desconhecido ao logar.";
 
@@ -205,9 +211,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const validationErrors = error.extensions.errors;
                     const errorMessage = validationErrors.map((e: { message: any; }) => e.message).join('\n');
                     message = errorMessage;
+                } else if (statusCode === 401) {
+                    // 🚨 CORREÇÃO 2: Mensagem forçada para o erro 401
+                    message = "Credenciais inválidas. Verifique seu e-mail e senha.";
                 } else {
-                    // 2. Outros erros (ex: credenciais inválidas, genéricos)
-                    message = error.message;
+                    // 2. Outros erros (ex: genéricos ou mensagem do servidor)
+                    message = error.message || "Ocorreu um erro no servidor.";
                 }
 
                 notifyError(message, 5000);
