@@ -1,9 +1,27 @@
 import React, { useState } from 'react';
-import { ArrowUpCircle, DollarSign, X } from 'lucide-react';
+import { DollarSign, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+// 🚀 NOVOS IMPORTS
+import { useMutation, ApolloCache } from '@apollo/client';
+import { CREATE_CASH_MOVEMENT, GET_CASH_MOVEMENTS } from '../../graphql/queries/queries'; // Assumindo que queries.ts contém a mutação e a query
+import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../hooks/useNotification'; // Assumindo que você tem este hook
+
+// Ajuste este tipo conforme a definição do seu movimento de caixa
+type CashMovement = {
+    id: string;
+    value: number;
+    description: string;
+    type: 'venda' | 'troco' | 'outros' | 'saida';
+    date: string;
+    // outros campos necessários
+};
 
 export function NewEntryMovement() {
     const navigate = useNavigate();
+    const { user } = useAuth(); // Para pegar o ID do usuário logado
+    const { notifySuccess, notifyError } = useNotification();
+
     const [formData, setFormData] = useState({
         value: 0,
         description: '',
@@ -11,10 +29,44 @@ export function NewEntryMovement() {
         date: new Date().toISOString().slice(0, 16),
     });
 
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // 🚀 NOVO: Hook de Mutação
+    const [createMovement, { loading }] = useMutation(CREATE_CASH_MOVEMENT, {
+        // 🚀 CORREÇÃO DO ERRO DOM: Manipulação explícita do cache
+        update(cache: ApolloCache<any>, { data }) {
+            const newMovement: CashMovement = data.createCashMovement;
+
+            if (!newMovement || !user?.id) return;
+
+            // Variáveis CRÍTICAS: Devem ser as mesmas usadas na query da lista em useCashMovements.ts
+            const queryVariables = { input: { userId: user.id } };
+
+            try {
+                // Tenta ler o cache da query que lista as movimentações
+                const existingMovements = cache.readQuery({
+                    query: GET_CASH_MOVEMENTS,
+                    variables: queryVariables,
+                });
+
+                if (existingMovements) {
+                    // Escreve o novo array no cache, adicionando o novo movimento no topo
+                    cache.writeQuery({
+                        query: GET_CASH_MOVEMENTS,
+                        variables: queryVariables,
+                        data: {
+                            cashMovements: [newMovement],
+                        },
+                    });
+                }
+            } catch (e) {
+                // Se falhar ao ler/escrever o cache (ex: cache vazio ou query nunca rodou), o Apollo fará refetch na navegação.
+                console.error("Falha ao atualizar o cache da lista de movimentos:", e);
+            }
+        },
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         if (!formData.value || !formData.description.trim()) {
@@ -22,14 +74,42 @@ export function NewEntryMovement() {
             return;
         }
 
-        setLoading(true);
-        // Aqui você envia para GraphQL
-        setTimeout(() => {
-            console.log('Nova entrada:', formData);
-            alert('Entrada registrada com sucesso!');
-            setLoading(false);
-            navigate('/movimentacoes');
-        }, 1000);
+        if (!user?.id) {
+            notifyError('Sessão expirada. Tente logar novamente.');
+            return;
+        }
+
+        // setLoading(true) é definido pelo hook useMutation
+
+        try {
+            const result = await createMovement({
+                variables: {
+                    input: {
+                        value: formData.value,
+                        description: formData.description.trim(),
+                        type: formData.type,
+                        date: formData.date,
+                        userId: user.id,
+                    }
+                }
+            });
+
+            // Lógica de tratamento de erro do GraphQL
+            if (result.errors) {
+                const errorMessage = result.errors[0]?.message || 'Erro ao registrar entrada.';
+                notifyError(errorMessage);
+                setError(errorMessage);
+            } else {
+                notifySuccess('Entrada registrada com sucesso!');
+                navigate('/movimentacoes'); // Navega para a lista após o sucesso
+            }
+
+        } catch (err: any) {
+            // Erro de rede ou erro na função update()
+            const errorMessage = err.message || 'Erro de conexão com o servidor. Verifique sua conexão.';
+            notifyError(errorMessage);
+            setError(errorMessage);
+        }
     };
 
     return (
