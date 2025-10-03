@@ -28,7 +28,7 @@ export function NewEntryMovement() {
             {
                 query: GET_CASH_MOVEMENTS,
                 // CRÍTICO: As variáveis devem ser as mesmas usadas para buscar a lista no componente /movimentacoes
-                variables: { input: { userId: user?.id } }
+                variables: { input: { userId: user?.id } } // Passa a variável de forma segura
             },
             'GET_CASH_MOVEMENTS' // Nome da query para garantir
         ],
