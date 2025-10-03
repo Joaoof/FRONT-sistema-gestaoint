@@ -2,20 +2,10 @@ import React, { useState } from 'react';
 import { DollarSign, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 // 🚀 NOVOS IMPORTS
-import { useMutation, ApolloCache } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { CREATE_CASH_MOVEMENT, GET_CASH_MOVEMENTS } from '../../graphql/queries/queries'; // Assumindo que queries.ts contém a mutação e a query
 import { useAuth } from '../../contexts/AuthContext';
-import { useNotification } from '../../hooks/useNotification'; // Assumindo que você tem este hook
-
-// Ajuste este tipo conforme a definição do seu movimento de caixa
-type CashMovement = {
-    id: string;
-    value: number;
-    description: string;
-    type: 'venda' | 'troco' | 'outros' | 'saida';
-    date: string;
-    // outros campos necessários
-};
+import { useNotification } from '../../hooks/useNotification'; // Para exibir notificações Sonner (toast)
 
 export function NewEntryMovement() {
     const navigate = useNavigate();
@@ -31,39 +21,17 @@ export function NewEntryMovement() {
 
     const [error, setError] = useState<string | null>(null);
 
-    // 🚀 NOVO: Hook de Mutação
+    // 🚀 Implementação real do Hook de Mutação
     const [createMovement, { loading }] = useMutation(CREATE_CASH_MOVEMENT, {
-        // 🚀 CORREÇÃO DO ERRO DOM: Manipulação explícita do cache
-        update(cache: ApolloCache<any>, { data }) {
-            const newMovement: CashMovement = data.createCashMovement;
-
-            if (!newMovement || !user?.id) return;
-
-            // Variáveis CRÍTICAS: Devem ser as mesmas usadas na query da lista em useCashMovements.ts
-            const queryVariables = { input: { userId: user.id } };
-
-            try {
-                // Tenta ler o cache da query que lista as movimentações
-                const existingMovements = cache.readQuery({
-                    query: GET_CASH_MOVEMENTS,
-                    variables: queryVariables,
-                });
-
-                if (existingMovements) {
-                    // Escreve o novo array no cache, adicionando o novo movimento no topo
-                    cache.writeQuery({
-                        query: GET_CASH_MOVEMENTS,
-                        variables: queryVariables,
-                        data: {
-                            cashMovements: [newMovement],
-                        },
-                    });
-                }
-            } catch (e) {
-                // Se falhar ao ler/escrever o cache (ex: cache vazio ou query nunca rodou), o Apollo fará refetch na navegação.
-                console.error("Falha ao atualizar o cache da lista de movimentos:", e);
-            }
-        },
+        // 🚀 CORREÇÃO DO DOM: Força o Apollo a refazer a query da lista
+        refetchQueries: [
+            {
+                query: GET_CASH_MOVEMENTS,
+                // CRÍTICO: As variáveis devem ser as mesmas usadas para buscar a lista no componente /movimentacoes
+                variables: { input: { userId: user?.id } }
+            },
+            'GET_CASH_MOVEMENTS' // Nome da query para garantir
+        ],
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -79,39 +47,38 @@ export function NewEntryMovement() {
             return;
         }
 
-        // setLoading(true) é definido pelo hook useMutation
-
         try {
             const result = await createMovement({
                 variables: {
                     input: {
                         value: formData.value,
                         description: formData.description.trim(),
+                        // O NestJS espera um formato ISO completo ou timestamp
+                        date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
                         type: formData.type,
-                        date: formData.date,
                         userId: user.id,
                     }
                 }
             });
 
-            // Lógica de tratamento de erro do GraphQL
             if (result.errors) {
                 const errorMessage = result.errors[0]?.message || 'Erro ao registrar entrada.';
                 notifyError(errorMessage);
                 setError(errorMessage);
             } else {
+                // ❌ REMOVIDO: O alert() foi substituído por notifySuccess
                 notifySuccess('Entrada registrada com sucesso!');
-                navigate('/movimentacoes'); // Navega para a lista após o sucesso
+                navigate('/movimentacoes');
             }
 
         } catch (err: any) {
-            // Erro de rede ou erro na função update()
             const errorMessage = err.message || 'Erro de conexão com o servidor. Verifique sua conexão.';
             notifyError(errorMessage);
             setError(errorMessage);
         }
     };
 
+    // ... (Omitido: O JSX abaixo é o mesmo de antes)
     return (
         <div className="space-y-8">
             <div className="flex items-center">
