@@ -30,6 +30,8 @@ import { ScheduleRoutePage } from './pages/ScheduleRoutePage';
 import { DeliveryReportsPage } from './pages/DeliveryReportsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import HelpPage from './pages/Help';
+import { PermissionGuard } from './guards/PermissionGuard';
+import { CustomAccessDeniedFallback } from './components/CustomAccessDeniedFallback';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,9 +62,12 @@ function AppContent() {
             <Route
               path="/dashboard"
               element={
-                <PrivateRoute moduleId="dashboard">
+                <PermissionGuard
+                  moduleId="DASHBOARD_MODULE_KEY" // Chave do módulo que protege o dashboard
+                  fallback={<CustomAccessDeniedFallback />} // <-- Use o novo componente aqui
+                >
                   <Dashboard {...inventory} />
-                </PrivateRoute>
+                </PermissionGuard>
               }
             />
             <Route path='/entregas' element={<DeliveriesPage />} />
