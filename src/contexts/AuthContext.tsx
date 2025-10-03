@@ -1,7 +1,7 @@
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect } from "react"
 import type { Company, User, AuthState } from "../types/auth"
-import { useNavigate } from "react-router-dom"; // ✅
+import { useNavigate } from "react-router-dom";
 import { useNotification } from "../hooks/useNotification"
 import { GET_USER_QUERY, LOGIN_MUTATION } from "../graphql/queries/user";
 import { toast } from "sonner";
@@ -15,8 +15,8 @@ interface AuthContextState extends AuthState {
     error: string | null;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
-    modules: Module[]; // ✅ Remove ou mantém, mas não use para permissões
-    permissions: { module_key: string; permissions: string[] }[]; // ✅ Adicione isso
+    modules: Module[];
+    permissions: { module_key: string; permissions: string[] }[];
 }
 type Module = {
     module_key: string;
@@ -59,7 +59,7 @@ function authReducer(state: AuthContextState, action: AuthAction): AuthContextSt
                 user,
                 company,
                 modules: user.plan?.modules || [],
-                permissions: user.permissions || [], // ✅ Use permissions
+                permissions: user.permissions || [],
                 isAuthenticated: true,
                 isLoading: false,
                 error: null,
@@ -91,7 +91,7 @@ function authReducer(state: AuthContextState, action: AuthAction): AuthContextSt
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [state, dispatch] = useReducer(authReducer, initialState)
-    const navigate = useNavigate(); // ✅ agora sim
+    const navigate = useNavigate();
     const { notifyError, notifySuccess } = useNotification()
 
     useEffect(() => {
@@ -99,13 +99,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const initializeAuth = async () => {
-        dispatch({ type: "SET_LOADING", payload: true }); // 👈 Garanta que começa como true
+        dispatch({ type: "SET_LOADING", payload: true });
 
         try {
             const token = localStorage.getItem("accessToken");
             if (!token) {
                 console.log("[Auth] Sem token no localStorage");
-                return; // Vai manter user = null, isLoading = false no finally
+                return;
             }
 
             console.log("[Auth] Token encontrado, consultando usuário...");
@@ -134,7 +134,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (json.errors) {
                 console.error("[Auth] Erros no GraphQL:", json.errors);
-                // Exemplo: token expirado, usuário bloqueado, etc.
                 localStorage.removeItem("accessToken");
                 dispatch({ type: "LOGOUT" });
                 return;
@@ -147,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return;
             }
 
-            const { me: user } = json.data;  // ✅ desestrutura `me`
+            const { me: user } = json.data;
             dispatch({
                 type: "SET_AUTH_DATA",
                 payload: { user, company: user.company },
@@ -157,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.removeItem("accessToken");
             dispatch({ type: "LOGOUT" });
         } finally {
-            dispatch({ type: "SET_LOADING", payload: false }); // ✅ Único lugar onde vira false
+            dispatch({ type: "SET_LOADING", payload: false });
         }
     };
 
@@ -190,39 +189,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const loginData = await resLogin.json();
 
-            console.log("Resposta completa do GraphQL:", loginData) // ✅ Agora sim, você verá os erros
+            // ALTERAÇÃO CRÍTICA PARA DEPURAR A RESPOSTA
+            console.log("-----------------------------------------");
+            console.log("1. Resposta da LOGIN_MUTATION:", loginData);
+            console.log("-----------------------------------------");
+
             if (loginData.errors) {
                 const error = loginData.errors[0];
                 const code = error.extensions?.code;
 
-                // ✅ 1. Erro com detalhes por campo (validação)
+                let message = "Erro desconhecido ao logar.";
+
+                // 1. Erro com detalhes por campo (validação)
                 if (code === 'DOMAIN_VALIDATION_ERROR' && Array.isArray(error.extensions?.errors)) {
                     const validationErrors = error.extensions.errors;
-
-                    // Extraia as mensagens
                     const errorMessage = validationErrors.map((e: { message: any; }) => e.message).join('\n');
-
-                    notifyError(errorMessage, 2000);
-                    dispatch({ type: "SET_ERROR", payload: errorMessage });
-                    return;
+                    message = errorMessage;
+                } else {
+                    // 2. Outros erros (ex: credenciais inválidas, genéricos)
+                    message = error.message;
                 }
 
-                // ✅ 2. Outros erros (ex: credenciais inválidas)
-                const message = error.message;
                 notifyError(message, 5000);
                 dispatch({ type: "SET_ERROR", payload: message });
+                return;
             }
 
             if (!loginData.data?.login) {
-                notifyError("Resposta inválida do servidor", 3000);
-                dispatch({ type: "SET_ERROR", payload: "Resposta inválida" });
+                notifyError("Resposta inválida do servidor: Login falhou sem erro explícito.", 5000);
+                dispatch({ type: "SET_ERROR", payload: "Resposta inválida/Login falhou" });
                 return;
             }
 
 
             const { accessToken } = loginData.data.login;
 
-
+            // Inicia a segunda requisição (busca de usuário)
             const resMe = await fetch(import.meta.env.VITE_GRAPHQL_ENDPOINT ?? '', {
                 method: "POST",
                 headers: {
@@ -236,7 +238,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const meData = await resMe.json();
 
+            // NOVA VERIFICAÇÃO CRÍTICA
+            console.log("-----------------------------------------");
+            console.log("2. Resposta da GET_USER_QUERY:", meData);
+            console.log("-----------------------------------------");
+
+            if (meData.errors || !meData.data?.me) {
+                console.error("[Auth] Falha na busca de usuário:", meData.errors || "Dados ausentes");
+                notifyError("Falha ao buscar dados do usuário. Tente novamente.", 5000);
+                localStorage.removeItem("accessToken");
+                dispatch({ type: "LOGOUT" });
+                return;
+            }
+
             if (!accessToken) {
+                // Tecnicamente inalcançável se o if anterior funcionou, mas mantido.
                 notifyError("Token não recebido do servidor", 3000);
                 dispatch({ type: "SET_ERROR", payload: "Token ausente" });
                 return;
@@ -244,20 +260,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             notifySuccess('Login realizado com sucesso!', 5000)
 
-            if (!meData) {
-                notifyError('Usuário inválido')
-                dispatch({ type: "LOGOUT" })
-                return
-            }
-
+            // Simplificação da lógica de sucesso
             const user = meData.data.me;
-            console.log(user);
-            
+            console.log("Usuário autenticado:", user);
+
 
             localStorage.setItem("accessToken", accessToken);
             dispatch({ type: "SET_AUTH_DATA", payload: { user, company: user.company } })
         } catch (err: any) {
             const message = err.message || "Erro de conexão com o servidor";
+            console.error("[Auth] Erro catastrófico de conexão:", err);
             dispatch({ type: "SET_ERROR", payload: message });
             notifyError(message, 5000);
             throw err;
@@ -280,7 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...state,
         login,
         logout,
-        permissions: state.permissions, // garantido
+        permissions: state.permissions,
     }
 
     return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
