@@ -124,11 +124,15 @@ function AppContent() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider> {/* ✅ Esse é o problema principal */}
-        <CompanyProvider >
-          <AppContent />
-        </CompanyProvider>
-      </AuthProvider>
+      <ErrorBoundary fallback={<div>Erro no carregamento da aplicação</div>}>
+        <AuthProvider>
+          <NotificationProvider>
+            <CompanyProvider>
+              <AppContent />
+            </CompanyProvider>
+          </NotificationProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }
