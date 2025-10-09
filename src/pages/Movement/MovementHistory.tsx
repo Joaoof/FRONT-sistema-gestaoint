@@ -700,13 +700,3 @@ function LoadingSkeleton() {
         </div>
     );
 }
-
-// Animações
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes bounce-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-    @keyframes bounce-down { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
-    .animate-bounce-up { animation: bounce-up 1s ease-in-out infinite; }
-    .animate-bounce-down { animation: bounce-down 1s ease-in-out infinite; }
-`;
-document.head.appendChild(style);
