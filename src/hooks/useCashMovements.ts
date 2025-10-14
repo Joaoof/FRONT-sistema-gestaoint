@@ -1,31 +1,79 @@
-// /src/hooks/useCashMovements.ts
-
-import { useQuery } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { GET_CASH_MOVEMENTS } from '../graphql/queries/queries';
+import { DELETE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
 import { useAuth } from '../contexts/AuthContext';
+import { handleGraphQLError } from '../utils/handleGraphqlError';
+import { toast } from 'sonner';
+
+interface CashMovement {
+    id: string;
+    description: string;
+    type: 'ENTRY' | 'EXIT';
+    value: number;
+    category: string;
+    date?: string;
+}
+interface CashMovementsData {
+    cashMovements: CashMovement[];
+}
 
 export const useCashMovements = (filters: any = {}) => {
     const { user, isLoading: isAuthLoading } = useAuth();
     const userId = user?.id;
 
     const input = userId ? {
-        userId: userId, // O campo obrigatório
-        ...filters,    // Combina quaisquer outros filtros (ex: { date: "2025-09-30" })
-    } : null; // Se não tem userId, o input é nulo.
+        userId: userId,
+        ...filters,
+    } : null;
 
     // 3. Condição para pular a execução da query
     const shouldSkip = !userId || isAuthLoading;
 
-    const { data, loading, error, refetch } = useQuery(GET_CASH_MOVEMENTS as any, {
-        variables: { input: input }, // Passa o objeto de input construído
-        skip: shouldSkip, // A query só roda se shouldSkip for false
+    const queryOptions = {
+        variables: { input: input },
+        skip: shouldSkip,
+    };
+
+    const { data, loading, error, refetch } = useQuery<CashMovementsData>(GET_CASH_MOVEMENTS as any, queryOptions);
+
+    // --- Lógica de Deleção ---
+    const [deleteMovement, { loading: isDeleting }] = useMutation(DELETE_CASH_MOVEMENT, {
+        onCompleted: (data) => {
+            if (data.cashMovementDelete) {
+                toast.success('Movimento deletado com sucesso!');
+            }
+        },
+        onError: (error) => {
+            // CORREÇÃO: Passamos o error e a função de callback notifyError (showToast)
+            handleGraphQLError(error, (msg: any) => toast.error(msg));
+        },
+        // Força a atualização da lista de movimentos e das estatísticas do dashboard
+        refetchQueries: [
+            {
+                query: GET_CASH_MOVEMENTS,
+                ...queryOptions,
+            },
+            'dashboardStats',
+        ],
     });
 
+    const deleteCashMovement = async (movementId: string) => {
+        try {
+            await deleteMovement({ variables: { movementId } });
+            return true;
+        } catch (e) {
+            // O erro já é tratado no onError do useMutation
+            return false;
+        }
+    };
+    // -------------------------
+
     return {
-        // 4. Use o nome do campo de retorno correto: cashMovements
         movements: data?.cashMovements || [],
-        loading: loading || isAuthLoading, // Considera o carregamento da autenticação
+        loading: loading || isAuthLoading,
         error,
         refetch,
+        deleteCashMovement,
+        isDeleting,
     };
 };

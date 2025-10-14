@@ -8,6 +8,7 @@ import {
     Edit,
     X,
     Check,
+    Trash2,
 } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
 import {
@@ -36,6 +37,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 // Animations & UI
 import CountUp from 'react-countup';
 import toast, { Toaster } from 'react-hot-toast';
+import { DELETE_CASH_MOVEMENT } from '../../graphql/mutations/mutations';
 
 type FilterType =
     | 'ALL'
@@ -116,6 +118,7 @@ export function MovementHistory() {
     const [valueMax, setValueMax] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [editingMovement, setEditingMovement] = useState<Movement | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null)
 
     const { data, loading, error, refetch } = useQuery(GET_CASH_MOVEMENTS, {
         fetchPolicy: 'cache-first',
@@ -128,6 +131,30 @@ export function MovementHistory() {
     const [updateMovement] = useMutation(UPDATE_CASH_MOVEMENT, {
         refetchQueries: [GET_CASH_MOVEMENTS],
     });
+
+    const [deleteMovement, { loading: isDeleting }] = useMutation(DELETE_CASH_MOVEMENT, {
+        refetchQueries: [GET_CASH_MOVEMENTS, 'dashboardStats'],
+        onCompleted: () => toast.success('Movimento deletado com sucesso!'),
+        onError: (err) => toast.error('Erro ao deletar: ' + err.message),
+    });
+
+    const handleDelete = async (movementId: string, description: string) => {
+        const confirmDelete = window.confirm(
+            `Tem certeza que deseja deletar o movimento: "${description}"? Esta ação é irreversível.`,
+        );
+
+        if (confirmDelete) {
+            setDeletingId(movementId);
+            try {
+                // A função deleteMovement é uma Promise, o resultado será tratado no onCompleted/onError acima
+                await deleteMovement({ variables: { movementId } });
+            } catch (e) {
+                // Erro capturado, mas já tratado no onError do useMutation
+            } finally {
+                setDeletingId(null);
+            }
+        }
+    };
 
     const movements: Movement[] = (data?.cashMovements || []).map((m: Movement) => ({
         id: m.id,
@@ -495,6 +522,22 @@ export function MovementHistory() {
                                                 >
                                                     {m.type === 'ENTRY' ? '+' : '-'} R$ {formatCurrency(m.value)}
                                                 </span>
+                                            </td>
+                                            {/* NOVO: Coluna de Ações com Lixeira */}
+                                            <td className="px-6 py-4 text-sm text-center">
+                                                <button
+                                                    onClick={() => handleDelete(m.id, m.description)}
+                                                    disabled={isDeleting || deletingId === m.id}
+                                                    className="text-red-500 hover:text-red-700 disabled:opacity-50 p-1 rounded transition-colors"
+                                                    aria-label={`Deletar movimento ${m.description}`}
+                                                >
+                                                    {/* Usa RotateCcw para simular um spinner durante a deleção */}
+                                                    {deletingId === m.id ? (
+                                                        <RotateCcw className="h-5 w-5 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="w-5 h-5" />
+                                                    )}
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}

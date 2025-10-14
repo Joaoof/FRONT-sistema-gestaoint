@@ -14,3 +14,9 @@ export const CREATE_CASH_MOVEMENT = gql`
     }
   }
 `;
+
+export const DELETE_CASH_MOVEMENT = gql`
+  mutation DeleteCashMovement($movementId: String!) {
+    cashMovementDelete(movementId: $movementId)
+  }
+`;
