@@ -489,6 +489,7 @@ export function MovementHistory() {
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Descrição</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Tipo</th>
                                         <th className="px-6 py-4 text-right text-sm font-semibold">Valor</th>
+                                        <th className="px-6 py-4 text-center text-sm font-semibold">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
