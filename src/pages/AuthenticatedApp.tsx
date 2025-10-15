@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+// ✅ Importe isLoading e isAuthenticated do useAuth
 import { useAuth } from '../contexts/AuthContext';
 import { useInventory } from '../hooks/useInventory';
 import { Sidebar } from '../components/Sidebar';
-import { useNotification } from '../hooks/useNotification'; // ✅ Hook adicionado
+import { useNotification } from '../hooks/useNotification';
 
 // Páginas
 import { Dashboard } from './Dashboard';
@@ -70,8 +71,9 @@ export function AuthenticatedApp() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const inventory = useInventory();
-    const { user, company } = useAuth();
-    const { addNotification } = useNotification(); // ✅ Hook usado
+    // ✅ Use 'isLoading' e 'isAuthenticated'
+    const { user, company, isLoading, isAuthenticated } = useAuth();
+    const { addNotification } = useNotification();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -92,12 +94,34 @@ export function AuthenticatedApp() {
         }
     }, [location.pathname, hasModuleAccess, navigate]);
 
-
+    // 🚨 CORREÇÃO DO LOOP: Só redireciona se não houver usuário E o carregamento tiver terminado.
     useEffect(() => {
-        if (!user) {
+        if (!isLoading && !user) {
             navigate('/login');
         }
-    }, [user, navigate]);
+    }, [user, isLoading, navigate]);
+
+    // Se a autenticação estiver sendo processada, podemos mostrar um loading aqui
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="flex flex-col items-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500"></div>
+                    <p className="mt-4 text-gray-600">Carregando usuário...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Se, por algum motivo (embora o useEffect anterior deva ter impedido), 
+    // ele chegar aqui sem usuário, mostramos um fallback ou redirecionamos.
+    // Usamos o isAuthenticated, que é mais confiável.
+    if (!isAuthenticated) {
+        // Redireciona para o login se o carregamento terminou e não estamos autenticados.
+        // Isso é um fail-safe, mas o useEffect já deve lidar com isso.
+        return null;
+    }
+
 
     const handleViewChange = (view: View) => {
         if (!hasModuleAccess(currentView)) {
@@ -107,6 +131,7 @@ export function AuthenticatedApp() {
         setCurrentView(view);
         navigate(`/${view}`);
     };
+
     // ✅ Atalhos de teclado
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
@@ -203,7 +228,7 @@ export function AuthenticatedApp() {
                 onViewChange={handleViewChange}
                 isOpen={sidebarOpen}
                 onToggle={() => setSidebarOpen(!sidebarOpen)}
-                userPermissions={user?.permissions || []} // ✅ passa as permissões
+                userPermissions={user?.permissions || []}
             />
 
             {sidebarOpen && (

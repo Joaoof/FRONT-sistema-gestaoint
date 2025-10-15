@@ -19,7 +19,7 @@ if (process.env.NODE_ENV !== "production") {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ApolloProvider client={apolloClient}>  
+      <ApolloProvider client={apolloClient}>
         <NotificationProvider>
           <SonnerToaster />
           <App />

@@ -9,6 +9,8 @@ import {
     X,
     Check,
     Trash2,
+    MoreVertical, // Adicionado para o menu de 3 pontos
+    Eye, // Adicionado para Visualizar
 } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
 import {
@@ -17,7 +19,7 @@ import {
     UPDATE_CASH_MOVEMENT,
 } from '../../graphql/queries/queries';
 import { generateMovementsPdf } from '../../utils/generatePDF';
-import { Movement } from '../../types';
+import { CategoryType, Movement, MovementType } from '../../types';
 import { RotateCcw } from 'lucide-react';
 
 // Recharts
@@ -36,8 +38,9 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 // Animations & UI
 import CountUp from 'react-countup';
-import toast, { Toaster } from 'react-hot-toast';
-import { DELETE_CASH_MOVEMENT } from '../../graphql/mutations/mutations';
+import { toast } from 'sonner';
+import { DELETE_CASH_MOVEMENT } from '../../graphql/mutations/mutations'; // Mantendo a importação do delete daqui
+import { da } from 'zod/v4/locales';
 
 type FilterType =
     | 'ALL'
@@ -86,18 +89,6 @@ const mapCategoryToSubtype = (category: string): Subtype => {
     return map[normalizedCategory] || 'EXPENSE';
 };
 
-const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return 'Sem data';
-    const date = new Date(dateString);
-    return isNaN(date.getTime())
-        ? 'Data inválida'
-        : date.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        });
-};
-
 const formatTime = (dateString: string | null | undefined): string => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -109,6 +100,42 @@ const formatTime = (dateString: string | null | undefined): string => {
         });
 };
 
+const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'Sem data';
+    const date = new Date(dateString);
+    return isNaN(date.getTime())
+        ? 'Data inválida'
+        : date.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+};
+// toDateInputString, toTimeInputString e combineDateTime já estão usando UTC corretamente
+const toDateInputString = (dateString: string | null | undefined): string => {
+    if (!dateString || dateString.length < 10) return '';
+    return dateString.substring(0, 10);
+};
+// CORREÇÃO FINAL: Extrai HH:MM diretamente da string ISO (mais confiável para inputs)
+const toTimeInputString = (dateString: string | null | undefined): string => {
+    if (!dateString || dateString.length < 16) return '';
+    const timePart = dateString.substring(11, 16);
+
+    // Garantir que é um formato válido antes de retornar
+    if (timePart.match(/^\d{2}:\d{2}$/)) {
+        return timePart;
+    }
+    return '';
+};
+
+const combineDateTime = (datePart: string, timePart: string): string => {
+    if (!datePart) return '';
+    const isoString = `${datePart}T${timePart || '00:00'}:00.000Z`;
+
+    return isoString;
+};
+
+
 export function MovementHistory() {
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState<FilterType>('ALL');
@@ -117,7 +144,11 @@ export function MovementHistory() {
     const [valueMin, setValueMin] = useState('');
     const [valueMax, setValueMax] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+
+    // Estados para os Modais de Ação
     const [editingMovement, setEditingMovement] = useState<Movement | null>(null);
+    const [viewingMovement, setViewingMovement] = useState<Movement | null>(null);
+    const [deletingMovement, setDeletingMovement] = useState<Movement | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
     const { data, loading, error, refetch } = useQuery(GET_CASH_MOVEMENTS, {
@@ -130,32 +161,39 @@ export function MovementHistory() {
     });
     const [updateMovement] = useMutation(UPDATE_CASH_MOVEMENT, {
         refetchQueries: [GET_CASH_MOVEMENTS],
+        onCompleted: () => toast.success('Movimentação atualizada!'),
+        onError: (err) => toast.error('Erro ao atualizar: ' + err.message),
     });
 
     const [deleteMovement, { loading: isDeleting }] = useMutation(DELETE_CASH_MOVEMENT, {
         refetchQueries: [GET_CASH_MOVEMENTS, 'dashboardStats'],
-        onCompleted: () => toast.success('Movimento deletado com sucesso!'),
+        onCompleted: () => {
+            // A mensagem de sucesso agora é tratada em confirmDelete
+        },
         onError: (err) => toast.error('Erro ao deletar: ' + err.message),
     });
 
-    const handleDelete = async (movementId: string, description: string) => {
-        const confirmDelete = window.confirm(
-            `Tem certeza que deseja deletar o movimento: "${description}"? Esta ação é irreversível.`,
-        );
+    // Funções para controle dos modais
+    const openViewModal = (movement: Movement) => setViewingMovement(movement);
+    const openEditModal = (movement: Movement) => setEditingMovement(movement);
+    const openDeleteModal = (movement: Movement) => setDeletingMovement(movement);
 
-        if (confirmDelete) {
-            setDeletingId(movementId);
-            try {
-                // A função deleteMovement é uma Promise, o resultado será tratado no onCompleted/onError acima
-                await deleteMovement({ variables: { movementId } });
-            } catch (e) {
-                // Erro capturado, mas já tratado no onError do useMutation
-            } finally {
-                setDeletingId(null);
-            }
+    const confirmDelete = async () => {
+        if (!deletingMovement) return;
+
+        setDeletingId(deletingMovement.id);
+        const description = deletingMovement.description;
+        try {
+            // A mutação do DELETE_CASH_MOVEMENT em mutations.ts espera `movementId`
+            await deleteMovement({ variables: { movementId: deletingMovement.id } });
+            toast.success(`Movimento "${description}" deletado com sucesso!`);
+        } catch (e: any) {
+            // Erro já tratado no onError do useMutation
+        } finally {
+            setDeletingId(null);
+            setDeletingMovement(null);
         }
     };
-
     const movements: Movement[] = (data?.cashMovements || []).map((m: Movement) => ({
         id: m.id,
         value: Number(m.value),
@@ -238,23 +276,22 @@ export function MovementHistory() {
         );
     };
 
-    const openEditModal = (movement: Movement) => {
-        setEditingMovement(movement);
-    };
-
     const saveEdit = async () => {
         if (!editingMovement) return;
+
+        // CORRIGIDO: Adicionando 'type' e 'category' que são campos obrigatórios
         await updateMovement({
             variables: {
-                id: editingMovement.id,
-                input: {
+                movementId: editingMovement.id,
+                movementUpdateCash: {
                     description: editingMovement.description,
                     value: Math.abs(editingMovement.value),
-                    type: editingMovement.value >= 0 ? 'ENTRY' : 'EXIT',
+                    type: editingMovement.type, // <-- ADICIONADO
+                    category: editingMovement.category, // <-- ADICIONADO
+                    date: editingMovement.date,
                 },
             },
         });
-        toast.success('Movimentação atualizada!');
         setEditingMovement(null);
     };
 
@@ -268,8 +305,6 @@ export function MovementHistory() {
 
     return (
         <>
-            <Toaster position="top-right" />
-
             <div className="space-y-8 px-6 py-6 bg-gray-50 min-h-screen w-full">
                 {/* Cabeçalho */}
                 <div className="w-full relative pb-10">
@@ -503,15 +538,14 @@ export function MovementHistory() {
                                                 {m.date && <><br /><span className="text-xs text-gray-500">{formatTime(m.date)}</span></>}
                                             </td>
                                             <td
-                                                className="px-6 py-4 text-sm font-medium text-gray-900 cursor-pointer hover:underline"
-                                                onClick={() => openEditModal(m)}
+                                                className="px-6 py-4 text-sm font-medium text-gray-900"
                                             >
                                                 {m.description}
                                             </td>
                                             <td className="px-6 py-4 text-sm">
                                                 <span
                                                     className={`inline-flex px-3 py-1 rounded-full text-xs font-medium
-                                                        ${m.type === 'ENTRY' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                                                            ${m.type === 'ENTRY' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
                                                 >
                                                     {typeLabels[mapCategoryToSubtype(m.category)]}
                                                 </span>
@@ -524,21 +558,15 @@ export function MovementHistory() {
                                                     {m.type === 'ENTRY' ? '+' : '-'} R$ {formatCurrency(m.value)}
                                                 </span>
                                             </td>
-                                            {/* NOVO: Coluna de Ações com Lixeira */}
+                                            {/* NOVO: Coluna de Ações com Dropdown de 3 pontos */}
                                             <td className="px-6 py-4 text-sm text-center">
-                                                <button
-                                                    onClick={() => handleDelete(m.id, m.description)}
-                                                    disabled={isDeleting || deletingId === m.id}
-                                                    className="text-red-500 hover:text-red-700 disabled:opacity-50 p-1 rounded transition-colors"
-                                                    aria-label={`Deletar movimento ${m.description}`}
-                                                >
-                                                    {/* Usa RotateCcw para simular um spinner durante a deleção */}
-                                                    {deletingId === m.id ? (
-                                                        <RotateCcw className="h-5 w-5 animate-spin" />
-                                                    ) : (
-                                                        <Trash2 className="w-5 h-5" />
-                                                    )}
-                                                </button>
+                                                <ActionsDropdown
+                                                    movement={m}
+                                                    onView={openViewModal}
+                                                    onEdit={openEditModal}
+                                                    onDelete={openDeleteModal}
+                                                    isDeleting={deletingId === m.id}
+                                                />
                                             </td>
                                         </tr>
                                     ))}
@@ -549,17 +577,189 @@ export function MovementHistory() {
                 </div>
             </div>
 
-            {/* Modal de Edição */}
+            {/* Modais */}
             <EditModal
                 movement={editingMovement}
+                setMovement={setEditingMovement} // Passando o setter para dentro do modal
                 onSave={saveEdit}
                 onClose={() => setEditingMovement(null)}
+            />
+            <ViewModal
+                movement={viewingMovement}
+                onClose={() => setViewingMovement(null)}
+            />
+            <DeleteConfirmationModal
+                movement={deletingMovement}
+                onConfirm={confirmDelete}
+                onClose={() => setDeletingMovement(null)}
+                isDeleting={isDeleting || deletingId === deletingMovement?.id}
             />
         </>
     );
 }
 
-// === COMPONENTES ===
+// === COMPONENTES NOVOS E MODIFICADOS ===
+
+// Componente para o menu de 3 pontos
+function ActionsDropdown({ movement, onView, onEdit, onDelete, isDeleting }: {
+    movement: Movement;
+    onView: (m: Movement) => void;
+    onEdit: (m: Movement) => void;
+    onDelete: (m: Movement) => void;
+    isDeleting: boolean;
+}) {
+    return (
+        <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+                <button
+                    className="p-1 rounded-full text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    disabled={isDeleting}
+                >
+                    {isDeleting ? (
+                        <RotateCcw className="h-5 w-5 animate-spin text-red-500" />
+                    ) : (
+                        <MoreVertical className="w-5 h-5" />
+                    )}
+                </button>
+            </DropdownMenu.Trigger>
+
+            <DropdownMenu.Content className="min-w-32 bg-white rounded-lg shadow-xl border border-gray-200 p-1 z-50">
+                <DropdownMenu.Item
+                    onClick={() => onView(movement)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 cursor-pointer rounded"
+                >
+                    <Eye className="w-4 h-4 text-indigo-600" /> Visualizar
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                    onClick={() => onEdit(movement)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 cursor-pointer rounded"
+                >
+                    <Edit className="w-4 h-4 text-blue-600" /> Editar
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className="my-1 border-t border-gray-100" />
+                <DropdownMenu.Item
+                    onClick={() => onDelete(movement)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer rounded"
+                >
+                    <Trash2 className="w-4 h-4" /> Deletar
+                </DropdownMenu.Item>
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
+    );
+}
+
+// Modal de Visualização (Novo)
+function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: () => void }) {
+    if (!movement) return null;
+
+    const typeLabels = {
+        SALE: 'Venda',
+        CHANGE: 'Troco',
+        OTHER_IN: 'Outros (Entrada)',
+        EXPENSE: 'Despesa',
+        WITHDRAWAL: 'Saque',
+        PAYMENT: 'Pagamento',
+    };
+
+    const categoryLabel = typeLabels[mapCategoryToSubtype(movement.category)];
+
+    return (
+        <Dialog.Root open={!!movement} onOpenChange={onClose}>
+            <Dialog.Portal>
+                <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md z-50">
+                    <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <Eye className="w-6 h-6 text-indigo-600" /> Detalhes da Movimentação
+                    </Dialog.Title>
+                    <div className="space-y-4 text-gray-700">
+                        <InfoItem label="ID da Movimentação" value={movement.id} />
+                        <InfoItem label="Descrição" value={movement.description} />
+                        <InfoItem label="Valor" value={formatCurrency(movement.value)}
+                            color={movement.type === 'ENTRY' ? 'text-green-600' : 'text-red-600'}
+                        />
+                        <InfoItem label="Tipo" value={movement.type === 'ENTRY' ? 'Entrada (➕)' : 'Saída (➖)'}
+                            color={movement.type === 'ENTRY' ? 'text-green-600' : 'text-red-600'}
+                        />
+                        <InfoItem label="Categoria" value={categoryLabel} />
+                        <InfoItem label="Data" value={`${formatDate(movement.date)} às ${formatTime(movement.date)}`} />
+                    </div>
+                    <div className="flex justify-end mt-8">
+                        <button
+                            onClick={onClose}
+                            className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                        >
+                            <Check className="w-5 h-5" /> Fechar
+                        </button>
+                    </div>
+                    <Dialog.Close asChild>
+                        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1" aria-label="Fechar">
+                            <X className="w-6 h-6" />
+                        </button>
+                    </Dialog.Close>
+                </Dialog.Content>
+            </Dialog.Portal>
+        </Dialog.Root>
+    );
+}
+
+function InfoItem({ label, value, color = 'text-gray-700' }: { label: string, value: string, color?: string }) {
+    return (
+        <div className="border-b border-gray-100 pb-2">
+            <p className="text-sm font-medium text-gray-500">{label}</p>
+            <p className={`text-base font-semibold ${color}`}>{value}</p>
+        </div>
+    );
+}
+
+function DeleteConfirmationModal({ movement, onConfirm, onClose, isDeleting }: {
+    movement: Movement | null;
+    onConfirm: () => void;
+    onClose: () => void;
+    isDeleting: boolean;
+}) {
+    if (!movement) return null;
+
+    return (
+        <Dialog.Root open={!!movement} onOpenChange={onClose}>
+            <Dialog.Portal>
+                <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm z-50">
+                    <Dialog.Title className="text-xl font-semibold text-red-600 mb-4 flex items-center gap-2">
+                        <Trash2 className="w-6 h-6" /> Confirmar Deleção
+                    </Dialog.Title>
+                    <p className="text-gray-700 mb-6">
+                        Você tem certeza que deseja deletar a movimentação:
+                        <span className="font-bold text-gray-900 block mt-1">
+                            {movement.description} ({formatCurrency(movement.value)})?
+                        </span>
+                        Esta ação é <span className="font-semibold text-red-600">irreversível</span>.
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={onClose}
+                            disabled={isDeleting}
+                            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition"
+                        >
+                            <X className="w-5 h-5" /> Cancelar
+                        </button>
+                        <button
+                            onClick={onConfirm}
+                            disabled={isDeleting}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 transition"
+                        >
+                            {isDeleting ? (
+                                <RotateCcw className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <Trash2 className="w-5 h-5" />
+                            )}
+                            {isDeleting ? 'Deletando...' : 'Deletar'}
+                        </button>
+                    </div>
+                </Dialog.Content>
+            </Dialog.Portal>
+        </Dialog.Root>
+    );
+}
 
 function SummaryCard({ title, value, icon, bg, text, onClick }: any) {
     return (
@@ -672,61 +872,170 @@ function ExportPdfDropdown({ movements }: { movements: Movement[] }) {
     );
 }
 
-function EditModal({ movement, onSave, onClose }: any) {
+// O EditModal foi modificado para receber 'setMovement' e corrigir o erro de estado
+function EditModal({ movement, onSave, onClose, setMovement }: { movement: Movement | null; onSave: () => void; onClose: () => void; setMovement: (m: Movement | null) => void; }) {
     if (!movement) return null;
 
-    function setEditingMovement(arg0: any): void {
-        throw new Error('Function not implemented.');
+    const categoryOptions: { value: CategoryType; label: string }[] = [
+        { value: 'SALE', label: 'Venda' },
+        { value: 'CHANGE', label: 'Troco' },
+        { value: 'OTHER_IN', label: 'Outros (Entrada)' },
+        { value: 'EXPENSE', label: 'Despesa' },
+        { value: 'WITHDRAWAL', label: 'Saque' },
+        { value: 'PAYMENT', label: 'Pagamento' },
+    ];
+
+    const handleCategoryChange = (newCategory: CategoryType) => {
+        const newType: MovementType = ['SALE', 'CHANGE', 'OTHER_IN'].includes(newCategory)
+            ? 'ENTRY'
+            : 'EXIT';
+
+        setMovement({
+            ...movement,
+            category: newCategory,
+            type: newType,
+        });
+    };
+
+
+
+    const handleDateChange = (dateInput: string) => {
+        const datePart = dateInput;
+
+        if (!datePart) {
+            setMovement({ ...movement, date: '' });
+            return;
+        }
+
+        const timePart = toTimeInputString(movement.date);
+
+        // Combina a nova data e a hora
+        const newISOString = combineDateTime(datePart, timePart);
+
+        setMovement({ ...movement, date: newISOString });
     }
+
+    const handleTimeChange = (timeInput: string) => {
+        const datePart = toDateInputString(movement.date);
+
+        if (!datePart) {
+            return;
+        }
+
+        const newISOString = combineDateTime(datePart, timeInput);
+
+        setMovement({ ...movement, date: newISOString });
+    }
+
 
     return (
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/30" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md z-50">
-                    <Dialog.Title className="text-xl font-semibold text-gray-900 mb-4">
-                        Editar Movimentação
+                <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg z-50">
+                    <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <Edit className="w-6 h-6 text-blue-600" /> Editar Movimentação
                     </Dialog.Title>
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        {/* Tipo (Exibição apenas, muda com a Categoria) */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Movimento</label>
+                            <div className={`p-3 rounded-xl border font-semibold ${movement.type === 'ENTRY' ? 'bg-green-50 text-green-700 border-green-300' : 'bg-red-50 text-red-700 border-red-300'
+                                }`}>
+                                {movement.type === 'ENTRY' ? 'Entrada (➕)' : 'Saída (➖)'}
+                            </div>
+                        </div>
+
+                        {/* Categoria */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+                            <select
+                                value={movement.category}
+                                onChange={(e) => handleCategoryChange(e.target.value as Subtype)}
+                                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                {categoryOptions.map(option => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Descrição */}
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
                             <input
                                 type="text"
                                 value={movement.description}
-                                onChange={(e) => setEditingMovement({ ...movement, description: e.target.value })}
-                                className="w-full p-3 border border-gray-300 rounded-xl"
+                                onChange={(e) => setMovement({ ...movement, description: e.target.value })}
+                                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                         </div>
+
+                        {/* Valor */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Valor (R$)</label>
                             <input
                                 type="number"
                                 step="0.01"
-                                value={movement.value}
-                                onChange={(e) => setEditingMovement({ ...movement, value: parseFloat(e.target.value) || 0 })}
-                                className="w-full p-3 border border-gray-300 rounded-xl"
+                                // O valor exibido é o valor absoluto, pois a mutação espera isso
+                                value={Math.abs(movement.value)}
+                                onChange={(e) => setMovement({ ...movement, value: parseFloat(e.target.value) || 0 })}
+                                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                         </div>
+
+                        {/* Data e Hora */}
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                                <input
+                                    type="date"
+                                    // Convertendo a data ISO para o formato YYYY-MM-DD para o input[type=date]
+                                    value={toDateInputString(movement.date)}
+                                    onChange={(e) => handleDateChange(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Hora</label>
+                                <input
+                                    type="time"
+                                    // Convertendo a data ISO para o formato HH:MM para o input[type=time]
+                                    value={toTimeInputString(movement.date)}
+                                    onChange={(e) => handleTimeChange(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex justify-end gap-2 mt-6">
+                    <div className="flex justify-end gap-2 mt-8 border-t pt-4 border-gray-100">
                         <button
                             onClick={onClose}
-                            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
                         >
                             <X className="w-5 h-5" /> Cancelar
                         </button>
                         <button
                             onClick={onSave}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                         >
-                            <Check className="w-5 h-5" /> Salvar
+                            <Check className="w-5 h-5" /> Salvar Alterações
                         </button>
                     </div>
+                    <Dialog.Close asChild>
+                        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1" aria-label="Fechar">
+                            <X className="w-6 h-6" />
+                        </button>
+                    </Dialog.Close>
                 </Dialog.Content>
             </Dialog.Portal>
         </Dialog.Root>
     );
 }
+
 
 function LoadingSkeleton() {
     return (

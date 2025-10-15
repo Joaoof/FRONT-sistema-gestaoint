@@ -1,5 +1,5 @@
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { Mail, Lock, ArrowLeft } from "lucide-react"
@@ -8,18 +8,35 @@ export const LoginForm = () => {
     const [isRecoveryMode, setIsRecoveryMode] = useState(false); // Controle da tela
     const [email, setEmail] = useState<string>("")
     const [password_hash, setPassword] = useState<string>("")
-    const { login, isLoading } = useAuth()
+    // Incluímos 'isAuthenticated' aqui para reagir ao login, mas a navegação principal é externa.
+    const { login, isLoading, isAuthenticated } = useAuth()
     const [message, setMessage] = useState<string>("");
     const [recoveryEmail, setRecoveryEmail] = useState<string>(""); // Para recuperação
     const [error, setError] = useState<string>("");
 
     const navigate = useNavigate();
 
+    // Use um useEffect para reagir APENAS quando o estado global de autenticação mudar.
+    useEffect(() => {
+        if (isAuthenticated) {
+            // Navega após o AuthContext confirmar que o usuário está autenticado
+            navigate('/dashboard', { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(""); // Limpa erro anterior
-        await login(email, password_hash);
-        navigate('/dashboard', { replace: true });
+
+        try {
+            await login(email, password_hash);
+            // ❌ REMOVIDO: navigate('/dashboard', { replace: true });
+            // Deixamos o useEffect acima lidar com a navegação após a conclusão do login.
+        } catch (err) {
+            // O AuthContext já trata erros e desliga o loading/define o erro
+            console.error("Erro na submissão do login:", err);
+            // Se houver um erro, o AuthContext deve definir um estado de erro
+        }
     }
 
     const handleRecoverySubmit = async (e: React.FormEvent) => {

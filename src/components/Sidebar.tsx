@@ -304,7 +304,7 @@ export function Sidebar({
 
       {/* Footer */}
       <div className="absolute bottom-4 w-full px-4 text-xs text-white">
-        <div>v{process.env.REACT_APP_VERSION}</div>
+        <div>v{"2.0.0"}</div>
         <a href="/help" className="hover:underline">
           Ajuda
         </a>

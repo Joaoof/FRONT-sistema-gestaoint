@@ -34,16 +34,8 @@ export const CREATE_CASH_MOVEMENT = gql`
  * Atualiza uma movimentação existente
  */
 export const UPDATE_CASH_MOVEMENT = gql`
-  mutation UpdateCashMovement($id: ID!, $input: UpdateCashMovementInput!) {
-    updateCashMovement(id: $id, input: $input) {
-      id
-      value
-      description
-      type
-      category
-      date
-      updatedAt
-    }
+  mutation CashMovementUpdate($movementId: String!, $movementUpdateCash: UpdateCashMovementInput!) {
+    cashMovementUpdate(movementId: $movementId, movementUpdateCash: $movementUpdateCash)
   }
 `;
 

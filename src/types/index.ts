@@ -39,12 +39,12 @@ export type MovementType =
 
 
 export type CategoryType =
-  | 'VENDA'
-  | 'TROCO'
-  | 'OUTROS'
-  | 'DEPESAS'
-  | 'SAQUE'
-  | 'PAGAMENTO';
+  | 'SALE'
+  | 'CHANGE'
+  | 'OTHER_IN'
+  | 'EXPENSE'
+  | 'WITHDRAWAL'
+  | 'PAYMENT';
 
 
 
