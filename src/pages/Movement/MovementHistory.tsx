@@ -652,6 +652,20 @@ function ActionsDropdown({ movement, onView, onEdit, onDelete, isDeleting }: {
 }
 
 // Modal de Visualização (Novo)
+// src/pages/Movement/MovementHistory.tsx (Apenas a função ViewModal e o mapa de labels)
+
+// ... (imports)
+
+// Mapeamento de categorias para caminhos de imagem
+const categoryImageMap: Record<Subtype, string> = {
+    SALE: 'https://cdn-icons-png.flaticon.com/512/5607/5607725.png', // Venda
+    CHANGE: 'https://cdn-icons-png.flaticon.com/512/1969/1969111.png', // Troco
+    OTHER_IN: 'https://cdn-icons-png.flaticon.com/512/7580/7580377.png', // Outros (Entrada)
+    EXPENSE: 'https://cdn-icons-png.flaticon.com/512/781/781760.png', // Despesa
+    WITHDRAWAL: 'https://cdn-icons-png.flaticon.com/512/11625/11625164.png', // Saque
+    PAYMENT: 'https://cdn-icons-png.flaticon.com/512/4564/4564998.png', // Pagamento
+};
+
 function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: () => void }) {
     if (!movement) return null;
 
@@ -665,14 +679,15 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
     };
 
     const categoryLabel = typeLabels[mapCategoryToSubtype(movement.category)];
+    const categoryIconUrl = categoryImageMap[mapCategoryToSubtype(movement.category)];
 
     return (
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md z-50">
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md z-50 font-['Open_Sans']">
                     <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <Eye className="w-6 h-6 text-indigo-600" /> Detalhes da Movimentação
+                        <img src={categoryIconUrl} alt="Categoria" className="w-6 h-6 object-contain" /> Detalhes da Movimentação
                     </Dialog.Title>
                     <div className="space-y-4 text-gray-700">
                         <InfoItem label="ID da Movimentação" value={movement.id} />
@@ -704,6 +719,8 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
         </Dialog.Root>
     );
 }
+
+// O restante do arquivo MovementHistory.tsx permanece o mesmo (funções auxiliares, etc.)
 
 function InfoItem({ label, value, color = 'text-gray-700' }: { label: string, value: string, color?: string }) {
     return (
