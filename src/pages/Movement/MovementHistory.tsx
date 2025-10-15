@@ -279,6 +279,35 @@ export function MovementHistory() {
         );
     };
 
+    const handleReverse = (movementToReverse: Movement) => {
+        // Confirmação simples
+        if (!window.confirm(`Confirma o estorno de ${formatCurrency(movementToReverse.value)} (${movementToReverse.description})? Um novo lançamento será criado.`)) {
+            return;
+        }
+
+        const isEntry = movementToReverse.type === 'ENTRY';
+        const reverseType = isEntry ? 'EXIT' : 'ENTRY';
+
+        // Define a categoria de estorno (uso EXPENSE para saída e OTHER_IN para entrada por padrão)
+        const reverseCategory = isEntry ? 'EXPENSE' : 'OTHER_IN';
+
+        // Cria o movimento compensatório (com valor absoluto)
+        createMovement({
+            variables: {
+                input: {
+                    value: Math.abs(movementToReverse.value),
+                    description: `ESTORNO: ${movementToReverse.description} (Original: ${movementToReverse.id})`,
+                    type: reverseType,
+                    category: reverseCategory,
+                    date: new Date().toISOString(),
+                },
+            },
+        }).then(
+            () => toast.success('Estorno registrado com sucesso!'),
+            (err) => toast.error('Funcionalidade em preparo: ' + err.message)
+        );
+    };
+
     const saveEdit = async () => {
         if (!editingMovement) return;
 
@@ -568,6 +597,7 @@ export function MovementHistory() {
                                                     onView={openViewModal}
                                                     onEdit={openEditModal}
                                                     onDelete={openDeleteModal}
+                                                    onReverse={handleReverse} // <-- NOVA PROP
                                                     isDeleting={deletingId === m.id}
                                                 />
                                             </td>
@@ -604,11 +634,15 @@ export function MovementHistory() {
 // === COMPONENTES NOVOS E MODIFICADOS ===
 
 // Componente para o menu de 3 pontos
-function ActionsDropdown({ movement, onView, onEdit, onDelete, isDeleting }: {
+// src/pages/Movement/MovementHistory.tsx
+
+// Adicione 'onReverse' ao objeto de propriedades do componente
+function ActionsDropdown({ movement, onView, onEdit, onDelete, onReverse, isDeleting }: {
     movement: Movement;
     onView: (m: Movement) => void;
     onEdit: (m: Movement) => void;
     onDelete: (m: Movement) => void;
+    onReverse: (m: Movement) => void; // NOVO: Função para estornar
     isDeleting: boolean;
 }) {
     return (
@@ -639,24 +673,33 @@ function ActionsDropdown({ movement, onView, onEdit, onDelete, isDeleting }: {
                 >
                     <Edit className="w-4 h-4 text-blue-600" /> Editar
                 </DropdownMenu.Item>
+
+                {/* NOVO ITEM: ESTORNAR MOVIMENTO */}
+                <DropdownMenu.Item
+                    onClick={() => onReverse(movement)} // Chama a nova função de estorno
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-yellow-50 cursor-pointer rounded"
+                >
+                    <RotateCcw className="w-4 h-4 text-yellow-600" /> Estornar Movimento
+                </DropdownMenu.Item>
+
                 <DropdownMenu.Separator className="my-1 border-t border-gray-100" />
+
                 <DropdownMenu.Item
                     onClick={() => onDelete(movement)}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer rounded"
                 >
-                    <Trash2 className="w-4 h-4" /> Deletar
+                    <img
+                        src={TRASH_ICON_URL}
+                        alt="Deletar"
+                        className="w-4 h-4 object-contain invert brightness-0 transition-transform group-hover:animate-jump"
+                    />
+                    Deletar
                 </DropdownMenu.Item>
             </DropdownMenu.Content>
         </DropdownMenu.Root>
     );
 }
 
-// Modal de Visualização (Novo)
-// src/pages/Movement/MovementHistory.tsx (Apenas a função ViewModal e o mapa de labels)
-
-// ... (imports)
-
-// Mapeamento de categorias para caminhos de imagem
 const categoryImageMap: Record<Subtype, string> = {
     SALE: 'https://cdn-icons-png.flaticon.com/512/5607/5607725.png', // Venda
     CHANGE: 'https://cdn-icons-png.flaticon.com/512/1969/1969111.png', // Troco
