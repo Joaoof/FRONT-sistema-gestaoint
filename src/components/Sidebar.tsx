@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useCompany } from '../contexts/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LogOut } from 'lucide-react'; // Importa o ícone de Sair
+import { useAuth } from '../contexts/AuthContext'; // Importa o hook de autenticação
 
 interface MenuItem {
   id: View;
@@ -90,6 +92,8 @@ export function Sidebar({
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const { company, isLoading } = useCompany();
+  // CHAMA O HOOK useAuth para obter a função logout
+  const { logout } = useAuth();
 
   if (isLoading || !company) {
     return (
@@ -304,6 +308,15 @@ export function Sidebar({
 
       {/* Footer */}
       <div className="absolute bottom-4 w-full px-4 text-xs text-white">
+        {/* BOTÃO SAIR ADICIONADO AQUI */}
+        <button
+          onClick={logout}
+          className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-red-600/70 text-white mb-2"
+        >
+          <LogOut className="w-5 h-5 text-red-400" />
+          <span>Sair</span>
+        </button>
+        {/* Fim do botão Sair */}
         <div>v{"2.0.0"}</div>
         <a href="/help" className="hover:underline">
           Ajuda

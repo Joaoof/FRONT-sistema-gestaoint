@@ -8,7 +8,6 @@ import {
     Edit,
     X,
     Check,
-    Trash2,
     MoreVertical, // Adicionado para o menu de 3 pontos
     Eye, // Adicionado para Visualizar
 } from 'lucide-react';
