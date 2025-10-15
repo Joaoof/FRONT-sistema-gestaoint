@@ -685,7 +685,8 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md z-50 font-['Open_Sans']">
+                {/* CLASSE ALTERADA DE max-w-md PARA max-w-2xl */}
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-['Open_Sans']">
                     <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                         <img src={categoryIconUrl} alt="Categoria" className="w-6 h-6 object-contain" /> Detalhes da Movimentação
                     </Dialog.Title>
@@ -719,9 +720,6 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
         </Dialog.Root>
     );
 }
-
-// O restante do arquivo MovementHistory.tsx permanece o mesmo (funções auxiliares, etc.)
-
 function InfoItem({ label, value, color = 'text-gray-700' }: { label: string, value: string, color?: string }) {
     return (
         <div className="border-b border-gray-100 pb-2">
@@ -730,6 +728,10 @@ function InfoItem({ label, value, color = 'text-gray-700' }: { label: string, va
         </div>
     );
 }
+
+
+const TRASH_ICON_URL = 'https://cdn-icons-png.flaticon.com/512/1214/1214428.png';
+// (Esta constante deve estar no topo do seu arquivo)
 
 function DeleteConfirmationModal({ movement, onConfirm, onClose, isDeleting }: {
     movement: Movement | null;
@@ -743,34 +745,49 @@ function DeleteConfirmationModal({ movement, onConfirm, onClose, isDeleting }: {
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm z-50">
-                    <Dialog.Title className="text-xl font-semibold text-red-600 mb-4 flex items-center gap-2">
-                        <Trash2 className="w-6 h-6" /> Confirmar Deleção
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm z-50 font-['Open_Sans']">
+
+                    {/* Título mais profissional com imagem e cor forte */}
+                    <Dialog.Title className="text-xl font-semibold text-red-700 mb-4 flex items-center gap-2">
+                        <img
+                            src={TRASH_ICON_URL}
+                            alt="Lixeira"
+                            className="w-6 h-6 object-contain"
+                        />
+                        Confirmação de Exclusão
                     </Dialog.Title>
-                    <p className="text-gray-700 mb-6">
-                        Você tem certeza que deseja deletar a movimentação:
-                        <span className="font-bold text-gray-900 block mt-1">
-                            {movement.description} ({formatCurrency(movement.value)})?
+
+                    {/* Texto de confirmação melhor formatado */}
+                    <p className="text-gray-700 mb-6 border-l-4 border-red-200 pl-4 py-2 bg-red-50 rounded-lg">
+                        Você está prestes a deletar a movimentação permanentemente:
+                        <span className="font-extrabold text-red-900 block mt-1 text-lg">
+                            {movement.description} ({formatCurrency(movement.value)})
                         </span>
-                        Esta ação é <span className="font-semibold text-red-600">irreversível</span>.
+                        Esta ação é <span className="font-semibold text-red-700">irreversível</span> e afetará o saldo de caixa.
                     </p>
-                    <div className="flex justify-end gap-3">
+                    <div className="flex justify-end gap-3 pt-4">
                         <button
                             onClick={onClose}
                             disabled={isDeleting}
-                            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition"
+                            className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition"
                         >
                             <X className="w-5 h-5" /> Cancelar
                         </button>
                         <button
                             onClick={onConfirm}
                             disabled={isDeleting}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 transition"
+                            // Adiciona 'group' para o hover, e 'hover:shadow-lg' para o efeito profissional
+                            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:shadow-lg disabled:bg-red-400 transition group"
                         >
                             {isDeleting ? (
                                 <RotateCcw className="w-5 h-5 animate-spin" />
                             ) : (
-                                <Trash2 className="w-5 h-5" />
+                                <img
+                                    src={TRASH_ICON_URL}
+                                    alt="Deletar"
+                                    // Inverte cor e adiciona a animação de pulo no hover
+                                    className="w-5 h-5 object-contain invert brightness-0 transition-transform group-hover:animate-jump"
+                                />
                             )}
                             {isDeleting ? 'Deletando...' : 'Deletar'}
                         </button>
@@ -892,7 +909,6 @@ function ExportPdfDropdown({ movements }: { movements: Movement[] }) {
     );
 }
 
-// O EditModal foi modificado para receber 'setMovement' e corrigir o erro de estado
 function EditModal({ movement, onSave, onClose, setMovement }: { movement: Movement | null; onSave: () => void; onClose: () => void; setMovement: (m: Movement | null) => void; }) {
     if (!movement) return null;
 
@@ -947,14 +963,17 @@ function EditModal({ movement, onSave, onClose, setMovement }: { movement: Movem
         setMovement({ ...movement, date: newISOString });
     }
 
+    const categoryIconUrl = categoryImageMap[mapCategoryToSubtype(movement.category)]; // Obtém a URL da imagem
 
     return (
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg z-50">
+                {/* A classe 'max-w-lg' foi alterada para 'max-w-2xl' */}
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-['Open_Sans']">
                     <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <Edit className="w-6 h-6 text-blue-600" /> Editar Movimentação
+                        {/* Substitui o ícone 'Edit' pela imagem */}
+                        <img src={categoryIconUrl} alt="Categoria" className="w-6 h-6 object-contain" /> Editar Movimentação
                     </Dialog.Title>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -1055,7 +1074,6 @@ function EditModal({ movement, onSave, onClose, setMovement }: { movement: Movem
         </Dialog.Root>
     );
 }
-
 
 function LoadingSkeleton() {
     return (

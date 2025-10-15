@@ -49,3 +49,17 @@ html {
 .animate-bounce-down {
   animation: bounce-down 1s ease-in-out infinite;
 }
+
+/* Adicionar em src/index.css */
+@keyframes jump {
+  0%, 100% { 
+    transform: translateY(0); 
+  }
+  50% { 
+    transform: translateY(-3px) rotate(0deg); /* Pula 3px para cima */
+  }
+}
+
+.animate-jump {
+  animation: jump 0.4s ease-out; /* Executa uma vez no hover */
+}
