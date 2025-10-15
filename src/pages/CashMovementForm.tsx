@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { DollarSign, Save, ArrowLeft } from 'lucide-react'; // Adicionado ArrowLeft
+import { DollarSign, Save, ArrowLeft } from 'lucide-react';
 import { apolloClient } from '../lib/apollo-client';
 import { CREATE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
 import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
@@ -43,7 +43,8 @@ type MovementType = MovementOption['type'];
 
 export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const [formData, setFormData] = useState({
-        type: 'venda' as MovementType,
+        // ALTERAÇÃO 1: Começa como null, sem seleção automática
+        type: null as MovementType | null,
         value: '',
         description: '',
         date: formatLocalDateTime(new Date()),
@@ -69,6 +70,14 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         setLoading(true);
         const value = parseFloat(formData.value);
         const token = localStorage.getItem('accessToken');
+
+        // VALIDAÇÃO 1: Tipo de movimentação
+        if (!formData.type) {
+            toast.error('Selecione o tipo de movimentação');
+            setLoading(false);
+            return;
+        }
+
         if (!token) {
             toast.error('Sessão expirada. Faça login novamente.');
             setError('Sem autenticação');
@@ -93,12 +102,13 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             return;
         }
         try {
+            // Agora formData.type é garantido ser MovementType
             const input = {
                 value,
                 description: formData.description.trim(),
                 date: parseLocalDateTime(formData.date),
-                type: movementTypeMap[formData.type],
-                category: categoryMap[formData.type],
+                type: movementTypeMap[formData.type as MovementType],
+                category: categoryMap[formData.type as MovementType],
             };
             const response = await apolloClient.mutate({
                 mutation: CREATE_CASH_MOVEMENT,
@@ -117,7 +127,8 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 return;
             }
             toast.success('Movimentação registrada com sucesso!');
-            setFormData({ type: 'venda', value: '', description: '', date: new Date().toISOString().slice(0, 16) });
+            // Limpa o formulário, mas retorna o tipo para null
+            setFormData({ type: null, value: '', description: '', date: formatLocalDateTime(new Date()) });
             onSuccess?.();
         } catch (err: any) {
             const msgs = getGraphQLErrorMessages(err);
@@ -134,6 +145,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const renderMovementButtons = (options: MovementOption[], colorClass: string) => (
         <div className="grid grid-cols-3 gap-4">
             {options.map(opt => {
+                // A lógica de seleção funciona com null
                 const isSelected = formData.type === opt.type;
                 const baseClass = 'border-gray-200 hover:border-gray-300 text-gray-700';
                 const selectedClass = `border-${colorClass}-500 bg-${colorClass}-50 text-${colorClass}-900`;
@@ -149,6 +161,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                         <img src={opt.imagePath} className="w-8 h-8 mb-1" alt={opt.label} />
                         <span className="mt-1 text-sm font-medium text-center">{opt.label}</span>
                         {isSelected && (
+                            // A classe de cor deve ser genérica no tailwind.config, ou usar a sintaxe completa
                             <div className={`absolute inset-x-0 bottom-0 w-full h-1 bg-${colorClass}-500 animate-pulse`}></div>
                         )}
                     </button>
@@ -174,6 +187,13 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
             <h2 className="text-2xl font-serif text-gray-900 mb-6">Formulário de Movimentação</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Alerta de erro de seleção */}
+                {error && error.includes('tipo de movimentação') && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                        {error}
+                    </div>
+                )}
+
                 {/* Entradas */}
                 <div style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>
                     <div className="flex items-center text-lg text-green-700 mb-3">
