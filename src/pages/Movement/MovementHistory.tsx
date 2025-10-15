@@ -40,7 +40,6 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import CountUp from 'react-countup';
 import { toast } from 'sonner';
 import { DELETE_CASH_MOVEMENT } from '../../graphql/mutations/mutations'; // Mantendo a importação do delete daqui
-import { da } from 'zod/v4/locales';
 
 type FilterType =
     | 'ALL'
@@ -111,21 +110,25 @@ const formatDate = (dateString: string | null | undefined): string => {
             year: 'numeric',
         });
 };
-// toDateInputString, toTimeInputString e combineDateTime já estão usando UTC corretamente
 const toDateInputString = (dateString: string | null | undefined): string => {
-    if (!dateString || dateString.length < 10) return '';
-    return dateString.substring(0, 10);
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    // Usa os componentes da hora local (do navegador)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
-// CORREÇÃO FINAL: Extrai HH:MM diretamente da string ISO (mais confiável para inputs)
-const toTimeInputString = (dateString: string | null | undefined): string => {
-    if (!dateString || dateString.length < 16) return '';
-    const timePart = dateString.substring(11, 16);
 
-    // Garantir que é um formato válido antes de retornar
-    if (timePart.match(/^\d{2}:\d{2}$/)) {
-        return timePart;
-    }
-    return '';
+const toTimeInputString = (dateString: string | null | undefined): string => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    // Usa os componentes da hora local (do navegador)
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
 };
 
 const combineDateTime = (datePart: string, timePart: string): string => {
