@@ -11,6 +11,9 @@ import {
     AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { apolloClient } from '../lib/apollo-client'; // Importa o cliente Apollo
+import { CHANGE_PASSWORD_MUTATION } from '../graphql/mutations/mutations'; // Importa a mutação
+import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage'; // Importa o utilitário de erro
 
 export function SettingsPage() {
     const { user, company, logout } = useAuth();
@@ -37,6 +40,9 @@ export function SettingsPage() {
         confirm: '',
     });
 
+    // Estado de Loading
+    const [loadingPassword, setLoadingPassword] = useState(false);
+
     // Notificação
     const [notification, setNotification] = useState<{
         type: 'success' | 'error';
@@ -55,16 +61,46 @@ export function SettingsPage() {
         setTimeout(() => setNotification(null), 3000);
     };
 
-    const handleChangePassword = () => {
-        if (password.new !== password.confirm) {
-            setNotification({ type: 'error', message: 'As senhas não coincidem.' });
-        } else if (password.new.length < 6) {
-            setNotification({ type: 'error', message: 'A nova senha deve ter pelo menos 6 caracteres.' });
-        } else {
-            console.log('Senha alterada');
-            setNotification({ type: 'success', message: 'Senha alterada com sucesso!' });
-            setPassword({ current: '', new: '', confirm: '' });
-            setTimeout(() => setNotification(null), 3000);
+    const handleChangePassword = async () => {
+        setLoadingPassword(true);
+        setNotification(null);
+
+        try {
+            const input = {
+                currentPassword: password.current,
+                newPassword: password.new,
+                confirmPassword: password.confirm,
+            };
+
+            const response = await apolloClient.mutate({
+                mutation: CHANGE_PASSWORD_MUTATION,
+                variables: { input },
+            });
+
+            console.log('MEU RESPONSE SENHA KAKAKAAAA', response);
+
+
+            // Tratamento de sucesso (a mutação retorna uma string)
+            if (response.data?.changePassword) {
+                setNotification({ type: 'success', message: response.data.changePassword });
+
+                // Limpar formulário e deslogar, forçando o re-login com a nova senha
+                setPassword({ current: '', new: '', confirm: '' });
+
+                // IMPORTANTE: Desloga o usuário após um pequeno delay para garantir que a mensagem de sucesso seja lida
+                setTimeout(() => logout(), 2000);
+
+            } else {
+                throw new Error('Resposta inválida do servidor.');
+            }
+
+        } catch (err: any) {
+            // Tratamento de Erros da API (E.g., Senha atual inválida)
+            const msgs = getGraphQLErrorMessages(err);
+            setNotification({ type: 'error', message: msgs[0] || 'Erro desconhecido ao alterar senha.' });
+        } finally {
+            setLoadingPassword(false);
+            setTimeout(() => setNotification(null), 5000);
         }
     };
 
@@ -80,8 +116,8 @@ export function SettingsPage() {
             {notification && (
                 <div
                     className={`fixed top-6 right-6 z-50 p-4 rounded-lg text-sm flex items-center gap-2 shadow-lg border-l-4 animate-fade-in ${notification.type === 'success'
-                            ? 'bg-green-50 text-green-800 border-green-500'
-                            : 'bg-red-50 text-red-800 border-red-500'
+                        ? 'bg-green-50 text-green-800 border-green-500'
+                        : 'bg-red-50 text-red-800 border-red-500'
                         }`}
                 >
                     {notification.type === 'success' ? (
@@ -94,14 +130,14 @@ export function SettingsPage() {
             )}
 
             {/* Perfil do Usuário */}
-            <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
+            <div className="bg-white rounded-2xl shadow-md border border-white p-8">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-blue-100 text-blue-600 rounded-full">
-                        <User className="w-6 h-6" />
+                    <div className="p-2 bg-white text-white rounded-full">
+                        <img src="https://icons.veryicon.com/png/o/miscellaneous/two-color-icon-library/user-286.png" alt="Usuário" className="w-6 h-6" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Perfil do Usuário</h2>
-                        <p className="text-sm text-gray-500">Atualize suas informações pessoais</p>
+                        <h2 className="text-xl font-sans text-gray-900">Perfil do Usuário</h2>
+                        <p className="text-sm font-serif text-gray-500">Atualize suas informações pessoais</p>
                     </div>
                 </div>
 
@@ -150,7 +186,7 @@ export function SettingsPage() {
                         onClick={handleSaveProfile}
                         className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-md transition-all"
                     >
-                        <Save className="w-5 h-5" />
+                        <img src="https://images.icon-icons.com/3863/PNG/512/save_icon_241135.png" alt="Usuário" className="w-6 h-6" />
                         Salvar Alterações
                     </button>
                 </div>
@@ -160,11 +196,10 @@ export function SettingsPage() {
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-green-100 text-green-600 rounded-full">
-                        <Building className="w-6 h-6" />
-                    </div>
+                        <img src="https://images.icon-icons.com/3578/PNG/512/enterprise_building_icon_225731.png" alt="Empresa" className="w-6 h-6" />                    </div>
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Dados da Empresa</h2>
-                        <p className="text-sm text-gray-500">Atualize as informações da sua empresa</p>
+                        <h2 className="text-xl font-sans text-gray-900">Dados da Empresa</h2>
+                        <p className="text-sm font-serif text-gray-500">Atualize as informações da sua empresa</p>
                     </div>
                 </div>
 
@@ -207,7 +242,7 @@ export function SettingsPage() {
                         onClick={handleSaveCompany}
                         className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-md transition-all"
                     >
-                        <Save className="w-5 h-5" />
+                        <img src="https://images.icon-icons.com/3863/PNG/512/save_icon_241135.png" alt="Usuário" className="w-6 h-6" />
                         Salvar Empresa
                     </button>
                 </div>
@@ -217,22 +252,22 @@ export function SettingsPage() {
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-purple-100 text-purple-600 rounded-full">
-                        <CreditCard className="w-6 h-6" />
+                        <img src="https://icones.pro/wp-content/uploads/2021/07/icone-d-entreprise-violet.png" alt="Empresa" className="w-6 h-6" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Plano e Módulos</h2>
-                        <p className="text-sm text-gray-500">Gerencie seu plano atual e módulos ativos</p>
+                        <h2 className="text-xl font-sans text-gray-900">Plano e Módulos</h2>
+                        <p className="text-sm font-serif text-gray-500">Gerencie seu plano atual e módulos ativos</p>
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     <div>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm font-mono text-gray-700">
                             <strong>Plano Atual:</strong> {user?.plan?.name || 'Grátis'}
                         </p>
-                        <p className="text-sm text-gray-700 mt-1">
+                        <p className="text-sm font-mono text-gray-700 mt-1">
                             <strong>Status:</strong>{' '}
-                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium font-serif rounded-full">
                                 Ativo
                             </span>
                         </p>
@@ -244,8 +279,8 @@ export function SettingsPage() {
                                 <span
                                     key={module.module_key}
                                     className={`px-3 py-1 rounded-full text-xs font-medium ${module.isActive
-                                            ? 'bg-blue-100 text-blue-800'
-                                            : 'bg-gray-100 text-gray-500 line-through'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : 'bg-gray-100 text-gray-500 line-through'
                                         }`}
                                 >
                                     {module.module_key}
@@ -260,11 +295,10 @@ export function SettingsPage() {
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-red-100 text-red-600 rounded-full">
-                        <Shield className="w-6 h-6" />
-                    </div>
+                        <img src="https://cdn-icons-png.flaticon.com/512/1746/1746650.png" alt="Segurança" className="w-6 h-6" />                       </div>
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Segurança</h2>
-                        <p className="text-sm text-gray-500">Altere sua senha e mantenha sua conta segura</p>
+                        <h2 className="text-xl font-sans text-gray-900">Segurança</h2>
+                        <p className="text-sm font-serif text-gray-500">Altere sua senha e mantenha sua conta segura</p>
                     </div>
                 </div>
 
@@ -276,6 +310,7 @@ export function SettingsPage() {
                             value={password.current}
                             onChange={(e) => setPassword({ ...password, current: e.target.value })}
                             className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            disabled={loadingPassword}
                         />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -286,6 +321,7 @@ export function SettingsPage() {
                                 value={password.new}
                                 onChange={(e) => setPassword({ ...password, new: e.target.value })}
                                 className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                disabled={loadingPassword}
                             />
                         </div>
                         <div>
@@ -295,6 +331,7 @@ export function SettingsPage() {
                                 value={password.confirm}
                                 onChange={(e) => setPassword({ ...password, confirm: e.target.value })}
                                 className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                disabled={loadingPassword}
                             />
                         </div>
                     </div>
@@ -303,10 +340,19 @@ export function SettingsPage() {
                 <div className="flex justify-end pt-6 border-t border-gray-200 mt-6">
                     <button
                         onClick={handleChangePassword}
-                        className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl shadow-md transition-all"
+                        className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                        disabled={loadingPassword}
                     >
-                        <KeyRound className="w-5 h-5" />
-                        Alterar Senha
+                        {loadingPassword ? (
+                            <>
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Alterando...
+                            </>
+                        ) : (
+                            <>
+                                <img src="https://cdn-icons-png.flaticon.com/512/1804/1804429.png" alt="Alterar Senha" className="w-6 h-6" />                                   Alterar Senha
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -317,8 +363,7 @@ export function SettingsPage() {
                     onClick={logout}
                     className="flex items-center gap-3 text-red-600 hover:text-red-800 font-medium transition-colors"
                 >
-                    <LogOut className="w-5 h-5" />
-                    <span>Sair da Conta</span>
+                    <img src="https://cdn-icons-png.flaticon.com/512/4400/4400828.png" alt="Sair da Conta" className="w-6 h-6" />                       <span>Sair da Conta</span>
                 </button>
             </div>
         </div>

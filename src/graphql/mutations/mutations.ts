@@ -20,3 +20,9 @@ export const DELETE_CASH_MOVEMENT = gql`
     cashMovementDelete(movementId: $movementId)
   }
 `;
+
+export const CHANGE_PASSWORD_MUTATION = gql`
+  mutation ChangePassword($input: ChangePasswordInput!) {
+    changePassword(input: $input)
+  }
+`;
