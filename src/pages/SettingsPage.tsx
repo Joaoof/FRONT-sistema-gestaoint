@@ -1,12 +1,5 @@
 import { useState } from 'react';
 import {
-    User,
-    Building,
-    Shield,
-    CreditCard,
-    LogOut,
-    Save,
-    KeyRound,
     CheckCircle,
     AlertCircle,
 } from 'lucide-react';
