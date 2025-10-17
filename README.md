@@ -199,13 +199,15 @@ front-sistema-gestaoint/
 <div align="center">
 
 ### Dashboard Principal
-![Dashboard](/placeholder.svg?height=400&width=800&query=modern+business+dashboard+with+charts)
+<img width="1920" height="912" alt="{27F9A4E4-FCF7-4F1C-9F4A-7439DD467CD2}" src="https://github.com/user-attachments/assets/6c9d80b8-1c88-4979-bb3f-9e5c3aa8e6f7" />
 
 ### Gestão de Dados
-![Gestão](/placeholder.svg?height=400&width=800&query=data+management+table+interface)
+<img width="1915" height="908" alt="{D8D29D84-856A-4298-A8FA-E3E1E8E290E5}" src="https://github.com/user-attachments/assets/e01b568f-0271-45d9-b85c-8e6fd9bd814f" />
+
 
 ### Visualização em Mapas
-![Mapas](/placeholder.svg?height=400&width=800&query=interactive+map+with+markers)
+<img width="1919" height="916" alt="{0FE2139D-F335-4FC6-AB02-35A38908A736}" src="https://github.com/user-attachments/assets/e5549b20-a65a-4b5f-b23d-93dafe9de492" />
+
 
 </div>
 
