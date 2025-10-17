@@ -522,23 +522,20 @@ export function MovementHistory() {
 
     return (
         <>
-            <div className="space-y-8 px-6 py-6 bg-gray-50 min-h-screen w-full">
-                {/* ... (Cabeçalho, Resumo, Mini gráfico, Filtros) ... */}
-
-                {/* Seu código aqui (Mantido o mesmo) */}
+            <div className="space-y-8 px-6 py-6 bg-gray-50 min-h-screen w-full font-sans">
                 <div className="w-full relative pb-10">
                     <h1 className="text-4xl font-serif text-gray-900 mb-2">📋 Histórico de Movimentações</h1>
-                    <p className="text-gray-600">Controle completo das entradas e saídas do caixa.</p>
+                    <p className="text-gray-600 font-sans">Controle completo das entradas e saídas do caixa.</p>
 
                     <button
                         type="button"
                         onClick={() => refetch()}
                         disabled={loading}
-                        className="absolute top-0 right-0 flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 shadow-sm disabled:opacity-60 rounded-xl text-gray-700 text-sm font-medium transition-all duration-200 group"
+                        className="absolute top-0 right-0 flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 shadow-sm disabled:opacity-60 rounded-xl text-gray-700 text-sm font-sans font-medium transition-all duration-200 group"
                         aria-label="Atualizar dados"
                     >
                         <RotateCcw
-                            className={`h-5 w-5 transition-transform duration-300 ${loading ? "animate-spin text-indigo-600" : "group-hover:rotate-12 text-gray-600"
+                            className={`h-5 w-5 transition-transform duration-300 ${loading ? "animate-spin text-[#780087]" : "group-hover:rotate-12 text-gray-600"
                                 }`}
                         />
                         <span className="font-medium">{loading ? "Atualizando..." : "Atualizar"}</span>
@@ -625,7 +622,7 @@ export function MovementHistory() {
                 </div>
 
                 {/* Filtros */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 font-sans">
                     <div className="flex flex-col sm:flex-row gap-4 justify-between mb-4">
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
@@ -650,7 +647,7 @@ export function MovementHistory() {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Filtros Rápidos de Data</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2 font-sans">Filtros Rápidos de Data</label>
                         <div className="flex flex-wrap gap-2">
                             {[
                                 { value: "", label: "Todas as datas", icon: "📅" },
@@ -665,8 +662,8 @@ export function MovementHistory() {
                                 <button
                                     key={f.value}
                                     onClick={() => handleQuickDateFilterChange(f.value)}
-                                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${quickDateFilter === f.value
-                                            ? "bg-purple-600 text-white shadow-md"
+                                    className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition ${quickDateFilter === f.value
+                                            ? "bg-[#780087] text-white shadow-md"
                                             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                         }`}
                                 >
@@ -691,7 +688,7 @@ export function MovementHistory() {
                             <button
                                 key={f.value}
                                 onClick={() => handleFilterChange(f.value as FilterType)}
-                                className={`px-3 py-1 rounded-full text-sm font-medium transition ${filter === f.value ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                className={`px-3 py-1 rounded-full text-sm font-sans font-medium transition ${filter === f.value ? "bg-[#780087] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                     }`}
                             >
                                 {f.icon} {f.label}
@@ -768,18 +765,18 @@ export function MovementHistory() {
 
                     <ExportPdfDropdown
                         movements={movements}
-                        generateAllPdf={generateMovementsPdf} // Passa a função que exporta tudo/mês/ano
-                        generateTodayPdf={generateTodayPdf} // Passa a função que exporta o dia
+                        generateAllPdf={generateMovementsPdf}
+                        generateTodayPdf={generateTodayPdf}
                     />
 
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-6 mb-4 pb-4 border-b border-gray-200">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
-                                <label className="text-sm font-medium text-gray-700">Ordenar por:</label>
+                                <label className="text-sm font-sans font-medium text-gray-700">Ordenar por:</label>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => handleSortChange("date")}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition ${sortField === "date" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "date" ? "bg-[#780087] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                             }`}
                                     >
                                         Data
@@ -788,7 +785,7 @@ export function MovementHistory() {
                                     </button>
                                     <button
                                         onClick={() => handleSortChange("value")}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition ${sortField === "value" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "value" ? "bg-[#780087] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                             }`}
                                     >
                                         Valor
@@ -797,8 +794,8 @@ export function MovementHistory() {
                                     </button>
                                     <button
                                         onClick={() => handleSortChange("description")}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition ${sortField === "description"
-                                                ? "bg-indigo-600 text-white"
+                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "description"
+                                                ? "bg-[#780087] text-white"
                                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                             }`}
                                     >
@@ -810,14 +807,14 @@ export function MovementHistory() {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <label className="text-sm font-medium text-gray-700">Itens por página:</label>
+                            <label className="text-sm font-sans font-medium text-gray-700">Itens por página:</label>
                             <select
                                 value={itemsPerPage}
                                 onChange={(e) => {
                                     setItemsPerPage(Number(e.target.value))
                                     setCurrentPage(1)
                                 }}
-                                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
+                                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-sans"
                             >
                                 <option value={5}>5</option>
                                 <option value={10}>10</option>
@@ -828,20 +825,20 @@ export function MovementHistory() {
                         </div>
                     </div>
 
-                    <div className="text-sm text-gray-600 mb-4">
+                    <div className="text-sm text-gray-600 mb-4 font-sans">
                         Mostrando {startIndex + 1} a {Math.min(endIndex, sorted.length)} de {sorted.length} movimentações
                     </div>
 
                     {/* Tabela */}
                     <div className="overflow-x-auto mt-8 bg-gray-50 rounded-xl border border-gray-200">
                         {paginatedMovements.length === 0 ? (
-                            <div className="text-center py-16 text-gray-500">
+                            <div className="text-center py-16 text-gray-500 font-sans">
                                 <p className="text-lg">🔍 Nenhuma movimentação encontrada.</p>
                                 <p className="text-sm mt-1">Ajuste os filtros.</p>
                             </div>
                         ) : (
-                            <table className="w-full">
-                                <thead className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white sticky top-0 z-10">
+                            <table className="w-full font-sans">
+                                <thead className="bg-gradient-to-r from-[#780087] to-[#9d00b8] text-white sticky top-0 z-10">
                                     <tr>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Data</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Descrição</th>
@@ -899,7 +896,7 @@ export function MovementHistory() {
 
                     {totalPages > 1 && (
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200">
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 font-sans">
                                 Página {currentPage} de {totalPages}
                             </div>
                             <div className="flex items-center gap-2">
@@ -938,8 +935,8 @@ export function MovementHistory() {
                                             <button
                                                 key={pageNum}
                                                 onClick={() => setCurrentPage(pageNum)}
-                                                className={`px-3 py-1 rounded-lg text-sm font-medium transition ${currentPage === pageNum
-                                                        ? "bg-indigo-600 text-white"
+                                                className={`px-3 py-1 rounded-lg text-sm font-sans font-medium transition ${currentPage === pageNum
+                                                        ? "bg-[#780087] text-white"
                                                         : "border border-gray-300 hover:bg-gray-50"
                                                     }`}
                                             >
@@ -1010,7 +1007,7 @@ function ActionsDropdown({
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
                 <button
-                    className="p-1 rounded-full text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    className="p-1 rounded-full text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-50 font-sans"
                     disabled={isDeleting}
                 >
                     {isDeleting ? (
@@ -1021,16 +1018,16 @@ function ActionsDropdown({
                 </button>
             </DropdownMenu.Trigger>
 
-            <DropdownMenu.Content className="min-w-32 bg-white rounded-lg shadow-xl border border-gray-200 p-1 z-50">
+            <DropdownMenu.Content className="min-w-32 bg-white rounded-lg shadow-xl border border-gray-200 p-1 z-50 font-sans">
                 <DropdownMenu.Item
                     onClick={() => onView(movement)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 cursor-pointer rounded"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 cursor-pointer rounded"
                 >
-                    <Eye className="w-4 h-4 text-indigo-600" /> Visualizar
+                    <Eye className="w-4 h-4 text-[#780087]" /> Visualizar
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
                     onClick={() => onEdit(movement)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 cursor-pointer rounded"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 cursor-pointer rounded"
                 >
                     <Edit className="w-4 h-4 text-blue-600" /> Editar
                 </DropdownMenu.Item>
@@ -1089,8 +1086,7 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                {/* CLASSE ALTERADA DE max-w-md PARA max-w-2xl */}
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-['Open_Sans']">
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-sans">
                     <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                         <img src={categoryIconUrl || "/placeholder.svg"} alt="Categoria" className="w-6 h-6 object-contain" />{" "}
                         Detalhes da Movimentação
@@ -1114,7 +1110,7 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
                     <div className="flex justify-end mt-8">
                         <button
                             onClick={onClose}
-                            className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                            className="flex items-center gap-2 px-6 py-2 bg-[#780087] text-white rounded-lg hover:bg-[#9d00b8] transition"
                         >
                             <Check className="w-5 h-5" /> Fechar
                         </button>
@@ -1156,7 +1152,7 @@ function DeleteConfirmationModal({
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm z-50 font-['Open_Sans']">
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm z-50 font-sans">
                     {/* Título mais profissional com imagem e cor forte */}
                     <Dialog.Title className="text-xl font-semibold text-red-700 mb-4 flex items-center gap-2">
                         <img src={TRASH_ICON_URL || "/placeholder.svg"} alt="Lixeira" className="w-6 h-6 object-contain" />
@@ -1212,7 +1208,7 @@ function SummaryCard({ title, value, icon, bg, text, onClick }: any) {
         >
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-gray-800">{title}</p>
+                    <p className="text-sm font-medium text-gray-800">Saldo</p>
                     <p className={`text-2xl font-bold ${text}`}>
                         <CountUp
                             end={value}
@@ -1261,7 +1257,7 @@ function ExportPdfDropdown({
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <button className="relative flex items-center gap-2 mt-8 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                <button className="relative flex items-center gap-2 mt-8 px-6 py-3 bg-gradient-to-r from-[#780087] to-[#9d00b8] text-white rounded-xl hover:from-[#9d00b8] hover:to-[#780087] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group font-sans">
                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
                     <Download className="w-5 h-5 relative z-10" />
                     <span className="relative z-10 font-semibold">Exportar PDF</span>
@@ -1269,17 +1265,17 @@ function ExportPdfDropdown({
             </DropdownMenu.Trigger>
 
             <DropdownMenu.Content
-                className="min-w-64 bg-white rounded-xl shadow-2xl border border-gray-100 p-3 z-50 animate-slideDown"
+                className="min-w-64 bg-white rounded-xl shadow-2xl border border-gray-100 p-3 z-50 animate-slideDown font-sans"
                 sideOffset={5}
             >
                 <DropdownMenu.Item
                     onClick={() => generateAllPdf(movements, "all")}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 cursor-pointer rounded-lg transition-all duration-200 group outline-none"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-purple-100 cursor-pointer rounded-lg transition-all duration-200 group outline-none"
                 >
-                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                        <FileText className="w-4 h-4 text-indigo-600" />
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                        <FileText className="w-4 h-4 text-[#780087]" />
                     </div>
-                    <span className="text-gray-700 font-medium group-hover:text-indigo-700">Exportar tudo</span>
+                    <span className="text-gray-700 font-medium group-hover:text-[#780087]">Exportar tudo</span>
                 </DropdownMenu.Item>
 
                 <DropdownMenu.Separator className="my-2 border-t border-gray-100" />
@@ -1326,8 +1322,8 @@ function ExportPdfDropdown({
                                     onClick={() => generateAllPdf(movements, ym)}
                                     className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-all duration-200 group outline-none ml-4"
                                 >
-                                    <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
-                                        <CalendarDays className="w-3.5 h-3.5 text-gray-600 group-hover:text-indigo-600" />
+                                    <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                                        <CalendarDays className="w-3.5 h-3.5 text-gray-600 group-hover:text-[#780087]" />
                                     </div>
                                     <span className="text-gray-600 group-hover:text-gray-800 text-sm">
                                         {monthName.charAt(0).toUpperCase() + monthName.slice(1)} {y}
@@ -1341,12 +1337,12 @@ function ExportPdfDropdown({
                             <DropdownMenu.Item
                                 key={`y-${year}`}
                                 onClick={() => generateAllPdf(movements, year)}
-                                className="flex items-center gap-3 px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 cursor-pointer rounded-lg transition-all duration-200 group outline-none"
+                                className="flex items-center gap-3 px-4 py-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-purple-100 cursor-pointer rounded-lg transition-all duration-200 group outline-none"
                             >
-                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                                    <Calendar className="w-4 h-4 text-blue-600" />
+                                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                                    <Calendar className="w-4 h-4 text-[#780087]" />
                                 </div>
-                                <span className="text-gray-700 font-semibold group-hover:text-blue-700">Ano {year}</span>
+                                <span className="text-gray-700 font-semibold group-hover:text-[#780087]">Ano {year}</span>
                             </DropdownMenu.Item>,
                             ...monthOptions,
                         ]
@@ -1418,8 +1414,7 @@ function EditModal({
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
-                {/* A classe 'max-w-lg' foi alterada para 'max-w-2xl' */}
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-['Open_Sans']">
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-sans">
                     <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                         {/* Substitui o ícone 'Edit' pela imagem */}
                         <img src={categoryIconUrl || "/placeholder.svg"} alt="Categoria" className="w-6 h-6 object-contain" />{" "}

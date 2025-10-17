@@ -97,7 +97,7 @@ export function Sidebar({
 
   if (isLoading || !company) {
     return (
-      <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-[#780087] to-[#000000] dark:from-[#580065] dark:to-[#380047] backdrop-blur-md shadow-xl border-r border-[#000000] z-50 animate-pulse" />
+      <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-[#780087] dark:from-[#580065] backdrop-blur-md shadow-xl border-r z-50 animate-pulse" />
     );
   }
 
