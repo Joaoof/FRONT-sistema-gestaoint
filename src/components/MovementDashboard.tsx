@@ -51,15 +51,13 @@ export function MovementDashboard() {
     const userId = user?.id; // Obtém o ID do usuário
 
     const token = localStorage.getItem("accessToken");
-
-    // Condição para pular a execução da query se o userId não estiver disponível ou autenticação estiver carregando
     const shouldSkip = !userId || isAuthLoading;
 
     const { data, loading, error } = useQuery(GET_DASHBOARD_STATS, {
         variables: {
             input: { date: filterDate, userId }
         },
-        skip: shouldSkip, // Pula se user.id não estiver pronto
+        skip: shouldSkip,
         pollInterval: 30000,
         context: {
             headers: {
@@ -69,15 +67,13 @@ export function MovementDashboard() {
     });
 
     const handleLogout = async () => {
-        await logout(); // Usa o logout do AuthContext
+        await logout();
     };
 
     console.log("GraphQL endpoint:", import.meta.env.VITE_GRAPHQL_ENDPOINT);
 
-    // Se a autenticação estiver carregando, mostre o spinner
     if (isAuthLoading) return <LoadingSpinner />;
 
-    // Mostra o spinner de loading se a query GraphQL estiver carregando (após a autenticação)
     if (loading) return <LoadingSpinner />;
 
     if (error) {
@@ -94,14 +90,12 @@ export function MovementDashboard() {
 
     const dashboardStats = data?.dashboardStats;
 
-    // Dados reais ou fallback
     const entries = dashboardStats?.todayEntries || 0;
     const exits = dashboardStats?.todayExits || 0;
     const balance = dashboardStats?.todayBalance || 0;
     const totalMes = dashboardStats?.monthlyTotal || 0;
     const totalMovements = dashboardStats?.totalMovements || 0;
 
-    // Dados MOCK para Gráficos
     const monthlyData = Array.from({ length: 7 }, (_, i) => {
         const base = Math.random() > 0.5 ? 1 : -1;
         return {
@@ -112,7 +106,6 @@ export function MovementDashboard() {
         };
     });
 
-    // MOCK para Entradas por Categoria (adaptado para o dashboardStats)
     const entriesPerCategory = dashboardStats?.entriesPerCategory || {};
 
     type EntradaCategoria = { categoria: string; valor: number };
@@ -122,13 +115,9 @@ export function MovementDashboard() {
         .sort((a, b) => b.valor - a.valor)
         .slice(0, 3);
 
-    // Cálculos de KPI
     const margemLucroValue = entries > 0 ? ((balance / entries) * 100) : 0;
     const isMargemPositiva = margemLucroValue >= 0;
     const margemLucroDisplay = `${margemLucroValue.toFixed(1)}%`;
-
-
-    // MOCK para Módulos (Cores neutras para 'EM BREVE')
     const mockModuleKpis = [
         {
             label: 'Margem de Lucro',
@@ -191,13 +180,6 @@ export function MovementDashboard() {
             badgeText: 'Módulo'
         },
     ];
-
-    // Lógica para edição de meta mensal
-    const handleEdit = () => {
-        setInputValue(metaMensal.toFixed(2));
-        setIsEditing(true);
-    };
-
     const handleSave = () => {
         const value = parseFloat(inputValue);
         if (!isNaN(value) && value > 0) {
@@ -208,14 +190,6 @@ export function MovementDashboard() {
         setIsEditing(false);
     };
 
-    // Variantes de animação ajustadas para Cubic Bezier
-    // Usando uma curva suave de "saída" para a flutuação
-    const cubicBezierFloating = [0.1, 0.6, 0.5, 1];
-    // Cubic Bezier para easeInOut (comum para barras de progresso)
-    const cubicBezierEaseInOut = [0.42, 0, 0.58, 1];
-
-    // O tipo Variants aceita o formato Cubic Bezier,
-    // garantindo que não haja erro de tipagem.
     const containerVariants: Variants = {
         hidden: { opacity: 0, y: 10 },
         show: {

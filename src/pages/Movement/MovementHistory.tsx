@@ -8,8 +8,8 @@ import {
     Edit,
     X,
     Check,
-    MoreVertical, // Adicionado para o menu de 3 pontos
-    Eye, // Adicionado para Visualizar
+    MoreVertical,
+    Eye,
 } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
 import {
@@ -17,11 +17,10 @@ import {
     CREATE_CASH_MOVEMENT,
     UPDATE_CASH_MOVEMENT,
 } from '../../graphql/queries/queries';
-import { generateMovementsPdf } from '../../utils/generatePDF';
+import { generateMovementPdfDoc } from '../../utils/generatePDF';
 import { CategoryType, Movement, MovementType } from '../../types';
 import { RotateCcw } from 'lucide-react';
 
-// Recharts
 import {
     PieChart,
     Pie,
@@ -31,14 +30,13 @@ import {
     Tooltip,
 } from 'recharts';
 
-// Radix UI
 import * as Dialog from '@radix-ui/react-dialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
-// Animations & UI
 import CountUp from 'react-countup';
 import { toast } from 'sonner';
-import { DELETE_CASH_MOVEMENT } from '../../graphql/mutations/mutations'; // Mantendo a importação do delete daqui
+import { DELETE_CASH_MOVEMENT } from '../../graphql/mutations/mutations';
+import { useCompany } from '../../contexts/CompanyContext';
 
 type FilterType =
     | 'ALL'
@@ -66,7 +64,6 @@ const formatCurrency = (value: number) => {
         minimumFractionDigits: 2,
     }).format(value);
 };
-
 
 const mapCategoryToSubtype = (category: string): Subtype => {
     const map: Record<string, Subtype> = {
@@ -132,11 +129,15 @@ const toTimeInputString = (dateString: string | null | undefined): string => {
 
 const combineDateTime = (datePart: string, timePart: string): string => {
     if (!datePart) return '';
-    const isoString = `${datePart}T${timePart || '00:00'}:00.000Z`;
+    // Corrigido para ISO sem Z para evitar problemas de fuso horário na data.
+    // A função toTimeInputString já usa a hora local, então a ISO String deve ser sem Z.
+    const isoString = `${datePart}T${timePart || '00:00'}:00`;
 
     return isoString;
 };
 
+// REMOVIDA A FUNÇÃO 'generateMovementPdfDoc' AUXILIAR DO ESCOPO GLOBAL 
+// e movida para dentro de MovementHistory (renomeada para generateMovementsPdf)
 
 export function MovementHistory() {
     const [search, setSearch] = useState('');
@@ -158,6 +159,96 @@ export function MovementHistory() {
         notifyOnNetworkStatusChange: true,
     });
 
+    const { company, user } = useCompany();
+    const companyInfo = company ?? {};
+    const userName = user?.name ?? 'Usuário Desconhecido';
+    const generateMovementsPdf = (
+        allMovements: Movement[],
+        filter: string, // 'all', 'YYYY', or 'YYYY-MM'
+    ) => {
+        let filteredMovements = allMovements;
+        let reportTitle = 'RELATÓRIO DE MOVIMENTAÇÕES';
+        let filename = 'relatorio-movimentacoes-geral.pdf';
+        if (filter === 'all') {
+            // Use all movements, default title/filename
+        } else {
+            const [year, month] = filter.split('-');
+
+            filteredMovements = allMovements.filter((m) => {
+                if (!m.date) return false;
+                const d = new Date(m.date);
+
+                // Trata as datas como locais para filtrar o YYYY/MM
+                const mYear = d.getFullYear().toString();
+                const mMonth = (d.getMonth() + 1).toString().padStart(2, '0');
+
+                if (month) {
+                    // Filter by specific month (YYYY-MM)
+                    return mYear === year && mMonth === month;
+                } else {
+                    // Filter by year only (YYYY)
+                    return mYear === year;
+                }
+            });
+
+            if (month) {
+                const monthName = new Date(+year, +month - 1, 1).toLocaleDateString('pt-BR', { month: 'long' });
+                reportTitle = `RELATÓRIO MENSAL - ${monthName.charAt(0).toUpperCase() + monthName.slice(1)} de ${year}`;
+                filename = `relatorio-mensal-${month}-${year}.pdf`;
+            } else {
+                reportTitle = `RELATÓRIO ANUAL - ${year}`;
+                filename = `relatorio-anual-${year}.pdf`;
+            }
+        }
+
+        if (filteredMovements.length === 0) {
+            toast.info('Não há movimentações para exportar para este período.');
+            return;
+        }
+
+        // Chamada CORRIGIDA com os 5 argumentos
+        generateMovementPdfDoc(
+            filteredMovements,
+            filename,
+            reportTitle,
+            companyInfo, // Context
+            userName,    // Context
+        );
+        toast.success(`Relatório "${reportTitle}" gerado com sucesso!`);
+    }
+
+    // Função original corrigida para PDF Diário
+    const generateTodayPdf = (movements: Movement[]) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const todayMovements = movements.filter((m) => {
+            if (!m.date) return false;
+            const movementDate = new Date(m.date);
+            // Compara as datas como locais (ignorando o fuso se m.date for ISO sem Z)
+            return movementDate.getTime() >= today.getTime() && movementDate.getTime() < tomorrow.getTime();
+        });
+
+        if (todayMovements.length === 0) {
+            toast.info('Não há movimentações para exportar na data de hoje.');
+            return;
+        }
+
+        const dateString = toDateInputString(new Date().toISOString());
+        generateMovementPdfDoc(
+            todayMovements,
+            `relatorio-diario-${dateString}.pdf`,
+            'RELATÓRIO DIÁRIO DE MOVIMENTAÇÕES',
+            companyInfo, // Context
+            userName,     // Context
+        );
+
+        toast.success('Relatório do dia gerado com sucesso!');
+    };
+
     const [createMovement] = useMutation(CREATE_CASH_MOVEMENT, {
         refetchQueries: [GET_CASH_MOVEMENTS],
     });
@@ -170,12 +261,10 @@ export function MovementHistory() {
     const [deleteMovement, { loading: isDeleting }] = useMutation(DELETE_CASH_MOVEMENT, {
         refetchQueries: [GET_CASH_MOVEMENTS, 'dashboardStats'],
         onCompleted: () => {
-            // A mensagem de sucesso agora é tratada em confirmDelete
         },
         onError: (err) => toast.error('Erro ao deletar: ' + err.message),
     });
 
-    // Funções para controle dos modais
     const openViewModal = (movement: Movement) => setViewingMovement(movement);
     const openEditModal = (movement: Movement) => setEditingMovement(movement);
     const openDeleteModal = (movement: Movement) => setDeletingMovement(movement);
@@ -186,16 +275,15 @@ export function MovementHistory() {
         setDeletingId(deletingMovement.id);
         const description = deletingMovement.description;
         try {
-            // A mutação do DELETE_CASH_MOVEMENT em mutations.ts espera `movementId`
             await deleteMovement({ variables: { movementId: deletingMovement.id } });
             toast.success(`Movimento "${description}" deletado com sucesso!`);
         } catch (e: any) {
-            // Erro já tratado no onError do useMutation
         } finally {
             setDeletingId(null);
             setDeletingMovement(null);
         }
     };
+
     const movements: Movement[] = (data?.cashMovements || []).map((m: Movement) => ({
         id: m.id,
         value: Number(m.value),
@@ -279,18 +367,14 @@ export function MovementHistory() {
     };
 
     const handleReverse = (movementToReverse: Movement) => {
-        // Confirmação simples
         if (!window.confirm(`Confirma o estorno de ${formatCurrency(movementToReverse.value)} (${movementToReverse.description})? Um novo lançamento será criado.`)) {
             return;
         }
-
         const isEntry = movementToReverse.type === 'ENTRY';
         const reverseType = isEntry ? 'EXIT' : 'ENTRY';
 
-        // Define a categoria de estorno (uso EXPENSE para saída e OTHER_IN para entrada por padrão)
         const reverseCategory = isEntry ? 'EXPENSE' : 'OTHER_IN';
 
-        // Cria o movimento compensatório (com valor absoluto)
         createMovement({
             variables: {
                 input: {
@@ -310,15 +394,14 @@ export function MovementHistory() {
     const saveEdit = async () => {
         if (!editingMovement) return;
 
-        // CORRIGIDO: Adicionando 'type' e 'category' que são campos obrigatórios
         await updateMovement({
             variables: {
                 movementId: editingMovement.id,
                 movementUpdateCash: {
                     description: editingMovement.description,
                     value: Math.abs(editingMovement.value),
-                    type: editingMovement.type, // <-- ADICIONADO
-                    category: editingMovement.category, // <-- ADICIONADO
+                    type: editingMovement.type,
+                    category: editingMovement.category,
                     date: editingMovement.date,
                 },
             },
@@ -337,7 +420,9 @@ export function MovementHistory() {
     return (
         <>
             <div className="space-y-8 px-6 py-6 bg-gray-50 min-h-screen w-full">
-                {/* Cabeçalho */}
+                {/* ... (Cabeçalho, Resumo, Mini gráfico, Filtros) ... */}
+
+                {/* Seu código aqui (Mantido o mesmo) */}
                 <div className="w-full relative pb-10">
                     <h1 className="text-4xl font-serif text-gray-900 mb-2">
                         📋 Histórico de Movimentações
@@ -401,13 +486,13 @@ export function MovementHistory() {
                                     <span className="animate-bounce-down text-lg">↓</span>
                                 )}
                             </div>
+                            <button
+                                onClick={() => handleAdjustment('ADJUSTMENT')}
+                                className="absolute top-2 right-2 p-1 text-blue-600 hover:bg-blue-100 rounded"
+                            >
+                                <Edit className="w-5 h-5" />
+                            </button>
                         </div>
-                        <button
-                            onClick={() => handleAdjustment('ADJUSTMENT')}
-                            className="absolute top-2 right-2 p-1 text-blue-600 hover:bg-blue-100 rounded"
-                        >
-                            <Edit className="w-5 h-5" />
-                        </button>
                     </div>
                 </div>
 
@@ -538,7 +623,11 @@ export function MovementHistory() {
                         </div>
                     )}
 
-                    <ExportPdfDropdown movements={movements} />
+                    <ExportPdfDropdown
+                        movements={movements}
+                        generateAllPdf={generateMovementsPdf} // Passa a função que exporta tudo/mês/ano
+                        generateTodayPdf={generateTodayPdf} // Passa a função que exporta o dia
+                    />
 
                     {/* Tabela */}
                     <div className="overflow-x-auto mt-8 bg-gray-50 rounded-xl border border-gray-200">
@@ -596,7 +685,7 @@ export function MovementHistory() {
                                                     onView={openViewModal}
                                                     onEdit={openEditModal}
                                                     onDelete={openDeleteModal}
-                                                    onReverse={handleReverse} // <-- NOVA PROP
+                                                    onReverse={handleReverse}
                                                     isDeleting={deletingId === m.id}
                                                 />
                                             </td>
@@ -612,7 +701,7 @@ export function MovementHistory() {
             {/* Modais */}
             <EditModal
                 movement={editingMovement}
-                setMovement={setEditingMovement} // Passando o setter para dentro do modal
+                setMovement={setEditingMovement}
                 onSave={saveEdit}
                 onClose={() => setEditingMovement(null)}
             />
@@ -630,12 +719,8 @@ export function MovementHistory() {
     );
 }
 
-// === COMPONENTES NOVOS E MODIFICADOS ===
+// ... (ActionsDropdown, categoryImageMap, ViewModal, InfoItem, TRASH_ICON_URL, DeleteConfirmationModal, SummaryCard, Input - MANTIDOS IGUAIS)
 
-// Componente para o menu de 3 pontos
-// src/pages/Movement/MovementHistory.tsx
-
-// Adicione 'onReverse' ao objeto de propriedades do componente
 function ActionsDropdown({ movement, onView, onEdit, onDelete, onReverse, isDeleting }: {
     movement: Movement;
     onView: (m: Movement) => void;
@@ -773,8 +858,6 @@ function InfoItem({ label, value, color = 'text-gray-700' }: { label: string, va
 
 
 const TRASH_ICON_URL = 'https://cdn-icons-png.flaticon.com/512/1214/1214428.png';
-// (Esta constante deve estar no topo do seu arquivo)
-
 function DeleteConfirmationModal({ movement, onConfirm, onClose, isDeleting }: {
     movement: Movement | null;
     onConfirm: () => void;
@@ -886,7 +969,16 @@ function Input({ label, value, onChange }: { label: string; value: string; onCha
     );
 }
 
-function ExportPdfDropdown({ movements }: { movements: Movement[] }) {
+// Assinatura da função atualizada para receber as funções de callback
+function ExportPdfDropdown({
+    movements,
+    generateAllPdf,
+    generateTodayPdf
+}: {
+    movements: Movement[],
+    generateAllPdf: (m: Movement[], filter: string) => void;
+    generateTodayPdf: (m: Movement[]) => void;
+}) {
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
@@ -898,11 +990,21 @@ function ExportPdfDropdown({ movements }: { movements: Movement[] }) {
 
             <DropdownMenu.Content className="min-w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-50">
                 <DropdownMenu.Item
-                    onClick={() => generateMovementsPdf(movements, 'all')}
+                    // CORRIGIDO: Chama generateAllPdf com filtro 'all'
+                    onClick={() => generateAllPdf(movements, 'all')}
                     className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded"
                 >
                     📥 Exportar tudo
                 </DropdownMenu.Item>
+                <DropdownMenu.Separator className="my-1 border-t border-gray-200" />
+                <DropdownMenu.Item
+                    // CORRIGIDO: Chama a função de PDF diário
+                    onClick={() => generateTodayPdf(movements)}
+                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded font-bold text-indigo-600"
+                >
+                    ☀️ Exportar PDF do Dia
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className="my-1 border-t border-gray-200" />
 
                 {(() => {
                     const yearsMap = new Map<string, Set<string>>();
@@ -925,7 +1027,8 @@ function ExportPdfDropdown({ movements }: { movements: Movement[] }) {
                             return (
                                 <DropdownMenu.Item
                                     key={ym}
-                                    onClick={() => generateMovementsPdf(movements, ym)}
+                                    // CORRIGIDO: Chama generateAllPdf com filtro 'YYYY-MM'
+                                    onClick={() => generateAllPdf(movements, ym)}
                                     className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded"
                                 >
                                     📆 {monthName.charAt(0).toUpperCase() + monthName.slice(1)} {y}
@@ -937,7 +1040,8 @@ function ExportPdfDropdown({ movements }: { movements: Movement[] }) {
                             <DropdownMenu.Separator key={`sep-${year}`} className="my-1 border-t border-gray-200" />,
                             <DropdownMenu.Item
                                 key={`y-${year}`}
-                                onClick={() => generateMovementsPdf(movements, year)}
+                                // CORRIGIDO: Chama generateAllPdf com filtro 'YYYY'
+                                onClick={() => generateAllPdf(movements, year)}
                                 className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded font-medium"
                             >
                                 📅 Ano {year}

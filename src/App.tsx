@@ -30,8 +30,6 @@ import { ScheduleRoutePage } from './pages/ScheduleRoutePage';
 import { DeliveryReportsPage } from './pages/DeliveryReportsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import HelpPage from './pages/Help';
-import { PermissionGuard } from './guards/PermissionGuard';
-// import { CustomAccessDeniedFallback } from './components/CustomAccessDeniedFallback';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
