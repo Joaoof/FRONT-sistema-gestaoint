@@ -644,13 +644,13 @@ export function MovementHistory() {
                             onClick={() => setShowFilters(!showFilters)}
                             className="flex items-center gap-2 px-5 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
                         >
-                            <Filter className="w-5 h-5" />
+                            <img src="https://cdn-icons-png.flaticon.com/512/3161/3161370.png" className="w-5 h-5" />
                             {showFilters ? "Ocultar" : "Filtros"}
                         </button>
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2 font-sans">Filtros Rápidos de Data</label>
+                        <label className="block text-sm  text-gray-700 mb-2 font-sans">Filtros</label>
                         <div className="flex flex-wrap gap-2">
                             {[
                                 { value: "", label: "Todas as datas", icon: "📅" },
@@ -665,7 +665,7 @@ export function MovementHistory() {
                                 <button
                                     key={f.value}
                                     onClick={() => handleQuickDateFilterChange(f.value)}
-                                    className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition ${quickDateFilter === f.value
+                                    className={`px-3 py-1.5 rounded-full text-sm font-[Inter] font-medium transition ${quickDateFilter === f.value
                                         ? "bg-[#780087] text-white shadow-md"
                                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                         }`}
@@ -691,7 +691,9 @@ export function MovementHistory() {
                             <button
                                 key={f.value}
                                 onClick={() => handleFilterChange(f.value as FilterType)}
-                                className={`px-3 py-1 rounded-full text-sm font-sans font-medium transition ${filter === f.value ? "bg-[#780087] text-white" : "bg-gray-100 text-gray hover:bg-gray-200"
+                                className={`px-3 py-1.5 rounded-full text-sm font-[Inter] font-medium transition ${quickDateFilter === f.value
+                                        ? "bg-[#780087] text-white shadow-md"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                     }`}
                             >
                                 {f.icon} {f.label}
