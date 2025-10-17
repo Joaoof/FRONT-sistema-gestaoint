@@ -692,8 +692,8 @@ export function MovementHistory() {
                                 key={f.value}
                                 onClick={() => handleFilterChange(f.value as FilterType)}
                                 className={`px-3 py-1.5 rounded-full text-sm font-[Inter] font-medium transition ${quickDateFilter === f.value
-                                        ? "bg-[#780087] text-white shadow-md"
-                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    ? "bg-[#780087] text-white shadow-md"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                     }`}
                             >
                                 {f.icon} {f.label}
@@ -1282,7 +1282,9 @@ function ExportPdfDropdown({
                 <button className="relative flex items-center gap-2 mt-8 px-6 py-3 bg-gradient-to-r from-[#780087] to-[#9d00b8] text-white rounded-xl hover:from-[#9d00b8] hover:to-[#780087] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group font-sans">
                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
                     <Download className="w-5 h-5 relative z-10" />
-                    <span className="relative z-10 font-semibold">Exportar PDF</span>
+                    <span className={`px-3 py-1.5 rounded-full text-sm font-[Inter] font-medium transition ? "bg-[#780087] text-white shadow-md"
+                            : "bg-gray- hover:bg-gray-200"
+                        }`}>Exportar PDF</span>
                 </button>
             </DropdownMenu.Trigger>
 
