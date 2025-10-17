@@ -22,6 +22,8 @@ import {
     ChevronsRight,
     ArrowUp,
     ArrowDown,
+    TrendingUp, // Novo ícone para Saldo positivo
+    TrendingDown, // Novo ícone para Saldo negativo
 } from "lucide-react"
 import { useQuery, useMutation } from "@apollo/client"
 import { GET_CASH_MOVEMENTS, CREATE_CASH_MOVEMENT, UPDATE_CASH_MOVEMENT } from "../../graphql/queries/queries"
@@ -542,45 +544,46 @@ export function MovementHistory() {
                     </button>
                 </div>
 
-                {/* Resumo */}
+                {/* Metric Cards (Antigo Resumo) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <SummaryCard
+                    <MetricCard
                         title="Entradas"
                         value={totalEntries}
-                        icon={<DollarSign className="w-6 h-6" />}
-                        bg="from-green-100 to-green-50"
-                        text="text-green-900"
-                        onClick={() => handleAdjustment("ENTRY")}
+                        icon={<img src="https://cdn-icons-png.flaticon.com/512/2916/2916115.png" className="w-8 h-8" />}
+                        bg="from-green-600 to-green-600"
+                        text="text-green-100"
+                        actionClick={() => handleAdjustment("ENTRY")}
                     />
-                    <SummaryCard
+
+                    <MetricCard
                         title="Saídas"
-                        decimal=","
-                        decimals={2}
-                        separator="."
                         value={totalExits}
-                        icon={<Banknote className="w-6 h-6" />}
-                        bg="from-red-100 to-red-50"
-                        text="text-red-900"
-                        onClick={() => handleAdjustment("EXIT")}
+                        icon={<img src="https://cdn-icons-png.flaticon.com/256/2331/2331668.png" className="w-10 h-10" />}
+                        bg="from-red-600 to-red-600"
+                        text="text-red-100"
+                        actionClick={() => handleAdjustment("EXIT")}
                     />
-                    <div className="bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl p-6 shadow-lg hover:scale-105 transition-transform relative">
+
+                    {/* Card de Saldo com tratamento de cor e ícone */}
+                    <div className="bg-gradient-to-br from-blue-700 to-blue-700 rounded-2xl p-6 shadow-lg hover:scale-105 transition-transform relative">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-800">Saldo</p>
-                                <p className={`text-2xl font-bold ${balance >= 0 ? "text-green-700" : "text-red-700"}`}>
+                                <p className="text-sm font-serif text-white">Saldo Atual</p>
+                                <p className={`text-2xl font-bold ${balance >= 0 ? "text-white" : "text-white"}`}>
                                     <CountUp end={balance} decimal="," decimals={2} prefix="R$ " separator="." />
                                 </p>
                             </div>
-                            <div className={`p-3 ${balance >= 0 ? "bg-green-500" : "bg-red-500"} rounded-full text-white`}>
+                            <div className={`p-3 ${balance >= 0} rounded-full text-white`}>
                                 {balance >= 0 ? (
-                                    <span className="animate-bounce-up text-lg">↑</span>
+                                    <img src="https://png.pngtree.com/png-clipart/20230805/original/pngtree-payment-icon-circle-balance-commerce-vector-picture-image_9731293.png" className="w-10 h-10" />
                                 ) : (
-                                    <span className="animate-bounce-down text-lg">↓</span>
+                                    <img src="https://cdn-icons-png.flaticon.com/512/334/334047.png" className="w-8 h-8" />
                                 )}
                             </div>
                             <button
                                 onClick={() => handleAdjustment("ADJUSTMENT")}
                                 className="absolute top-2 right-2 p-1 text-blue-600 hover:bg-blue-100 rounded"
+                                title="Fazer Ajuste de Saldo"
                             >
                                 <Edit className="w-5 h-5" />
                             </button>
@@ -589,8 +592,8 @@ export function MovementHistory() {
                 </div>
 
                 {/* Mini gráfico */}
-                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Resumo Financeiro</h3>
+                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-300">
+                    <h3 className="text-lg font-sans text-gray-800 mb-4">Resumo Financeiro</h3>
                     <div className="h-48">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -663,8 +666,8 @@ export function MovementHistory() {
                                     key={f.value}
                                     onClick={() => handleQuickDateFilterChange(f.value)}
                                     className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition ${quickDateFilter === f.value
-                                            ? "bg-[#780087] text-white shadow-md"
-                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        ? "bg-[#780087] text-white shadow-md"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                         }`}
                                 >
                                     {f.icon} {f.label}
@@ -688,7 +691,7 @@ export function MovementHistory() {
                             <button
                                 key={f.value}
                                 onClick={() => handleFilterChange(f.value as FilterType)}
-                                className={`px-3 py-1 rounded-full text-sm font-sans font-medium transition ${filter === f.value ? "bg-[#780087] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                className={`px-3 py-1 rounded-full text-sm font-sans font-medium transition ${filter === f.value ? "bg-[#780087] text-white" : "bg-gray-100 text-gray hover:bg-gray-200"
                                     }`}
                             >
                                 {f.icon} {f.label}
@@ -795,8 +798,8 @@ export function MovementHistory() {
                                     <button
                                         onClick={() => handleSortChange("description")}
                                         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "description"
-                                                ? "bg-[#780087] text-white"
-                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            ? "bg-[#780087] text-white"
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                             }`}
                                     >
                                         Descrição
@@ -863,7 +866,7 @@ export function MovementHistory() {
                                             <td className="px-6 py-4 text-sm">
                                                 <span
                                                     className={`inline-flex px-3 py-1 rounded-full text-xs font-medium
-                                                            ${m.type === "ENTRY" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                                                             ${m.type === "ENTRY" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                                                 >
                                                     {typeLabels[mapCategoryToSubtype(m.category)]}
                                                 </span>
@@ -936,8 +939,8 @@ export function MovementHistory() {
                                                 key={pageNum}
                                                 onClick={() => setCurrentPage(pageNum)}
                                                 className={`px-3 py-1 rounded-lg text-sm font-sans font-medium transition ${currentPage === pageNum
-                                                        ? "bg-[#780087] text-white"
-                                                        : "border border-gray-300 hover:bg-gray-50"
+                                                    ? "bg-[#780087] text-white"
+                                                    : "border border-gray-300 hover:bg-gray-50"
                                                     }`}
                                             >
                                                 {pageNum}
@@ -985,8 +988,6 @@ export function MovementHistory() {
         </>
     )
 }
-
-// ... (ActionsDropdown, categoryImageMap, ViewModal, InfoItem, TRASH_ICON_URL, DeleteConfirmationModal, SummaryCard, Input - MANTIDOS IGUAIS)
 
 function ActionsDropdown({
     movement,
@@ -1200,33 +1201,52 @@ function DeleteConfirmationModal({
     )
 }
 
-function SummaryCard({ title, value, icon, bg, text, onClick }: any) {
+// NOVO COMPONENTE: MetricCard
+function MetricCard({ title, value, icon, bg, text, actionClick }: {
+    title: string;
+    value: number;
+    icon: React.ReactNode;
+    bg: string;
+    text: string;
+    actionClick: () => void;
+}) {
+    // Usamos o CountUp para formatação BRL
+    const formattedValue = (
+        <CountUp
+            end={value}
+            decimal=","
+            decimals={2}
+            prefix="R$ "
+            separator="."
+        />
+    )
+
     return (
         <div
             className={`bg-gradient-to-br ${bg} rounded-2xl p-6 shadow-lg hover:scale-105 transition-transform relative`}
-            onClick={onClick}
         >
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-gray-800">Saldo</p>
+                    <p className="text-sm font-serif text-white">{title}</p>
                     <p className={`text-2xl font-bold ${text}`}>
-                        <CountUp
-                            end={value}
-                            decimal=","
-                            decimals={2}
-                            prefix="R$ "
-                            separator="." // ← isso é o thousandsSeparator
-                        />
+                        {formattedValue}
                     </p>
                 </div>
+                {/* Cor de fundo do ícone é derivada da prop 'text' */}
                 <div className={`${text.replace("text-", "bg-")}200 p-3 rounded-full ${text}`}>{icon}</div>
             </div>
-            <button className="absolute top-2 right-2 p-1 text-gray-600 hover:bg-gray-100 rounded">
+            {/* Botão de ajuste/ação movido para dentro, no canto superior direito */}
+            <button
+                onClick={actionClick}
+                className="absolute top-2 right-2 p-1 text-gray-600 hover:bg-gray-100 rounded transition"
+                title={`Adicionar ${title.toLowerCase()}`}
+            >
                 <Edit className="w-5 h-5" />
             </button>
         </div>
     )
 }
+
 
 function Input({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
     return (
@@ -1426,8 +1446,8 @@ function EditModal({
                             <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Movimento</label>
                             <div
                                 className={`p-3 rounded-xl border font-semibold ${movement.type === "ENTRY"
-                                        ? "bg-green-50 text-green-700 border-green-300"
-                                        : "bg-red-50 text-red-700 border-red-300"
+                                    ? "bg-green-50 text-green-700 border-green-300"
+                                    : "bg-red-50 text-red-700 border-red-300"
                                     }`}
                             >
                                 {movement.type === "ENTRY" ? "Entrada (➕)" : "Saída (➖)"}
