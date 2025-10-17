@@ -10,6 +10,10 @@ import {
     Check,
     MoreVertical,
     Eye,
+    FileText,
+    Sparkles,
+    CalendarDays,
+    Calendar,
 } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
 import {
@@ -982,29 +986,44 @@ function ExportPdfDropdown({
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <button className="flex items-center gap-2 mt-8 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
-                    <Download className="w-5 h-5" />
-                    Exportar PDF
+                <button className="relative flex items-center gap-2 mt-8 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+                    <Download className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10 font-semibold">Exportar PDF</span>
                 </button>
             </DropdownMenu.Trigger>
 
-            <DropdownMenu.Content className="min-w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-50">
+            <DropdownMenu.Content
+                className="min-w-64 bg-white rounded-xl shadow-2xl border border-gray-100 p-3 z-50 animate-slideDown"
+                sideOffset={5}
+            >
                 <DropdownMenu.Item
-                    // CORRIGIDO: Chama generateAllPdf com filtro 'all'
                     onClick={() => generateAllPdf(movements, 'all')}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 cursor-pointer rounded-lg transition-all duration-200 group outline-none"
                 >
-                    📥 Exportar tudo
+                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                        <FileText className="w-4 h-4 text-indigo-600" />
+                    </div>
+                    <span className="text-gray-700 font-medium group-hover:text-indigo-700">Exportar tudo</span>
                 </DropdownMenu.Item>
-                <DropdownMenu.Separator className="my-1 border-t border-gray-200" />
+
+                <DropdownMenu.Separator className="my-2 border-t border-gray-100" />
+
                 <DropdownMenu.Item
-                    // CORRIGIDO: Chama a função de PDF diário
                     onClick={() => generateTodayPdf(movements)}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded font-bold text-indigo-600"
+                    className="relative flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 cursor-pointer rounded-lg transition-all duration-200 group outline-none border-2 border-amber-200 animate-pulse-soft overflow-hidden"
                 >
-                    ☀️ Exportar PDF do Dia
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-200 via-orange-200 to-amber-200 opacity-30 animate-shimmer"></div>
+                    <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform relative z-10 shadow-md">
+                        <Sparkles className="w-4 h-4 text-white animate-spin-slow" />
+                    </div>
+                    <span className="text-orange-700 font-bold group-hover:text-orange-800 relative z-10 flex items-center gap-2">
+                        PDF do Dia
+                        <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full animate-bounce-subtle">BAIXAR</span>
+                    </span>
                 </DropdownMenu.Item>
-                <DropdownMenu.Separator className="my-1 border-t border-gray-200" />
+
+                <DropdownMenu.Separator className="my-2 border-t border-gray-100" />
 
                 {(() => {
                     const yearsMap = new Map<string, Set<string>>();
@@ -1027,24 +1046,30 @@ function ExportPdfDropdown({
                             return (
                                 <DropdownMenu.Item
                                     key={ym}
-                                    // CORRIGIDO: Chama generateAllPdf com filtro 'YYYY-MM'
                                     onClick={() => generateAllPdf(movements, ym)}
-                                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded"
+                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-all duration-200 group outline-none ml-4"
                                 >
-                                    📆 {monthName.charAt(0).toUpperCase() + monthName.slice(1)} {y}
+                                    <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                                        <CalendarDays className="w-3.5 h-3.5 text-gray-600 group-hover:text-indigo-600" />
+                                    </div>
+                                    <span className="text-gray-600 group-hover:text-gray-800 text-sm">
+                                        {monthName.charAt(0).toUpperCase() + monthName.slice(1)} {y}
+                                    </span>
                                 </DropdownMenu.Item>
                             );
                         });
 
                         return [
-                            <DropdownMenu.Separator key={`sep-${year}`} className="my-1 border-t border-gray-200" />,
+                            <DropdownMenu.Separator key={`sep-${year}`} className="my-2 border-t border-gray-100" />,
                             <DropdownMenu.Item
                                 key={`y-${year}`}
-                                // CORRIGIDO: Chama generateAllPdf com filtro 'YYYY'
                                 onClick={() => generateAllPdf(movements, year)}
-                                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded font-medium"
+                                className="flex items-center gap-3 px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 cursor-pointer rounded-lg transition-all duration-200 group outline-none"
                             >
-                                📅 Ano {year}
+                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                    <Calendar className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <span className="text-gray-700 font-semibold group-hover:text-blue-700">Ano {year}</span>
                             </DropdownMenu.Item>,
                             ...monthOptions,
                         ];
