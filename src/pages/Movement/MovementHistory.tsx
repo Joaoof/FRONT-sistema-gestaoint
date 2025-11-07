@@ -294,7 +294,7 @@ export function MovementHistory() {
         type: m.type as MovementType || (
             ['SALE', 'CHANGE', 'OTHER_IN'].includes(m.category) ? 'ENTRY' : 'EXIT'
         ) as MovementType,
-
+        typePayment: (m.typePayment as MovementTypePayment) ?? null,
         category: mapCategoryToSubtype(m.category),
         date: m.date,
     }));
