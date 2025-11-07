@@ -287,15 +287,17 @@ export function MovementHistory() {
         }
     }
 
-    const movements: (Movement & { typePayment: MovementTypePayment | null })[] = (data?.cashMovements || []).map((m: any) => ({
+    const movements: Movement[] = (data?.cashMovements || []).map((m: any) => ({
         id: m.id,
         value: Number(m.value),
         description: m.description,
-        typePayment: (m.typePayment as MovementTypePayment) ?? null,
+        type: m.type as MovementType || (
+            ['SALE', 'CHANGE', 'OTHER_IN'].includes(m.category) ? 'ENTRY' : 'EXIT'
+        ) as MovementType,
+
         category: mapCategoryToSubtype(m.category),
         date: m.date,
-    }))
-
+    }));
     const applyQuickDateFilter = (movements: Movement[]) => {
         if (!quickDateFilter) return movements
 
