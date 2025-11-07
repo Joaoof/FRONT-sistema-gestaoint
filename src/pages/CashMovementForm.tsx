@@ -303,7 +303,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 </button>
             </div>
 
-            <h2 className="text-2xl font-serif text-gray-900 mb-6">Formulário de Movimentação</h2>
+            <h2 className="text-2xl font-poppins text-gray-900 mb-6">Formulário de Movimentação</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Alerta de erro de seleção */}
                 {error && error.includes('tipo de movimentação') && (
@@ -319,8 +319,8 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 )}
 
                 {/* Entradas */}
-                <div style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>
-                    <div className="flex items-center text-lg text-green-700 mb-3">
+                <div>
+                    <div className="flex items-center text-lg text-green-700 mb-3 font-poppins">
                         <img src="https://cdn-icons-png.flaticon.com/512/4680/4680408.png" alt="Entrada" className="w-6 h-6 mr-2" />
                         <h3>Entrada</h3>
                     </div>
@@ -328,8 +328,8 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 </div>
 
                 {/* Saídas */}
-                <div style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>
-                    <div className="flex items-center text-lg text-red-700 mb-3">
+                <div>
+                    <div className="flex items-center text-lg text-red-700 mb-3 font-poppins">
                         <img src="https://cdn-icons-png.flaticon.com/512/1828/1828407.png" alt="Saída" className="w-6 h-6 mr-2" />
                         <h3>Saída</h3>
                     </div>
@@ -338,7 +338,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
                 {/* NOVO: Tipo de Pagamento */}
                 {shouldShowPaymentMethod && (
-                    <div style={{ fontFamily: 'Open-Sans, sans-serif' }}>
+                    <div className='font-poppins'>
                         <div className="flex items-center text-lg text-blue-700 mb-3">
                             <img src="https://cdn-icons-png.flaticon.com/512/4669/4669019.png" alt="Pagamento" className="w-6 h-6 mr-2" />
                             <h3>Meio de Pagamento {formData.type === 'venda' ? '*' : ''}</h3>
