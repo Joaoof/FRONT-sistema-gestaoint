@@ -533,8 +533,8 @@ export function MovementHistory() {
         <>
             <div className="space-y-8 px-6 py-6 bg-gray-50 min-h-screen w-full font-sans">
                 <div className="w-full relative pb-10">
-                    <h1 className="text-4xl font-serif text-gray-900 mb-2">📋 Histórico de Movimentações</h1>
-                    <p className="text-gray-600 font-sans">Controle completo das entradas e saídas do caixa.</p>
+                    <h1 className="text-4xl font-poppins text-gray-900 mb-2">📋 Histórico de Movimentações</h1>
+                    <p className="text-gray-600 font-open_sans">Controle completo das entradas e saídas do caixa.</p>
 
                     <button
                         type="button"
@@ -552,7 +552,7 @@ export function MovementHistory() {
                 </div>
 
                 {/* Metric Cards (Antigo Resumo) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-open_sans">
                     <MetricCard
                         title="Entradas"
                         value={totalEntries}
@@ -600,8 +600,8 @@ export function MovementHistory() {
 
                 {/* Mini gráfico */}
                 <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-300">
-                    <h3 className="text-lg font-sans text-gray-800 mb-4">Resumo Financeiro</h3>
-                    <div className="h-48">
+                    <h3 className="text-lg font-poppins text-gray-800 mb-4">Resumo Financeiro</h3>
+                    <div className="h-48 font-open_sans">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
@@ -632,7 +632,7 @@ export function MovementHistory() {
                 </div>
 
                 {/* Filtros */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 font-sans">
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 font-open_sans">
                     <div className="flex flex-col sm:flex-row gap-4 justify-between mb-4">
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
@@ -684,7 +684,7 @@ export function MovementHistory() {
                     </div>
 
                     {/* Filtros rápidos em pills */}
-                    <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="flex flex-wrap gap-2 mb-4 font-poppins">
                         {[
                             { value: "ALL", label: "Todos", icon: "💸" },
                             { value: "ENTRY", label: "Entradas", icon: "➕" },
@@ -781,7 +781,7 @@ export function MovementHistory() {
                         generateTodayPdf={generateTodayPdf}
                     />
 
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-6 mb-4 pb-4 border-b border-gray-200">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-6 mb-4 pb-4 border-b border-gray-200 font-poppins">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <label className="text-sm font-sans font-medium text-gray-700">Ordenar por:</label>
@@ -849,8 +849,8 @@ export function MovementHistory() {
                                 <p className="text-sm mt-1">Ajuste os filtros.</p>
                             </div>
                         ) : (
-                            <table className="w-full font-sans">
-                                <thead className="bg-gradient-to-r from-[#780087] to-[#9d00b8] text-white sticky top-0 z-10">
+                            <table className="w-full font-poppins">
+                                <thead className="bg-gradient-to-r from-[#780087] to-[#9d00b8] text-white sticky top-0 z-10 font-open_sans">
                                     <tr>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Data</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Descrição</th>
@@ -1106,7 +1106,7 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-sans">
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-open_sans">
                     <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                         <img src={categoryIconUrl || "/placeholder.svg"} alt="Categoria" className="w-6 h-6 object-contain" />{" "}
                         Detalhes da Movimentação
@@ -1455,7 +1455,7 @@ function EditModal({
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-sans">
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-open_sans">
                     <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                         {/* Substitui o ícone 'Edit' pela imagem */}
                         <img src={categoryIconUrl || "/placeholder.svg"} alt="Categoria" className="w-6 h-6 object-contain" />{" "}
