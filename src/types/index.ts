@@ -62,7 +62,7 @@ export type FilterType =
 export type MovementTypePayment = 'CASH' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'OTHER';
 
 export type Movement = {
-  typePayment: MovementTypePayment;
+  typePayment: MovementTypePayment | null;
   id: string;
   category: CategoryType;
   type: MovementType;
