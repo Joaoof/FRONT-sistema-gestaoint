@@ -59,8 +59,10 @@ export type FilterType =
   | 'WITHDRAWAL'
   | 'PAYMENT';
 
+export type MovementTypePayment = 'CASH' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'OTHER';
 
 export type Movement = {
+  typePayment: MovementTypePayment;
   id: string;
   category: CategoryType;
   type: MovementType;

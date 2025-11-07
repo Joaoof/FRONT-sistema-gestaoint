@@ -6,6 +6,7 @@ export const CREATE_CASH_MOVEMENT = gql`
       id
       type
       category
+      typePayment
       value
       description
       date

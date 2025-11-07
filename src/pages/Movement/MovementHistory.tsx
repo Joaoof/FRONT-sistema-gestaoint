@@ -3,9 +3,6 @@
 import { useState } from "react"
 import {
     Search,
-    Filter,
-    DollarSign,
-    Banknote,
     Download,
     Edit,
     X,
@@ -22,13 +19,11 @@ import {
     ChevronsRight,
     ArrowUp,
     ArrowDown,
-    TrendingUp, // Novo ícone para Saldo positivo
-    TrendingDown, // Novo ícone para Saldo negativo
 } from "lucide-react"
 import { useQuery, useMutation } from "@apollo/client"
 import { GET_CASH_MOVEMENTS, CREATE_CASH_MOVEMENT, UPDATE_CASH_MOVEMENT } from "../../graphql/queries/queries"
 import { generateMovementPdfDoc } from "../../utils/generatePDF"
-import type { CategoryType, Movement, MovementType } from "../../types"
+import type { CategoryType, Movement, MovementType, MovementTypePayment } from "../../types"
 import { RotateCcw } from "lucide-react"
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
@@ -47,6 +42,16 @@ type Subtype = "SALE" | "CHANGE" | "OTHER_IN" | "EXPENSE" | "WITHDRAWAL" | "PAYM
 
 type SortField = "date" | "value" | "description"
 type SortOrder = "asc" | "desc"
+
+type PaymentMethod = "CASH" | "PIX" | "CREDIT_CARD" | "DEBIT_CARD" | "OTHER"
+
+const paymentMethodLabels: Record<PaymentMethod, string> = {
+    CASH: "Dinheiro 💵",
+    PIX: "PIX 📱",
+    CREDIT_CARD: "Crédito 💳",
+    DEBIT_CARD: "Débito 💳",
+    OTHER: "Outros 📦",
+}
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -282,10 +287,11 @@ export function MovementHistory() {
         }
     }
 
-    const movements: Movement[] = (data?.cashMovements || []).map((m: Movement) => ({
+    const movements: (Movement & { typePayment: MovementTypePayment | null })[] = (data?.cashMovements || []).map((m: any) => ({
         id: m.id,
         value: Number(m.value),
         description: m.description,
+        typePayment: m.typePayment as MovementTypePayment || null, // ASSUMINDO que o campo 'typePayment' venha no m
         type: m.type,
         category: mapCategoryToSubtype(m.category),
         date: m.date,
@@ -847,6 +853,7 @@ export function MovementHistory() {
                                     <tr>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Data</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Descrição</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold">Pagamento</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Tipo</th>
                                         <th className="px-6 py-4 text-right text-sm font-semibold">Valor</th>
                                         <th className="px-6 py-4 text-center text-sm font-semibold">Ações</th>
@@ -865,6 +872,15 @@ export function MovementHistory() {
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-sm font-medium text-gray-900">{m.description}</td>
+                                            <td className="px-6 py-4 text-sm">
+                                                {m.typePayment ? (
+                                                    <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        {paymentMethodLabels[m.typePayment]}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs">— N/A —</span>
+                                                )}
+                                            </td>
                                             <td className="px-6 py-4 text-sm">
                                                 <span
                                                     className={`inline-flex px-3 py-1 rounded-full text-xs font-medium

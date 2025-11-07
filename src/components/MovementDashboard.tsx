@@ -379,46 +379,55 @@ export function MovementDashboard() {
                     {
                         label: 'Entradas do Dia',
                         value: formatCurrency(entries),
-                        icon: TrendingUp,
+                        // Ícone Lucide TrendindUp substituído por Imagem
+                        image: 'https://cdn-icons-png.flaticon.com/512/2916/2916115.png',
                         color: 'green',
-                        gradient: 'from-green-400/20 to-emerald-200/40',
+                        gradient: 'from-green-900 to-emerald-900',
                     },
                     {
                         label: 'Saídas do Dia',
                         value: formatCurrency(exits),
-                        icon: TrendingDown,
+                        // Ícone Lucide TrendindDown substituído por Imagem
+                        image: 'https://cdn-icons-png.flaticon.com/512/2331/2331668.png',
                         color: 'red',
-                        gradient: 'from-red-400/20 to-rose-200/40',
+                        gradient: 'from-red-700 to-rose-700',
                     },
                     {
                         label: 'Saldo do Dia',
                         value: formatCurrency(balance),
-                        icon: DollarSign,
+                        // Ícone Lucide DollarSign substituído por Imagem
+                        image: balance >= 0
+                            ? 'https://png.pngtree.com/png-clipart/20230805/original/pngtree-payment-icon-circle-balance-commerce-vector-picture-image_9731293.png'
+                            : 'https://cdn-icons-png.flaticon.com/512/334/334047.png',
                         color: balance >= 0 ? 'blue' : 'red',
-                        gradient: balance >= 0 ? 'from-blue-400/20 to-sky-200/40' : 'from-red-400/20 to-pink-200/40',
+                        gradient: balance >= 0 ? 'from-blue-700 to-sky-700' : 'from-red-700 to-pink-700',
                     },
                     {
                         label: 'Total do Mês',
                         value: formatCurrency(totalMes),
-                        icon: Calendar,
+                        // Ícone Lucide Calendar substituído por Imagem
+                        image: 'https://cdn-icons-png.flaticon.com/512/13/13530.png',
                         color: 'purple',
-                        gradient: 'from-purple-400/20 to-violet-200/40',
+                        gradient: 'from-purple-400 to-violet-400',
                     },
                 ].map((item, i) => (
                     <motion.div
                         key={i}
                         variants={itemVariants}
                         whileHover={{ scale: 1.02 }}
-                        className={`bg-gradient-to-br ${item.gradient} border border-${item.color}-200/40 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all min-h-48 flex flex-col justify-between`}
+                        // Adicionado 'text-white' ao card para garantir que o texto seja visível no gradiente escuro
+                        className={`bg-gradient-to-br ${item.gradient} border border-${item.color}-200/40 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all min-h-48 flex flex-col justify-between text-white`}
                     >
                         <div>
-                            <p className="text-sm font-medium text-gray-700">{item.label}</p>
-                            <p className={`text-3xl tabular-nums font-extrabold text-${item.color}-900 tabular-nums mt-1`}>
+                            <p className="text-sm font-medium text-white">{item.label}</p>
+                            {/* Cor do valor ajustada para usar a cor base do card (white) já que os fundos são escuros */}
+                            <p className={`text-3xl tabular-nums font-extrabold text-white mt-1`}>
                                 {item.value}
                             </p>
                         </div>
-                        <div className={`p-2 rounded-full bg-${item.color}-100 text-${item.color}-600 w-fit`}>
-                            <item.icon className="w-6 h-6" />
+                        {/* Bloco do Ícone: Agora usa a tag <img> */}
+                        <div className={`p-2 rounded-full bg-white/20 w-fit`}>
+                            <img src={item.image} alt={item.label} className="w-6 h-6 invert" />
                         </div>
                     </motion.div>
                 ))}
