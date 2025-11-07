@@ -227,8 +227,8 @@ export function MovementDashboard() {
                 variants={itemVariants}
             >
                 <div>
-                    <h1 className="text-3xl font-serif tracking-tight text-gray-900 mb-2">Dashboard de Movimentações</h1>
-                    <p className="text-gray-600 text-sm">Controle completo de entradas e saídas do caixa</p>
+                    <h1 className="text-3xl font-poppins tracking-tight text-gray-900 mb-2">Dashboard de Movimentações</h1>
+                    <p className="text-gray-600 font-open_sans text-sm">Controle completo de entradas e saídas do caixa</p>
                 </div>
                 <motion.button
                     onClick={handleLogout}
@@ -248,7 +248,7 @@ export function MovementDashboard() {
                     whileHover="hover"
                     whileTap="tap"
                     onClick={() => navigate('/formulario-movimentacao')}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl hover:from-green-600 hover:to-green-700 shadow-md hover:shadow-lg transition-all duration-200"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl hover:from-green-600 hover:to-green-700 shadow-md hover:shadow-lg transition-all duration-200 font-poppins"
                 >
                     <ArrowUpCircle className="w-5 h-5" />
                     Registrar Movimentações
@@ -257,7 +257,7 @@ export function MovementDashboard() {
 
             {/* Filtro */}
             <motion.div variants={itemVariants}>
-                <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-lg">
+                <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-lg font-open_sans">
                     <div className="flex flex-col sm:flex-row gap-4 items-center">
                         <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Filtrar por </label>
                         <div className="relative flex-1 max-w-md">
@@ -274,7 +274,7 @@ export function MovementDashboard() {
             </motion.div>
 
             {/* KPIs - Módulos */}
-            <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6" variants={containerVariants}>
+            <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 font-poppins" variants={containerVariants}>
                 {mockModuleKpis.map((kpi, i) => (
                     <motion.div
                         key={i}
@@ -374,7 +374,7 @@ export function MovementDashboard() {
             </motion.div>
 
             {/* Resumo com gradientes vibrantes e badges (Mantido) */}
-            <motion.div className="grid grid-cols-1 md:grid-cols-4 gap-6" variants={containerVariants}>
+            <motion.div className="grid grid-cols-1 md:grid-cols-4 gap-6 font-poppins" variants={containerVariants}>
                 {[
                     {
                         label: 'Entradas do Dia',
@@ -442,14 +442,14 @@ export function MovementDashboard() {
                                 <Target className="w-5 h-5" />
                             </div>
                             <h3
-                                className="text-lg font-extrabold tracking-tight text-gray-900 font-['Open_Sans']"
+                                className="text-lg font-extrabold tracking-tight text-gray-900 font-poppins"
                             >
                                 Meta de Faturamento Mensal
                             </h3>
                         </div>
 
                         {/* Bloco substituído pelo novo texto "Módulo em breve" */}
-                        <span className="text-sm font-medium text-gray-500 italic">
+                        <span className="text-sm font-open_sans text-gray-500 italic">
                             Módulo em breve
                         </span>
 
@@ -466,12 +466,12 @@ export function MovementDashboard() {
                                     onBlur={handleSave}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSave()}
                                     autoFocus
-                                    className="px-3 py-1 border border-blue-300 rounded-lg text-sm w-32 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="px-3 py-1 border border-blue-300 rounded-lg text-sm w-32 text-right focus:outline-none focus:ring-2 focus:ring-blue-500 font-open_sans"
                                 />
                                 <span className="text-gray-500">R$/mês</span>
                             </div>
                         ) : (
-                            <p className="text-3xl font-extrabold text-gray-900 tabular-nums">
+                            <p className="text-3xl font-extrabold font-open_sans text-gray-900 tabular-nums">
                                 R$ {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                         )}
@@ -499,7 +499,7 @@ export function MovementDashboard() {
             </motion.div>
 
             {/* Gráficos de Módulos Futuros (Mantidos) */}
-            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
+            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8 font-open_sans" variants={containerVariants}>
                 {[
                     {
                         title: "Previsão de Caixa",
@@ -532,7 +532,7 @@ export function MovementDashboard() {
                             <card.icon className="w-8 h-8 text-gray-700" />
                         </div>
                         <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-2">{card.title}</h3>
-                        <p className="text-gray-600 text-sm font-medium">Módulo em breve!</p>
+                        <p className="text-gray-600 text-sm font-poppins">Módulo em breve!</p>
                         <div className="mt-4 w-16 h-1 bg-gradient-to-r from-current to-transparent rounded-full opacity-30"></div>
                     </motion.div>
                 ))}
@@ -545,7 +545,7 @@ export function MovementDashboard() {
                         whileHover={{ scale: 1.01 }}
                         className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
                     >
-                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Entradas vs Saídas</h3>
+                        <h3 className="text-lg font-poppins tracking-tight text-gray-900 mb-4">Entradas vs Saídas</h3>
                         <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={[{ name: 'Hoje', entries, exits }]}>
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -575,7 +575,7 @@ export function MovementDashboard() {
                         whileHover={{ scale: 1.01 }}
                         className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
                     >
-                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-4">Evolução Diária</h3>
+                        <h3 className="text-lg font-poppins tracking-tight text-gray-900 mb-4">Evolução Diária</h3>
                         <ResponsiveContainer width="100%" height={200}>
                             <LineChart data={monthlyData}>
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -605,7 +605,7 @@ export function MovementDashboard() {
             <motion.div variants={itemVariants}>
                 <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-shadow min-h-48">
                     <div className="p-6 border-b border-white/20">
-                        <h2 className="text-xl font-extrabold tracking-tight text-gray-900">
+                        <h2 className="text-xl font-poppins tracking-tight text-gray-900">
                             Movimentações de {new Date(filterDate).toLocaleDateString('pt-BR')}
                         </h2>
                     </div>
