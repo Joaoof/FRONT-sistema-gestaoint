@@ -291,8 +291,7 @@ export function MovementHistory() {
         id: m.id,
         value: Number(m.value),
         description: m.description,
-        typePayment: m.typePayment as MovementTypePayment || null, // ASSUMINDO que o campo 'typePayment' venha no m
-        type: m.type,
+        typePayment: (m.typePayment as MovementTypePayment) || null, type: m.type,
         category: mapCategoryToSubtype(m.category),
         date: m.date,
     }))
