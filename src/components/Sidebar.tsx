@@ -185,7 +185,7 @@ export function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="mt-4 px-3 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600">
+      <nav className="mt-4 px-3 space-y-1 overflow-y-auto font-open_sans scrollbar-thin scrollbar-thumb-gray-600">
         {filteredMenuItems.map(item => {
           const isActive = currentView === item.id;
           const isSectionActive = item.children?.some(c => c.id === currentView) ?? false;
