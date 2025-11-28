@@ -210,3 +210,20 @@ export interface PaginatedResponse<T> {
   limit: number;
   totalPages: number;
 }
+
+
+// Enum com valores em string (mais compatível com API)
+export enum TaxStatus {
+  PENDING = 'pendente',
+  PAID = 'pago',
+  OVERDUE = 'vencido'
+}
+
+// Interface do gasto
+export interface TaxExpenses {
+  supplier: string;
+  value: number;
+  description: string;
+  dueDate: Date;
+  status: TaxStatus;
+}

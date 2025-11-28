@@ -18,13 +18,29 @@ const authLink = setContext((_, { headers }) => {
     };
 });
 
-// Error Link
+// Error Link Corrigido
 const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors) {
-        graphQLErrors.forEach(({ message, locations, path }) => {
-            console.error(
-                `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
-            );
+        graphQLErrors.forEach(({ message, locations, path, extensions }: any) => {
+
+            // 🚨 NOVO: Lógica para extrair e exibir erros detalhados de validação (Zod)
+            if (extensions && Array.isArray(extensions.issues)) {
+                console.error(
+                    `[GraphQL Validation Error - ${extensions.code || 'VALIDATION_ERROR'}]:`
+                );
+
+                // Exibe cada erro detalhado em uma linha separada
+                extensions.issues.forEach((issue: any) => {
+                    // Verifica se issue tem 'message' e 'path' (conforme seu filtro de backend)
+                    const pathStr = Array.isArray(issue.path) ? issue.path.join('.') : issue.path;
+                    console.error(`  -> Campo: ${pathStr || 'N/A'}, Mensagem: ${issue.message}`);
+                });
+            } else {
+                // Lógica original para outros GraphQL errors (erros de lógica, autorização, etc.)
+                console.error(
+                    `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+                );
+            }
         });
     }
 

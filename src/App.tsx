@@ -30,6 +30,7 @@ import { ScheduleRoutePage } from './pages/ScheduleRoutePage';
 import { DeliveryReportsPage } from './pages/DeliveryReportsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import HelpPage from './pages/Help';
+import AccountsPayableHistory from './pages/Tax/AccountsPayableHistory/List';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -79,6 +80,7 @@ function AppContent() {
             <Route path="/fiscal-receber" element={<AccountsReceivableDashboard />} />
             <Route path="/fiscal-receber-cria" element={<CreateReceivable />} />
             <Route path="/fiscal-pagar" element={<AccountsPayableDashboard />} />
+            <Route path="/listar-fiscal-pagar" element={<AccountsPayableHistory />} />
             <Route path="/fiscal-pagar-criar" element={<CreatePayable />} />
             <Route path="/listar-contas-pagas" element={<ReceivablesList />} />
             <Route path="/listar-contas-receber" element={<PayablesList />} />

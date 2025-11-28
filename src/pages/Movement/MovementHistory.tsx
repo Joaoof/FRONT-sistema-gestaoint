@@ -1107,11 +1107,11 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
                 <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-open_sans">
-                    <Dialog.Title className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <Dialog.Title className="text-2xl font-poppins font-bold text-gray-900 mb-6 flex items-center gap-3">
                         <img src={categoryIconUrl || "/placeholder.svg"} alt="Categoria" className="w-6 h-6 object-contain" />{" "}
                         Detalhes da Movimentação
                     </Dialog.Title>
-                    <div className="space-y-4 text-gray-700">
+                    <div className="space-y-4 text-gray-700 font-open_sans">
                         <InfoItem label="ID da Movimentação" value={movement.id} />
                         <InfoItem label="Descrição" value={movement.description} />
                         <InfoItem

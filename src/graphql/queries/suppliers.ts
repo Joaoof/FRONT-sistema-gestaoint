@@ -63,3 +63,16 @@ export const SEARCH_SUPPLIERS = gql`
     }
   }
 `;
+
+export const GET_TAX_EXPENSES = gql`
+    query GetTaxExpenses($input: FindAllTaxExpenseInput) {
+        taxExpenses(input: $input) {
+            id
+            supplier
+            value
+            description
+            dueDate
+            status
+        }
+    }
+`;

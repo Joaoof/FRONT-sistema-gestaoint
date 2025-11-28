@@ -4,7 +4,6 @@ import {
     ArrowUpCircle,
     Calendar,
     TrendingUp,
-    TrendingDown,
     Target,
     Box,
     GraduationCap,
