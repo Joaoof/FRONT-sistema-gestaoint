@@ -30,6 +30,7 @@ import { ScheduleRoutePage } from './pages/ScheduleRoutePage';
 import { DeliveryReportsPage } from './pages/DeliveryReportsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import HelpPage from './pages/Help';
+import { SalesManagementPage } from './pages/SalesManagementPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -84,6 +85,7 @@ function AppContent() {
             <Route path="/listar-contas-receber" element={<PayablesList />} />
             <Route path="/financeiro" element={<FinancialManagement />} />
             <Route path="/consultas" element={<SearchPage />} />
+            <Route path="/gestao-comercial" element={<SalesManagementPage />} />
           // src/App.tsx
             <Route path="/movimentacoes" element={<MovementDashboard />} />
             <Route path="/formulario-movimentacao" element={<CashMovementForm />} />
