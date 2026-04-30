@@ -256,7 +256,7 @@ export function SupplierRegistration() {
                                         setShowForm(false);
                                         resetForm();
                                     }}
-                                    className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-200 transition-colors"
+                                    className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
                                 >
                                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -327,7 +327,7 @@ export function SupplierRegistration() {
                                             setShowForm(false);
                                             resetForm();
                                         }}
-                                        className="px-5 py-2.5 text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-gray-300 dark:border-white/15 rounded-lg hover:bg-gray-50 dark:bg-slate-950 active:scale-95 transition-all"
+                                        className="px-5 py-2.5 text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-gray-300 dark:border-white/15 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 active:scale-95 transition-all"
                                     >
                                         Cancelar
                                     </button>

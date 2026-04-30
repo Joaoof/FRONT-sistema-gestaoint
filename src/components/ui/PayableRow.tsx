@@ -12,7 +12,7 @@ export function PayableRow({ payable, onClick }: PayableRowProps) {
     return (
         <tr
             onClick={onClick}
-            className="hover:bg-gray-50 dark:bg-slate-950 cursor-pointer transition-colors"
+            className="hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
         >
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{payable.supplierName}</td>
             <td className="px-6 py-4 text-sm text-gray-700 dark:text-slate-200">{payable.description}</td>

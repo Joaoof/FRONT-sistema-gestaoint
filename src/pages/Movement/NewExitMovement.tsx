@@ -41,7 +41,7 @@ export function NewExitMovement() {
             <div className="flex items-center">
                 <button
                     onClick={() => navigate('/movimentacoes')}
-                    className="mr-4 p-2 hover:bg-gray-100 dark:bg-slate-800 rounded"
+                    className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded"
                 >
                     <X className="w-5 h-5" />
                 </button>

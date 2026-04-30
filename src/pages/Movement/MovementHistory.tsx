@@ -679,7 +679,7 @@ export function MovementHistory() {
                         </div>
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className="flex items-center gap-2 px-5 py-3 border border-gray-300 dark:border-white/15 rounded-xl hover:bg-gray-50 dark:bg-slate-950"
+                            className="flex items-center gap-2 px-5 py-3 border border-gray-300 dark:border-white/15 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800"
                         >
                             <img src="https://cdn-icons-png.flaticon.com/512/3161/3161370.png" className="w-5 h-5" />
                             {showFilters ? "Ocultar" : "Filtros"}
@@ -704,7 +704,7 @@ export function MovementHistory() {
                                     onClick={() => handleQuickDateFilterChange(f.value)}
                                     className={`px-3 py-1.5 rounded-full text-sm font-[Inter] font-medium transition ${quickDateFilter === f.value
                                         ? "bg-[#780087] text-white shadow-md"
-                                        : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:bg-slate-700"
+                                        : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
                                         }`}
                                 >
                                     {f.icon} {f.label}
@@ -730,7 +730,7 @@ export function MovementHistory() {
                                 onClick={() => handleFilterChange(f.value as FilterType)}
                                 className={`px-3 py-1.5 rounded-full text-sm font-[Inter] font-medium transition ${quickDateFilter === f.value
                                     ? "bg-[#780087] text-white shadow-md"
-                                    : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:bg-slate-700"
+                                    : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
                                     }`}
                             >
                                 {f.icon} {f.label}
@@ -818,7 +818,7 @@ export function MovementHistory() {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => handleSortChange("date")}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "date" ? "bg-[#780087] text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:bg-slate-700"
+                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "date" ? "bg-[#780087] text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
                                             }`}
                                     >
                                         Data
@@ -827,7 +827,7 @@ export function MovementHistory() {
                                     </button>
                                     <button
                                         onClick={() => handleSortChange("value")}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "value" ? "bg-[#780087] text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:bg-slate-700"
+                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "value" ? "bg-[#780087] text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
                                             }`}
                                     >
                                         Valor
@@ -838,7 +838,7 @@ export function MovementHistory() {
                                         onClick={() => handleSortChange("description")}
                                         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "description"
                                             ? "bg-[#780087] text-white"
-                                            : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:bg-slate-700"
+                                            : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
                                             }`}
                                     >
                                         Descrição
@@ -892,7 +892,7 @@ export function MovementHistory() {
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white dark:bg-slate-900">
                                     {paginatedMovements.map((m) => (
-                                        <tr key={m.id} className="hover:bg-gray-50 dark:bg-slate-950 odd:bg-gray-50 dark:bg-slate-950 transition-opacity duration-200">
+                                        <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-slate-800 odd:bg-gray-50 dark:odd:bg-slate-950 transition-opacity duration-200">
                                             <td className="px-6 py-4 text-sm text-gray-700 dark:text-slate-200">
                                                 {formatDate(m.date)}
                                                 {m.date && (
@@ -955,7 +955,7 @@ export function MovementHistory() {
                                 <button
                                     onClick={() => setCurrentPage(1)}
                                     disabled={currentPage === 1}
-                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                     title="Primeira página"
                                 >
                                     <ChevronsLeft className="w-5 h-5" />
@@ -963,7 +963,7 @@ export function MovementHistory() {
                                 <button
                                     onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                                     disabled={currentPage === 1}
-                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                     title="Página anterior"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
@@ -989,7 +989,7 @@ export function MovementHistory() {
                                                 onClick={() => setCurrentPage(pageNum)}
                                                 className={`px-3 py-1 rounded-lg text-sm font-sans font-medium transition ${currentPage === pageNum
                                                     ? "bg-[#780087] text-white"
-                                                    : "border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:bg-slate-950"
+                                                    : "border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800"
                                                     }`}
                                             >
                                                 {pageNum}
@@ -1001,7 +1001,7 @@ export function MovementHistory() {
                                 <button
                                     onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                                     disabled={currentPage === totalPages}
-                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                     title="Próxima página"
                                 >
                                     <ChevronRight className="w-5 h-5" />
@@ -1009,7 +1009,7 @@ export function MovementHistory() {
                                 <button
                                     onClick={() => setCurrentPage(totalPages)}
                                     disabled={currentPage === totalPages}
-                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                     title="Última página"
                                 >
                                     <ChevronsRight className="w-5 h-5" />
@@ -1057,7 +1057,7 @@ function ActionsDropdown({
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
                 <button
-                    className="p-1 rounded-full text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:bg-slate-700 transition-colors disabled:opacity-50 font-sans"
+                    className="p-1 rounded-full text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 font-sans"
                     disabled={isDeleting}
                 >
                     {isDeleting ? (
@@ -1166,7 +1166,7 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
                         </button>
                     </div>
                     <Dialog.Close asChild>
-                        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-slate-300 p-1" aria-label="Fechar">
+                        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 p-1" aria-label="Fechar">
                             <X className="w-6 h-6" />
                         </button>
                     </Dialog.Close>
@@ -1221,7 +1221,7 @@ function DeleteConfirmationModal({
                         <button
                             onClick={onClose}
                             disabled={isDeleting}
-                            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-slate-200 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:bg-slate-700 disabled:opacity-50 transition"
+                            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-slate-200 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 transition"
                         >
                             <X className="w-5 h-5" /> Cancelar
                         </button>
@@ -1287,7 +1287,7 @@ function MetricCard({ title, value, icon, bg, text, actionClick }: {
             {/* Botão de ajuste/ação movido para dentro, no canto superior direito */}
             <button
                 onClick={actionClick}
-                className="absolute top-2 right-2 p-1 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:bg-slate-800 rounded transition"
+                className="absolute top-2 right-2 p-1 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition"
                 title={`Adicionar ${title.toLowerCase()}`}
             >
                 <Edit className="w-5 h-5" />
@@ -1330,7 +1330,7 @@ function ExportPdfDropdown({
                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
                     <Download className="w-5 h-5 relative z-10" />
                     <span className={`px-3 py-1.5 rounded-full text-sm font-[Inter] font-medium transition ? "bg-[#780087] text-white shadow-md"
-                            : "bg-gray- hover:bg-gray-200 dark:bg-slate-700"
+                            : "bg-gray- hover:bg-gray-200 dark:hover:bg-slate-700"
                         }`}>Exportar PDF</span>
                 </button>
             </DropdownMenu.Trigger>
@@ -1391,12 +1391,12 @@ function ExportPdfDropdown({
                                 <DropdownMenu.Item
                                     key={ym}
                                     onClick={() => generateAllPdf(movements, ym)}
-                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:bg-slate-950 cursor-pointer rounded-lg transition-all duration-200 group outline-none ml-4"
+                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer rounded-lg transition-all duration-200 group outline-none ml-4"
                                 >
                                     <div className="w-7 h-7 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                                         <CalendarDays className="w-3.5 h-3.5 text-gray-600 dark:text-slate-300 group-hover:text-[#780087]" />
                                     </div>
-                                    <span className="text-gray-600 dark:text-slate-300 group-hover:text-gray-800 dark:text-slate-100 text-sm">
+                                    <span className="text-gray-600 dark:text-slate-300 group-hover:text-gray-800 dark:group-hover:text-slate-100 text-sm">
                                         {monthName.charAt(0).toUpperCase() + monthName.slice(1)} {y}
                                     </span>
                                 </DropdownMenu.Item>
@@ -1572,7 +1572,7 @@ function EditModal({
                     <div className="flex justify-end gap-2 mt-8 border-t pt-4 border-gray-100 dark:border-white/5">
                         <button
                             onClick={onClose}
-                            className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:bg-slate-800 rounded-lg transition"
+                            className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition"
                         >
                             <X className="w-5 h-5" /> Cancelar
                         </button>
@@ -1584,7 +1584,7 @@ function EditModal({
                         </button>
                     </div>
                     <Dialog.Close asChild>
-                        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-slate-300 p-1" aria-label="Fechar">
+                        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 p-1" aria-label="Fechar">
                             <X className="w-6 h-6" />
                         </button>
                     </Dialog.Close>

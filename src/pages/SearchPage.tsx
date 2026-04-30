@@ -152,7 +152,7 @@ export function SearchPage() {
                             onClick={() => setConsulta(item.id as ConsultaType)}
                             className={`p-3 text-sm text-center rounded-lg transition-all ${consulta === item.id
                                 ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                                : 'bg-gray-50 dark:bg-slate-950 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:bg-slate-800'
+                                : 'bg-gray-50 dark:bg-slate-950 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800'
                                 }`}
                         >
                             <div className="text-lg mb-1">{item.icon}</div>
@@ -293,23 +293,23 @@ export function SearchPage() {
                         <table className="w-full">
                             <thead className="bg-gray-50 dark:bg-slate-950">
                                 <tr>
-                                    <th onClick={() => requestSort('nome')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800">
+                                    <th onClick={() => requestSort('nome')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800">
                                         Nome {sortConfig?.key === 'nome' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
                                     </th>
-                                    <th onClick={() => requestSort('categoria')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800">
+                                    <th onClick={() => requestSort('categoria')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800">
                                         Categoria
                                     </th>
-                                    <th onClick={() => requestSort('estoque')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800">
+                                    <th onClick={() => requestSort('estoque')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800">
                                         Estoque {sortConfig?.key === 'estoque' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
                                     </th>
-                                    <th onClick={() => requestSort('preco')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800">
+                                    <th onClick={() => requestSort('preco')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800">
                                         Preço {sortConfig?.key === 'preco' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {sortedResults.map((item) => (
-                                    <tr key={item.id} className="hover:bg-gray-50 dark:bg-slate-950">
+                                    <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{item.nome}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">{item.categoria}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">{item.estoque}</td>

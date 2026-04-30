@@ -468,7 +468,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 </thead>
                 <tbody>
                   {csvData.slice(0, 5).map((row, i) => (
-                    <tr key={i} className="hover:bg-gray-50 dark:bg-slate-950">
+                    <tr key={i} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                       {Object.keys(columnMapping).map((h) => (
                         <td key={h} className="px-3 py-2 border-b text-gray-700 dark:text-slate-200">
                           {row[h]}

@@ -106,7 +106,7 @@ export function SupplierRegistration() {
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Nova Categoria</h3>
                                 <button
                                     onClick={() => setShowForm(false)}
-                                    className="text-gray-400 hover:text-gray-600 dark:text-slate-300"
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300"
                                 >
                                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -185,7 +185,7 @@ export function SupplierRegistration() {
                                     <button
                                         type="button"
                                         onClick={() => setShowForm(false)}
-                                        className="px-4 py-2 text-gray-700 dark:text-slate-200 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:bg-slate-700 transition-colors"
+                                        className="px-4 py-2 text-gray-700 dark:text-slate-200 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
                                     >
                                         Cancelar
                                     </button>

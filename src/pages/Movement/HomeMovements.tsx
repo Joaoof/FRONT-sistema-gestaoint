@@ -132,7 +132,7 @@ export function HomeMovement() {
                         <div className="p-8 text-center text-gray-500 dark:text-slate-400">Nenhuma movimentação encontrada para esta data.</div>
                     ) : (
                         filteredMovements.map((m) => (
-                            <div key={m.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:bg-slate-950">
+                            <div key={m.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-800">
                                 <div className="flex items-center space-x-3">
                                     <span className={`w-2 h-2 rounded-full ${['venda', 'troco', 'outros'].includes(m.type) ? 'bg-green-500' : 'bg-red-500'}`}></span>
                                     <div>

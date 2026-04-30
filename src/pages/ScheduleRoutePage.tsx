@@ -249,7 +249,7 @@ function DriverRegistration() {
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:text-slate-100 font-medium"
+                                    className="px-4 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:hover:text-slate-100 font-medium"
                                 >
                                     {t.cancel}
                                 </button>
@@ -539,7 +539,7 @@ function LiveNotifications() {
                         <h3 className="font-semibold text-gray-900 dark:text-white">{t.iaAssistant}</h3>
                         <button
                             onClick={clearAll}
-                            className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-200"
+                            className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
                         >
                             {t.cancel}
                         </button>
@@ -551,7 +551,7 @@ function LiveNotifications() {
                             notifications.map(notif => (
                                 <div
                                     key={notif.id}
-                                    className={`p-3 border-b last:border-b-0 ${getColorClass(notif.type)} hover:bg-gray-50 dark:bg-slate-950`}
+                                    className={`p-3 border-b last:border-b-0 ${getColorClass(notif.type)} hover:bg-gray-50 dark:hover:bg-slate-800`}
                                 >
                                     <div className="flex items-start space-x-2">
                                         {getIcon(notif.type)}
@@ -563,7 +563,7 @@ function LiveNotifications() {
                                         </div>
                                         <button
                                             onClick={() => remove(notif.id)}
-                                            className="text-gray-400 hover:text-gray-600 dark:text-slate-300 ml-1"
+                                            className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 ml-1"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -1176,7 +1176,7 @@ export function ScheduleRoutePage() {
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {table.getRowModel().rows.map(row => (
-                                    <tr key={row.id} className="hover:bg-gray-50 dark:bg-slate-950">
+                                    <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                                         {row.getVisibleCells().map(cell => (
                                             <td key={cell.id} className="px-6 py-4 text-sm text-gray-700 dark:text-slate-200">
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -1289,7 +1289,7 @@ export function ScheduleRoutePage() {
                                     <button
                                         type="button"
                                         onClick={() => setIsModalOpen(false)}
-                                        className="px-4 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:text-slate-100 font-medium rounded-lg hover:bg-gray-100 dark:bg-slate-800 transition"
+                                        className="px-4 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:hover:text-slate-100 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
                                     >
                                         {t.cancel}
                                     </button>

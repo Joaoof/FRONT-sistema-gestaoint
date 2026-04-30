@@ -367,7 +367,7 @@ export function FinancialManagement() {
                             <tr>
                                 <th
                                     scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800"
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
                                     onClick={() => requestSort(type === "receber" ? "clientName" : "supplierName")}
                                 >
                                     {type === "receber" ? "Cliente" : "Fornecedor"}
@@ -379,7 +379,7 @@ export function FinancialManagement() {
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800"
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
                                     onClick={() => requestSort("value")}
                                 >
                                     Valor
@@ -387,7 +387,7 @@ export function FinancialManagement() {
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800"
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
                                     onClick={() => requestSort("dueDate")}
                                 >
                                     Vencimento
@@ -419,7 +419,7 @@ export function FinancialManagement() {
                                     return (
                                         <tr
                                             key={item.id}
-                                            className={`hover:bg-gray-50 dark:bg-slate-950 transition-colors ${overdue ? "bg-red-50 dark:bg-red-950/40" : nearDue ? "bg-orange-50 dark:bg-orange-950/40" : ""}`}
+                                            className={`hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors ${overdue ? "bg-red-50 dark:bg-red-950/40" : nearDue ? "bg-orange-50 dark:bg-orange-950/40" : ""}`}
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                                 {type === "receber" ? (item as Receivable).clientName : (item as Payable).supplierName}

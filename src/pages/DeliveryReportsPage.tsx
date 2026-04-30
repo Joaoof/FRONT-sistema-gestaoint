@@ -146,7 +146,7 @@ export function DeliveryReportsPage() {
                             onClick={() => setPeriod(preset)}
                             className={`px-4 py-2 text-sm rounded-lg transition capitalize ${period === preset
                                 ? 'bg-blue-600 text-white shadow-md'
-                                : 'bg-white dark:bg-slate-900 border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:bg-slate-950 text-gray-700 dark:text-slate-200'
+                                : 'bg-white dark:bg-slate-900 border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-200'
                                 }`}
                         >
                             {preset === 'today' && 'Hoje'}

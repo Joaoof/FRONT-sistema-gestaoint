@@ -163,7 +163,7 @@ function RecentPayablesTable() {
                     {mockData.map((item) => (
                         <tr
                             key={item.id}
-                            className={`hover:bg-gray-50 dark:bg-slate-950 transition-colors ${isOverdue(item.dueDate) ? 'bg-red-50 dark:bg-red-950/40' : ''}`}
+                            className={`hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors ${isOverdue(item.dueDate) ? 'bg-red-50 dark:bg-red-950/40' : ''}`}
                         >
                             <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{item.supplier}</td>
                             <td className="px-4 py-3 text-sm text-gray-700 dark:text-slate-200">{item.category}</td>

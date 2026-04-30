@@ -7,7 +7,7 @@ export function PayableCard({ payable, onClick }: { payable: Payable; onClick: (
     return (
         <div
             onClick={onClick}
-            className="p-4 border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:bg-slate-950 cursor-pointer transition-colors"
+            className="p-4 border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
         >
             <div className="flex justify-between items-start mb-2">
                 <h3 className="font-medium text-gray-900 dark:text-white">{payable.supplierName}</h3>

@@ -295,7 +295,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 <button
                     type="button"
                     onClick={handleGoBack}
-                    className="flex items-center gap-2 px-3 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:text-slate-100 hover:bg-gray-100 dark:bg-slate-800 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:hover:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                     disabled={loading}
                 >
                     <ArrowLeft className="w-4 h-4" />

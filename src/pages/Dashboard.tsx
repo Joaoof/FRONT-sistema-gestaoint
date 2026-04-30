@@ -2,7 +2,7 @@ import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
 import { InventoryData } from '../hooks/useInventory';
 import { useAuth } from '../contexts/AuthContext';
-import { Package, BarChart3, ShoppingCart, DollarSign, TrendingUp, Wallet, ArrowRight } from 'lucide-react';
+import { Package, BarChart3, ShoppingCart, DollarSign, TrendingUp, Wallet, ArrowRight, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { StatCard } from '../components/ui/StatCard';
@@ -36,7 +36,7 @@ export function Dashboard({
 }: InventoryData) {
   const dailyRevenue = getDailyRevenue();
   const dailyProfit = getDailyProfit();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const [mounted, setMounted] = useState(false);
 
@@ -80,36 +80,29 @@ export function Dashboard({
   const profitDelta = dailyProfit && dailyRevenue ? (dailyProfit / Math.max(dailyRevenue, 1)) * 100 : 0;
 
   return (
-    <div className="space-y-6 w-full">
-      {/* Header */}
+    <div className="space-y-8 px-4 lg:px-8 py-6 w-full">
+      {/* Header — mesmo layout de Entregas */}
       <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">
-              Dashboard
-            </h1>
+            <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
             <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 text-[10.5px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 rounded">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live
+              Ativo
             </span>
           </div>
-          <p className="text-[13px] text-slate-500 dark:text-slate-400">
-            Visão geral do negócio · atualizado{' '}
-            <time className="font-medium text-slate-700 dark:text-slate-300">agora</time>
-            {user?.role && (
-              <>
-                {' '}·{' '}
-                <span className="capitalize text-slate-600 dark:text-slate-400">{user.role}</span>
-              </>
-            )}
-          </p>
+          <p className="text-[13px] text-slate-500 dark:text-slate-400">Visão geral do negócio em tempo real</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button className="hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 text-[12.5px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md transition-colors">
-            Últimos 30 dias
-          </button>
-          <button className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-white dark:text-slate-900 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 rounded-md transition-colors">
-            Exportar
+          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 text-[12.5px] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-md">
+            <User className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <span className="truncate max-w-[180px]">{user?.email}</span>
+          </div>
+          <button
+            onClick={logout}
+            className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md transition-colors"
+          >
+            Sair
           </button>
         </div>
       </div>
