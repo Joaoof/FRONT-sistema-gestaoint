@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useCompany } from '../contexts/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Moon, Sun } from 'lucide-react'; // Ícones
+import { LogOut, Moon, Sun, Search, Settings } from 'lucide-react'; // Ícones
 import { useAuth } from '../contexts/AuthContext'; // Importa o hook de autenticação
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -92,9 +92,10 @@ export function Sidebar({
 }: SidebarProps) {
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState('');
   const { company, isLoading } = useCompany();
   // CHAMA O HOOK useAuth para obter a função logout
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   if (isLoading || !company) {
@@ -134,11 +135,25 @@ export function Sidebar({
     }
   };
 
-  const filteredMenuItems = menuItems.filter(item =>
-    item.children
-      ? item.children.some(child => hasPermission(userPermissions, child.id))
-      : hasPermission(userPermissions, item.id)
-  );
+  const filteredMenuItems = menuItems
+    .filter(item =>
+      item.children
+        ? item.children.some(child => hasPermission(userPermissions, child.id))
+        : hasPermission(userPermissions, item.id)
+    )
+    .filter(item => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      if (item.label.toLowerCase().includes(q)) return true;
+      return item.children?.some(c => c.label.toLowerCase().includes(q)) ?? false;
+    });
+
+  const initials = (user?.name || '•')
+    .split(' ')
+    .map(n => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
     <div
@@ -188,8 +203,22 @@ export function Sidebar({
         </button>
       </div>
 
+      {/* Search */}
+      <div className="px-2 pt-2.5 pb-1">
+        <label className="relative flex items-center h-8 px-2.5 rounded-md bg-white/[0.04] border border-white/[0.06] focus-within:border-white/15 focus-within:bg-white/[0.06] transition-colors">
+          <Search className="w-3.5 h-3.5 text-slate-500 shrink-0" strokeWidth={1.75} aria-hidden />
+          <input
+            type="search"
+            placeholder="Buscar no menu…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="ml-2 flex-1 bg-transparent border-0 outline-none text-[12.5px] text-slate-200 placeholder:text-slate-500 p-0 m-0 focus:ring-0"
+          />
+        </label>
+      </div>
+
       {/* Navigation */}
-      <nav className="relative flex-1 mt-2 px-2 pb-2 space-y-px overflow-y-auto">
+      <nav className="relative flex-1 mt-1 px-2 pb-2 space-y-px overflow-y-auto">
         <p className="px-2 pt-2 pb-1.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-slate-500">
           Navegação
         </p>
@@ -295,37 +324,62 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Footer fixo na base */}
-      <div className="relative shrink-0 px-2 pt-2 pb-3 border-t border-white/[0.06] space-y-px">
-        {/* Toggle tema */}
-        <button
-          onClick={toggleTheme}
-          aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-          className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-[13px] text-slate-300 hover:bg-white/[0.04] hover:text-white"
-        >
-          <span className="flex items-center gap-2.5">
+      {/* Footer com user card + ações */}
+      <div className="relative shrink-0 border-t border-white/[0.06]">
+        {/* Toggle tema + sair (linha enxuta) */}
+        <div className="flex items-center justify-between px-2 pt-2 pb-1.5 gap-1">
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+            className="flex items-center gap-2 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/[0.04] hover:text-white"
+            title={`Tema ${theme === 'dark' ? 'escuro' : 'claro'}`}
+          >
             {theme === 'dark' ? (
-              <Moon className="w-[15px] h-[15px] text-slate-400" strokeWidth={1.75} />
+              <Moon className="w-3.5 h-3.5" strokeWidth={1.75} />
             ) : (
-              <Sun className="w-[15px] h-[15px] text-slate-400" strokeWidth={1.75} />
+              <Sun className="w-3.5 h-3.5" strokeWidth={1.75} />
             )}
-            <span>Tema</span>
-          </span>
-          <span className="text-[11.5px] text-slate-500 capitalize">
-            {theme === 'dark' ? 'Escuro' : 'Claro'}
-          </span>
-        </button>
+            <span className="capitalize">{theme === 'dark' ? 'Escuro' : 'Claro'}</span>
+          </button>
+          <button
+            onClick={() => navigate('/configuracoes')}
+            aria-label="Configurações"
+            className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-white/[0.04] hover:text-white"
+            title="Configurações"
+          >
+            <Settings className="w-3.5 h-3.5" strokeWidth={1.75} />
+          </button>
+          <button
+            onClick={logout}
+            aria-label="Sair"
+            className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-white/[0.04] hover:text-white"
+            title="Sair"
+          >
+            <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
+          </button>
+        </div>
 
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] text-slate-300 hover:bg-white/[0.04] hover:text-white"
-        >
-          <LogOut className="w-[15px] h-[15px] text-slate-400" strokeWidth={1.75} />
-          <span>Sair</span>
-        </button>
-        <div className="flex items-center justify-between px-2 pt-2 text-[11px] text-slate-500">
-          <a href="/help" className="hover:text-slate-300 transition-colors">Ajuda</a>
-          <span className="font-mono tracking-tight">v2.0.0</span>
+        {/* User card */}
+        <div className="px-2 pb-2.5">
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-md bg-white/[0.03] border border-white/[0.05]">
+            <span className="w-7 h-7 rounded bg-white/10 text-white text-[11px] font-semibold flex items-center justify-center shrink-0">
+              {initials}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[12.5px] font-medium text-white truncate leading-tight">
+                {user?.name || 'Conta'}
+              </div>
+              <div className="text-[11px] text-slate-500 truncate leading-tight mt-0.5">
+                {user?.email || 'sem e-mail'}
+              </div>
+            </div>
+            <span
+              className="text-[10px] font-mono text-slate-600 tracking-tight shrink-0"
+              title="Versão do sistema"
+            >
+              v2.0
+            </span>
+          </div>
         </div>
       </div>
     </div>

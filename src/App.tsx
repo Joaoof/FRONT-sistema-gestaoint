@@ -30,6 +30,7 @@ import { ScheduleRoutePage } from './pages/ScheduleRoutePage';
 import { DeliveryReportsPage } from './pages/DeliveryReportsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import HelpPage from './pages/Help';
+import { Topbar } from './components/Topbar';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -53,14 +54,12 @@ function AppContent() {
         </PrivateRoute>
       )}
 
-      <main
-        key={location.pathname}
-        className={
-          showSidebar
-            ? 'flex-1 lg:ml-64 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in'
-            : 'w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in'
-        }
-      >
+      <div className={showSidebar ? 'flex-1 lg:ml-64 flex flex-col min-w-0' : 'w-full flex flex-col min-w-0'}>
+        {showSidebar && <Topbar />}
+        <main
+          key={location.pathname}
+          className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in"
+        >
         <NotificationProvider>
           <Routes>
             <Route path="/" element={<LoginForm />} />
@@ -116,7 +115,8 @@ function AppContent() {
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>
         </NotificationProvider>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
