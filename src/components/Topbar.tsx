@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Bell, Search, ChevronRight, Slash, Command } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useCompany } from "../contexts/CompanyContext";
+import { useLowStock } from "../hooks/useLowStock";
 
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
@@ -44,8 +45,10 @@ export function Topbar() {
   const { company } = useCompany();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [isMac, setIsMac] = useState(true);
+  const { lowStock, count: lowStockCount, outOfStockCount } = useLowStock();
 
   useEffect(() => {
     setIsMac(typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform));
@@ -75,6 +78,17 @@ export function Topbar() {
     window.addEventListener("mousedown", close);
     return () => window.removeEventListener("mousedown", close);
   }, [menuOpen]);
+
+  // Fecha o popover de alertas ao clicar fora
+  useEffect(() => {
+    if (!alertsOpen) return;
+    const close = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-alerts-menu]")) setAlertsOpen(false);
+    };
+    window.addEventListener("mousedown", close);
+    return () => window.removeEventListener("mousedown", close);
+  }, [alertsOpen]);
 
   const segments = location.pathname.split("/").filter(Boolean);
   const crumbs = segments.map((seg, i) => {
@@ -160,14 +174,99 @@ export function Topbar() {
       </div>
 
       {/* Notifications */}
-      <button
-        type="button"
-        aria-label="Notificações"
-        className="relative w-8 h-8 flex items-center justify-center rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors"
-      >
-        <Bell className="w-[15px] h-[15px]" strokeWidth={1.75} />
-        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-950" aria-hidden />
-      </button>
+      <div className="relative" data-alerts-menu>
+        <button
+          type="button"
+          aria-label={`Notificações${lowStockCount > 0 ? ` — ${lowStockCount} alerta${lowStockCount === 1 ? '' : 's'}` : ''}`}
+          aria-haspopup="menu"
+          aria-expanded={alertsOpen}
+          onClick={() => setAlertsOpen(v => !v)}
+          className="relative w-8 h-8 flex items-center justify-center rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors"
+        >
+          <Bell className="w-[15px] h-[15px]" strokeWidth={1.75} />
+          {lowStockCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 inline-flex items-center justify-center text-[10px] font-bold text-white bg-amber-500 rounded-full ring-2 ring-white dark:ring-slate-950 tabular-nums">
+              {lowStockCount > 9 ? '9+' : lowStockCount}
+            </span>
+          )}
+        </button>
+
+        {alertsOpen && (
+          <div
+            role="menu"
+            className="absolute right-0 top-[calc(100%+6px)] w-80 max-h-[420px] overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-md shadow-soft-lg flex flex-col animate-fade-in-up"
+          >
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.06]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Alertas</h3>
+                {lowStockCount > 0 && (
+                  <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/15 px-2 py-0.5 rounded-full">
+                    {lowStockCount} estoque{lowStockCount === 1 ? '' : 's'} baixo{lowStockCount === 1 ? '' : 's'}
+                  </span>
+                )}
+              </div>
+              {outOfStockCount > 0 && (
+                <p className="mt-1 text-[11.5px] text-rose-600 dark:text-rose-400 font-medium">
+                  {outOfStockCount} produto{outOfStockCount === 1 ? '' : 's'} sem estoque
+                </p>
+              )}
+            </div>
+
+            {lowStockCount === 0 ? (
+              <div className="px-4 py-8 text-center text-[12.5px] text-slate-500 dark:text-slate-400">
+                Nenhum alerta no momento.
+              </div>
+            ) : (
+              <ul className="overflow-y-auto divide-y divide-slate-100 dark:divide-white/[0.06]">
+                {lowStock.slice(0, 8).map(p => {
+                  const isOut = p.quantity === 0;
+                  return (
+                    <li key={p.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAlertsOpen(false);
+                          navigate(`/produtos/${p.id}`);
+                        }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[12.5px] font-medium text-slate-900 dark:text-white truncate">
+                            {p.nameProduct}
+                          </span>
+                          <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10.5px] font-semibold ${
+                            isOut
+                              ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400'
+                              : 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300'
+                          }`}>
+                            {isOut ? 'Sem estoque' : `${p.quantity} ${p.unit}`}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          mínimo: {p.minStock} {p.unit}
+                        </p>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <div className="border-t border-slate-100 dark:border-white/[0.06] px-4 py-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setAlertsOpen(false);
+                  navigate('/produtos');
+                }}
+                className="text-[12px] text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Ver todos os produtos →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* User menu */}
       <div className="relative" data-user-menu>

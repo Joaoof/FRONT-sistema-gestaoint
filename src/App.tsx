@@ -33,6 +33,7 @@ import HelpPage from './pages/Help';
 import { Topbar } from './components/Topbar';
 import { CreateProduct } from './pages/Products/CreateProduct';
 import { ProductsList } from './pages/Products/ProductsList';
+import { ProductDetail } from './pages/Products/ProductDetail';
 import { ReportsPage } from './pages/Reports/ReportsPage';
 
 function AppContent() {
@@ -86,6 +87,7 @@ function AppContent() {
             <Route path="/estoque" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
             <Route path="/produtos" element={<ProductsList />} />
             <Route path="/produtos/cadastrar" element={<CreateProduct />} />
+            <Route path="/produtos/:id" element={<ProductDetail />} />
             <Route path="/categorias" element={<CategoriesRegistration />} />
             <Route path="/relatorios" element={<ReportsPage />} />
             <Route path="/vendas" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
@@ -93,11 +95,10 @@ function AppContent() {
             <Route path="/fiscal-receber-cria" element={<CreateReceivable />} />
             <Route path="/fiscal-pagar" element={<AccountsPayableDashboard />} />
             <Route path="/fiscal-pagar-criar" element={<CreatePayable />} />
-            <Route path="/listar-contas-pagas" element={<ReceivablesList />} />
-            <Route path="/listar-contas-receber" element={<PayablesList />} />
+            <Route path="/listar-contas-pagas" element={<PayablesList />} />
+            <Route path="/listar-contas-receber" element={<ReceivablesList />} />
             <Route path="/financeiro" element={<FinancialManagement />} />
             <Route path="/consultas" element={<SearchPage />} />
-          // src/App.tsx
             <Route path="/movimentacoes" element={<MovementDashboard />} />
             <Route path="/formulario-movimentacao" element={<CashMovementForm />} />
             <Route path="/historico-movimentacao" element={<MovementHistory />} />

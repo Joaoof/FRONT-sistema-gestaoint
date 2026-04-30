@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StatCard } from '../components/ui/StatCard';
+import { LowStockAlert } from '../components/LowStockAlert';
 
 // Função utilitária DRY para calcular dados mensais
 const getMonthlyData = (
@@ -153,6 +154,9 @@ export function Dashboard({
           icon={<TrendingUp className="w-3.5 h-3.5" strokeWidth={2} />}
         />
       </motion.div>
+
+      {/* Alerta de estoque baixo */}
+      <LowStockAlert />
 
       {/* Seção Atalhos — design quiet, sem ilustrações genéricas */}
       <div className="space-y-3">

@@ -141,7 +141,16 @@ export function ProductsList() {
               return (
                 <div
                   key={p.id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/produtos/${p.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/produtos/${p.id}`);
+                    }
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer focus:outline-none focus:bg-slate-100 dark:focus:bg-white/[0.04]"
                 >
                   <div className="w-12 h-12 rounded-md bg-slate-100 dark:bg-white/[0.05] overflow-hidden shrink-0 flex items-center justify-center">
                     {cover ? (
