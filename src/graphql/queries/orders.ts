@@ -79,3 +79,9 @@ export const CANCEL_ORDER = gql`
     }
   }
 `;
+
+export const DELETE_ORDER = gql`
+  mutation DeleteOrder($id: String!) {
+    deleteOrder(id: $id)
+  }
+`;

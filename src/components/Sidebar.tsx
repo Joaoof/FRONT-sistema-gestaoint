@@ -33,6 +33,7 @@ import {
   PieChart,
   Plus,
   Sliders,
+  Sparkles,
   TrendingUp,
   UserPlus,
   Warehouse,
@@ -165,6 +166,12 @@ const sections: MenuSection[] = [
         ],
       },
       { id: 'ecommerce' as View, label: 'E-commerce', icon: Globe },
+    ],
+  },
+  {
+    label: 'Inteligência',
+    items: [
+      { id: 'ia' as View, label: 'IA Studio', icon: Sparkles },
     ],
   },
   {

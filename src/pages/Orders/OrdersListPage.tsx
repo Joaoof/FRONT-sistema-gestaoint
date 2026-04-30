@@ -1,19 +1,23 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import {
     ArrowLeft,
     Calendar,
     Eye,
     FileText,
+    Loader2,
     Plus,
     Printer,
     Search,
     ShoppingCart,
+    Trash2,
     TrendingUp,
 } from 'lucide-react';
-import { GET_ORDERS } from '../../graphql/queries/orders';
+import { DELETE_ORDER, GET_ORDERS } from '../../graphql/queries/orders';
+import { getGraphQLErrorMessages } from '../../utils/getGraphQLErrorMessage';
 
 type OrderStatus = 'DRAFT' | 'CONFIRMED' | 'PAID' | 'CANCELED' | 'REFUNDED';
 type PaymentMethod = 'CASH' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'BOLETO' | 'TRANSFER' | 'OTHER';
@@ -69,11 +73,32 @@ export function OrdersListPage() {
     const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL');
     const [rangeFilter, setRangeFilter] = useState<RangeFilter>('all');
 
-    const { data, loading } = useQuery<{ orders: OrderRow[] }>(GET_ORDERS, {
+    const { data, loading, refetch } = useQuery<{ orders: OrderRow[] }>(GET_ORDERS, {
         fetchPolicy: 'cache-and-network',
     });
 
+    const [deleteOrder] = useMutation(DELETE_ORDER);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [confirmId, setConfirmId] = useState<string | null>(null);
+
     const orders = data?.orders ?? [];
+
+    async function handleDelete(id: string) {
+        setDeletingId(id);
+        try {
+            await deleteOrder({ variables: { id } });
+            toast.success('Pedido excluído. Estoque devolvido se aplicável.');
+            await refetch();
+        } catch (err) {
+            const msgs = getGraphQLErrorMessages(err);
+            toast.error(msgs[0] || 'Erro ao excluir pedido.');
+        } finally {
+            setDeletingId(null);
+            setConfirmId(null);
+        }
+    }
+
+    const confirmOrder = orders.find((o) => o.id === confirmId);
 
     const filtered = useMemo(() => {
         const now = new Date();
@@ -270,6 +295,18 @@ export function OrdersListPage() {
                                                 >
                                                     <Eye className="w-3.5 h-3.5" />
                                                 </button>
+                                                <button
+                                                    onClick={() => setConfirmId(o.id)}
+                                                    disabled={deletingId === o.id}
+                                                    title="Excluir pedido"
+                                                    className="w-7 h-7 grid place-items-center rounded text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 disabled:opacity-50"
+                                                >
+                                                    {deletingId === o.id ? (
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    )}
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -289,6 +326,57 @@ export function OrdersListPage() {
                     </div>
                 )}
             </div>
+
+            {/* Modal de confirmação de exclusão */}
+            {confirmOrder && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-lg w-full max-w-md shadow-xl border border-slate-200 dark:border-white/10">
+                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/10">
+                            <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Trash2 className="w-4 h-4 text-rose-600" />
+                                Excluir pedido #{confirmOrder.number}?
+                            </h3>
+                        </div>
+                        <div className="px-5 py-4 text-[13px] text-slate-700 dark:text-slate-300 space-y-2">
+                            <p>
+                                Cliente: <span className="font-semibold">{confirmOrder.customer?.name ?? confirmOrder.customerName ?? 'Avulso'}</span>
+                            </p>
+                            <p>
+                                Total: <span className="font-semibold tabular-nums">{formatBRL(Number(confirmOrder.total))}</span>
+                            </p>
+                            <div className="mt-3 p-2.5 rounded bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-[12px] text-amber-800 dark:text-amber-300">
+                                Essa ação <strong>devolve o estoque</strong> dos produtos vendidos (se ativo) e <strong>estorna a comissão</strong> do vendedor. Não é possível desfazer.
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2 px-5 py-3 border-t border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] rounded-b-lg">
+                            <button
+                                onClick={() => setConfirmId(null)}
+                                disabled={deletingId === confirmOrder.id}
+                                className="h-9 px-4 text-[12.5px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-md disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={() => handleDelete(confirmOrder.id)}
+                                disabled={deletingId === confirmOrder.id}
+                                className="inline-flex items-center gap-1.5 h-9 px-4 text-[12.5px] font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-md disabled:opacity-50"
+                            >
+                                {deletingId === confirmOrder.id ? (
+                                    <>
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        Excluindo…
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        Excluir definitivamente
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
