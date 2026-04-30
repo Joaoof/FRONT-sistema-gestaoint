@@ -12,6 +12,7 @@ import {
     ShoppingBag,
 } from 'lucide-react';
 import { useLowStock, LowStockProduct } from '../../hooks/useLowStock';
+import { ProductImage } from '../../components/ProductImage';
 
 type Severity = 'OUT' | 'CRITICAL' | 'WARNING';
 
@@ -246,13 +247,13 @@ export function StockAlertsReport() {
                                         <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02]">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className="w-9 h-9 rounded bg-slate-100 dark:bg-white/[0.05] overflow-hidden flex items-center justify-center shrink-0">
-                                                        {cover ? (
-                                                            <img src={cover} alt="" className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <Package className="w-4 h-4 text-slate-400" />
-                                                        )}
-                                                    </div>
+                                                    <ProductImage
+                                                        src={cover}
+                                                        alt={p.nameProduct}
+                                                        className="w-9 h-9 rounded object-cover shrink-0"
+                                                        fallbackClassName="w-9 h-9 rounded shrink-0"
+                                                        iconSize={16}
+                                                    />
                                                     <div className="min-w-0">
                                                         <p className="text-[13px] font-medium text-slate-900 dark:text-white truncate max-w-[260px]">
                                                             {p.nameProduct}

@@ -3,6 +3,7 @@ import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Package, AlertTriangle, Tag } from 'lucide-react';
 import { LIST_PRODUCTS_WITH_IMAGES } from '../../graphql/mutations/product-with-images';
+import { ProductImage } from '../../components/ProductImage';
 
 interface ProductImage {
   id: string;
@@ -152,13 +153,13 @@ export function ProductsList() {
                   }}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer focus:outline-none focus:bg-slate-100 dark:focus:bg-white/[0.04]"
                 >
-                  <div className="w-12 h-12 rounded-md bg-slate-100 dark:bg-white/[0.05] overflow-hidden shrink-0 flex items-center justify-center">
-                    {cover ? (
-                      <img src={cover} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <Package className="w-5 h-5 text-slate-400" strokeWidth={1.5} />
-                    )}
-                  </div>
+                  <ProductImage
+                    src={cover}
+                    alt={p.nameProduct}
+                    className="w-12 h-12 rounded-md object-cover shrink-0"
+                    fallbackClassName="w-12 h-12 rounded-md shrink-0"
+                    iconSize={20}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="text-[13.5px] font-medium text-slate-900 dark:text-white truncate">

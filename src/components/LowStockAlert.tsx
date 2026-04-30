@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, ChevronRight, Package, PackageX } from 'lucide-react';
+import { AlertTriangle, ChevronRight, PackageX } from 'lucide-react';
 import { useLowStock } from '../hooks/useLowStock';
+import { ProductImage } from './ProductImage';
 
 export function LowStockAlert() {
     const navigate = useNavigate();
@@ -59,13 +60,13 @@ export function LowStockAlert() {
                                 onClick={() => navigate(`/produtos/${p.id}`)}
                                 className="w-full flex items-center gap-3 px-5 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.02] text-left transition-colors"
                             >
-                                <div className="w-10 h-10 rounded-md bg-slate-100 dark:bg-white/[0.05] overflow-hidden shrink-0 flex items-center justify-center">
-                                    {cover ? (
-                                        <img src={cover} alt="" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <Package className="w-4 h-4 text-slate-400" strokeWidth={1.5} />
-                                    )}
-                                </div>
+                                <ProductImage
+                                    src={cover}
+                                    alt={p.nameProduct}
+                                    className="w-10 h-10 rounded-md object-cover shrink-0"
+                                    fallbackClassName="w-10 h-10 rounded-md shrink-0"
+                                    iconSize={16}
+                                />
                                 <div className="min-w-0 flex-1">
                                     <p className="text-[13px] font-medium text-slate-900 dark:text-white truncate">
                                         {p.nameProduct}

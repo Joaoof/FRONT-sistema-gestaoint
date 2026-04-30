@@ -5,11 +5,11 @@ import {
     AlertTriangle,
     ChevronDown,
     ExternalLink,
-    Package,
     PackageX,
     RefreshCcw,
 } from 'lucide-react';
 import { useLowStock } from '../hooks/useLowStock';
+import { ProductImage } from './ProductImage';
 
 export function SidebarStockAlerts() {
     const navigate = useNavigate();
@@ -104,13 +104,13 @@ export function SidebarStockAlerts() {
                                             className="w-full text-left px-2 py-1.5 rounded-md hover:bg-white/[0.05] transition-colors group"
                                         >
                                             <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 rounded bg-white/[0.06] overflow-hidden flex items-center justify-center shrink-0">
-                                                    {cover ? (
-                                                        <img src={cover} alt="" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <Package className="w-3 h-3 text-slate-500" strokeWidth={1.5} />
-                                                    )}
-                                                </div>
+                                                <ProductImage
+                                                    src={cover}
+                                                    alt={p.nameProduct}
+                                                    className="w-7 h-7 rounded object-cover shrink-0"
+                                                    fallbackClassName="w-7 h-7 rounded shrink-0 bg-white/[0.06]"
+                                                    iconSize={12}
+                                                />
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-[11.5px] font-medium text-slate-200 truncate group-hover:text-white">
                                                         {p.nameProduct}

@@ -36,6 +36,7 @@ import { ProductsList } from './pages/Products/ProductsList';
 import { ProductDetail } from './pages/Products/ProductDetail';
 import { StockAlertsReport } from './pages/Products/StockAlertsReport';
 import { ReportsPage } from './pages/Reports/ReportsPage';
+import { BusinessOverview } from './pages/Reports/BusinessOverview';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -92,6 +93,7 @@ function AppContent() {
             <Route path="/produtos/:id" element={<ProductDetail />} />
             <Route path="/categorias" element={<CategoriesRegistration />} />
             <Route path="/relatorios" element={<ReportsPage />} />
+            <Route path="/relatorios/visao-geral" element={<BusinessOverview />} />
             <Route path="/vendas" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
             <Route path="/fiscal-receber" element={<AccountsReceivableDashboard />} />
             <Route path="/fiscal-receber-cria" element={<CreateReceivable />} />

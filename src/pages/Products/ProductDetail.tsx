@@ -18,6 +18,7 @@ import {
     UPDATE_PRODUCT_DETAIL,
 } from '../../graphql/queries/product-detail';
 import { StockAdjustmentModal } from './StockAdjustmentModal';
+import { ProductImage } from '../../components/ProductImage';
 
 interface ProductImage {
     id: string;
@@ -233,25 +234,23 @@ export function ProductDetail() {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
                     <div className="md:col-span-1">
-                        {cover ? (
-                            <img
-                                src={cover.url}
-                                alt={product.nameProduct}
-                                className="w-full aspect-square object-cover rounded-lg border border-slate-200 dark:border-white/10"
-                            />
-                        ) : (
-                            <div className="w-full aspect-square rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                <Package className="w-16 h-16 text-slate-400" />
-                            </div>
-                        )}
+                        <ProductImage
+                            src={cover?.url}
+                            alt={product.nameProduct}
+                            className="w-full aspect-square object-cover rounded-lg border border-slate-200 dark:border-white/10"
+                            fallbackClassName="w-full aspect-square rounded-lg border border-slate-200 dark:border-white/10"
+                            iconSize={64}
+                        />
                         {product.images.length > 1 && (
                             <div className="grid grid-cols-4 gap-2 mt-3">
                                 {product.images.slice(0, 4).map((img) => (
-                                    <img
+                                    <ProductImage
                                         key={img.id}
                                         src={img.url}
                                         alt=""
                                         className="aspect-square object-cover rounded border border-slate-200 dark:border-white/10"
+                                        fallbackClassName="aspect-square rounded border border-slate-200 dark:border-white/10"
+                                        iconSize={20}
                                     />
                                 ))}
                             </div>
