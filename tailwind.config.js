@@ -7,6 +7,18 @@ export default {
         sans: ["Rubik", "sans-serif"],
         poppins: ['"Poppins"', "sans-serif"],
         open_sans: ['"Open Sans"', "sans-serif"],
+        system: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"Segoe UI"',
+          "Roboto",
+          '"Helvetica Neue"',
+          "Arial",
+          "system-ui",
+          "sans-serif",
+          '"Apple Color Emoji"',
+          '"Segoe UI Emoji"',
+        ],
         keyframes: {
           "fade-in": {
             "0%": { opacity: 0, transform: "scale(0.95)" },

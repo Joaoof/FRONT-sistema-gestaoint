@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fonte nativa do sistema operacional:
+   - macOS/iOS: San Francisco (via -apple-system / BlinkMacSystemFont)
+   - Windows: Segoe UI
+   - Android/Chrome OS: Roboto
+   - Linux: o que o SO definir como system-ui
+   Aplicada apenas como base — classes font-sans/font-poppins/font-open_sans
+   continuam funcionando normalmente onde já foram declaradas. */
+html,
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern", "liga", "calt", "ss01";
+  font-kerning: normal;
+}
+
 .dark {
   color-scheme: dark;
 }
