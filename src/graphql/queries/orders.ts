@@ -19,7 +19,7 @@ const ORDER_FIELDS = `
   notes
   createdAt
   updatedAt
-  customer { id name document email phone }
+  customer { id name document email phone address bairro cep }
   items {
     id
     productId

@@ -43,6 +43,9 @@ interface OrderDetail {
         document?: string | null;
         email?: string | null;
         phone?: string | null;
+        address?: string | null;
+        bairro?: string | null;
+        cep?: string | null;
     } | null;
     items: OrderItem[];
 }
@@ -189,24 +192,35 @@ function Receipt({ order, company, via }: ReceiptProps) {
                 </div>
             </header>
 
-            {/* Linha cliente / vendedor / pagamento */}
-            <div className="grid grid-cols-3 gap-3 mt-2 text-[10px]">
-                <div className="min-w-0">
-                    <p className="text-[8.5px] uppercase tracking-wider text-slate-500">Cliente</p>
-                    <p className="font-semibold truncate">
-                        {order.customer?.name ?? order.customerName ?? 'Consumidor'}
-                    </p>
-                    {(order.customerDocument ?? order.customer?.document) && (
-                        <p className="text-slate-600 truncate">
-                            CPF/CNPJ: {order.customerDocument ?? order.customer?.document}
-                        </p>
-                    )}
-                    {(order.customerPhone ?? order.customer?.phone) && (
-                        <p className="text-slate-600 truncate">
-                            Tel: {order.customerPhone ?? order.customer?.phone}
-                        </p>
-                    )}
-                </div>
+            {/* Bloco do cliente (labeled, igual ao da empresa) */}
+            <div className="mt-2 pb-2 border-b border-slate-300">
+                <p className="text-[8.5px] uppercase tracking-[0.15em] font-semibold text-slate-500 mb-1">
+                    Dados do cliente
+                </p>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-0 text-[9.5px] leading-tight">
+                    <CompanyRow
+                        label="CLIENTE"
+                        value={order.customer?.name ?? order.customerName ?? 'Consumidor'}
+                        bold
+                    />
+                    <CompanyRow
+                        label="CPF/CNPJ"
+                        value={order.customer?.document ?? order.customerDocument}
+                        mono
+                    />
+                    <CompanyRow
+                        label="FONE"
+                        value={order.customer?.phone ?? order.customerPhone}
+                    />
+                    <CompanyRow label="EMAIL" value={order.customer?.email} />
+                    <CompanyRow label="ENDEREÇO" value={order.customer?.address} />
+                    <CompanyRow label="BAIRRO" value={order.customer?.bairro} />
+                    <CompanyRow label="CEP" value={order.customer?.cep} mono />
+                </dl>
+            </div>
+
+            {/* Linha vendedor + pagamento */}
+            <div className="grid grid-cols-2 gap-3 mt-2 text-[10px]">
                 <div className="min-w-0">
                     <p className="text-[8.5px] uppercase tracking-wider text-slate-500">Vendedor</p>
                     <p className="font-semibold truncate">{order.sellerName ?? '—'}</p>
