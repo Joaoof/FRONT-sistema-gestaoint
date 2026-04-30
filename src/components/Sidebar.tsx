@@ -6,6 +6,7 @@ import { useCompany } from '../contexts/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut,
+  MessageCircle,
   Moon,
   Sun,
   Search,
@@ -39,6 +40,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SidebarStockAlerts } from './SidebarStockAlerts';
+import { WhatsAppReportPanel } from './WhatsAppReportPanel';
 
 interface MenuItem {
   id: View;
@@ -225,6 +227,7 @@ export function Sidebar({
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState('');
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
   const { company, isLoading } = useCompany();
   const { logout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -379,6 +382,31 @@ export function Sidebar({
 
       {/* Painel de alertas de estoque ao vivo */}
       <SidebarStockAlerts />
+
+      {/* Atalho WhatsApp */}
+      <div className="px-2 pb-2">
+        <button
+          type="button"
+          onClick={() => setWhatsappOpen(true)}
+          className="group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-gradient-to-r from-emerald-600/20 to-green-600/20 hover:from-emerald-600/30 hover:to-green-600/30 border border-emerald-500/20 hover:border-emerald-500/40 text-left transition-colors"
+          title="Enviar relatório por WhatsApp"
+        >
+          <span className="w-7 h-7 rounded-md bg-gradient-to-br from-emerald-500 to-green-600 grid place-items-center shrink-0 shadow-sm">
+            <MessageCircle className="w-3.5 h-3.5 text-white" strokeWidth={2} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[12.5px] font-semibold text-emerald-100 truncate leading-tight">
+              Relatório por WhatsApp
+            </span>
+            <span className="block text-[10.5px] text-emerald-200/70 leading-tight mt-0.5">
+              Resumo do mês com preview
+            </span>
+          </span>
+        </button>
+      </div>
+
+      {/* Drawer WhatsApp */}
+      <WhatsAppReportPanel open={whatsappOpen} onClose={() => setWhatsappOpen(false)} />
 
       {/* Footer */}
       <div className="relative shrink-0 border-t border-white/[0.06]">

@@ -1,11 +1,13 @@
 // pages/NewDeliveryPage.tsx
 import { useAuth } from '../contexts/AuthContext';
-import { Truck, User, ArrowLeft } from 'lucide-react';
+import { Truck, User, ArrowLeft, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
+import { saveDelivery } from '../lib/deliveries-store';
+import { toast } from 'sonner';
 
 // === Schema de validação (inline para facilitar, mas pode ir em types/DeliverySchema.ts) ===
 import { z } from 'zod';
@@ -283,9 +285,22 @@ export function NewDeliveryPage() {
 
     const onSubmit: SubmitHandler<DeliveryFormData> = async (data) => {
         setIsLoading(true);
-        // Simulação de chamada à API
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        console.log('Nova entrega cadastrada:', data);
+        // Persistência local (sem backend ainda) — vai pro deliveries-store
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        saveDelivery({
+            orderId: data.orderId,
+            driver: data.driver,
+            vehicle: data.vehicle ?? '',
+            route: '',
+            category: data.category,
+            status: 'pendente',
+            scheduledDate: data.scheduledDate,
+            origin: 'Fábrica Central',
+            destination: data.destination,
+            distanceKm: 0,
+            estimatedTimeHours: 0,
+        });
+        toast.success(`Entrega ${data.orderId} cadastrada.`);
         setFormData(data);
         setIsSubmitted(true);
         setIsLoading(false);

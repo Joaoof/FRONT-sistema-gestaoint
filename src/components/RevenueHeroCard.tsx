@@ -4,16 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
 import {
-    Activity,
     ArrowUpRight,
-    Box,
     Calendar,
     DollarSign,
+    LineChart,
     Package,
+    PiggyBank,
     Plus,
     ShoppingCart,
     Sparkles,
     TrendingUp,
+    Warehouse,
 } from 'lucide-react';
 import { GET_ORDERS, GET_ORDERS_SUMMARY } from '../graphql/queries/orders';
 import { LIST_PRODUCTS_WITH_IMAGES } from '../graphql/mutations/product-with-images';
@@ -26,12 +27,23 @@ interface OrderRow {
     createdAt: string;
     customerName?: string | null;
     customer?: { name: string } | null;
+    items?: OrderItemRow[] | null;
 }
 
 interface ProductRow {
     id: string;
     nameProduct: string;
+    quantity?: number | null;
+    costPrice?: number | null;
+    salePrice?: number | null;
     createdAt: string;
+}
+
+interface OrderItemRow {
+    productId?: string | null;
+    quantity: number;
+    unitPrice: number;
+    total: number;
 }
 
 interface OrdersSummary {
@@ -98,37 +110,53 @@ export function RevenueHeroCard() {
     const orders = ordersData?.orders ?? [];
     const products = productsData?.products ?? [];
 
+    // Mapa de produtos para joins client-side (custo, etc.)
+    const productById = useMemo(() => {
+        const m = new Map<string, ProductRow>();
+        for (const p of products) m.set(p.id, p);
+        return m;
+    }, [products]);
+
     // Métricas calculadas
     const stats = useMemo(() => {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
         const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-        const sevenDaysAgo = startOfDay - 7 * 24 * 60 * 60 * 1000;
 
         let prevMonthRevenue = 0;
-        let avgTicket = 0;
-        let validOrdersInMonth = 0;
-        let salesLast7Days = 0;
+        let todayProfit = 0;
 
         for (const o of orders) {
             if (o.status === 'CANCELED' || o.status === 'REFUNDED') continue;
             const ts = new Date(o.createdAt).getTime();
             if (ts >= startOfMonth) {
-                avgTicket += o.total;
-                validOrdersInMonth++;
+                // dentro do mês corrente
             } else if (ts >= startOfPrevMonth) {
                 prevMonthRevenue += o.total;
             }
-            if (ts >= sevenDaysAgo) salesLast7Days++;
+            if (ts >= startOfDay) {
+                // Lucro = receita líquida - custo dos itens (a partir do costPrice do produto)
+                const items = o.items ?? [];
+                let cost = 0;
+                for (const it of items) {
+                    const prod = it.productId ? productById.get(it.productId) : undefined;
+                    const unitCost = Number(prod?.costPrice ?? 0);
+                    cost += unitCost * Number(it.quantity ?? 0);
+                }
+                todayProfit += Number(o.total) - cost;
+            }
         }
 
-        const productsThisMonth = products.filter(
-            (p) => new Date(p.createdAt).getTime() >= startOfMonth,
-        ).length;
-        const productsThisWeek = products.filter(
-            (p) => new Date(p.createdAt).getTime() >= sevenDaysAgo,
-        ).length;
+        // Estoque
+        let stockCost = 0;
+        let inStockCount = 0;
+        for (const p of products) {
+            const qty = Number(p.quantity ?? 0);
+            const cp = Number(p.costPrice ?? 0);
+            stockCost += qty * cp;
+            if (qty > 0) inStockCount++;
+        }
 
         const monthRevenue = summary.monthTotal;
         const monthDelta = prevMonthRevenue > 0
@@ -141,13 +169,12 @@ export function RevenueHeroCard() {
             monthRevenue,
             prevMonthRevenue,
             monthDelta,
-            avgTicket: validOrdersInMonth > 0 ? avgTicket / validOrdersInMonth : 0,
-            salesLast7Days,
-            productsThisMonth,
-            productsThisWeek,
+            todayProfit,
+            stockCost,
+            inStockCount,
             totalProducts: products.length,
         };
-    }, [orders, products, summary]);
+    }, [orders, products, productById, summary]);
 
     // Sparkline: últimos 30 dias
     const sparkData = useMemo(() => {
@@ -197,17 +224,17 @@ export function RevenueHeroCard() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="relative overflow-hidden rounded-2xl border border-violet-500/20 dark:border-violet-500/30 bg-gradient-to-br from-violet-600 via-fuchsia-600 to-rose-500 text-white shadow-xl"
+            className="relative overflow-hidden rounded-2xl border border-blue-500/20 dark:border-blue-500/30 bg-gradient-to-br from-indigo-700 via-blue-600 to-sky-500 text-white shadow-xl"
         >
             {/* Glow animado de fundo */}
             <div className="pointer-events-none absolute inset-0">
-                <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/20 blur-3xl animate-pulse" />
+                <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/15 blur-3xl animate-pulse" />
                 <div
-                    className="absolute -bottom-32 -right-20 w-96 h-96 rounded-full bg-fuchsia-400/30 blur-3xl animate-pulse"
+                    className="absolute -bottom-32 -right-20 w-96 h-96 rounded-full bg-cyan-400/30 blur-3xl animate-pulse"
                     style={{ animationDelay: '1s' }}
                 />
                 <div
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-violet-400/20 blur-3xl animate-pulse"
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-blue-400/20 blur-3xl animate-pulse"
                     style={{ animationDelay: '2s' }}
                 />
             </div>
@@ -321,32 +348,28 @@ export function RevenueHeroCard() {
                     {/* Mini stats em linha */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <MiniStat
-                            label="Hoje"
+                            label="Vendas hoje"
                             value={formatBRLShort(animatedToday)}
                             sub={`${summary.todayCount} venda${summary.todayCount === 1 ? '' : 's'}`}
                             icon={<Calendar className="w-3.5 h-3.5" />}
                         />
                         <MiniStat
-                            label="Ticket médio"
-                            value={formatBRLShort(stats.avgTicket)}
-                            sub="por venda no mês"
-                            icon={<Activity className="w-3.5 h-3.5" />}
+                            label="Lucro do dia"
+                            value={formatBRLShort(stats.todayProfit)}
+                            sub="receita − custo"
+                            icon={<LineChart className="w-3.5 h-3.5" />}
                         />
                         <MiniStat
-                            label="Vendas 7d"
-                            value={String(stats.salesLast7Days)}
-                            sub="últimos 7 dias"
-                            icon={<ShoppingCart className="w-3.5 h-3.5" />}
+                            label="Custo de estoque"
+                            value={formatBRLShort(stats.stockCost)}
+                            sub="capital parado"
+                            icon={<PiggyBank className="w-3.5 h-3.5" />}
                         />
                         <MiniStat
-                            label="Produtos"
-                            value={String(stats.totalProducts)}
-                            sub={
-                                stats.productsThisWeek > 0
-                                    ? `+${stats.productsThisWeek} esta semana`
-                                    : 'no catálogo'
-                            }
-                            icon={<Box className="w-3.5 h-3.5" />}
+                            label="Em estoque"
+                            value={String(stats.inStockCount)}
+                            sub={`de ${stats.totalProducts} no catálogo`}
+                            icon={<Warehouse className="w-3.5 h-3.5" />}
                         />
                     </div>
                 </div>

@@ -14,14 +14,7 @@ import {
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const mockDeliveries: Delivery[] = [
-    { id: '1', orderId: 'ENT-1001', driver: 'Carlos Silva', vehicle: 'Caminhão 123', route: 'Rota A', category: 'Produtos Acabados', status: 'entregue', scheduledDate: '2025-03-01', deliveryDate: '2025-03-01', origin: 'Fábrica Central', destination: 'Distribuidor SP', distanceKm: 120, estimatedTimeHours: 2 },
-    { id: '2', orderId: 'ENT-1002', driver: 'Ana Souza', vehicle: 'Van 456', route: 'Rota B', category: 'Materiais Brutos', status: 'em rota', scheduledDate: '2025-03-02', origin: 'Porto Santos', destination: 'Fábrica Central', distanceKm: 80, estimatedTimeHours: 1.5 },
-    { id: '3', orderId: 'ENT-1003', driver: 'João Lima', vehicle: 'Caminhão 789', route: 'Rota C', category: 'Produtos Acabados', status: 'atrasado', scheduledDate: '2025-03-01', origin: 'Fábrica Central', destination: 'Distribuidor RJ', distanceKm: 400, estimatedTimeHours: 6 },
-    { id: '4', orderId: 'ENT-1004', driver: 'Maria Oliveira', vehicle: 'Van 101', route: 'Rota A', category: 'Alimentos', status: 'pendente', scheduledDate: '2025-03-03', origin: 'Fábrica Central', destination: 'Supermercado BH', distanceKm: 600, estimatedTimeHours: 8 },
-    { id: '5', orderId: 'ENT-1005', driver: 'Pedro Costa', vehicle: 'Caminhão 123', route: 'Rota D', category: 'Produtos Acabados', status: 'entregue', scheduledDate: '2025-03-02', deliveryDate: '2025-03-02', origin: 'Fábrica Central', destination: 'Atacado Curitiba', distanceKm: 180, estimatedTimeHours: 3 },
-];
+import { listDeliveries, subscribeDeliveries, updateDeliveryStatus } from '../lib/deliveries-store';
 
 // Função utilitária: entregas por mês
 const getMonthlyDeliveries = (deliveries: Delivery[], status: Delivery['status']) => {
@@ -46,23 +39,27 @@ const getMonthlyDeliveries = (deliveries: Delivery[], status: Delivery['status']
 export function DeliveriesPage() {
     const { user, logout } = useAuth();
     const [mounted, setMounted] = useState(false);
-    const navigate = useNavigate();// Dados simulados (você pode substituir por API)
+    const [deliveries, setDeliveries] = useState<Delivery[]>(() => listDeliveries());
+    const navigate = useNavigate();
 
     useEffect(() => {
         setMounted(true);
+        const unsub = subscribeDeliveries(() => setDeliveries(listDeliveries()));
+        return unsub;
     }, []);
 
     // Métricas
-    const deliveredCount = mockDeliveries.filter((d) => d.status === 'entregue').length;
-    const delayedCount = mockDeliveries.filter((d) => d.status === 'atrasado').length;
-    const onRouteCount = mockDeliveries.filter((d) => d.status === 'em rota').length;
+    const deliveredCount = deliveries.filter((d) => d.status === 'entregue').length;
+    const delayedCount = deliveries.filter((d) => d.status === 'atrasado').length;
+    const onRouteCount = deliveries.filter((d) => d.status === 'em rota').length;
+    const pendingCount = deliveries.filter((d) => d.status === 'pendente').length;
 
     // Dados para gráfico de linha: entregas por mês
-    const deliveredData = getMonthlyDeliveries(mockDeliveries, 'entregue');
-    const delayedData = getMonthlyDeliveries(mockDeliveries, 'atrasado');
+    const deliveredData = getMonthlyDeliveries(deliveries, 'entregue');
+    const delayedData = getMonthlyDeliveries(deliveries, 'atrasado');
 
     // Dados para gráfico de pizza: por categoria
-    const categoryDistribution = mockDeliveries.reduce((acc, d) => {
+    const categoryDistribution = deliveries.reduce((acc, d) => {
         acc[d.category] = (acc[d.category] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
@@ -111,7 +108,7 @@ export function DeliveriesPage() {
             >
                 <MetricCard
                     title="ENTREGAS HOJE"
-                    value={mockDeliveries.filter(d => new Date(d.scheduledDate).toDateString() === new Date().toDateString()).length}
+                    value={deliveries.filter(d => new Date(d.scheduledDate).toDateString() === new Date().toDateString()).length}
                     color="blue"
                     icon="🚚"
                     isCount={true}
@@ -273,14 +270,84 @@ export function DeliveriesPage() {
                 transition={{ duration: 0.5, delay: 0.4 }}
                 className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm px-1"
             >
-                <div className="border-b pb-3 mb-4">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Status das Entregas</h3>
-                    <p className="text-sm text-gray-500 dark:text-slate-400">Distribuição atual de todas as entregas</p>
+                <div className="border-b pb-3 mb-4 flex items-center justify-between gap-3">
+                    <div>
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-white">Entregas registradas</h3>
+                        <p className="text-sm text-gray-500 dark:text-slate-400">
+                            {deliveries.length} entregas · {pendingCount} pendentes · {onRouteCount} em rota
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => navigate('/entregas/cadastrar')}
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[12.5px] font-semibold"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        Nova
+                    </button>
                 </div>
-                <div className="h-40">
-
-                </div>
+                {deliveries.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                        <Truck className="w-10 h-10 mb-2 opacity-50" />
+                        <p className="text-sm">Nenhuma entrega cadastrada ainda.</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-[13px]">
+                            <thead>
+                                <tr className="text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-white/[0.06]">
+                                    <th className="py-2 pr-3">Pedido</th>
+                                    <th className="py-2 pr-3">Motorista</th>
+                                    <th className="py-2 pr-3">Destino</th>
+                                    <th className="py-2 pr-3">Saída</th>
+                                    <th className="py-2 pr-3">Status</th>
+                                    <th className="py-2 pr-3 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {deliveries.slice(0, 10).map((d) => (
+                                    <tr key={d.id} className="border-b border-slate-100 dark:border-white/[0.04] last:border-0">
+                                        <td className="py-2.5 pr-3 font-mono text-[12px] text-slate-700 dark:text-slate-300">{d.orderId}</td>
+                                        <td className="py-2.5 pr-3 text-slate-700 dark:text-slate-300">{d.driver}</td>
+                                        <td className="py-2.5 pr-3 text-slate-700 dark:text-slate-300 truncate max-w-[200px]">{d.destination}</td>
+                                        <td className="py-2.5 pr-3 text-slate-500 dark:text-slate-400 tabular-nums">
+                                            {new Date(d.scheduledDate).toLocaleDateString('pt-BR')}
+                                        </td>
+                                        <td className="py-2.5 pr-3">
+                                            <StatusBadge status={d.status} />
+                                        </td>
+                                        <td className="py-2.5 pr-0 text-right">
+                                            <select
+                                                value={d.status}
+                                                onChange={(e) => updateDeliveryStatus(d.id, e.target.value as Delivery['status'])}
+                                                className="h-7 px-2 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-[11.5px] text-slate-700 dark:text-slate-200"
+                                            >
+                                                <option value="pendente">pendente</option>
+                                                <option value="em rota">em rota</option>
+                                                <option value="entregue">entregue</option>
+                                                <option value="atrasado">atrasado</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </motion.div>
         </div>
+    );
+}
+
+function StatusBadge({ status }: { status: Delivery['status'] }) {
+    const map: Record<Delivery['status'], string> = {
+        'pendente': 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+        'em rota': 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+        'entregue': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300',
+        'atrasado': 'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300',
+    };
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold ${map[status]}`}>
+            {status}
+        </span>
     );
 }
