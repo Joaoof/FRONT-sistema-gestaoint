@@ -178,8 +178,9 @@ export function Topbar() {
           aria-expanded={menuOpen}
           className="flex items-center gap-2 h-8 pl-1 pr-2 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors"
         >
-          <span className="w-6 h-6 rounded bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10.5px] font-semibold flex items-center justify-center">
+          <span className="relative w-6 h-6 rounded bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[10.5px] font-semibold flex items-center justify-center shadow-[0_0_0_1px_rgb(139_92_246_/_0.25)]">
             {initials(user?.name)}
+            <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-950" aria-label="Online" />
           </span>
           <span className="hidden sm:inline text-[12.5px] font-medium text-slate-700 dark:text-slate-200 truncate max-w-[100px]">
             {user?.name?.split(" ")[0] || "Conta"}

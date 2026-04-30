@@ -2,7 +2,7 @@ import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
 import { InventoryData } from '../hooks/useInventory';
 import { useAuth } from '../contexts/AuthContext';
-import { Package, BarChart3, ShoppingCart, DollarSign, TrendingUp, Wallet } from 'lucide-react';
+import { Package, BarChart3, ShoppingCart, DollarSign, TrendingUp, Wallet, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { StatCard } from '../components/ui/StatCard';
@@ -122,36 +122,40 @@ export function Dashboard({
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
       >
         <StatCard
+          tone="emerald"
           label="Vendas do dia"
           value={dailyRevenue}
           format="currency"
           delta={revenueDelta}
           trend={revenueData}
           hint="vs trimestre anterior"
-          icon={<DollarSign className="w-3.5 h-3.5" strokeWidth={1.75} />}
+          icon={<DollarSign className="w-3.5 h-3.5" strokeWidth={2} />}
         />
         <StatCard
+          tone="sky"
           label="Produtos em estoque"
           value={products.length}
           format="number"
           hint={`${products.filter(p => p.stock > 0).length} ativos`}
-          icon={<Package className="w-3.5 h-3.5" strokeWidth={1.75} />}
+          icon={<Package className="w-3.5 h-3.5" strokeWidth={2} />}
         />
         <StatCard
+          tone="amber"
           label="Custo do estoque"
           value={totalCost}
           format="currency"
           trend={spendingData}
           hint="valor imobilizado"
-          icon={<Wallet className="w-3.5 h-3.5" strokeWidth={1.75} />}
+          icon={<Wallet className="w-3.5 h-3.5" strokeWidth={2} />}
         />
         <StatCard
+          tone="violet"
           label="Lucro do dia"
           value={dailyProfit}
           format="currency"
           delta={profitDelta}
           hint="margem sobre vendas"
-          icon={<TrendingUp className="w-3.5 h-3.5" strokeWidth={1.75} />}
+          icon={<TrendingUp className="w-3.5 h-3.5" strokeWidth={2} />}
         />
       </motion.div>
 
@@ -164,38 +168,47 @@ export function Dashboard({
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors">
+          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center shrink-0">
-                <Package className="w-4 h-4 text-slate-700 dark:text-slate-300" strokeWidth={1.75} />
+              <div className="w-9 h-9 rounded-md bg-sky-50 text-sky-700 ring-1 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Package className="w-[18px] h-[18px]" strokeWidth={2} />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-[13.5px] font-medium text-slate-900 dark:text-white">Cadastrar produto</h3>
-                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Adicione ao estoque</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[13.5px] font-medium text-slate-900 dark:text-white">Cadastrar produto</h3>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all" strokeWidth={2} />
+                </div>
+                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Adicione novos itens ao seu estoque</p>
               </div>
             </div>
           </button>
 
-          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors">
+          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center shrink-0">
-                <BarChart3 className="w-4 h-4 text-slate-700 dark:text-slate-300" strokeWidth={1.75} />
+              <div className="w-9 h-9 rounded-md bg-violet-50 text-violet-700 ring-1 ring-violet-100 dark:bg-violet-500/10 dark:text-violet-400 dark:ring-violet-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <BarChart3 className="w-[18px] h-[18px]" strokeWidth={2} />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-[13.5px] font-medium text-slate-900 dark:text-white">Gerar relatório</h3>
-                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Análises detalhadas</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[13.5px] font-medium text-slate-900 dark:text-white">Gerar relatório</h3>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all" strokeWidth={2} />
+                </div>
+                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Análises detalhadas do período</p>
               </div>
             </div>
           </button>
 
-          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors">
+          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center shrink-0">
-                <ShoppingCart className="w-4 h-4 text-slate-700 dark:text-slate-300" strokeWidth={1.75} />
+              <div className="w-9 h-9 rounded-md bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <ShoppingCart className="w-[18px] h-[18px]" strokeWidth={2} />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-[13.5px] font-medium text-slate-900 dark:text-white">Registrar venda</h3>
-                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Saídas e operações</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[13.5px] font-medium text-slate-900 dark:text-white">Registrar venda</h3>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all" strokeWidth={2} />
+                </div>
+                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Saídas e operações de venda</p>
               </div>
             </div>
           </button>

@@ -242,6 +242,9 @@ export function Sidebar({
                     : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
                 }`}
               >
+                {isActive && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full bg-violet-400" aria-hidden />
+                )}
                 <img
                   src={item.imageUrl}
                   alt=""
@@ -266,6 +269,9 @@ export function Sidebar({
                     : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
                 }`}
               >
+                {highlight && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full bg-violet-400" aria-hidden />
+                )}
                 <img
                   src={item.imageUrl}
                   alt=""
@@ -362,8 +368,9 @@ export function Sidebar({
         {/* User card */}
         <div className="px-2 pb-2.5">
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-md bg-white/[0.03] border border-white/[0.05]">
-            <span className="w-7 h-7 rounded bg-white/10 text-white text-[11px] font-semibold flex items-center justify-center shrink-0">
+            <span className="relative w-7 h-7 rounded bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[11px] font-semibold flex items-center justify-center shrink-0">
               {initials}
+              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-slate-950" aria-label="Online" />
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-[12.5px] font-medium text-white truncate leading-tight">
