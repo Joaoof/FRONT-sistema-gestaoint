@@ -32,6 +32,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import HelpPage from './pages/Help';
 import { Topbar } from './components/Topbar';
 import { CreateProduct } from './pages/Products/CreateProduct';
+import { ProductsList } from './pages/Products/ProductsList';
 import { ReportsPage } from './pages/Reports/ReportsPage';
 
 function AppContent() {
@@ -83,7 +84,9 @@ function AppContent() {
             />
             <Route path="/entregas/relatorios" element={<DeliveryReportsPage />} />
             <Route path="/estoque" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
+            <Route path="/produtos" element={<ProductsList />} />
             <Route path="/produtos/cadastrar" element={<CreateProduct />} />
+            <Route path="/categorias" element={<CategoriesRegistration />} />
             <Route path="/relatorios" element={<ReportsPage />} />
             <Route path="/vendas" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
             <Route path="/fiscal-receber" element={<AccountsReceivableDashboard />} />

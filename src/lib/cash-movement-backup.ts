@@ -9,13 +9,7 @@
  * são ignoradas (`skipDuplicates`).
  */
 
-const API_BASE =
-  (import.meta.env.VITE_API_URL as string | undefined) ??
-  (import.meta.env.VITE_GRAPHQL_ENDPOINT as string | undefined)?.replace(
-    /\/graphql\/?$/,
-    '',
-  ) ??
-  '';
+import { API_BASE, authHeaders } from './api';
 
 const ENDPOINT = `${API_BASE}/api/cash-movements`;
 
@@ -34,14 +28,6 @@ export interface ImportResult {
 export interface ExportRange {
   start?: string; // ISO date
   end?: string;   // ISO date
-}
-
-function authHeaders(): HeadersInit {
-  const token =
-    typeof window !== 'undefined'
-      ? window.localStorage.getItem('accessToken')
-      : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 function buildQuery(range?: ExportRange): string {

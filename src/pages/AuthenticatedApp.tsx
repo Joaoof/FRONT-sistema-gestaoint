@@ -28,6 +28,8 @@ export type View =
     | 'entregas'
     | 'cadastros'
     | 'estoque'
+    | 'produtos'
+    | 'categorias'
     | 'vendas'
     | 'fiscal'
     | 'fiscal-receber'
@@ -49,6 +51,8 @@ const moduleNames: Record<View, string> = {
     entregas: 'Entregas',
     cadastros: 'Cadastros',
     estoque: 'Estoque',
+    produtos: 'Produtos',
+    categorias: 'Categorias',
     entrada: 'Entrada de Produtos',
     'formulario-movimentacao': 'Formulário de Movimentação',
     'movimentacoes-saida': 'Nova Saída',

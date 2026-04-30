@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Star,
   GripVertical,
+  Sparkles,
 } from 'lucide-react';
 import { uploadProductImage, validateImage, UploadError, type UploadedAsset } from '../../lib/r2-upload';
 import { toast } from 'sonner';
@@ -180,9 +181,15 @@ export function CreateProduct() {
   }
 
   // ───────── VALIDAÇÃO ─────────
+  function generateSku(): string {
+    const rand = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+      ? crypto.randomUUID().slice(0, 8)
+      : Math.random().toString(36).slice(2, 10);
+    return `PROD-${rand.toUpperCase()}`;
+  }
+
   function validate(): boolean {
     const next: typeof errors = {};
-    if (!form.sku.trim())            next.sku = 'Informe o código (SKU)';
     if (!form.name.trim())           next.name = 'Informe o nome do produto';
     if (!form.category)              next.category = 'Selecione uma categoria';
     if (!form.costPrice || cost < 0) next.costPrice = 'Preço de compra inválido';
@@ -241,7 +248,7 @@ export function CreateProduct() {
   }
 
   const uploadingCount = images.filter(i => i.status === 'uploading').length;
-  const isFormValid = form.sku && form.name && form.category && form.costPrice && form.salePrice;
+  const isFormValid = form.name && form.category && form.costPrice && form.salePrice;
 
   return (
     <div className="space-y-6 w-full max-w-5xl mx-auto pb-12">
@@ -350,18 +357,28 @@ export function CreateProduct() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field
               label="Código (SKU)"
-              required
               error={errors.sku}
               icon={<Hash className="w-3.5 h-3.5" strokeWidth={1.75} />}
-              hint="Ex: PROD-0001, ABC-123"
+              hint="Opcional · deixe em branco ou clique no ícone pra gerar"
             >
-              <input
-                type="text"
-                value={form.sku}
-                onChange={(e) => update('sku', e.target.value.toUpperCase())}
-                placeholder="PROD-0001"
-                className={inputClass(!!errors.sku)}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={form.sku}
+                  onChange={(e) => update('sku', e.target.value.toUpperCase())}
+                  placeholder="Opcional — ex: PROD-0001"
+                  className={`${inputClass(!!errors.sku)} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => update('sku', generateSku())}
+                  title="Gerar SKU automático"
+                  aria-label="Gerar SKU automático"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-md text-slate-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+                </button>
+              </div>
             </Field>
 
             <Field label="Unidade" required>

@@ -18,7 +18,11 @@
  * deve retornar a URL pública correta em `publicUrl`.
  */
 
-const STORAGE_API = (import.meta.env.VITE_STORAGE_API as string | undefined) ?? '/api/storage';
+import { API_BASE, authHeaders as sharedAuthHeaders } from './api';
+
+const STORAGE_API =
+  (import.meta.env.VITE_STORAGE_API as string | undefined) ??
+  `${API_BASE}/api/storage`;
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const ACCEPTED_TYPES = new Set([
   'image/jpeg',
@@ -66,10 +70,7 @@ interface SignedUrlResponse {
   expiresIn?: number;
 }
 
-function authHeaders(): HeadersInit {
-  const token = typeof window !== 'undefined' ? window.localStorage.getItem('accessToken') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+const authHeaders = sharedAuthHeaders;
 
 async function getSignedUploadUrl(file: File, folder: string): Promise<SignedUrlResponse> {
   const res = await fetch(`${STORAGE_API}/sign`, {
