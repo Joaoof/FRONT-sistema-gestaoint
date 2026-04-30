@@ -203,7 +203,7 @@ export function AccountsPayableDashboard() {
         <div className="space-y-8">
             {/* Título */}
             <div>
-                <h1 className="text-3xl font-bold font-['Rajdhani'] text-gray-900 dark:text-white mb-2">Contas a Pagar</h1>
+                <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Contas a Pagar</h1>
                 <p className="text-gray-600 dark:text-slate-300">Gestão de fornecedores, despesas e pagamentos</p>
             </div>
 

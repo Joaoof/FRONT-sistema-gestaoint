@@ -531,23 +531,24 @@ export function MovementHistory() {
 
     return (
         <>
-            <div className="space-y-8 px-6 py-6 bg-gray-50 dark:bg-slate-950 min-h-screen w-full font-sans">
-                <div className="w-full relative pb-10">
-                    <h1 className="text-4xl font-poppins text-gray-900 dark:text-white mb-2">📋 Histórico de Movimentações</h1>
-                    <p className="text-gray-600 dark:text-slate-300 font-open_sans">Controle completo das entradas e saídas do caixa.</p>
-
+            <div className="space-y-6 w-full">
+                <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+                    <div className="min-w-0">
+                        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Histórico de movimentações</h1>
+                        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Controle completo das entradas e saídas do caixa</p>
+                    </div>
                     <button
                         type="button"
                         onClick={() => refetch()}
                         disabled={loading}
-                        className="absolute top-0 right-0 flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-white/10 shadow-sm disabled:opacity-60 rounded-xl text-gray-700 dark:text-slate-200 text-sm font-sans font-medium transition-all duration-200 group"
+                        className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md disabled:opacity-50 transition-colors group shrink-0"
                         aria-label="Atualizar dados"
                     >
                         <RotateCcw
-                            className={`h-5 w-5 transition-transform duration-300 ${loading ? "animate-spin text-[#780087]" : "group-hover:rotate-12 text-gray-600 dark:text-slate-300"
-                                }`}
+                            className={`w-3.5 h-3.5 transition-transform ${loading ? "animate-spin text-violet-500" : "group-hover:rotate-12"}`}
+                            strokeWidth={2}
                         />
-                        <span className="font-medium">{loading ? "Atualizando..." : "Atualizar"}</span>
+                        <span>{loading ? "Atualizando…" : "Atualizar"}</span>
                     </button>
                 </div>
 
@@ -1106,7 +1107,7 @@ function ViewModal({ movement, onClose }: { movement: Movement | null; onClose: 
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-open_sans">
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6 w-full max-w-2xl z-50 font-open_sans">
                     <Dialog.Title className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
                         <img src={categoryIconUrl || "/placeholder.svg"} alt="Categoria" className="w-6 h-6 object-contain" />{" "}
                         Detalhes da Movimentação
@@ -1172,7 +1173,7 @@ function DeleteConfirmationModal({
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-sm z-50 font-sans">
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6 w-full max-w-sm z-50 font-sans">
                     {/* Título mais profissional com imagem e cor forte */}
                     <Dialog.Title className="text-xl font-semibold text-red-700 dark:text-red-300 mb-4 flex items-center gap-2">
                         <img src={TRASH_ICON_URL || "/placeholder.svg"} alt="Lixeira" className="w-6 h-6 object-contain" />
@@ -1306,7 +1307,7 @@ function ExportPdfDropdown({
             </DropdownMenu.Trigger>
 
             <DropdownMenu.Content
-                className="min-w-64 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-100 dark:border-white/5 p-3 z-50 animate-slideDown font-sans"
+                className="min-w-64 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-100 dark:border-white/5 p-3 z-50 animate-slideDown font-sans"
                 sideOffset={5}
             >
                 <DropdownMenu.Item
@@ -1455,7 +1456,7 @@ function EditModal({
         <Dialog.Root open={!!movement} onOpenChange={onClose}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-2xl z-50 font-open_sans">
+                <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6 w-full max-w-2xl z-50 font-open_sans">
                     <Dialog.Title className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
                         {/* Substitui o ícone 'Edit' pela imagem */}
                         <img src={categoryIconUrl || "/placeholder.svg"} alt="Categoria" className="w-6 h-6 object-contain" />{" "}

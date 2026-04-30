@@ -39,7 +39,7 @@ export function PayablesList() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Contas a Pagar</h1>
+                    <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white">Contas a Pagar</h1>
                     <p className="text-gray-600 dark:text-slate-300">Lista completa de despesas</p>
                 </div>
                 <button

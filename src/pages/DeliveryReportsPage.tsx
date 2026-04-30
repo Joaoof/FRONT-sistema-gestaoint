@@ -124,7 +124,7 @@ export function DeliveryReportsPage() {
                 >
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white font-['Rubik']">
+                            <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">
                                 Relatórios de Entregas
                             </h1>
                             <div className="flex items-center mt-1.5 space-x-1 text-sm text-gray-600 dark:text-slate-300">

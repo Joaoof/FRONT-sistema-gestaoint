@@ -533,7 +533,7 @@ function LiveNotifications() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute mt-2 w-80 bg-white dark:bg-slate-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden"
+                    className="absolute mt-2 w-80 bg-white dark:bg-slate-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg overflow-hidden"
                 >
                     <div className="p-3 border-b bg-gray-50 dark:bg-slate-950 flex justify-between items-center">
                         <h3 className="font-semibold text-gray-900 dark:text-white">{t.iaAssistant}</h3>

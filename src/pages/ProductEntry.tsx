@@ -387,7 +387,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
       <Toaster position="top-right" />
 
       <div>
-        <h1 className="text-3xl font-bold font-['Merriweather'] text-gray-900 dark:text-white mb-2">Entrada de Produtos</h1>
+        <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Entrada de Produtos</h1>
         <p className="text-gray-600 dark:text-slate-300">Registre novos produtos no seu estoque</p>
       </div>
 

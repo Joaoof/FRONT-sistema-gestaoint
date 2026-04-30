@@ -307,7 +307,7 @@ export function NewDeliveryPage() {
             >
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white font-['Rubik']">
+                        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">
                             Nova Entrega
                         </h1>
                         <p className="text-sm text-gray-600 dark:text-slate-300 mt-1.5">

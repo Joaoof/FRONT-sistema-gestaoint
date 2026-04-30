@@ -34,7 +34,7 @@ export function ReceivablesList() {
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Contas a Receber</h1>
+                    <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white">Contas a Receber</h1>
                     <p className="text-gray-600 dark:text-slate-300">Lista completa de recebíveis</p>
                 </div>
                 <button

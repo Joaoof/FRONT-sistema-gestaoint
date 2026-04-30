@@ -245,7 +245,7 @@ export function AccountsReceivableDashboard() {
         <div className="space-y-8">
             {/* Título */}
             <div>
-                <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white mb-2">Contas a Receber</h1>
+                <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Contas a Receber</h1>
                 <p className="text-gray-600 dark:text-slate-300">Gestão de recebíveis: clientes, vencimentos e pagamentos</p>
             </div>
 

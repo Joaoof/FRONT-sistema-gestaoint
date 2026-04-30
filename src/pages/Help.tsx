@@ -31,7 +31,7 @@ export default function HelpPage() {
                 <div className="grid md:grid-cols-3 gap-12">
                     {/* Sistema Section */}
                     <div>
-                        <h2 className="text-2xl font-bold text-[#1a2b49] mb-6">Sistema</h2>
+                        <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white tracking-tight mb-6">Sistema</h2>
                         <ul className="space-y-4">
                             <li>
                                 <a
@@ -78,7 +78,7 @@ export default function HelpPage() {
 
                     {/* Gestão Section */}
                     <div>
-                        <h2 className="text-2xl font-bold text-[#1a2b49] mb-6">Gestão</h2>
+                        <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white tracking-tight mb-6">Gestão</h2>
                         <ul className="space-y-4">
                             <li>
                                 <a
@@ -135,7 +135,7 @@ export default function HelpPage() {
 
                     {/* Suporte Section */}
                     <div>
-                        <h2 className="text-2xl font-bold text-[#1a2b49] mb-6">Suporte</h2>
+                        <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white tracking-tight mb-6">Suporte</h2>
                         <ul className="space-y-4">
                             <li>
                                 <a

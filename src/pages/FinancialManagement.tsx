@@ -498,40 +498,58 @@ export function FinancialManagement() {
     }
 
     return (
-        <div className="space-y-8 px-4 py-6 w-full min-w-0">
+        <div className="space-y-6 w-full min-w-0">
             <Toaster position="top-right" />
 
-            {/* Cabeçalho Executivo */}
-            <div>
-                <h1 className="text-3xl font-serif text-gray-900 dark:text-white">Centro de Controle Financeiro</h1>
-                <p className="text-gray-600 dark:text-slate-300">
-                    Plataforma integrada de gestão financeira com análises avançadas e relatórios executivos.
-                </p>
+            {/* Header SaaS */}
+            <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+                <div className="min-w-0">
+                    <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Centro financeiro</h1>
+                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+                        Gestão integrada de contas a pagar, receber e fluxo de caixa
+                    </p>
+                </div>
             </div>
 
-            {/* Painel de Indicadores Estratégicos */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-                    <p className="text-sm text-blue-800">Contas a Receber</p>
-                    <p className="text-2xl font-bold font-['Rajdhani'] text-blue-600 dark:text-blue-400">{formatCurrency(totalReceber)}</p>
+            {/* KPIs com tones semânticos */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <span className="absolute inset-x-0 top-0 h-[2px] bg-sky-500 opacity-70" aria-hidden />
+                    <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-md bg-sky-50 text-sky-700 ring-1 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20 flex items-center justify-center">
+                            <DollarSign className="w-3.5 h-3.5" strokeWidth={2} />
+                        </span>
+                        <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Contas a receber</span>
+                    </div>
+                    <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">{formatCurrency(totalReceber)}</p>
                 </div>
-                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 rounded-lg p-6 text-center">
-                    <FileText className="w-6 h-6 text-red-600 dark:text-red-400 mx-auto mb-2" />
-                    <p className="text-sm text-red-800">Contas a Pagar</p>
-                    <p className="text-2xl font-bold font-['Rajdhani'] text-red-900">{formatCurrency(totalPagar)}</p>
+
+                <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <span className="absolute inset-x-0 top-0 h-[2px] bg-rose-500 opacity-70" aria-hidden />
+                    <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-md bg-rose-50 text-rose-700 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20 flex items-center justify-center">
+                            <FileText className="w-3.5 h-3.5" strokeWidth={2} />
+                        </span>
+                        <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Contas a pagar</span>
+                    </div>
+                    <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">{formatCurrency(totalPagar)}</p>
                 </div>
-                <div
-                    className={`bg-green-50 dark:bg-emerald-950/40 border border-green-200 rounded-lg p-6 text-center ${saldo < 0 ? "bg-red-50 dark:bg-red-950/40 border-red-200" : ""}`}
-                >
-                    <CheckCircle
-                        className="w-6 h-6 text-green-600 dark:text-emerald-400 mx-auto mb-2"
-                        style={{ color: saldo >= 0 ? "#16a34a" : "#dc2626" }}
-                    />
-                    <p className="text-sm text-green-800">Posição Financeira Líquida</p>
-                    <p className={`text-2xl font-bold font-['Rajdhani'] ${saldo >= 0 ? "text-green-900" : "text-red-900"}`}>
-                        {formatCurrency(saldo)}
-                    </p>
+
+                <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <span className={`absolute inset-x-0 top-0 h-[2px] ${saldo >= 0 ? 'bg-emerald-500' : 'bg-rose-500'} opacity-70`} aria-hidden />
+                    <div className="flex items-center gap-2">
+                        <span className={`w-7 h-7 rounded-md flex items-center justify-center ring-1 ${
+                            saldo >= 0
+                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20'
+                                : 'bg-rose-50 text-rose-700 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20'
+                        }`}>
+                            <CheckCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                        </span>
+                        <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Posição líquida</span>
+                    </div>
+                    <p className={`mt-2.5 text-[24px] font-semibold leading-none tabular-nums tracking-tight ${
+                        saldo >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
+                    }`}>{formatCurrency(saldo)}</p>
                 </div>
             </div>
 

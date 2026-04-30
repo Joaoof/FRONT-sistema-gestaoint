@@ -221,57 +221,44 @@ export function MovementDashboard() {
             initial="hidden"
             animate="show"
         >
-            {/* Título e Logout */}
-            <motion.div
-                className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4"
-                variants={itemVariants}
-            >
-                <div>
-                    <h1 className="text-3xl font-poppins tracking-tight text-gray-900 dark:text-white mb-2">Dashboard de Movimentações</h1>
-                    <p className="text-gray-600 dark:text-slate-300 font-open_sans text-sm">Controle completo de entradas e saídas do caixa</p>
-                </div>
-                <motion.button
-                    onClick={handleLogout}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 rounded-lg transition-colors self-start"
-                >
-                    <span>Sair</span>
-                    <LogOut className="w-4 h-4" />
-                </motion.button>
-            </motion.div>
-
-            {/* Ações rápidas */}
-            <motion.div className="flex flex-wrap gap-6" variants={containerVariants}>
-                <motion.button
-                    variants={buttonVariants}
-                    whileHover="hover"
-                    whileTap="tap"
-                    onClick={() => navigate('/formulario-movimentacao')}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl hover:from-green-600 hover:to-green-700 shadow-md hover:shadow-lg transition-all duration-200 font-poppins"
-                >
-                    <ArrowUpCircle className="w-5 h-5" />
-                    Registrar Movimentações
-                </motion.button>
-            </motion.div>
-
-            {/* Filtro */}
-            <motion.div variants={itemVariants}>
-                <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-lg font-open_sans">
-                    <div className="flex flex-col sm:flex-row gap-4 items-center">
-                        <label className="text-sm font-medium text-gray-700 dark:text-slate-200 whitespace-nowrap">Filtrar por </label>
-                        <div className="relative flex-1 max-w-md">
-                            <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                            <input
-                                type="date"
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
-                                className="w-full pl-10 p-2 border border-gray-300 dark:border-white/15 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                        </div>
+            {/* Header SaaS */}
+            <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+                <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Movimentações</h1>
+                        <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 text-[10.5px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 rounded">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Live
+                        </span>
                     </div>
+                    <p className="text-[13px] text-slate-500 dark:text-slate-400">Controle completo de entradas e saídas do caixa</p>
                 </div>
-            </motion.div>
+                <div className="flex items-center gap-2 shrink-0">
+                    <div className="relative">
+                        <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" strokeWidth={1.75} />
+                        <input
+                            type="date"
+                            value={filterDate}
+                            onChange={(e) => setFilterDate(e.target.value)}
+                            className="h-8 pl-8 pr-2.5 text-[12.5px] text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-md focus:outline-none focus:ring-[3px] focus:ring-violet-500/15 focus:border-violet-500 hover:border-slate-300 dark:hover:border-white/15"
+                        />
+                    </div>
+                    <button
+                        onClick={() => navigate('/formulario-movimentacao')}
+                        className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-white bg-gradient-to-b from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 rounded-md shadow-sm transition-colors"
+                    >
+                        <ArrowUpCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                        Nova movimentação
+                    </button>
+                    <button
+                        onClick={handleLogout}
+                        className="hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 text-[12.5px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md transition-colors"
+                    >
+                        <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
+                        Sair
+                    </button>
+                </div>
+            </div>
 
             {/* KPIs - Módulos */}
             <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 font-poppins" variants={containerVariants}>

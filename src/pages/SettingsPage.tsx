@@ -101,7 +101,7 @@ export function SettingsPage() {
         <div className="bg-gray-50 dark:bg-slate-950 min-h-screen py-8 px-4 sm:px-6 lg:px-8 space-y-8">
             {/* Cabeçalho */}
             <div>
-                <h1 className="text-3xl font-serif text-gray-900 dark:text-white mb-2">Configurações</h1>
+                <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Configurações</h1>
                 <p className="text-gray-600 dark:text-slate-300">Gerencie seu perfil, empresa e segurança</p>
             </div>
 

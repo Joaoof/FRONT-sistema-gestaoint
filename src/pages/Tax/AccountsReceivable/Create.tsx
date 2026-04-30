@@ -54,7 +54,7 @@ export function CreateReceivable() {
         <div className="space-y-8">
             <div className="flex items-center">
                 <button onClick={() => navigate(-1)} className="mr-4 text-blue-600 dark:text-blue-400">← Voltar</button>
-                <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Nova Conta a Receber</h1>
+                <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white">Nova Conta a Receber</h1>
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">

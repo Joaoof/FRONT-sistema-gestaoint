@@ -57,7 +57,7 @@ export function ProductExit({ onAddExit, products }: ProductExitProps) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold font-serif text-gray-900 dark:text-white mb-2">Saída de Produtos</h1>
+        <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Saída de Produtos</h1>
         <p className="text-gray-600 dark:text-slate-300">Registre vendas e movimentações de saída</p>
       </div>
 

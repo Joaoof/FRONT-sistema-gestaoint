@@ -130,7 +130,7 @@ export function SearchPage() {
             <Toaster position="top-right" />
 
             <div>
-                <h1 className="text-3xl font-serif text-gray-900 dark:text-white mb-2">Centro de Consultas</h1>
+                <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Centro de Consultas</h1>
                 <p className="text-gray-600 dark:text-slate-300">Análise avançada de dados com visualização em tempo real.</p>
             </div>
 
@@ -228,22 +228,37 @@ export function SearchPage() {
                 </div>
             </form>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-lg p-6 text-center">
-                    <Package className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-                    <p className="text-sm text-blue-800">Total em Estoque</p>
-                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalEstoque}</p>
+            {/* KPIs com tones SaaS */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <span className="absolute inset-x-0 top-0 h-[2px] bg-sky-500 opacity-70" aria-hidden />
+                    <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-md bg-sky-50 text-sky-700 ring-1 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20 flex items-center justify-center">
+                            <Package className="w-3.5 h-3.5" strokeWidth={2} />
+                        </span>
+                        <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Total em estoque</span>
+                    </div>
+                    <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">{totalEstoque}</p>
                 </div>
-                <div className="bg-green-50 dark:bg-emerald-950/40 border border-green-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-green-600 dark:text-emerald-400 mx-auto mb-2" />
-                    <p className="text-sm text-green-800">Valor Total em Estoque</p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-emerald-400">{formatCurrency(valorTotal)}</p>
+                <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <span className="absolute inset-x-0 top-0 h-[2px] bg-emerald-500 opacity-70" aria-hidden />
+                    <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 flex items-center justify-center">
+                            <DollarSign className="w-3.5 h-3.5" strokeWidth={2} />
+                        </span>
+                        <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Valor em estoque</span>
+                    </div>
+                    <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">{formatCurrency(valorTotal)}</p>
                 </div>
-                <div className="bg-purple-50 dark:bg-purple-950/40 border border-purple-200 rounded-lg p-6 text-center">
-                    <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
-                    <p className="text-sm text-purple-800">Ticket Médio</p>
-                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{formatCurrency(ticketMedio)}</p>
+                <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <span className="absolute inset-x-0 top-0 h-[2px] bg-violet-500 opacity-70" aria-hidden />
+                    <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-md bg-violet-50 text-violet-700 ring-1 ring-violet-100 dark:bg-violet-500/10 dark:text-violet-400 dark:ring-violet-500/20 flex items-center justify-center">
+                            <TrendingUp className="w-3.5 h-3.5" strokeWidth={2} />
+                        </span>
+                        <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Ticket médio</span>
+                    </div>
+                    <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">{formatCurrency(ticketMedio)}</p>
                 </div>
             </div>
 

@@ -47,8 +47,8 @@ export function HomeMovement() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-serif text-gray-900 dark:text-white mb-2">Controle de Caixa</h1>
-                <p className="text-gray-700 dark:text-slate-200 font-light">Sistema de movimentações financeiras</p>
+                <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Controle de Caixa</h1>
+                <p className="text-gray-700 dark:text-slate-200 text-[13px]">Sistema de movimentações financeiras</p>
             </div>
 
             {/* Ações rápidas */}
@@ -69,24 +69,43 @@ export function HomeMovement() {
                 </button>
             </div>
 
-            {/* Resumo do dia */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-green-50 dark:bg-emerald-950/40 border border-green-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-green-600 dark:text-emerald-400 mx-auto mb-2" />
-                    <p className="text-sm text-green-800">Entradas do dia</p>
-                    <p className="text-2xl font-bold text-green-900">R$ {entradas.toFixed(2)}</p>
+            {/* KPIs do dia */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <span className="absolute inset-x-0 top-0 h-[2px] bg-emerald-500 opacity-70" aria-hidden />
+                    <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 flex items-center justify-center">
+                            <DollarSign className="w-3.5 h-3.5" strokeWidth={2} />
+                        </span>
+                        <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Entradas do dia</span>
+                    </div>
+                    <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">R$ {entradas.toFixed(2)}</p>
                 </div>
-                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-red-600 dark:text-red-400 mx-auto mb-2" />
-                    <p className="text-sm text-red-800">Saídas do dia</p>
-                    <p className="text-2xl font-bold text-red-900">R$ {saidas.toFixed(2)}</p>
+                <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <span className="absolute inset-x-0 top-0 h-[2px] bg-rose-500 opacity-70" aria-hidden />
+                    <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-md bg-rose-50 text-rose-700 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20 flex items-center justify-center">
+                            <DollarSign className="w-3.5 h-3.5" strokeWidth={2} />
+                        </span>
+                        <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Saídas do dia</span>
+                    </div>
+                    <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">R$ {saidas.toFixed(2)}</p>
                 </div>
-                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-                    <p className="text-sm text-blue-800">Saldo Final</p>
-                    <p className={`text-2xl font-bold ${saldo >= 0 ? 'text-blue-900' : 'text-red-900'}`}>
-                        R$ {saldo.toFixed(2)}
-                    </p>
+                <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <span className={`absolute inset-x-0 top-0 h-[2px] ${saldo >= 0 ? 'bg-sky-500' : 'bg-rose-500'} opacity-70`} aria-hidden />
+                    <div className="flex items-center gap-2">
+                        <span className={`w-7 h-7 rounded-md flex items-center justify-center ring-1 ${
+                            saldo >= 0
+                                ? 'bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20'
+                                : 'bg-rose-50 text-rose-700 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20'
+                        }`}>
+                            <DollarSign className="w-3.5 h-3.5" strokeWidth={2} />
+                        </span>
+                        <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Saldo final</span>
+                    </div>
+                    <p className={`mt-2.5 text-[24px] font-semibold leading-none tabular-nums tracking-tight ${
+                        saldo >= 0 ? 'text-sky-700 dark:text-sky-400' : 'text-rose-700 dark:text-rose-400'
+                    }`}>R$ {saldo.toFixed(2)}</p>
                 </div>
             </div>
 
