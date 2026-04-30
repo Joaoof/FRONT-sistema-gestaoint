@@ -116,9 +116,9 @@ function CompanyRow({
     if (!value) return null;
     return (
         <div className="flex gap-1 min-w-0">
-            <dt className="text-slate-500 shrink-0">{label}:</dt>
+            <dt className="shrink-0 font-semibold">{label}:</dt>
             <dd
-                className={`text-slate-900 truncate min-w-0 ${bold ? 'font-semibold' : ''} ${mono ? 'font-mono' : ''}`}
+                className={`truncate min-w-0 ${bold ? 'font-semibold' : ''} ${mono ? 'font-mono' : ''}`}
             >
                 {value}
             </dd>
@@ -137,13 +137,12 @@ function Receipt({ order, company, via }: ReceiptProps) {
     const issuedAt = new Date(order.createdAt);
 
     const viaLabel = via === 'empresa' ? 'VIA DA EMPRESA' : 'VIA DO CLIENTE';
-    const viaColor = via === 'empresa' ? 'bg-slate-900 text-white' : 'bg-blue-700 text-white';
 
     return (
-        <section className="receipt p-4 text-[10.5px] leading-tight text-slate-900">
+        <section className="receipt p-4 text-[10.5px] leading-tight text-black">
             {/* Topo: identificação da via + número */}
-            <div className="flex items-center justify-between mb-2">
-                <span className={`inline-block px-1.5 py-0.5 text-[9px] font-bold tracking-[0.15em] rounded-sm ${viaColor}`}>
+            <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[9px] font-bold tracking-[0.15em] uppercase">
                     {viaLabel}
                 </span>
                 <span className="text-[14px] font-bold tabular-nums">
@@ -151,22 +150,23 @@ function Receipt({ order, company, via }: ReceiptProps) {
                 </span>
             </div>
 
-            {/* Cabeçalho: bloco de dados da empresa + data/status */}
-            <header className="flex items-start justify-between gap-3 pb-2 border-b border-slate-900">
+            {/* Cabeçalho: só logo + dados da empresa, sem fundo colorido */}
+            <header className="flex items-start justify-between gap-3 pb-2 border-b border-black">
                 <div className="flex items-start gap-2 min-w-0 flex-1">
-                    {company?.logoUrl ? (
-                        <img src={company.logoUrl} alt="" className="w-12 h-12 rounded object-cover ring-1 ring-slate-200 shrink-0" />
-                    ) : (
-                        <div className="w-12 h-12 rounded bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white font-bold text-[12px] shrink-0">
-                            {(company?.nomeFantasia ?? company?.name ?? 'EM').slice(0, 2).toUpperCase()}
-                        </div>
+                    {company?.logoUrl && (
+                        <img
+                            src={company.logoUrl}
+                            alt=""
+                            className="w-12 h-12 object-contain shrink-0"
+                            style={{ filter: 'grayscale(100%)' }}
+                        />
                     )}
                     <div className="min-w-0 flex-1">
                         <p className="text-[12.5px] font-bold uppercase leading-tight">
                             {company?.nomeFantasia ?? company?.name ?? 'Empresa'}
                         </p>
                         {buildCompanyAddressLine(company) && (
-                            <p className="text-[9.5px] text-slate-700 leading-tight uppercase">
+                            <p className="text-[9.5px] leading-tight uppercase">
                                 {buildCompanyAddressLine(company)}
                             </p>
                         )}
@@ -181,28 +181,20 @@ function Receipt({ order, company, via }: ReceiptProps) {
                         </dl>
                     </div>
                 </div>
-                <div className="text-right shrink-0">
-                    <p className="text-[9.5px] text-slate-600 tabular-nums">
+                <div className="text-right shrink-0 text-[9.5px] tabular-nums">
+                    <p>
                         {issuedAt.toLocaleDateString('pt-BR')}{' '}
                         {issuedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
-                    <span
-                        className={`inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold ${
-                            order.status === 'PAID'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : order.status === 'CANCELED' || order.status === 'REFUNDED'
-                                ? 'bg-rose-100 text-rose-800'
-                                : 'bg-sky-100 text-sky-800'
-                        }`}
-                    >
+                    <p className="text-[9px] font-semibold uppercase tracking-wider mt-0.5">
                         {STATUS_LABEL[order.status]}
-                    </span>
+                    </p>
                 </div>
             </header>
 
-            {/* Bloco do cliente (labeled, igual ao da empresa) */}
-            <div className="mt-2 pb-2 border-b border-slate-300">
-                <p className="text-[8.5px] uppercase tracking-[0.15em] font-semibold text-slate-500 mb-1">
+            {/* Bloco do cliente */}
+            <div className="mt-2 pb-2 border-b border-black/40">
+                <p className="text-[8.5px] uppercase tracking-[0.15em] font-semibold mb-1">
                     Dados do cliente
                 </p>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-0 text-[9.5px] leading-tight">
@@ -230,20 +222,20 @@ function Receipt({ order, company, via }: ReceiptProps) {
             {/* Linha vendedor + pagamento */}
             <div className="grid grid-cols-2 gap-3 mt-2 text-[10px]">
                 <div className="min-w-0">
-                    <p className="text-[8.5px] uppercase tracking-wider text-slate-500">Vendedor</p>
+                    <p className="text-[8.5px] uppercase tracking-wider">Vendedor</p>
                     <p className="font-semibold truncate">{order.sellerName ?? '—'}</p>
                     {order.sellerName && Number(order.commissionPercent ?? 0) > 0 && via === 'empresa' && (
-                        <p className="text-slate-600 tabular-nums">
+                        <p className="tabular-nums">
                             Comissão: {Number(order.commissionPercent).toFixed(2)}% · {formatBRL(Number(order.commissionAmount ?? 0))}
                         </p>
                     )}
                 </div>
                 <div className="min-w-0 text-right">
-                    <p className="text-[8.5px] uppercase tracking-wider text-slate-500">Pagamento</p>
+                    <p className="text-[8.5px] uppercase tracking-wider">Pagamento</p>
                     <p className="font-semibold">
                         {order.paymentMethod ? PAYMENT_LABEL[order.paymentMethod] : '—'}
                     </p>
-                    <p className="text-slate-600 tabular-nums">
+                    <p className="tabular-nums">
                         {order.items.length} {order.items.length === 1 ? 'item' : 'itens'} · {totalQty}un
                     </p>
                 </div>
@@ -252,31 +244,31 @@ function Receipt({ order, company, via }: ReceiptProps) {
             {/* Itens */}
             <table className="w-full mt-2 text-[10px]">
                 <thead>
-                    <tr className="text-left border-y border-slate-400">
-                        <th className="py-1 pr-1 font-semibold text-slate-700 w-6">#</th>
-                        <th className="py-1 px-1 font-semibold text-slate-700">Descrição</th>
-                        <th className="py-1 px-1 font-semibold text-slate-700 text-right tabular-nums w-9">Qt</th>
-                        <th className="py-1 px-1 font-semibold text-slate-700 text-right tabular-nums w-16">Unit.</th>
-                        <th className="py-1 pl-1 font-semibold text-slate-700 text-right tabular-nums w-20">Total</th>
+                    <tr className="text-left border-y border-black">
+                        <th className="py-1 pr-1 font-semibold w-6">#</th>
+                        <th className="py-1 px-1 font-semibold">Descrição</th>
+                        <th className="py-1 px-1 font-semibold text-right tabular-nums w-9">Qt</th>
+                        <th className="py-1 px-1 font-semibold text-right tabular-nums w-16">Unit.</th>
+                        <th className="py-1 pl-1 font-semibold text-right tabular-nums w-20">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     {order.items.map((it, idx) => (
-                        <tr key={it.id} className="border-b border-slate-200 align-top">
-                            <td className="py-0.5 pr-1 text-slate-500 tabular-nums">{idx + 1}</td>
-                            <td className="py-0.5 px-1 text-slate-800 truncate max-w-0">
+                        <tr key={it.id} className="border-b border-black/20 align-top">
+                            <td className="py-0.5 pr-1 tabular-nums">{idx + 1}</td>
+                            <td className="py-0.5 px-1 truncate max-w-0">
                                 {it.productName}
                                 {Number(it.discount ?? 0) > 0 && (
-                                    <span className="text-slate-500"> (−{formatBRL(Number(it.discount))})</span>
+                                    <span> (−{formatBRL(Number(it.discount))})</span>
                                 )}
                             </td>
-                            <td className="py-0.5 px-1 text-right text-slate-800 tabular-nums">
+                            <td className="py-0.5 px-1 text-right tabular-nums">
                                 {Number(it.quantity).toLocaleString('pt-BR')}
                             </td>
-                            <td className="py-0.5 px-1 text-right text-slate-800 tabular-nums">
+                            <td className="py-0.5 px-1 text-right tabular-nums">
                                 {formatBRL(Number(it.unitPrice))}
                             </td>
-                            <td className="py-0.5 pl-1 text-right text-slate-900 font-semibold tabular-nums">
+                            <td className="py-0.5 pl-1 text-right font-semibold tabular-nums">
                                 {formatBRL(Number(it.total))}
                             </td>
                         </tr>
@@ -287,43 +279,52 @@ function Receipt({ order, company, via }: ReceiptProps) {
             {/* Totais */}
             <div className="mt-2 flex justify-end">
                 <div className="min-w-[140px] text-[10px]">
-                    <div className="flex items-center justify-between text-slate-600">
+                    <div className="flex items-center justify-between">
                         <span>Subtotal</span>
                         <span className="tabular-nums">{formatBRL(subtotal)}</span>
                     </div>
                     {discount > 0 && (
-                        <div className="flex items-center justify-between text-slate-600">
+                        <div className="flex items-center justify-between">
                             <span>Desconto</span>
                             <span className="tabular-nums">−{formatBRL(discount)}</span>
                         </div>
                     )}
-                    <div className="border-t border-slate-900 mt-1 pt-1 flex items-center justify-between font-bold text-[12px]">
+                    <div className="border-t border-black mt-1 pt-1 flex items-center justify-between font-bold text-[12px]">
                         <span>TOTAL</span>
                         <span className="tabular-nums">{formatBRL(total)}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Observações (compactas) */}
+            {/* Observações */}
             {order.notes && (
-                <div className="mt-2 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-[9.5px] text-slate-700">
-                    <span className="text-[8.5px] uppercase tracking-wider text-slate-500">Obs:</span>{' '}
+                <div className="mt-2 pt-1 border-t border-black/30 text-[9.5px]">
+                    <span className="text-[8.5px] uppercase tracking-wider font-semibold">Obs:</span>{' '}
                     {order.notes}
                 </div>
             )}
 
+            {/* AVISO DESTACADO */}
+            <div className="mt-3 border-2 border-black p-2 text-center">
+                <p className="text-[10.5px] font-bold uppercase tracking-wide leading-snug">
+                    Conferir mercadoria no ato da entrega.
+                    <br />
+                    Não aceitamos reclamações posteriores.
+                </p>
+            </div>
+
             {/* Assinatura */}
-            <div className="mt-4 grid grid-cols-2 gap-6 text-[9.5px]">
-                <div className="border-t border-slate-400 pt-1 text-center text-slate-600">
+            <div className="mt-3 grid grid-cols-2 gap-6 text-[9.5px]">
+                <div className="border-t border-black pt-1 text-center">
                     Assinatura do cliente
                 </div>
-                <div className="border-t border-slate-400 pt-1 text-center text-slate-600">
-                    {company?.name ?? 'Empresa'}
+                <div className="border-t border-black pt-1 text-center">
+                    {company?.nomeFantasia ?? company?.name ?? 'Empresa'}
                 </div>
             </div>
 
             {/* Rodapé minimalista */}
-            <p className="mt-2 text-center text-[8.5px] text-slate-400">
+            <p className="mt-1.5 text-center text-[8.5px]">
                 {viaLabel} · #{String(order.number).padStart(4, '0')} ·{' '}
                 <span className="font-mono">{order.id.slice(0, 8).toUpperCase()}</span> · não substitui documento fiscal
             </p>
@@ -420,11 +421,11 @@ export function PrintableOrder() {
                     <Receipt order={order} company={company} via="empresa" />
 
                     {/* Linha de corte */}
-                    <div className="px-4 py-2 flex items-center gap-2 text-slate-400">
+                    <div className="px-4 py-2 flex items-center gap-2 text-black">
                         <Scissors className="w-3 h-3 shrink-0 -scale-x-100" />
-                        <div className="flex-1 border-t border-dashed border-slate-400" />
+                        <div className="flex-1 border-t border-dashed border-black" />
                         <span className="text-[8.5px] uppercase tracking-wider">corte aqui</span>
-                        <div className="flex-1 border-t border-dashed border-slate-400" />
+                        <div className="flex-1 border-t border-dashed border-black" />
                     </div>
 
                     {/* Via 2: Cliente */}

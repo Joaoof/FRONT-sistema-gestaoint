@@ -6,12 +6,14 @@ import {
     AlertTriangle,
     ArrowLeft,
     Banknote,
+    CheckCircle,
     CreditCard,
     Loader2,
     MapPin,
     Minus,
     Package,
     Plus,
+    Printer,
     Search,
     ShoppingCart,
     Trash2,
@@ -101,6 +103,7 @@ export function NewSale() {
     const [notes, setNotes] = useState('');
     const [sellerId, setSellerId] = useState<string>('');
     const [commissionPercent, setCommissionPercent] = useState<string>('');
+    const [printPrompt, setPrintPrompt] = useState<{ id: string; number: number; total: number } | null>(null);
 
     const { data: productsData, loading: loadingProducts } = useQuery<{ products: ProductOption[] }>(
         LIST_PRODUCTS_WITH_IMAGES,
@@ -355,10 +358,31 @@ export function NewSale() {
             toast.success(`Venda #${order?.number ?? ''} registrada com sucesso!`, {
                 description: `Total: ${formatBRL(order?.total ?? total)}`,
             });
-            navigate('/vendas');
+            if (order?.id) {
+                setPrintPrompt({
+                    id: order.id,
+                    number: Number(order.number ?? 0),
+                    total: Number(order.total ?? total),
+                });
+            } else {
+                navigate('/pedidos');
+            }
         } catch (err: any) {
             toast.error(err?.message ?? 'Erro ao criar venda');
         }
+    }
+
+    function handlePrintNow() {
+        if (!printPrompt) return;
+        // Abre a impressão numa nova aba e volta pra lista de pedidos
+        window.open(`/pedidos/${printPrompt.id}/imprimir`, '_blank');
+        setPrintPrompt(null);
+        navigate('/pedidos');
+    }
+
+    function handleSkipPrint() {
+        setPrintPrompt(null);
+        navigate('/pedidos');
     }
 
     return (
@@ -953,6 +977,48 @@ export function NewSale() {
                     </section>
                 </aside>
             </form>
+
+            {/* Modal: imprimir agora? */}
+            {printPrompt && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg w-full max-w-md shadow-xl">
+                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/10 flex items-start gap-3">
+                            <span className="w-9 h-9 rounded-md bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 grid place-items-center shrink-0">
+                                <CheckCircle className="w-5 h-5" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                                <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">
+                                    Pedido #{printPrompt.number} criado
+                                </h3>
+                                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5 tabular-nums">
+                                    Total: {formatBRL(printPrompt.total)}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="px-5 py-4 text-[13.5px] text-slate-700 dark:text-slate-200">
+                            Você deseja <strong>imprimir direto</strong> agora?
+                        </div>
+                        <div className="flex items-center gap-2 px-5 py-3 border-t border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] rounded-b-lg">
+                            <button
+                                type="button"
+                                onClick={handleSkipPrint}
+                                className="flex-1 h-9 px-4 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 hover:bg-white dark:hover:bg-white/[0.04] rounded-md"
+                            >
+                                Não, depois
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handlePrintNow}
+                                autoFocus
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 px-4 text-[12.5px] font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm"
+                            >
+                                <Printer className="w-3.5 h-3.5" />
+                                Sim, imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
