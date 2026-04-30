@@ -4,12 +4,14 @@ export const GET_USER_QUERY = `
     id
     name
     email
+    phone
+    avatarUrl
     role
     company_id
     plan {
       name
       modules {
-        module_key  
+        module_key
         permission
       }
     }
@@ -19,6 +21,20 @@ export const GET_USER_QUERY = `
     }
   }
 }
+`;
+
+export const UPDATE_MY_PROFILE_MUTATION = `
+  mutation UpdateMyProfile($input: UpdateProfileInput!) {
+    updateMyProfile(input: $input) {
+      id
+      name
+      email
+      phone
+      avatarUrl
+      role
+      company_id
+    }
+  }
 `;
 
 // src/graphql/mutations/login.graphql.ts

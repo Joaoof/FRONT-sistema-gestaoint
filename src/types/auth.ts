@@ -3,6 +3,8 @@ export interface User {
     id: string
     email: string
     name: string
+    phone?: string | null
+    avatarUrl?: string | null
     company_id: string
     role: UserRole
     plan: PlanDto; // ✅ Corrigido: é um objeto, não uma string
@@ -32,11 +34,13 @@ export type ModuleDto = {
 export interface Company {
     id: string
     name: string
-    address: string
-    cnpj: string
-    modules: ModuleAccess[]
-    settings: CompanySettings
-    logoUrl: string
+    address?: string
+    cnpj?: string
+    email?: string
+    phone?: string
+    modules?: ModuleAccess[]
+    settings?: CompanySettings
+    logoUrl?: string
 }
 
 export interface ModuleAccess {

@@ -15,6 +15,7 @@ interface AuthContextState extends AuthState {
     error: string | null;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    updateLocalUser: (patch: Partial<User>) => void;
     modules: Module[];
     permissions: { module_key: string; permissions: string[] }[];
 }
@@ -29,6 +30,7 @@ type Module = {
 type AuthAction =
     | { type: "SET_LOADING"; payload: boolean }
     | { type: "SET_AUTH_DATA"; payload: { user: User; company: Company } }
+    | { type: "PATCH_USER"; payload: Partial<User> }
     | { type: "SET_ERROR"; payload: string }
     | { type: "CLEAR_ERROR" }
     | { type: "LOGOUT" }
@@ -43,6 +45,7 @@ const initialState: AuthContextState = {
     permissions: [],
     login: async () => { },
     logout: async () => { },
+    updateLocalUser: () => { },
 };
 
 const AuthContext = createContext<AuthContextState>(initialState)
@@ -76,6 +79,13 @@ function authReducer(state: AuthContextState, action: AuthAction): AuthContextSt
             return {
                 ...state,
                 error: null,
+            }
+
+        case "PATCH_USER":
+            if (!state.user) return state;
+            return {
+                ...state,
+                user: { ...state.user, ...action.payload },
             }
 
         case "LOGOUT":
@@ -297,10 +307,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         navigate("/");
     };
 
+    const updateLocalUser = (patch: Partial<User>) => {
+        dispatch({ type: "PATCH_USER", payload: patch });
+    };
+
     const contextValue: AuthContextState = {
         ...state,
         login,
         logout,
+        updateLocalUser,
         permissions: state.permissions,
     }
 

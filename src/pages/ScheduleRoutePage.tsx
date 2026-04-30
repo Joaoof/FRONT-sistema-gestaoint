@@ -57,6 +57,12 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apolloClient } from '../lib/apollo-client';
+import {
+    GET_DELIVERIES,
+    GET_DELIVERABLE_ORDERS,
+    CREATE_DELIVERY,
+} from '../graphql/queries/deliveries';
 
 // Leaflet (Mapa)
 import { MapContainer, TileLayer, Polyline, CircleMarker } from 'react-leaflet';
@@ -118,9 +124,17 @@ interface Driver {
     availability: boolean;
 }
 
-// --- Hook para gerenciar motoristas
-function useDriverManagement() {
-    const [drivers, setDrivers] = useState<Driver[]>(mockDrivers.map(d => ({ ...d, id: d.name })));
+// --- Hook para gerenciar motoristas (lista local; seed vem das rotas reais)
+function useDriverManagement(seed: Driver[] = []) {
+    const [drivers, setDrivers] = useState<Driver[]>(seed);
+    const [seedKey, setSeedKey] = useState('');
+
+    const currentSeedKey = seed.map((d) => d.id).join('|');
+    if (currentSeedKey !== seedKey && seed.length > 0 && drivers.length === 0) {
+        // hidrata uma única vez quando o seed da API chega
+        setSeedKey(currentSeedKey);
+        setDrivers(seed);
+    }
 
     const addDriver = (newDriver: Omit<Driver, 'id'>) => {
         const driver: Driver = { ...newDriver, id: newDriver.name };
@@ -139,8 +153,8 @@ function useDriverManagement() {
 }
 
 // --- Componente: DriverRegistration
-function DriverRegistration() {
-    const { drivers, addDriver, deleteDriver } = useDriverManagement();
+function DriverRegistration({ seedDrivers = [] }: { seedDrivers?: Driver[] }) {
+    const { drivers, addDriver, deleteDriver } = useDriverManagement(seedDrivers);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form, setForm] = useState<Omit<Driver, 'id'>>({
         name: '',
@@ -268,83 +282,135 @@ function DriverRegistration() {
     );
 }
 
-// --- Mock Data Ampliado ---
-const mockRoutes: Route[] = [
-    {
-        id: 'R1',
-        name: 'Rota A',
-        driver: 'Carlos Silva',
-        vehicle: 'Caminhão 123',
+// --- Mapeamento Delivery (API) → Route (UI) ---
+type ApiDelivery = {
+    id: string;
+    orderId: string;
+    driver: string | null;
+    vehicle: string | null;
+    destination: string | null;
+    scheduledDate: string | null;
+    startedAt: string | null;
+    deliveredAt: string | null;
+    status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELED';
+    notes: string | null;
+    createdAt: string;
+    updatedAt: string;
+    order?: {
+        id: string;
+        number: number;
+        customerName: string | null;
+        total: number;
+        customer?: { id: string; name: string; phone: string | null; document: string | null } | null;
+        items?: Array<{ productName: string; quantity: number; unitPrice: number; total: number }>;
+    } | null;
+};
+
+function statusFromApi(s: ApiDelivery['status']): RouteStatus {
+    switch (s) {
+        case 'IN_TRANSIT':
+            return 'em rota';
+        case 'DELIVERED':
+            return 'finalizada';
+        case 'CANCELED':
+            return 'finalizada';
+        case 'PENDING':
+        default:
+            return 'ativa';
+    }
+}
+
+function stopStatusFromApi(s: ApiDelivery['status']): Stop['status'] {
+    if (s === 'DELIVERED') return 'entregue';
+    if (s === 'CANCELED') return 'falha';
+    return 'pendente';
+}
+
+function formatTime(iso: string | null): string {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function deliveryToRoute(d: ApiDelivery): Route {
+    const orderNumber = d.order?.number ? `#${d.order.number}` : d.orderId.slice(0, 6);
+    const customer = d.order?.customerName ?? d.order?.customer?.name ?? 'Cliente';
+    return {
+        id: d.id,
+        name: `Rota ${orderNumber} – ${customer}`,
+        driver: d.driver ?? '—',
+        vehicle: d.vehicle ?? '—',
         stops: [
-            { id: 'S1', address: 'Av. Paulista, 1000', expectedTime: '09:00', actualTime: '09:05', status: 'entregue', notes: 'Entregue ao recepcionista' },
-            { id: 'S2', address: 'Rua Augusta, 500', expectedTime: '10:30', status: 'pendente' },
+            {
+                id: `${d.id}-stop-1`,
+                address: d.destination ?? customer,
+                expectedTime: formatTime(d.scheduledDate),
+                actualTime: d.deliveredAt ? formatTime(d.deliveredAt) : undefined,
+                status: stopStatusFromApi(d.status),
+                notes: d.notes ?? undefined,
+            },
         ],
-        distance: '120 km',
-        estimatedTime: '2h',
-        status: 'em rota',
-        weightKg: 900,
-        productionOrder: 'PO-2024-001',
-        createdAt: '2024-04-05T08:00:00Z',
-        updatedAt: '2024-04-05T10:30:00Z',
-    },
-    {
-        id: 'R2',
-        name: 'Rota B',
-        driver: 'Ana Souza',
-        vehicle: 'Van 456',
-        stops: [
-            { id: 'S3', address: 'Praça da Sé, 1', expectedTime: '08:00', actualTime: '08:00', status: 'entregue' },
-        ],
-        distance: '80 km',
-        estimatedTime: '1.5h',
-        status: 'finalizada',
-        completedAt: '2024-04-05T12:30:00Z',
-        weightKg: 400,
-        productionOrder: 'PO-2024-002',
-        createdAt: '2024-04-05T07:30:00Z',
-        updatedAt: '2024-04-05T12:30:00Z',
-    },
-];
+        distance: '—',
+        estimatedTime: '—',
+        status: statusFromApi(d.status),
+        completedAt: d.deliveredAt ?? undefined,
+        weightKg: 0,
+        productionOrder: d.order?.number ? `PED-${d.order.number}` : undefined,
+        createdAt: d.createdAt,
+        updatedAt: d.updatedAt,
+    };
+}
 
-const mockVehicles = [
-    { plate: 'Caminhão 123', capacityKg: 1000, maintenanceDue: false, lastService: '2024-03-01' },
-    { plate: 'Van 456', capacityKg: 500, maintenanceDue: true, lastService: '2024-01-15' },
-];
-
-const mockDrivers = [
-    { name: 'Carlos Silva', license: 'CNH-123', availability: true, phone: '(11) 99999-1111' },
-    { name: 'Ana Souza', license: 'CNH-456', availability: false, phone: '(11) 99999-2222' },
-];
-
-// --- API ---
+// --- API real (GraphQL via Apollo) ---
 const fetchRoutes = async (): Promise<Route[]> => {
-    return new Promise((resolve) => setTimeout(() => resolve(mockRoutes), 800));
+    const { data } = await apolloClient.query<{ deliveries: ApiDelivery[] }>({
+        query: GET_DELIVERIES,
+        fetchPolicy: 'network-only',
+    });
+    return (data?.deliveries ?? []).map(deliveryToRoute);
+};
+
+type DeliverableOrder = {
+    id: string;
+    number: number;
+    customerName: string | null;
+    total: number;
 };
 
 const addRoute = async (newRoute: NewRoute): Promise<Route> => {
-    const vehicle = mockVehicles.find(v => v.plate === newRoute.vehicle);
-    if (vehicle && newRoute.weightKg > vehicle.capacityKg) {
-        throw new Error(`Capacidade excedida: ${newRoute.weightKg}kg > ${vehicle.capacityKg}kg`);
+    // Para criar uma entrega real precisamos de um orderId.
+    // Pegamos o primeiro pedido entregável disponível.
+    const { data: ordersData } = await apolloClient.query<{ deliverableOrders: DeliverableOrder[] }>({
+        query: GET_DELIVERABLE_ORDERS,
+        fetchPolicy: 'network-only',
+    });
+    const order = ordersData?.deliverableOrders?.[0];
+    if (!order) {
+        throw new Error('Nenhum pedido disponível para vincular esta rota. Crie um pedido primeiro.');
     }
 
-    return new Promise((resolve) =>
-        setTimeout(() =>
-            resolve({
-                ...newRoute,
-                id: `R${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
-                status: 'ativa',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                stops: Array(newRoute.stops).fill(0).map((_, i) => ({
-                    id: `S${Math.random().toString(36).substr(2, 4)}`,
-                    address: `Endereço ${i + 1}`,
-                    expectedTime: `${8 + i}:00`,
-                    status: 'pendente',
-                })),
-            }),
-            500
-        )
-    );
+    const { data } = await apolloClient.mutate<{ createDelivery: ApiDelivery }>({
+        mutation: CREATE_DELIVERY,
+        variables: {
+            input: {
+                orderId: order.id,
+                driver: newRoute.driver || null,
+                vehicle: newRoute.vehicle || null,
+                destination: newRoute.name || null,
+                notes: newRoute.productionOrder ? `OP: ${newRoute.productionOrder}` : null,
+            },
+        },
+    });
+    if (!data?.createDelivery) {
+        throw new Error('Falha ao criar rota.');
+    }
+    // Recarrega o detalhe da entrega para ter os campos completos
+    const fresh = await apolloClient.query<{ deliveries: ApiDelivery[] }>({
+        query: GET_DELIVERIES,
+        fetchPolicy: 'network-only',
+    });
+    const created = fresh.data?.deliveries.find((d) => d.id === data.createDelivery.id);
+    return created ? deliveryToRoute(created) : deliveryToRoute(data.createDelivery as ApiDelivery);
 };
 
 // --- Schema ---
@@ -889,6 +955,30 @@ export function ScheduleRoutePage() {
         return Object.entries(counts).map(([name, rotas]) => ({ name, rotas }));
     }, [routes]);
 
+    const driversList = useMemo(() => {
+        const set = new Map<string, Driver>();
+        for (const r of routes) {
+            if (r.driver && r.driver !== '—' && !set.has(r.driver)) {
+                set.set(r.driver, {
+                    id: r.driver,
+                    name: r.driver,
+                    license: '—',
+                    phone: '—',
+                    availability: true,
+                });
+            }
+        }
+        return Array.from(set.values());
+    }, [routes]);
+
+    const vehiclesList = useMemo(() => {
+        const set = new Set<string>();
+        for (const r of routes) {
+            if (r.vehicle && r.vehicle !== '—') set.add(r.vehicle);
+        }
+        return Array.from(set).map((plate) => ({ plate, capacityKg: 0 }));
+    }, [routes]);
+
     const mapPositions = useMemo((): L.LatLngTuple[] => {
         if (!selectedRoute) return [];
         return selectedRoute.stops.map((_, i): L.LatLngTuple => [
@@ -1033,7 +1123,7 @@ export function ScheduleRoutePage() {
                                 className="w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-2"
                             >
                                 <option value="">{t.driver}...</option>
-                                {mockDrivers.map(d => (
+                                {driversList.map(d => (
                                     <option key={d.name} value={d.name}>{d.name}</option>
                                 ))}
                             </select>
@@ -1046,7 +1136,7 @@ export function ScheduleRoutePage() {
                                 className="w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-2"
                             >
                                 <option value="">{t.vehicle}...</option>
-                                {mockVehicles.map(v => (
+                                {vehiclesList.map(v => (
                                     <option key={v.plate} value={v.plate}>{v.plate}</option>
                                 ))}
                             </select>
@@ -1198,7 +1288,7 @@ export function ScheduleRoutePage() {
                             <RouteReplay route={selectedRoute} />
                         </>
                     )}
-                    <DriverRegistration /> {/* ✅ Novo componente aqui */}
+                    <DriverRegistration seedDrivers={driversList} />{/* lista hidratada da API */}
                     {selectedRoute && (
                         <>
                             <RouteTimeline route={selectedRoute} />
