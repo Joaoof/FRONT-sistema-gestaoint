@@ -38,6 +38,7 @@ import CountUp from "react-countup"
 import { toast } from "sonner"
 import { DELETE_CASH_MOVEMENT } from "../../graphql/mutations/mutations"
 import { useCompany } from "../../contexts/CompanyContext"
+import { CashMovementBackupActions } from "../../components/CashMovementBackupActions"
 
 type FilterType = "ALL" | "ENTRY" | "EXIT" | "SALE" | "CHANGE" | "OTHER_IN" | "EXPENSE" | "WITHDRAWAL" | "PAYMENT"
 
@@ -540,19 +541,22 @@ export function MovementHistory() {
                         <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Histórico de movimentações</h1>
                         <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Controle completo das entradas e saídas do caixa</p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => refetch()}
-                        disabled={loading}
-                        className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md disabled:opacity-50 transition-colors group shrink-0"
-                        aria-label="Atualizar dados"
-                    >
-                        <RotateCcw
-                            className={`w-3.5 h-3.5 transition-transform ${loading ? "animate-spin text-violet-500" : "group-hover:rotate-12"}`}
-                            strokeWidth={2}
-                        />
-                        <span>{loading ? "Atualizando…" : "Atualizar"}</span>
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <CashMovementBackupActions onImported={() => refetch()} />
+                        <button
+                            type="button"
+                            onClick={() => refetch()}
+                            disabled={loading}
+                            className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md disabled:opacity-50 transition-colors group"
+                            aria-label="Atualizar dados"
+                        >
+                            <RotateCcw
+                                className={`w-3.5 h-3.5 transition-transform ${loading ? "animate-spin text-violet-500" : "group-hover:rotate-12"}`}
+                                strokeWidth={2}
+                            />
+                            <span>{loading ? "Atualizando…" : "Atualizar"}</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* KPIs SaaS — Entradas, Saídas, Saldo */}
