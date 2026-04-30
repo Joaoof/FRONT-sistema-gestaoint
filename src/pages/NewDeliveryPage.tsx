@@ -298,41 +298,25 @@ export function NewDeliveryPage() {
 
     return (
         <div className="space-y-8 px-4 lg:px-8 py-6 w-full">
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-6 py-5 rounded-xl shadow-sm"
-            >
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">
-                            Nova Entrega
-                        </h1>
-                        <p className="text-sm text-gray-600 dark:text-slate-300 mt-1.5">
-                            Cadastre uma nova saída de produto da fábrica.
-                        </p>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-300">
-                        <User className="w-5 h-5 text-gray-500 dark:text-slate-400" />
-                        <span>{user?.name}</span>
-                    </div>
+            {/* Header SaaS */}
+            <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+                <div className="min-w-0">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="inline-flex items-center gap-1 text-[12px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-1.5 transition-colors"
+                        aria-label="Voltar"
+                    >
+                        <ArrowLeft className="w-3 h-3" strokeWidth={2} />
+                        Voltar
+                    </button>
+                    <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Nova entrega</h1>
+                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Cadastre uma nova saída de produto da fábrica</p>
                 </div>
-            </motion.div>
-
-            {/* Botão de Voltar */}
-            <motion.button
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4 }}
-                onClick={() => navigate(-1)}
-                className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 font-medium text-sm transition"
-                aria-label="Voltar para a página anterior"
-            >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Voltar</span>
-            </motion.button>
+                <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 text-[12.5px] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-md shrink-0">
+                    <User className="w-3.5 h-3.5" strokeWidth={1.75} />
+                    <span className="truncate max-w-[160px]">{user?.name}</span>
+                </div>
+            </div>
 
             {/* Formulário ou Mensagem de Sucesso */}
             <motion.div

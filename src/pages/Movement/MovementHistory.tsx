@@ -19,6 +19,9 @@ import {
     ChevronsRight,
     ArrowUp,
     ArrowDown,
+    ArrowDownCircle,
+    ArrowUpCircle,
+    Wallet,
 } from "lucide-react"
 import { useQuery, useMutation } from "@apollo/client"
 import { GET_CASH_MOVEMENTS, CREATE_CASH_MOVEMENT, UPDATE_CASH_MOVEMENT } from "../../graphql/queries/queries"
@@ -552,56 +555,81 @@ export function MovementHistory() {
                     </button>
                 </div>
 
-                {/* Metric Cards (Antigo Resumo) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-open_sans">
-                    <MetricCard
-                        title="Entradas"
-                        value={totalEntries}
-                        icon={<img src="https://cdn-icons-png.flaticon.com/512/2916/2916115.png" className="w-8 h-8" />}
-                        bg="from-green-600 to-green-600"
-                        text="text-green-100"
-                        actionClick={() => handleAdjustment("ENTRY")}
-                    />
+                {/* KPIs SaaS — Entradas, Saídas, Saldo */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <button
+                        type="button"
+                        onClick={() => handleAdjustment("ENTRY")}
+                        className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:shadow-sm transition-all"
+                    >
+                        <span className="absolute inset-x-0 top-0 h-[2px] bg-emerald-500 opacity-70" aria-hidden />
+                        <div className="flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                <ArrowDownCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                            </span>
+                            <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Entradas</span>
+                            <span className="ml-auto text-[10.5px] font-medium text-emerald-700 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">+ Ajustar</span>
+                        </div>
+                        <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
+                            <CountUp end={totalEntries} decimal="," decimals={2} prefix="R$ " separator="." />
+                        </p>
+                    </button>
 
-                    <MetricCard
-                        title="Saídas"
-                        value={totalExits}
-                        icon={<img src="https://cdn-icons-png.flaticon.com/256/2331/2331668.png" className="w-10 h-10" />}
-                        bg="from-red-600 to-red-600"
-                        text="text-red-100"
-                        actionClick={() => handleAdjustment("EXIT")}
-                    />
+                    <button
+                        type="button"
+                        onClick={() => handleAdjustment("EXIT")}
+                        className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-rose-300 dark:hover:border-rose-500/30 hover:shadow-sm transition-all"
+                    >
+                        <span className="absolute inset-x-0 top-0 h-[2px] bg-rose-500 opacity-70" aria-hidden />
+                        <div className="flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-md bg-rose-50 text-rose-700 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                <ArrowUpCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                            </span>
+                            <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Saídas</span>
+                            <span className="ml-auto text-[10.5px] font-medium text-rose-700 dark:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity">+ Ajustar</span>
+                        </div>
+                        <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
+                            <CountUp end={totalExits} decimal="," decimals={2} prefix="R$ " separator="." />
+                        </p>
+                    </button>
 
-                    {/* Card de Saldo com tratamento de cor e ícone */}
-                    <div className="bg-gradient-to-br from-blue-700 to-blue-700 rounded-2xl p-6 shadow-lg hover:scale-105 transition-transform relative">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-serif text-white">Saldo Atual</p>
-                                <p className={`text-2xl font-bold ${balance >= 0 ? "text-white" : "text-white"}`}>
-                                    <CountUp end={balance} decimal="," decimals={2} prefix="R$ " separator="." />
-                                </p>
-                            </div>
-                            <div className={`p-3 ${balance >= 0} rounded-full text-white`}>
-                                {balance >= 0 ? (
-                                    <img src="https://png.pngtree.com/png-clipart/20230805/original/pngtree-payment-icon-circle-balance-commerce-vector-picture-image_9731293.png" className="w-10 h-10" />
-                                ) : (
-                                    <img src="https://cdn-icons-png.flaticon.com/512/334/334047.png" className="w-8 h-8" />
-                                )}
-                            </div>
+                    <div className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors">
+                        <span className={`absolute inset-x-0 top-0 h-[2px] ${balance >= 0 ? 'bg-sky-500' : 'bg-rose-500'} opacity-70`} aria-hidden />
+                        <div className="flex items-center gap-2">
+                            <span className={`w-7 h-7 rounded-md flex items-center justify-center ring-1 ${
+                                balance >= 0
+                                    ? 'bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20'
+                                    : 'bg-rose-50 text-rose-700 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20'
+                            }`}>
+                                <Wallet className="w-3.5 h-3.5" strokeWidth={2} />
+                            </span>
+                            <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Saldo atual</span>
                             <button
+                                type="button"
                                 onClick={() => handleAdjustment("ADJUSTMENT")}
-                                className="absolute top-2 right-2 p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 rounded"
-                                title="Fazer Ajuste de Saldo"
+                                className="ml-auto p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded transition-colors"
+                                title="Ajustar saldo"
+                                aria-label="Ajustar saldo"
                             >
-                                <Edit className="w-5 h-5" />
+                                <Edit className="w-3 h-3" strokeWidth={2} />
                             </button>
                         </div>
+                        <p className={`mt-2.5 text-[24px] font-semibold leading-none tabular-nums tracking-tight ${
+                            balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-700 dark:text-rose-400'
+                        }`}>
+                            <CountUp end={balance} decimal="," decimals={2} prefix="R$ " separator="." />
+                        </p>
                     </div>
                 </div>
 
                 {/* Mini gráfico */}
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-lg border border-gray-300 dark:border-white/15">
-                    <h3 className="text-lg font-poppins text-gray-800 dark:text-slate-100 mb-4">Resumo Financeiro</h3>
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg">
+                    <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                        <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Resumo financeiro</h3>
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Distribuição entre entradas e saídas</p>
+                    </div>
+                    <div className="p-4">
+                    <h3 className="sr-only">Distribuição</h3>
                     <div className="h-48 font-open_sans">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -630,22 +658,23 @@ export function MovementHistory() {
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
+                    </div>
                 </div>
 
                 {/* Filtros */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-gray-200 dark:border-white/10 p-6 font-open_sans">
-                    <div className="flex flex-col sm:flex-row gap-4 justify-between mb-4">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
+                    <div className="flex flex-col sm:flex-row gap-3 justify-between mb-4">
                         <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 dark:text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
                             <input
                                 type="text"
-                                placeholder="Buscar por descrição..."
+                                placeholder="Buscar por descrição…"
                                 value={search}
                                 onChange={(e) => {
                                     setSearch(e.target.value)
                                     setCurrentPage(1)
                                 }}
-                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500"
+                                className="w-full h-9 pl-9 pr-3 text-[13px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-md text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-violet-500/15 focus:border-violet-500 hover:border-slate-300 dark:hover:border-white/15 transition-colors"
                             />
                         </div>
                         <button

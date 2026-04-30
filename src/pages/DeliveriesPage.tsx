@@ -77,44 +77,30 @@ export function DeliveriesPage() {
     return (
         <div className="space-y-8 px-4 lg:px-8 py-6 w-full">
             {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-6 py-5 rounded-xl shadow-sm"
-            >
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">
-                            Controle de Entregas
-                        </h1>
-                        <p className="text-sm text-gray-600 dark:text-slate-300 mt-1.5">
-                            Olá,{' '}
-                            <span className="font-semibold text-gray-800 dark:text-slate-100">{user?.name}</span>!
-                            {user?.role && (
-                                <span className="ml-1 capitalize font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-full text-xs">
-                                    {user.role}
-                                </span>
-                            )}
-                        </p>
+            <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+                <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Entregas</h1>
+                        <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 text-[10.5px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 rounded">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Ativo
+                        </span>
                     </div>
-                    <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-300">
-                            <User className="w-5 h-5 text-gray-500 dark:text-slate-400" />
-                            <span>{user?.email}</span>
-                        </div>
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
-                            {user?.name?.charAt(0).toUpperCase()}
-                        </div>
-                        <button
-                            onClick={logout}
-                            className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm"
-                        >
-                            Sair
-                        </button>
-                    </div>
+                    <p className="text-[13px] text-slate-500 dark:text-slate-400">Logística e rastreamento de pedidos em tempo real</p>
                 </div>
-            </motion.div>
+                <div className="flex items-center gap-2 shrink-0">
+                    <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 text-[12.5px] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-md">
+                        <User className="w-3.5 h-3.5" strokeWidth={1.75} />
+                        <span className="truncate max-w-[180px]">{user?.email}</span>
+                    </div>
+                    <button
+                        onClick={logout}
+                        className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md transition-colors"
+                    >
+                        Sair
+                    </button>
+                </div>
+            </div>
 
             {/* Cards de Métricas */}
             <motion.div

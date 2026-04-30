@@ -17,41 +17,56 @@ interface SummaryCardProps {
 
 
 // ==============================
-// Componente: SummaryCard
+// Componente: SummaryCard (SaaS pattern)
 // ==============================
 function SummaryCard({ label, value, color, progress }: SummaryCardProps) {
-    const colorClasses = {
-        blue: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 text-blue-800 text-blue-900',
-        yellow: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 text-yellow-800 text-yellow-900',
-        green: 'bg-green-50 dark:bg-emerald-950/40 border-green-200 text-green-800 text-green-900',
-    };
-
-    const [border, text, valueText] = colorClasses[color].split(' ');
+    const tones = {
+        blue: {
+            accent: 'bg-sky-500',
+            iconBg: 'bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20',
+            bar: 'bg-sky-500',
+        },
+        yellow: {
+            accent: 'bg-amber-500',
+            iconBg: 'bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20',
+            bar: 'bg-amber-500',
+        },
+        green: {
+            accent: 'bg-emerald-500',
+            iconBg: 'bg-emerald-50 text-emerald-700 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20',
+            bar: 'bg-emerald-500',
+        },
+    } as const;
+    const t = tones[color];
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className={`border ${border} rounded-lg p-6 text-center cursor-default hover:shadow-md transition-shadow`}
+            className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all"
         >
-            <p className={`text-sm ${text} font-medium`}>{label}</p>
-            <p className={`text-2xl font-bold ${valueText} mt-1`}>
-                {new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                }).format(value)}
+            <span className={`absolute inset-x-0 top-0 h-[2px] ${t.accent} opacity-70`} aria-hidden />
+            <div className="flex items-center gap-2">
+                <span className={`w-7 h-7 rounded-md ring-1 flex items-center justify-center ${t.iconBg}`}>
+                    {color === 'blue' ? <DollarSign className="w-3.5 h-3.5" strokeWidth={2} /> :
+                     color === 'yellow' ? <TrendingUp className="w-3.5 h-3.5" strokeWidth={2} /> :
+                     <DollarSign className="w-3.5 h-3.5" strokeWidth={2} />}
+                </span>
+                <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">{label}</span>
+            </div>
+            <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
             </p>
-
             {progress !== undefined && (
                 <div className="mt-3">
-                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+                    <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
                         <div
-                            className={`bg-${color}-500 h-2 rounded-full transition-all duration-300`}
+                            className={`${t.bar} h-1.5 rounded-full transition-all duration-500`}
                             style={{ width: `${progress}%` }}
-                        ></div>
+                        />
                     </div>
-                    <p className={`text-xs mt-1 ${text}`}>{progress}% recebido</p>
+                    <p className="text-[11px] mt-1.5 text-slate-500 dark:text-slate-400 tabular-nums">{progress}% recebido</p>
                 </div>
             )}
         </motion.div>
@@ -242,63 +257,52 @@ export function AccountsReceivableDashboard() {
     }
 
     return (
-        <div className="space-y-8">
-            {/* Título */}
-            <div>
-                <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Contas a Receber</h1>
-                <p className="text-gray-600 dark:text-slate-300">Gestão de recebíveis: clientes, vencimentos e pagamentos</p>
+        <div className="space-y-6 w-full">
+            {/* Header SaaS */}
+            <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+                <div className="min-w-0">
+                    <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Contas a receber</h1>
+                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Gestão de recebíveis: clientes, vencimentos e pagamentos</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        onClick={() => navigate('/app/fiscal/receivables/list')}
+                        className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md transition-colors"
+                    >
+                        <TrendingUp className="w-3.5 h-3.5" strokeWidth={1.75} />
+                        Ver todas
+                    </button>
+                    <button
+                        onClick={() => navigate('/app/fiscal/receivables/create')}
+                        className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-white bg-gradient-to-b from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 rounded-md shadow-sm transition-colors"
+                    >
+                        <DollarSign className="w-3.5 h-3.5" strokeWidth={2} />
+                        Nova conta
+                    </button>
+                </div>
             </div>
 
-            {/* Ações Rápidas */}
-            <div className="flex flex-wrap gap-4">
-                <ActionButton
-                    icon={DollarSign}
-                    label="Nova Conta a Receber"
-                    onClick={() => navigate('/app/fiscal/receivables/create')}
-                />
-                <ActionButton
-                    icon={TrendingUp}
-                    label="Ver Todas"
-                    variant="secondary"
-                    onClick={() => navigate('/app/fiscal/receivables/list')}
-                />
-            </div>
-
-            {/* Resumo com animação */}
+            {/* KPIs */}
             <motion.div
                 initial="hidden"
                 animate="visible"
-                variants={{
-                    hidden: {},
-                    visible: {
-                        transition: { staggerChildren: 0.1 },
-                    },
-                }}
-                className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
+                className="grid grid-cols-1 md:grid-cols-3 gap-3"
             >
-                <SummaryCard
-                    label="Total a Receber"
-                    value={data.total}
-                    color="blue"
-                />
-                <SummaryCard
-                    label="Pendentes"
-                    value={data.pending}
-                    color="yellow"
-                    progress={100 - paidPercentage}
-                />
-                <SummaryCard
-                    label="Pagos"
-                    value={data.paid}
-                    color="green"
-                    progress={paidPercentage}
-                />
+                <SummaryCard label="Total a receber" value={data.total} color="blue" />
+                <SummaryCard label="Pendentes" value={data.pending} color="yellow" progress={100 - paidPercentage} />
+                <SummaryCard label="Recebidos" value={data.paid} color="green" progress={paidPercentage} />
             </motion.div>
 
-            {/* Últimas Contas */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Últimas Contas Cadastradas</h2>
-                <RecentReceivablesTable />
+            {/* Últimas contas */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                    <h2 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Últimas contas cadastradas</h2>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Recebíveis recentes</p>
+                </div>
+                <div className="p-4">
+                    <RecentReceivablesTable />
+                </div>
             </div>
         </div>
     );

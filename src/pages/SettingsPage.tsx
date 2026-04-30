@@ -98,41 +98,46 @@ export function SettingsPage() {
     };
 
     return (
-        <div className="bg-gray-50 dark:bg-slate-950 min-h-screen py-8 px-4 sm:px-6 lg:px-8 space-y-8">
-            {/* Cabeçalho */}
-            <div>
-                <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Configurações</h1>
-                <p className="text-gray-600 dark:text-slate-300">Gerencie seu perfil, empresa e segurança</p>
+        <div className="space-y-6 w-full">
+            {/* Header SaaS */}
+            <div className="pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+                <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Configurações</h1>
+                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Gerencie seu perfil, empresa e segurança</p>
             </div>
 
-            {/* Notificação Fixa no Canto (Toast) - Opcional */}
+            {/* Toast notification */}
             {notification && (
                 <div
-                    className={`fixed top-6 right-6 z-50 p-4 rounded-lg text-sm flex items-center gap-2 shadow-lg border-l-4 animate-fade-in ${notification.type === 'success'
-                        ? 'bg-green-50 dark:bg-emerald-950/40 text-green-800 border-green-500'
-                        : 'bg-red-50 dark:bg-red-950/40 text-red-800 border-red-500'
-                        }`}
+                    role="status"
+                    className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg text-[13px] flex items-center gap-2.5 shadow-soft-lg border animate-fade-in-up ${
+                        notification.type === 'success'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40'
+                            : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40'
+                    }`}
                 >
                     {notification.type === 'success' ? (
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-4 h-4 shrink-0" strokeWidth={2} />
                     ) : (
-                        <AlertCircle className="w-5 h-5" />
+                        <AlertCircle className="w-4 h-4 shrink-0" strokeWidth={2} />
                     )}
                     <span>{notification.message}</span>
                 </div>
             )}
 
             {/* Perfil do Usuário */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-white p-8">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-white dark:bg-slate-900 text-white rounded-full">
-                        <img src="https://icons.veryicon.com/png/o/miscellaneous/two-color-icon-library/user-286.png" alt="Usuário" className="w-6 h-6" />
-                    </div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg overflow-hidden">
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                    <span className="w-8 h-8 rounded-md bg-violet-50 text-violet-700 ring-1 ring-violet-100 dark:bg-violet-500/10 dark:text-violet-400 dark:ring-violet-500/20 flex items-center justify-center">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </span>
                     <div>
-                        <h2 className="text-xl font-sans text-gray-900 dark:text-white">Perfil do Usuário</h2>
-                        <p className="text-sm font-serif text-gray-500 dark:text-slate-400">Atualize suas informações pessoais</p>
+                        <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white">Perfil do usuário</h2>
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Atualize suas informações pessoais</p>
                     </div>
                 </div>
+                <div className="p-5">
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
@@ -174,27 +179,32 @@ export function SettingsPage() {
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-white/10 mt-6">
+                <div className="flex justify-end pt-5 mt-5 border-t border-slate-100 dark:border-white/[0.06]">
                     <button
                         onClick={handleSaveProfile}
-                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-md transition-all"
+                        className="inline-flex items-center gap-1.5 h-9 px-4 text-[12.5px] font-medium text-white bg-gradient-to-b from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 rounded-md shadow-sm transition-colors"
                     >
-                        <img src="https://images.icon-icons.com/3863/PNG/512/save_icon_241135.png" alt="Usuário" className="w-6 h-6" />
-                        Salvar Alterações
+                        <CheckCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                        Salvar alterações
                     </button>
+                </div>
                 </div>
             </div>
 
             {/* Dados da Empresa */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-white/5 p-8">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-green-100 text-green-600 dark:text-emerald-400 rounded-full">
-                        <img src="https://images.icon-icons.com/3578/PNG/512/enterprise_building_icon_225731.png" alt="Empresa" className="w-6 h-6" />                    </div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg overflow-hidden">
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                    <span className="w-8 h-8 rounded-md bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 flex items-center justify-center">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 21V5a2 2 0 012-2h14a2 2 0 012 2v16M9 7h.01M9 11h.01M9 15h.01M13 7h.01M13 11h.01M13 15h.01M3 21h18" />
+                        </svg>
+                    </span>
                     <div>
-                        <h2 className="text-xl font-sans text-gray-900 dark:text-white">Dados da Empresa</h2>
-                        <p className="text-sm font-serif text-gray-500 dark:text-slate-400">Atualize as informações da sua empresa</p>
+                        <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white">Dados da empresa</h2>
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Atualize as informações da empresa</p>
                     </div>
                 </div>
+                <div className="p-5">
 
                 <div className="space-y-6">
                     <div>
@@ -230,51 +240,53 @@ export function SettingsPage() {
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-white/10 mt-6">
+                <div className="flex justify-end pt-5 mt-5 border-t border-slate-100 dark:border-white/[0.06]">
                     <button
                         onClick={handleSaveCompany}
-                        className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-md transition-all"
+                        className="inline-flex items-center gap-1.5 h-9 px-4 text-[12.5px] font-medium text-white bg-gradient-to-b from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 rounded-md shadow-sm transition-colors"
                     >
-                        <img src="https://images.icon-icons.com/3863/PNG/512/save_icon_241135.png" alt="Usuário" className="w-6 h-6" />
-                        Salvar Empresa
+                        <CheckCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                        Salvar empresa
                     </button>
+                </div>
                 </div>
             </div>
 
             {/* Plano e Módulos */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-white/5 p-8">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-purple-100 text-purple-600 dark:text-purple-400 rounded-full">
-                        <img src="https://icones.pro/wp-content/uploads/2021/07/icone-d-entreprise-violet.png" alt="Empresa" className="w-6 h-6" />
-                    </div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg overflow-hidden">
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                    <span className="w-8 h-8 rounded-md bg-amber-50 text-amber-700 ring-1 ring-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20 flex items-center justify-center">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                    </span>
                     <div>
-                        <h2 className="text-xl font-sans text-gray-900 dark:text-white">Plano e Módulos</h2>
-                        <p className="text-sm font-serif text-gray-500 dark:text-slate-400">Gerencie seu plano atual e módulos ativos</p>
+                        <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white">Plano e módulos</h2>
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Gerencie seu plano atual e módulos ativos</p>
                     </div>
                 </div>
-
-                <div className="space-y-4">
-                    <div>
-                        <p className="text-sm font-mono text-gray-700 dark:text-slate-200">
-                            <strong>Plano Atual:</strong> {user?.plan?.name || 'Grátis'}
-                        </p>
-                        <p className="text-sm font-mono text-gray-700 dark:text-slate-200 mt-1">
-                            <strong>Status:</strong>{' '}
-                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium font-serif rounded-full">
-                                Ativo
-                            </span>
-                        </p>
+                <div className="p-5 space-y-4">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <div>
+                            <p className="text-[11.5px] uppercase tracking-[0.04em] font-medium text-slate-500 dark:text-slate-400">Plano atual</p>
+                            <p className="text-[15px] font-semibold text-slate-900 dark:text-white mt-0.5">{user?.plan?.name || 'Grátis'}</p>
+                        </div>
+                        <span className="ml-auto inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 rounded">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Ativo
+                        </span>
                     </div>
                     <div>
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Módulos Ativos</h3>
-                        <div className="flex flex-wrap gap-2">
+                        <p className="text-[11.5px] uppercase tracking-[0.04em] font-medium text-slate-500 dark:text-slate-400 mb-2">Módulos ativos</p>
+                        <div className="flex flex-wrap gap-1.5">
                             {user?.plan?.modules?.map((module) => (
                                 <span
                                     key={module.module_key}
-                                    className={`px-3 py-1 rounded-full text-xs font-medium ${module.isActive
-                                        ? 'bg-blue-100 text-blue-800'
-                                        : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 line-through'
-                                        }`}
+                                    className={`px-2 py-0.5 rounded text-[11px] font-medium border ${
+                                        module.isActive
+                                            ? 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/20'
+                                            : 'bg-slate-50 dark:bg-white/[0.04] text-slate-400 dark:text-slate-500 border-slate-200 dark:border-white/[0.06] line-through'
+                                    }`}
                                 >
                                     {module.module_key}
                                 </span>
@@ -285,15 +297,19 @@ export function SettingsPage() {
             </div>
 
             {/* Segurança */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-white/5 p-8">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-red-100 text-red-600 dark:text-red-400 rounded-full">
-                        <img src="https://cdn-icons-png.flaticon.com/512/1746/1746650.png" alt="Segurança" className="w-6 h-6" />                       </div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg overflow-hidden">
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                    <span className="w-8 h-8 rounded-md bg-rose-50 text-rose-700 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20 flex items-center justify-center">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </span>
                     <div>
-                        <h2 className="text-xl font-sans text-gray-900 dark:text-white">Segurança</h2>
-                        <p className="text-sm font-serif text-gray-500 dark:text-slate-400">Altere sua senha e mantenha sua conta segura</p>
+                        <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white">Segurança</h2>
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Altere sua senha e mantenha sua conta segura</p>
                     </div>
                 </div>
+                <div className="p-5">
 
                 <div className="space-y-6">
                     <div>
@@ -330,33 +346,36 @@ export function SettingsPage() {
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-white/10 mt-6">
+                <div className="flex justify-end pt-5 mt-5 border-t border-slate-100 dark:border-white/[0.06]">
                     <button
                         onClick={handleChangePassword}
-                        className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-1.5 h-9 px-4 text-[12.5px] font-medium text-white bg-gradient-to-b from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={loadingPassword}
                     >
                         {loadingPassword ? (
                             <>
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Alterando...
+                                <div className="w-3.5 h-3.5 border-[1.5px] border-white border-t-transparent rounded-full animate-spin" />
+                                Alterando…
                             </>
                         ) : (
                             <>
-                                <img src="https://cdn-icons-png.flaticon.com/512/1804/1804429.png" alt="Alterar Senha" className="w-6 h-6" />                                   Alterar Senha
+                                <CheckCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                                Alterar senha
                             </>
                         )}
                     </button>
                 </div>
+                </div>
             </div>
 
             {/* Logout */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-white/5 p-8">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-5">
                 <button
                     onClick={logout}
-                    className="flex items-center gap-3 text-red-600 dark:text-red-400 hover:text-red-800 font-medium transition-colors"
+                    className="inline-flex items-center gap-2 h-8 px-3 text-[12.5px] font-medium text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-md transition-colors"
                 >
-                    <img src="https://cdn-icons-png.flaticon.com/512/4400/4400828.png" alt="Sair da Conta" className="w-6 h-6" />                       <span>Sair da Conta</span>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    <span>Sair da conta</span>
                 </button>
             </div>
         </div>

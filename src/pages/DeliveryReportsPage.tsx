@@ -115,43 +115,28 @@ export function DeliveryReportsPage() {
             />
 
             <div className="relative z-10">
-                {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-6 py-5 rounded-xl shadow-sm mx-4 lg:mx-8 mb-6"
-                >
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div>
-                            <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">
-                                Relatórios de Entregas
-                            </h1>
-                            <div className="flex items-center mt-1.5 space-x-1 text-sm text-gray-600 dark:text-slate-300">
-                                <Home className="w-4 h-4" />
-                                <span>/</span>
-                                <span className="hover:text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Dashboard</span>
-                                <span>/</span>
-                                <span className="text-blue-600 dark:text-blue-400 font-medium">Relatórios</span>
-                                <span>/</span>
-                                <span className="text-gray-900 dark:text-white font-medium">Entregas</span>
-                            </div>
+                {/* Header SaaS */}
+                <div className="mx-4 lg:mx-8 mb-6 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                        <div className="min-w-0">
+                            <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Relatórios de entregas</h1>
+                            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Análises de logística e desempenho operacional</p>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-2 shrink-0">
                             <button
                                 onClick={() => setLoading(true)}
-                                className="flex items-center space-x-2 px-4 py-2 text-sm bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:bg-slate-700 rounded-lg transition"
+                                className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md transition-colors"
                             >
-                                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                                <span>Atualizar</span>
+                                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={2} />
+                                Atualizar
                             </button>
-                            <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-                                <Download className="w-4 h-4" />
-                                <span>Exportar</span>
+                            <button className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-white bg-gradient-to-b from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 rounded-md shadow-sm transition-colors">
+                                <Download className="w-3.5 h-3.5" strokeWidth={2} />
+                                Exportar
                             </button>
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Filtros */}
                 <div className="mx-4 lg:mx-8 mb-6 flex flex-wrap gap-3">
