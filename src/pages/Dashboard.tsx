@@ -10,6 +10,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { LowStockAlert } from '../components/LowStockAlert';
 import { RecentActivityWidget } from '../components/RecentActivityWidget';
 import { DashboardCharts } from '../components/DashboardCharts';
+import { RevenueHeroCard } from '../components/RevenueHeroCard';
 
 // Função utilitária DRY para calcular dados mensais
 const getMonthlyData = (
@@ -111,6 +112,9 @@ export function Dashboard({
           </button>
         </div>
       </div>
+
+      {/* Card hero — faturamento ao vivo */}
+      <RevenueHeroCard />
 
       {/* KPIs */}
       <motion.div
