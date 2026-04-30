@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import {
+    ArrowLeft,
+    Battery,
     Check,
     CheckCheck,
     ExternalLink,
@@ -10,14 +13,13 @@ import {
     Mic,
     Paperclip,
     Phone,
+    Send,
     Settings2,
+    Signal,
     Smile,
     Video,
-    X,
-    Send,
     Wifi,
-    Battery,
-    Signal,
+    X,
 } from 'lucide-react';
 import { GET_ORDERS, GET_ORDERS_SUMMARY } from '../graphql/queries/orders';
 import { LIST_PRODUCTS_WITH_IMAGES } from '../graphql/mutations/product-with-images';
@@ -82,16 +84,11 @@ function formatPhonePreview(raw: string) {
     if (d.length <= 4) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
     if (d.length <= 9) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}${d.length > 7 ? '-' + d.slice(7) : ''}`;
     if (d.length <= 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7, 11)}`;
-    // Internacional (com DDI já no começo, ex: 55...)
     return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 9)}-${d.slice(9, 13)}`;
 }
 
-interface Props {
-    open: boolean;
-    onClose: () => void;
-}
-
-export function WhatsAppReportPanel({ open, onClose }: Props) {
+export function WhatsAppReportPage() {
+    const navigate = useNavigate();
     const { company } = useCompany();
     const [phone, setPhone] = useState<string>(() => localStorage.getItem(STORAGE_KEY_PHONE) ?? '');
     const [message, setMessage] = useState<string>('');
@@ -102,16 +99,14 @@ export function WhatsAppReportPanel({ open, onClose }: Props) {
 
     const { data: summaryData } = useQuery<{ ordersSummary: OrdersSummary }>(
         GET_ORDERS_SUMMARY,
-        { fetchPolicy: 'cache-and-network', skip: !open },
+        { fetchPolicy: 'cache-and-network' },
     );
     const { data: ordersData } = useQuery<{ orders: OrderRow[] }>(GET_ORDERS, {
         fetchPolicy: 'cache-and-network',
-        skip: !open,
     });
     const { data: productsData } = useQuery<{ products: ProductRow[] }>(LIST_PRODUCTS_WITH_IMAGES, {
         variables: { take: 200, skip: 0 },
         fetchPolicy: 'cache-and-network',
-        skip: !open,
     });
 
     const summary = summaryData?.ordersSummary ?? { todayCount: 0, todayTotal: 0, monthCount: 0, monthTotal: 0 };
@@ -173,7 +168,6 @@ export function WhatsAppReportPanel({ open, onClose }: Props) {
         ].join('\n');
     }, [company, monthMetrics, summary]);
 
-    // sincroniza message com o gerado, salvo se o usuário já editou
     useEffect(() => {
         if (!touched) setMessage(generatedMessage);
     }, [generatedMessage, touched]);
@@ -186,7 +180,6 @@ export function WhatsAppReportPanel({ open, onClose }: Props) {
     const phoneValid = phoneDigits.length >= 10;
 
     const buildIntlPhone = () => {
-        // se usuário já incluiu DDI (>= 12 dígitos), usa direto. Senão prefixa 55.
         if (phoneDigits.length >= 12) return phoneDigits;
         return `55${phoneDigits}`;
     };
@@ -213,9 +206,6 @@ export function WhatsAppReportPanel({ open, onClose }: Props) {
             return;
         }
         setSendingEvolution(true);
-        // === MOCK: simula chamada de API ===
-        // Em produção, este POST iria pra um endpoint do backend que faz o proxy
-        // pra Evolution (não chama direto pelo navegador por causa de CORS e segredo do apiKey).
         await new Promise((r) => setTimeout(r, 900));
         // eslint-disable-next-line no-console
         console.info('[Evolution mock] enviaria:', {
@@ -233,180 +223,166 @@ export function WhatsAppReportPanel({ open, onClose }: Props) {
     };
 
     return (
-        <AnimatePresence>
-            {open && (
-                <>
-                    {/* Backdrop */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
-                        onClick={onClose}
+        <div className="space-y-6 w-full">
+            {/* Header da página */}
+            <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+                <div className="min-w-0">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="inline-flex items-center gap-1 text-[12px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-1.5 transition-colors"
+                    >
+                        <ArrowLeft className="w-3 h-3" strokeWidth={2} />
+                        Voltar
+                    </button>
+                    <div className="flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-md bg-gradient-to-br from-emerald-500 to-green-600 grid place-items-center shadow-sm">
+                            <MessageCircle className="w-4 h-4 text-white" />
+                        </span>
+                        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">
+                            Relatório por WhatsApp
+                        </h1>
+                    </div>
+                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+                        Envie o resumo do mês pro cliente, sócio ou contador
+                    </p>
+                </div>
+                <button
+                    onClick={() => setShowConfig(true)}
+                    className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-md border border-slate-200 dark:border-white/10 text-[12.5px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/[0.05]"
+                >
+                    <Settings2 className="w-3.5 h-3.5" />
+                    Evolution API
+                </button>
+            </div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(320px,420px)] gap-6"
+            >
+                {/* Coluna controles */}
+                <div className="space-y-5">
+                    <ConnectionBadge
+                        config={config}
+                        onConfigClick={() => setShowConfig(true)}
                     />
 
-                    {/* Drawer */}
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                        role="dialog"
-                        aria-label="Enviar relatório por WhatsApp"
-                        className="fixed right-0 top-0 bottom-0 z-[61] w-full max-w-[1100px] bg-white dark:bg-slate-950 shadow-2xl border-l border-slate-200 dark:border-white/10 flex flex-col"
+                    <Field
+                        label="Número do destinatário"
+                        hint="Com DDD. Para internacional, prefixe o DDI (ex: 55 11 99999-0000)."
                     >
-                        {/* Header */}
-                        <header className="shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-white/10 bg-gradient-to-r from-emerald-600 to-green-600 text-white">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <span className="w-9 h-9 rounded-full bg-white/20 grid place-items-center">
-                                    <MessageCircle className="w-4.5 h-4.5" />
-                                </span>
-                                <div className="min-w-0">
-                                    <h2 className="text-[15px] font-semibold leading-tight">Relatório por WhatsApp</h2>
-                                    <p className="text-[11.5px] text-white/80 leading-tight">
-                                        Envie o resumo mensal pro cliente, sócio ou contador
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={onClose}
-                                aria-label="Fechar"
-                                className="w-8 h-8 grid place-items-center rounded-md hover:bg-white/15"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </header>
-
-                        <div className="flex-1 overflow-y-auto">
-                            <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(320px,420px)] gap-6 p-5 lg:p-6">
-                                {/* Coluna controles */}
-                                <div className="space-y-5">
-                                    <ConnectionBadge
-                                        config={config}
-                                        onConfigClick={() => setShowConfig(true)}
-                                    />
-
-                                    {/* Telefone */}
-                                    <Field label="Número do destinatário" hint="Com DDD. Para internacional, prefixe o DDI (ex: 55 11 99999-0000).">
-                                        <div className="flex items-center gap-2">
-                                            <span className="px-3 h-10 grid place-items-center rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 text-[13px] font-mono">
-                                                +
-                                            </span>
-                                            <input
-                                                value={formatPhonePreview(phone)}
-                                                onChange={(e) => setPhone(onlyDigits(e.target.value))}
-                                                placeholder="11 99999-0000"
-                                                inputMode="tel"
-                                                className="flex-1 h-10 px-3 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-[14px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                                            />
-                                        </div>
-                                        {!phoneValid && phone.length > 0 && (
-                                            <p className="text-[11.5px] text-rose-500 mt-1.5">
-                                                Número incompleto — precisa de pelo menos DDD + 8 dígitos.
-                                            </p>
-                                        )}
-                                    </Field>
-
-                                    {/* Mensagem */}
-                                    <Field
-                                        label="Mensagem"
-                                        hint="Você pode editar livremente. *negrito* e _itálico_ funcionam no WhatsApp."
-                                        right={
-                                            touched && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setTouched(false);
-                                                        setMessage(generatedMessage);
-                                                    }}
-                                                    className="text-[11.5px] text-emerald-600 dark:text-emerald-400 hover:underline"
-                                                >
-                                                    Restaurar relatório original
-                                                </button>
-                                            )
-                                        }
-                                    >
-                                        <textarea
-                                            value={message}
-                                            onChange={(e) => {
-                                                setMessage(e.target.value);
-                                                setTouched(true);
-                                            }}
-                                            rows={12}
-                                            className="w-full rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2.5 text-[13px] font-mono leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 resize-y"
-                                        />
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1.5">
-                                            {message.length} caracteres
-                                        </p>
-                                    </Field>
-
-                                    {/* Botões */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={handleSendRedirect}
-                                            disabled={!phoneValid}
-                                            className="h-11 inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[13.5px] font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            <ExternalLink className="w-4 h-4" />
-                                            Enviar via WhatsApp Web
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={handleSendEvolution}
-                                            disabled={!phoneValid || sendingEvolution}
-                                            className="h-11 inline-flex items-center justify-center gap-2 rounded-md bg-slate-900 dark:bg-white/[0.08] hover:bg-slate-800 dark:hover:bg-white/[0.14] text-white dark:text-slate-100 text-[13.5px] font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed border border-slate-900/10 dark:border-white/10"
-                                        >
-                                            {sendingEvolution ? (
-                                                <>
-                                                    <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                                    Enviando…
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Send className="w-4 h-4" />
-                                                    Enviar via Evolution API
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfig(true)}
-                                        className="inline-flex items-center gap-1.5 text-[12.5px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                                    >
-                                        <Settings2 className="w-3.5 h-3.5" />
-                                        Configurar Evolution API
-                                    </button>
-                                </div>
-
-                                {/* Preview do celular */}
-                                <div className="lg:sticky lg:top-0 self-start">
-                                    <PhonePreview
-                                        contactName={company?.name ?? 'Cliente'}
-                                        message={message}
-                                    />
-                                </div>
-                            </div>
+                        <div className="flex items-center gap-2">
+                            <span className="px-3 h-10 grid place-items-center rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 text-[13px] font-mono">
+                                +
+                            </span>
+                            <input
+                                value={formatPhonePreview(phone)}
+                                onChange={(e) => setPhone(onlyDigits(e.target.value))}
+                                placeholder="11 99999-0000"
+                                inputMode="tel"
+                                className="flex-1 h-10 px-3 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-[14px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                            />
                         </div>
+                        {!phoneValid && phone.length > 0 && (
+                            <p className="text-[11.5px] text-rose-500 mt-1.5">
+                                Número incompleto — precisa de pelo menos DDD + 8 dígitos.
+                            </p>
+                        )}
+                    </Field>
 
-                        {/* Modal config */}
-                        <EvolutionConfigModal
-                            open={showConfig}
-                            onClose={() => setShowConfig(false)}
-                            value={config}
-                            onSave={(next) => {
-                                saveConfig(next);
-                                setShowConfig(false);
-                                toast.success('Configuração salva.');
+                    <Field
+                        label="Mensagem"
+                        hint="Você pode editar livremente. *negrito* e _itálico_ funcionam no WhatsApp."
+                        right={
+                            touched && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setTouched(false);
+                                        setMessage(generatedMessage);
+                                    }}
+                                    className="text-[11.5px] text-emerald-600 dark:text-emerald-400 hover:underline"
+                                >
+                                    Restaurar relatório original
+                                </button>
+                            )
+                        }
+                    >
+                        <textarea
+                            value={message}
+                            onChange={(e) => {
+                                setMessage(e.target.value);
+                                setTouched(true);
                             }}
+                            rows={12}
+                            className="w-full rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2.5 text-[13px] font-mono leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 resize-y"
                         />
-                    </motion.div>
-                </>
-            )}
-        </AnimatePresence>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1.5">
+                            {message.length} caracteres
+                        </p>
+                    </Field>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={handleSendRedirect}
+                            disabled={!phoneValid}
+                            className="h-11 inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[13.5px] font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ExternalLink className="w-4 h-4" />
+                            Enviar via WhatsApp Web
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleSendEvolution}
+                            disabled={!phoneValid || sendingEvolution}
+                            className="h-11 inline-flex items-center justify-center gap-2 rounded-md bg-slate-900 dark:bg-white/[0.08] hover:bg-slate-800 dark:hover:bg-white/[0.14] text-white dark:text-slate-100 text-[13.5px] font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed border border-slate-900/10 dark:border-white/10"
+                        >
+                            {sendingEvolution ? (
+                                <>
+                                    <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                    Enviando…
+                                </>
+                            ) : (
+                                <>
+                                    <Send className="w-4 h-4" />
+                                    Enviar via Evolution API
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => setShowConfig(true)}
+                        className="sm:hidden inline-flex items-center gap-1.5 text-[12.5px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    >
+                        <Settings2 className="w-3.5 h-3.5" />
+                        Configurar Evolution API
+                    </button>
+                </div>
+
+                {/* Preview do celular */}
+                <div className="lg:sticky lg:top-6 self-start">
+                    <PhonePreview
+                        contactName={company?.name ?? 'Cliente'}
+                        message={message}
+                    />
+                </div>
+            </motion.div>
+
+            <EvolutionConfigModal
+                open={showConfig}
+                onClose={() => setShowConfig(false)}
+                value={config}
+                onSave={(next) => {
+                    saveConfig(next);
+                    setShowConfig(false);
+                    toast.success('Configuração salva.');
+                }}
+            />
+        </div>
     );
 }
 
@@ -494,12 +470,10 @@ function ConnectionBadge({
     );
 }
 
-/** Render do texto WhatsApp aplicando *negrito* e _itálico_ simples. */
 function renderWhatsAppText(text: string) {
     const parts: React.ReactNode[] = [];
     const lines = text.split('\n');
     lines.forEach((line, lineIdx) => {
-        // tokeniza por *...* e _..._ (não aninha). Suficiente pra preview.
         const regex = /(\*[^*]+\*|_[^_]+_)/g;
         const tokens = line.split(regex);
         tokens.forEach((tok, tokIdx) => {
@@ -527,16 +501,12 @@ function PhonePreview({ contactName, message }: { contactName: string; message: 
                 Pré-visualização
             </p>
 
-            {/* Frame do celular */}
             <div className="relative mx-auto rounded-[44px] bg-slate-950 p-2 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)] ring-1 ring-black/30">
-                {/* notch */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-950 rounded-b-2xl z-20" />
-                {/* botão lateral */}
                 <span className="absolute left-[-3px] top-24 w-[3px] h-12 rounded-l bg-slate-800" />
                 <span className="absolute right-[-3px] top-32 w-[3px] h-20 rounded-r bg-slate-800" />
 
                 <div className="relative rounded-[36px] overflow-hidden bg-[#ECE5DD] dark:bg-[#0b141a]">
-                    {/* Status bar */}
                     <div className="relative z-10 flex items-center justify-between px-5 pt-2 pb-1 text-[11px] font-semibold text-white bg-[#075E54]">
                         <span className="tabular-nums">{time}</span>
                         <div className="flex items-center gap-1">
@@ -546,7 +516,6 @@ function PhonePreview({ contactName, message }: { contactName: string; message: 
                         </div>
                     </div>
 
-                    {/* Header do chat */}
                     <div className="relative z-10 flex items-center gap-3 px-3 py-2 bg-[#075E54] text-white">
                         <span className="w-9 h-9 rounded-full bg-emerald-300/30 grid place-items-center text-[12px] font-bold">
                             {contactName.slice(0, 2).toUpperCase()}
@@ -559,7 +528,6 @@ function PhonePreview({ contactName, message }: { contactName: string; message: 
                         <Phone className="w-4 h-4" />
                     </div>
 
-                    {/* Conversa */}
                     <div
                         className="relative h-[440px] overflow-hidden px-3 py-3"
                         style={{
@@ -568,14 +536,12 @@ function PhonePreview({ contactName, message }: { contactName: string; message: 
                             backgroundColor: '#ECE5DD',
                         }}
                     >
-                        {/* Data divider */}
                         <div className="flex justify-center mb-3">
                             <span className="px-2.5 py-0.5 rounded-md bg-white/85 text-[10px] font-medium text-slate-600 shadow-sm">
                                 HOJE
                             </span>
                         </div>
 
-                        {/* Bubble outgoing */}
                         <div className="flex justify-end">
                             <div className="relative max-w-[85%] rounded-lg bg-[#DCF8C6] text-slate-900 px-2.5 py-1.5 shadow-sm">
                                 <div className="text-[12.5px] leading-snug whitespace-pre-wrap break-words">
@@ -587,7 +553,6 @@ function PhonePreview({ contactName, message }: { contactName: string; message: 
                                     <span className="tabular-nums">{time}</span>
                                     <CheckCheck className="w-3 h-3 text-sky-500" />
                                 </div>
-                                {/* Tail */}
                                 <span
                                     className="absolute -right-1 top-0 w-2 h-2 bg-[#DCF8C6]"
                                     style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
@@ -596,7 +561,6 @@ function PhonePreview({ contactName, message }: { contactName: string; message: 
                         </div>
                     </div>
 
-                    {/* Composer */}
                     <div className="relative z-10 flex items-center gap-2 px-2 py-2 bg-[#F0F0F0] dark:bg-[#1f2c33]">
                         <div className="flex-1 flex items-center gap-2 bg-white dark:bg-[#2a3942] rounded-full px-3 py-1.5 text-[12px] text-slate-400">
                             <Smile className="w-4 h-4" />

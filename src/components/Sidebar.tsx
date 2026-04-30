@@ -40,7 +40,6 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SidebarStockAlerts } from './SidebarStockAlerts';
-import { WhatsAppReportPanel } from './WhatsAppReportPanel';
 
 interface MenuItem {
   id: View;
@@ -227,7 +226,6 @@ export function Sidebar({
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState('');
-  const [whatsappOpen, setWhatsappOpen] = useState(false);
   const { company, isLoading } = useCompany();
   const { logout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -387,7 +385,11 @@ export function Sidebar({
       <div className="px-2 pb-2">
         <button
           type="button"
-          onClick={() => setWhatsappOpen(true)}
+          onClick={() => {
+            navigate('/whatsapp/relatorio');
+            if (window.innerWidth < 1024) onToggle();
+          }}
+          aria-current={currentView === ('whatsapp/relatorio' as View) ? 'page' : undefined}
           className="group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-gradient-to-r from-emerald-600/20 to-green-600/20 hover:from-emerald-600/30 hover:to-green-600/30 border border-emerald-500/20 hover:border-emerald-500/40 text-left transition-colors"
           title="Enviar relatório por WhatsApp"
         >
@@ -404,9 +406,6 @@ export function Sidebar({
           </span>
         </button>
       </div>
-
-      {/* Drawer WhatsApp */}
-      <WhatsAppReportPanel open={whatsappOpen} onClose={() => setWhatsappOpen(false)} />
 
       {/* Footer */}
       <div className="relative shrink-0 border-t border-white/[0.06]">

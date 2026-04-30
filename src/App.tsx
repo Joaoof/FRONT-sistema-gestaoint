@@ -39,6 +39,7 @@ import { ProductDetail } from './pages/Products/ProductDetail';
 import { StockAlertsReport } from './pages/Products/StockAlertsReport';
 import { ReportsPage } from './pages/Reports/ReportsPage';
 import { BusinessOverview } from './pages/Reports/BusinessOverview';
+import { WhatsAppReportPage } from './pages/WhatsAppReportPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -125,6 +126,8 @@ function AppContent() {
             />
 
             <Route path="/configuracoes" element={<SettingsPage />} />
+
+            <Route path="/whatsapp/relatorio" element={<WhatsAppReportPage />} />
 
             <Route path='/help' element={<HelpPage />} />
 
