@@ -62,29 +62,46 @@ export const LoginForm = () => {
     };
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
-            {/* aurora suave de fundo (só visual, não interativo) */}
-            <div aria-hidden className="pointer-events-none absolute inset-0">
-                <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-brand-300/40 dark:bg-brand-700/30 blur-3xl" />
-                <div className="absolute -bottom-40 -right-32 h-[28rem] w-[28rem] rounded-full bg-indigo-300/30 dark:bg-indigo-700/20 blur-3xl" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-72 w-72 rounded-full bg-fuchsia-200/30 dark:bg-fuchsia-700/15 blur-3xl" />
-            </div>
+        <div className="relative min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
+            {/* grid pattern sutil — assinatura SaaS, não decoração */}
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-[0.5] dark:opacity-[0.35]"
+                style={{
+                    backgroundImage:
+                        "linear-gradient(to right, rgb(15 23 42 / 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgb(15 23 42 / 0.04) 1px, transparent 1px)",
+                    backgroundSize: "32px 32px",
+                    maskImage: "radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 80%)",
+                    WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 80%)",
+                }}
+            />
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 hidden dark:block opacity-[0.4]"
+                style={{
+                    backgroundImage:
+                        "linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px)",
+                    backgroundSize: "32px 32px",
+                    maskImage: "radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 80%)",
+                    WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 80%)",
+                }}
+            />
 
-            <div className="relative max-w-md w-full animate-fade-in-up">
-                <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl border border-white/60 dark:border-white/10 ring-1 ring-slate-900/5 dark:ring-white/5 shadow-soft-xl rounded-2xl p-8 sm:p-10 space-y-7">
-                    {/* Logo */}
-                    <div className="flex flex-col items-center gap-3">
-                        <div className="w-44 h-28 flex items-center justify-center">
-                            <img src="images/logo.png" alt="Logo da empresa" className="max-h-full max-w-full object-contain" />
+            <div className="relative max-w-[400px] w-full animate-fade-in-up">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-white/[0.06] rounded-xl p-7 sm:p-9 space-y-6">
+                    {/* Logo + título */}
+                    <div className="flex flex-col items-center gap-5 pb-2">
+                        <div className="h-12 flex items-center justify-center">
+                            <img src="images/logo.png" alt="Logo" className="max-h-full max-w-[160px] object-contain" />
                         </div>
                         <div className="text-center">
-                            <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
-                                {isRecoveryMode ? "Recuperar acesso" : "Bem-vindo de volta"}
+                            <h1 className="text-[19px] font-semibold text-slate-900 dark:text-white tracking-tight">
+                                {isRecoveryMode ? "Recuperar acesso" : "Entrar na sua conta"}
                             </h1>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            <p className="mt-1.5 text-[13.5px] text-slate-500 dark:text-slate-400">
                                 {isRecoveryMode
-                                    ? "Informe seu e-mail para receber o link"
-                                    : "Entre com suas credenciais para continuar"}
+                                    ? "Enviaremos um link para o seu e-mail"
+                                    : "Use suas credenciais para continuar"}
                             </p>
                         </div>
                     </div>
@@ -93,8 +110,8 @@ export const LoginForm = () => {
                     {!isRecoveryMode && (
                         <form className="space-y-5" onSubmit={handleSubmit}>
                             {error && (
-                                <div role="alert" className="flex items-start gap-2 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm">
-                                    <span className="mt-0.5 inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                <div role="alert" className="flex items-start gap-2.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 px-3.5 py-2.5 rounded-lg text-[13px]">
+                                    <span className="mt-1.5 inline-block w-1 h-1 rounded-full bg-rose-500 shrink-0" />
                                     <span>{error}</span>
                                 </div>
                             )}
@@ -102,8 +119,8 @@ export const LoginForm = () => {
                             <div className="space-y-4">
                                 {/* Campo de E-mail */}
                                 <div>
-                                    <label htmlFor="email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 tracking-wide">
-                                        E-MAIL
+                                    <label htmlFor="email" className="block text-[12.5px] font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                        E-mail
                                     </label>
                                     <div className="relative group">
                                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -115,7 +132,7 @@ export const LoginForm = () => {
                                             type="email"
                                             required
                                             autoComplete="email"
-                                            className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/60 hover:border-slate-300 dark:hover:border-white/20"
+                                            className="block w-full pl-10 pr-3 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-[3px] focus:ring-brand-600/15 focus:border-brand-600 dark:focus:border-brand-400 hover:border-slate-300 dark:hover:border-white/20 transition-colors"
                                             placeholder="seu@email.com"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
@@ -125,8 +142,8 @@ export const LoginForm = () => {
 
                                 {/* Campo de Senha */}
                                 <div>
-                                    <label htmlFor="password_hash" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 tracking-wide">
-                                        SENHA
+                                    <label htmlFor="password_hash" className="block text-[12.5px] font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                        Senha
                                     </label>
                                     <div className="relative group">
                                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -138,7 +155,7 @@ export const LoginForm = () => {
                                             type="password"
                                             required
                                             autoComplete="current-password"
-                                            className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/60 hover:border-slate-300 dark:hover:border-white/20"
+                                            className="block w-full pl-10 pr-3 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-[3px] focus:ring-brand-600/15 focus:border-brand-600 dark:focus:border-brand-400 hover:border-slate-300 dark:hover:border-white/20 transition-colors"
                                             placeholder="••••••••"
                                             value={password_hash}
                                             onChange={(e) => setPassword(e.target.value)}
@@ -151,7 +168,7 @@ export const LoginForm = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full flex justify-center items-center gap-2 py-3 px-4 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-brand-700 to-brand-600 hover:from-brand-800 hover:to-brand-700 shadow-soft-md hover:shadow-soft-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-soft-md transform hover:-translate-y-0.5 active:translate-y-0"
+                                className="w-full flex justify-center items-center gap-2 py-2.5 px-4 text-[14px] font-medium rounded-lg text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 {isLoading ? (
                                     <>
@@ -171,7 +188,7 @@ export const LoginForm = () => {
                                 <button
                                     type="button"
                                     onClick={() => setIsRecoveryMode(true)}
-                                    className="text-brand-700 dark:text-brand-300 hover:text-brand-800 dark:hover:text-brand-200 font-medium text-sm"
+                                    className="text-[13px] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline-offset-4 hover:underline"
                                 >
                                     Esqueci minha senha
                                 </button>
@@ -182,14 +199,14 @@ export const LoginForm = () => {
                     {isRecoveryMode && (
                         <form className="space-y-5" onSubmit={handleRecoverySubmit}>
                             {error && (
-                                <div role="alert" className="flex items-start gap-2 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm">
-                                    <span className="mt-0.5 inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                <div role="alert" className="flex items-start gap-2.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 px-3.5 py-2.5 rounded-lg text-[13px]">
+                                    <span className="mt-1.5 inline-block w-1 h-1 rounded-full bg-rose-500 shrink-0" />
                                     <span>{error}</span>
                                 </div>
                             )}
                             {message && (
-                                <div role="status" className="flex items-start gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm">
-                                    <span className="mt-0.5 inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <div role="status" className="flex items-start gap-2.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-3.5 py-2.5 rounded-lg text-[13px]">
+                                    <span className="mt-1.5 inline-block w-1 h-1 rounded-full bg-emerald-500 shrink-0" />
                                     <span>{message}</span>
                                 </div>
                             )}
@@ -217,7 +234,7 @@ export const LoginForm = () => {
 
                             <button
                                 type="submit"
-                                className="w-full py-3 px-4 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-brand-700 to-brand-600 hover:from-brand-800 hover:to-brand-700 shadow-soft-md hover:shadow-soft-lg transform hover:-translate-y-0.5 active:translate-y-0"
+                                className="w-full py-2.5 px-4 text-[14px] font-medium rounded-lg text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                             >
                                 Enviar link de recuperação
                             </button>
@@ -230,9 +247,9 @@ export const LoginForm = () => {
                                         setError("");
                                         setMessage("");
                                     }}
-                                    className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium"
+                                    className="inline-flex items-center gap-1.5 text-[13px] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                                 >
-                                    <ArrowLeft className="h-4 w-4" />
+                                    <ArrowLeft className="h-3.5 w-3.5" />
                                     Voltar ao login
                                 </button>
                             </div>
@@ -240,7 +257,7 @@ export const LoginForm = () => {
                     )}
                 </div>
 
-                <p className="text-center text-xs text-slate-500 dark:text-slate-500 mt-6">
+                <p className="text-center text-[11.5px] text-slate-400 dark:text-slate-600 mt-5">
                     © {new Date().getFullYear()} Sistema de Gestão Integrado
                 </p>
             </div>

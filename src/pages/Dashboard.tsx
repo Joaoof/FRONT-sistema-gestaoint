@@ -71,46 +71,35 @@ export function Dashboard({
   const isEmptyData = revenueData.every(v => v === 0) && spendingData.every(v => v === 0);
 
   return (
-    <div className="space-y-8 px-4 lg:px-8 py-6 w-full">
-      {/* Header com Avatar */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-6 py-5 rounded-xl shadow-sm"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white font-['Rubik']">
-              Dashboard
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-slate-300 mt-1.5">
-              Olá,{' '}
-              <span className="font-semibold text-gray-800 dark:text-slate-100">{user?.name}</span>!
-              {user?.role && (
-                <span className="ml-1 capitalize font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-full text-xs">
-                  {user.role}
-                </span>
-              )}
-            </p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-300">
-              <User className="w-5 h-5 text-gray-500 dark:text-slate-400" />
-              <span>{user?.email}</span>
-            </div>
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <button
-              onClick={logout}
-              className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm"
-            >
-              Sair
-            </button>
-          </div>
+    <div className="space-y-7 w-full">
+      {/* Header SaaS — sem card, hierarquia via tipografia */}
+      <div className="flex items-center justify-between pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+        <div>
+          <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">
+            Dashboard
+          </h1>
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+            Bem-vindo de volta, {user?.name}
+            {user?.role && (
+              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.06] rounded">
+                {user.role}
+              </span>
+            )}
+          </p>
         </div>
-      </motion.div>
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 text-[12.5px] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-md">
+            <User className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <span className="truncate max-w-[180px]">{user?.email}</span>
+          </div>
+          <button
+            onClick={logout}
+            className="px-3 py-1.5 text-[12.5px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md transition-colors"
+          >
+            Sair
+          </button>
+        </div>
+      </div>
 
       {/* Cards de Métricas */}
       <motion.div
@@ -150,47 +139,52 @@ export function Dashboard({
         </div>
       </motion.div>
 
-      {/* Seção Atalhos */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={mounted ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <div className="space-y-4 px-1">
-          <div className="flex items-center justify-between border-b pb-2">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Atalhos Rápidos</h2>
-            <button className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 text-sm font-medium transition">
-              <img src="https://cdn-icons-png.flaticon.com/512/7033/7033070.png" alt="Novo Produto" className="w-4 h-4" />
-              <span>Novo Produto</span>
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer">
-              <div className="w-16 h-16 bg-blue-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                <img src="https://cdn-icons-png.flaticon.com/512/1949/1949617.png" alt="Cadastrar Produto" className="w-8 h-8 object-contain" />
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Cadastrar Produto</h3>
-              <p className="text-sm text-gray-500 dark:text-slate-400">Adicione ao seu estoque</p>
-            </motion.div>
-
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer">
-              <div className="w-16 h-16 bg-green-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                <img src="https://cdn-icons-png.freepik.com/512/4041/4041233.png" alt="Gerar Relatório" className="w-8 h-8 object-contain" />
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Gerar Relatório</h3>
-              <p className="text-sm text-gray-500 dark:text-slate-400">Relatórios detalhados</p>
-            </motion.div>
-
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer">
-              <div className="w-16 h-16 bg-purple-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                <img src="https://cdn-icons-png.freepik.com/256/6573/6573825.png?semt=ais_white_label" alt="Registrar Venda" className="w-8 h-8 object-contain" />
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Registrar Venda</h3>
-              <p className="text-sm text-gray-500 dark:text-slate-400">Registre saídas e vendas</p>
-            </motion.div>
+      {/* Seção Atalhos — design quiet, sem ilustrações genéricas */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white">Atalhos</h2>
+            <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Acesso rápido às ações mais comuns</p>
           </div>
         </div>
-      </motion.div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center shrink-0">
+                <Package className="w-4 h-4 text-slate-700 dark:text-slate-300" strokeWidth={1.75} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-[13.5px] font-medium text-slate-900 dark:text-white">Cadastrar produto</h3>
+                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Adicione ao estoque</p>
+              </div>
+            </div>
+          </button>
+
+          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center shrink-0">
+                <BarChart3 className="w-4 h-4 text-slate-700 dark:text-slate-300" strokeWidth={1.75} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-[13.5px] font-medium text-slate-900 dark:text-white">Gerar relatório</h3>
+                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Análises detalhadas</p>
+              </div>
+            </div>
+          </button>
+
+          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center shrink-0">
+                <Headphones className="w-4 h-4 text-slate-700 dark:text-slate-300" strokeWidth={1.75} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-[13.5px] font-medium text-slate-900 dark:text-white">Registrar venda</h3>
+                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Saídas e operações</p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
 
       {/* Gráficos */}
       <motion.div

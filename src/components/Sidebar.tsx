@@ -142,38 +142,33 @@ export function Sidebar({
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full w-64 flex flex-col bg-slate-950 text-slate-100 border-r border-white/5 shadow-soft-xl z-50 transform transition-transform duration-300 ease-smooth ${isOpen ? 'translate-x-0' : '-translate-x-full'
+      className={`fixed left-0 top-0 h-full w-64 flex flex-col bg-slate-950 text-slate-100 border-r border-white/[0.06] z-50 transform transition-transform duration-200 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
     >
-      {/* subtle brand glow no topo */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-brand-600/15 to-transparent" aria-hidden />
-
       {/* Header */}
-      <div className="relative px-5 py-5 border-b border-white/5 flex items-center justify-between">
+      <div className="relative px-3.5 py-3.5 border-b border-white/[0.06] flex items-center justify-between">
         <div
           onClick={() => {
             onViewChange('dashboard');
             navigate('/dashboard');
           }}
-          className="flex items-center gap-3 cursor-pointer group"
+          className="flex items-center gap-2.5 cursor-pointer min-w-0"
           title="Voltar ao Início"
         >
           <img
             src={logo}
-            alt="Logo da Empresa"
-            className="w-10 h-10 rounded-lg object-cover ring-1 ring-white/10 group-hover:ring-white/25 transition"
+            alt=""
+            aria-hidden
+            className="w-7 h-7 rounded-md object-cover ring-1 ring-white/10"
             onError={e =>
             ((e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
               company.name
             )}&background=3B82F6&color=fff`)
             }
           />
-          <div className="flex flex-col leading-tight">
-            <span className="text-[13px] uppercase tracking-[0.14em] text-slate-400">Empresa</span>
-            <span className="font-semibold text-[15px] text-white truncate max-w-[150px]">
-              {company.name}
-            </span>
-          </div>
+          <span className="font-medium text-[14px] text-white truncate">
+            {company.name}
+          </span>
         </div>
         <button
           onClick={onToggle}
@@ -194,8 +189,8 @@ export function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="relative flex-1 mt-3 px-3 pb-3 space-y-0.5 overflow-y-auto">
-        <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+      <nav className="relative flex-1 mt-2 px-2 pb-2 space-y-px overflow-y-auto">
+        <p className="px-2 pt-2 pb-1.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-slate-500">
           Navegação
         </p>
         {filteredMenuItems.map(item => {
@@ -212,21 +207,17 @@ export function Sidebar({
                 onClick={() => handleItemClick(item.id)}
                 title={item.label}
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium ${
+                className={`group relative w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] ${
                   isActive
-                    ? 'bg-white/10 text-white'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white/[0.07] text-white font-medium'
+                    : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
                 }`}
               >
-                <span
-                  className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-brand-400 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0'}`}
-                  aria-hidden
-                />
                 <img
                   src={item.imageUrl}
                   alt=""
                   aria-hidden
-                  className={`w-5 h-5 object-contain ${isActive ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`}
+                  className={`w-[18px] h-[18px] object-contain ${isActive ? 'opacity-95' : 'opacity-60 group-hover:opacity-90'}`}
                 />
                 <span className="truncate">{item.label}</span>
               </button>
@@ -235,38 +226,35 @@ export function Sidebar({
 
           // Group Item
           return (
-            <div key={item.id} className="space-y-0.5">
+            <div key={item.id} className="space-y-px">
               <button
                 onClick={() => handleItemClick(item.id)}
                 title={item.label}
                 aria-expanded={isExpanded}
-                className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium ${
+                className={`group relative w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] ${
                   highlight
-                    ? 'bg-white/10 text-white'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white/[0.07] text-white font-medium'
+                    : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
                 }`}
               >
-                <span
-                  className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-brand-400 transition-opacity ${highlight ? 'opacity-100' : 'opacity-0'}`}
-                  aria-hidden
-                />
                 <img
                   src={item.imageUrl}
                   alt=""
                   aria-hidden
-                  className={`w-5 h-5 object-contain ${highlight ? 'opacity-100' : 'opacity-70'}`}
+                  className={`w-[18px] h-[18px] object-contain ${highlight ? 'opacity-95' : 'opacity-60 group-hover:opacity-90'}`}
                 />
                 <span className="truncate">{item.label}</span>
-                <motion.span
+                <motion.svg
                   animate={{ rotate: isExpanded ? 90 : 0 }}
-                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                  className="ml-auto text-slate-400"
+                  transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  className="ml-auto w-3.5 h-3.5 text-slate-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                   aria-hidden
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </motion.span>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </motion.svg>
               </button>
 
               {/* Sub-menu */}
@@ -276,10 +264,10 @@ export function Sidebar({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                     className="overflow-hidden"
                   >
-                    <div className="ml-5 pl-3 border-l border-white/10 space-y-0.5 py-1">
+                    <div className="ml-[15px] pl-2.5 border-l border-white/[0.06] space-y-px py-0.5">
                       {item.children.map(child => {
                         const isChildActive = currentView === child.id;
                         return (
@@ -288,13 +276,12 @@ export function Sidebar({
                             onClick={() => handleItemClick(child.id)}
                             title={child.label}
                             aria-current={isChildActive ? 'page' : undefined}
-                            className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium ${
+                            className={`relative w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12.5px] ${
                               isChildActive
-                                ? 'bg-brand-600/20 text-white'
-                                : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                ? 'bg-white/[0.07] text-white font-medium'
+                                : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-100'
                             }`}
                           >
-                            <img src={child.imageUrl} alt="" aria-hidden className="w-4 h-4 object-contain opacity-80" />
                             <span className="truncate">{child.label}</span>
                           </button>
                         );
@@ -309,40 +296,36 @@ export function Sidebar({
       </nav>
 
       {/* Footer fixo na base */}
-      <div className="relative shrink-0 px-3 pt-3 pb-4 border-t border-white/5 space-y-1">
+      <div className="relative shrink-0 px-2 pt-2 pb-3 border-t border-white/[0.06] space-y-px">
         {/* Toggle tema */}
         <button
           onClick={toggleTheme}
           aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-          className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+          className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-[13px] text-slate-300 hover:bg-white/[0.04] hover:text-white"
         >
-          <span className="flex items-center gap-3">
+          <span className="flex items-center gap-2.5">
             {theme === 'dark' ? (
-              <Moon className="w-[17px] h-[17px] text-indigo-300" />
+              <Moon className="w-[15px] h-[15px] text-slate-400" strokeWidth={1.75} />
             ) : (
-              <Sun className="w-[17px] h-[17px] text-amber-300" />
+              <Sun className="w-[15px] h-[15px] text-slate-400" strokeWidth={1.75} />
             )}
-            <span>Aparência</span>
+            <span>Tema</span>
           </span>
-          <span className="relative inline-flex h-5 w-9 items-center rounded-full bg-white/10 transition-colors">
-            <span
-              className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-soft transform transition-transform duration-200 ease-smooth ${
-                theme === 'dark' ? 'translate-x-[18px]' : 'translate-x-1'
-              }`}
-            />
+          <span className="text-[11.5px] text-slate-500 capitalize">
+            {theme === 'dark' ? 'Escuro' : 'Claro'}
           </span>
         </button>
 
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-slate-300 hover:bg-rose-500/15 hover:text-rose-200"
+          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] text-slate-300 hover:bg-white/[0.04] hover:text-white"
         >
-          <LogOut className="w-[18px] h-[18px] text-rose-400" />
+          <LogOut className="w-[15px] h-[15px] text-slate-400" strokeWidth={1.75} />
           <span>Sair</span>
         </button>
-        <div className="flex items-center justify-between px-3 pt-2 text-[11px] text-slate-500">
+        <div className="flex items-center justify-between px-2 pt-2 text-[11px] text-slate-500">
           <a href="/help" className="hover:text-slate-300 transition-colors">Ajuda</a>
-          <span>v2.0.0</span>
+          <span className="font-mono tracking-tight">v2.0.0</span>
         </div>
       </div>
     </div>
