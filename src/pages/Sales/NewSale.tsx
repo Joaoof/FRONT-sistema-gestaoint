@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { toast } from 'sonner';
@@ -75,6 +75,8 @@ export function NewSale() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [customerId, setCustomerId] = useState<string>('');
     const [customerName, setCustomerName] = useState('');
+    const [customerDocument, setCustomerDocument] = useState('');
+    const [customerPhone, setCustomerPhone] = useState('');
     const [showNewCustomer, setShowNewCustomer] = useState(false);
     const [newCustomer, setNewCustomer] = useState({ name: '', document: '', email: '', phone: '' });
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
@@ -102,6 +104,14 @@ export function NewSale() {
     const sellers = sellersData?.sellers ?? [];
     const selectedCustomer = customers.find((c) => c.id === customerId);
     const selectedSeller = sellers.find((s) => s.id === sellerId);
+
+    // Auto-preenche CPF/telefone ao escolher um cliente cadastrado
+    useEffect(() => {
+        if (selectedCustomer) {
+            setCustomerDocument(selectedCustomer.document ?? '');
+            setCustomerPhone(selectedCustomer.phone ?? '');
+        }
+    }, [selectedCustomer?.id]);
     const effectiveCommissionPercent =
         commissionPercent !== '' ? Number(commissionPercent) : selectedSeller?.commissionPercent ?? 0;
 
@@ -225,6 +235,8 @@ export function NewSale() {
                     input: {
                         customerId: customerId || undefined,
                         customerName: customerId ? undefined : customerName || undefined,
+                        customerDocument: customerDocument.trim() || undefined,
+                        customerPhone: customerPhone.trim() || undefined,
                         sellerId: sellerId || undefined,
                         commissionPercent:
                             sellerId && commissionPercent !== ''
@@ -405,14 +417,39 @@ export function NewSale() {
                             </button>
                         </div>
 
-                        {!customerId && !showNewCustomer && (
-                            <input
-                                type="text"
-                                value={customerName}
-                                onChange={(e) => setCustomerName(e.target.value)}
-                                placeholder="Ou digite um nome temporário..."
-                                className="w-full mt-2 p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
-                            />
+                        {!showNewCustomer && (
+                            <div className="mt-2 space-y-2">
+                                {!customerId && (
+                                    <input
+                                        type="text"
+                                        value={customerName}
+                                        onChange={(e) => setCustomerName(e.target.value)}
+                                        placeholder="Nome do cliente (avulso)"
+                                        className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
+                                    />
+                                )}
+                                <div className="grid grid-cols-2 gap-2">
+                                    <input
+                                        type="text"
+                                        value={customerDocument}
+                                        onChange={(e) => setCustomerDocument(e.target.value)}
+                                        placeholder="CPF / CNPJ"
+                                        className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] tabular-nums"
+                                    />
+                                    <input
+                                        type="tel"
+                                        value={customerPhone}
+                                        onChange={(e) => setCustomerPhone(e.target.value)}
+                                        placeholder="Telefone"
+                                        className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] tabular-nums"
+                                    />
+                                </div>
+                                {customerId && (
+                                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                                        Os campos foram preenchidos a partir do cadastro. Você pode editá-los só para este pedido.
+                                    </p>
+                                )}
+                            </div>
                         )}
 
                         {showNewCustomer && (

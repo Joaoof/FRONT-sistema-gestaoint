@@ -23,6 +23,8 @@ interface OrderDetail {
     number: number;
     customerId?: string | null;
     customerName?: string | null;
+    customerDocument?: string | null;
+    customerPhone?: string | null;
     sellerId?: string | null;
     sellerName?: string | null;
     commissionPercent?: number | null;
@@ -46,12 +48,18 @@ interface OrderDetail {
 }
 
 interface CompanyLite {
-    name?: string;
-    cnpj?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    logoUrl?: string;
+    name?: string | null;
+    nomeFantasia?: string | null;
+    razaoSocial?: string | null;
+    inscricaoEstadual?: string | null;
+    cnpj?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    bairro?: string | null;
+    cidade?: string | null;
+    estado?: string | null;
+    logoUrl?: string | null;
 }
 
 const formatBRL = (n: number) =>
@@ -81,6 +89,32 @@ interface ReceiptProps {
     via: 'empresa' | 'cliente';
 }
 
+function CompanyRow({
+    label,
+    value,
+    bold,
+    mono,
+}: {
+    label: string;
+    value?: string | null;
+    bold?: boolean;
+    mono?: boolean;
+}) {
+    if (!value) return null;
+    return (
+        <div className="flex gap-1.5">
+            <dt className="text-slate-500 font-semibold tracking-wide text-[8.5px] uppercase shrink-0 pt-[1px]">
+                {label}:
+            </dt>
+            <dd
+                className={`text-slate-900 truncate ${bold ? 'font-semibold' : ''} ${mono ? 'font-mono' : ''}`}
+            >
+                {value}
+            </dd>
+        </div>
+    );
+}
+
 function Receipt({ order, company, via }: ReceiptProps) {
     const subtotal = Number(
         order.subtotal ??
@@ -106,27 +140,35 @@ function Receipt({ order, company, via }: ReceiptProps) {
                 </span>
             </div>
 
-            {/* Cabeçalho compacto: logo+empresa | data+status */}
+            {/* Cabeçalho: bloco de dados da empresa + data/status */}
             <header className="flex items-start justify-between gap-3 pb-2 border-b border-slate-900">
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-start gap-2 min-w-0 flex-1">
                     {company?.logoUrl ? (
-                        <img src={company.logoUrl} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-slate-200 shrink-0" />
+                        <img src={company.logoUrl} alt="" className="w-10 h-10 rounded object-cover ring-1 ring-slate-200 shrink-0" />
                     ) : (
-                        <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white font-bold text-[11px] shrink-0">
-                            {(company?.name ?? 'EM').slice(0, 2).toUpperCase()}
+                        <div className="w-10 h-10 rounded bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white font-bold text-[11px] shrink-0">
+                            {(company?.nomeFantasia ?? company?.name ?? 'EM').slice(0, 2).toUpperCase()}
                         </div>
                     )}
-                    <div className="min-w-0">
-                        <p className="text-[11.5px] font-bold leading-tight truncate">{company?.name ?? 'Empresa'}</p>
-                        <p className="text-[9.5px] text-slate-600 leading-tight truncate">
-                            {company?.cnpj ? `CNPJ ${company.cnpj}` : null}
-                            {company?.cnpj && company?.phone ? ' · ' : null}
-                            {company?.phone ?? null}
-                        </p>
-                        {company?.address && (
-                            <p className="text-[9.5px] text-slate-600 leading-tight truncate">{company.address}</p>
+                    <dl className="min-w-0 flex-1 grid grid-cols-1 gap-y-0 text-[9.5px] leading-tight">
+                        <CompanyRow label="RAZÃO SOCIAL" value={company?.razaoSocial ?? company?.name} bold />
+                        <CompanyRow label="FANTASIA" value={company?.nomeFantasia ?? company?.name} />
+                        <CompanyRow label="FONE" value={company?.phone} />
+                        <CompanyRow label="CNPJ/CPF" value={company?.cnpj} mono />
+                        {company?.inscricaoEstadual && (
+                            <CompanyRow label="I.E." value={company.inscricaoEstadual} mono />
                         )}
-                    </div>
+                        <CompanyRow label="ENDEREÇO" value={company?.address} />
+                        <CompanyRow label="BAIRRO" value={company?.bairro} />
+                        <CompanyRow
+                            label="CIDADE"
+                            value={
+                                company?.cidade
+                                    ? `${company.cidade}${company.estado ? ` / ${company.estado}` : ''}`
+                                    : null
+                            }
+                        />
+                    </dl>
                 </div>
                 <div className="text-right shrink-0">
                     <p className="text-[9.5px] text-slate-600 tabular-nums">
@@ -154,11 +196,15 @@ function Receipt({ order, company, via }: ReceiptProps) {
                     <p className="font-semibold truncate">
                         {order.customer?.name ?? order.customerName ?? 'Consumidor'}
                     </p>
-                    {order.customer?.document && (
-                        <p className="text-slate-600 truncate">{order.customer.document}</p>
+                    {(order.customerDocument ?? order.customer?.document) && (
+                        <p className="text-slate-600 truncate">
+                            CPF/CNPJ: {order.customerDocument ?? order.customer?.document}
+                        </p>
                     )}
-                    {order.customer?.phone && (
-                        <p className="text-slate-600 truncate">{order.customer.phone}</p>
+                    {(order.customerPhone ?? order.customer?.phone) && (
+                        <p className="text-slate-600 truncate">
+                            Tel: {order.customerPhone ?? order.customer?.phone}
+                        </p>
                     )}
                 </div>
                 <div className="min-w-0">

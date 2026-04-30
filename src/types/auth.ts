@@ -34,13 +34,19 @@ export type ModuleDto = {
 export interface Company {
     id: string
     name: string
-    address?: string
-    cnpj?: string
-    email?: string
-    phone?: string
+    nomeFantasia?: string | null
+    razaoSocial?: string | null
+    inscricaoEstadual?: string | null
+    address?: string | null
+    bairro?: string | null
+    cidade?: string | null
+    estado?: string | null
+    cnpj?: string | null
+    email?: string | null
+    phone?: string | null
     modules?: ModuleAccess[]
     settings?: CompanySettings
-    logoUrl?: string
+    logoUrl?: string | null
 }
 
 export interface ModuleAccess {

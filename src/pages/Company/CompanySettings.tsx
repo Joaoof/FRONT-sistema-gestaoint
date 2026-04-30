@@ -17,23 +17,48 @@ import { GET_MY_COMPANY, UPDATE_COMPANY } from '../../graphql/queries/company';
 interface CompanyData {
     id: string;
     name: string;
+    nomeFantasia?: string | null;
+    razaoSocial?: string | null;
+    inscricaoEstadual?: string | null;
     email?: string | null;
     phone?: string | null;
     address?: string | null;
+    bairro?: string | null;
+    cidade?: string | null;
+    estado?: string | null;
     cnpj?: string | null;
     logoUrl?: string | null;
 }
 
 interface FormState {
     name: string;
+    nomeFantasia: string;
+    razaoSocial: string;
+    inscricaoEstadual: string;
     email: string;
     phone: string;
     address: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
     cnpj: string;
     logoUrl: string;
 }
 
-const EMPTY: FormState = { name: '', email: '', phone: '', address: '', cnpj: '', logoUrl: '' };
+const EMPTY: FormState = {
+    name: '',
+    nomeFantasia: '',
+    razaoSocial: '',
+    inscricaoEstadual: '',
+    email: '',
+    phone: '',
+    address: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    cnpj: '',
+    logoUrl: '',
+};
 
 export function CompanySettings() {
     const navigate = useNavigate();
@@ -48,11 +73,17 @@ export function CompanySettings() {
 
     useEffect(() => {
         if (company) {
-            const filled = {
+            const filled: FormState = {
                 name: company.name ?? '',
+                nomeFantasia: company.nomeFantasia ?? '',
+                razaoSocial: company.razaoSocial ?? '',
+                inscricaoEstadual: company.inscricaoEstadual ?? '',
                 email: company.email ?? '',
                 phone: company.phone ?? '',
                 address: company.address ?? '',
+                bairro: company.bairro ?? '',
+                cidade: company.cidade ?? '',
+                estado: company.estado ?? '',
                 cnpj: company.cnpj ?? '',
                 logoUrl: company.logoUrl ?? '',
             };
@@ -76,9 +107,15 @@ export function CompanySettings() {
                     id: company.id,
                     input: {
                         name: form.name || undefined,
+                        nomeFantasia: form.nomeFantasia || null,
+                        razaoSocial: form.razaoSocial || null,
+                        inscricaoEstadual: form.inscricaoEstadual || null,
                         email: form.email || null,
                         phone: form.phone || null,
                         address: form.address || null,
+                        bairro: form.bairro || null,
+                        cidade: form.cidade || null,
+                        estado: form.estado || null,
                         cnpj: form.cnpj || null,
                         logoUrl: form.logoUrl || null,
                     },
@@ -156,13 +193,21 @@ export function CompanySettings() {
                 </div>
 
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Field label="Nome / Razão social" required icon={<Building2 className="w-4 h-4" />}>
+                    <Field label="Razão social" required icon={<Building2 className="w-4 h-4" />}>
                         <input
-                            value={form.name}
-                            onChange={(e) => update('name', e.target.value)}
-                            required
+                            value={form.razaoSocial}
+                            onChange={(e) => update('razaoSocial', e.target.value)}
                             className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
                             placeholder="Ex: JC Comércio Ltda"
+                        />
+                    </Field>
+
+                    <Field label="Fantasia" icon={<Building2 className="w-4 h-4" />}>
+                        <input
+                            value={form.nomeFantasia}
+                            onChange={(e) => update('nomeFantasia', e.target.value)}
+                            className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
+                            placeholder="Ex: JC Variedades"
                         />
                     </Field>
 
@@ -172,6 +217,24 @@ export function CompanySettings() {
                             onChange={(e) => update('cnpj', e.target.value)}
                             className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px] font-mono"
                             placeholder="00.000.000/0000-00"
+                        />
+                    </Field>
+
+                    <Field label="Inscrição estadual" icon={<FileText className="w-4 h-4" />}>
+                        <input
+                            value={form.inscricaoEstadual}
+                            onChange={(e) => update('inscricaoEstadual', e.target.value)}
+                            className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px] font-mono"
+                            placeholder="ISENTO ou número"
+                        />
+                    </Field>
+
+                    <Field label="Fone" icon={<Phone className="w-4 h-4" />}>
+                        <input
+                            value={form.phone}
+                            onChange={(e) => update('phone', e.target.value)}
+                            className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
+                            placeholder="(11) 99999-9999"
                         />
                     </Field>
 
@@ -185,23 +248,43 @@ export function CompanySettings() {
                         />
                     </Field>
 
-                    <Field label="Telefone" icon={<Phone className="w-4 h-4" />}>
-                        <input
-                            value={form.phone}
-                            onChange={(e) => update('phone', e.target.value)}
-                            className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
-                            placeholder="(11) 99999-9999"
-                        />
-                    </Field>
-
                     <Field label="Endereço" icon={<MapPin className="w-4 h-4" />} className="md:col-span-2">
                         <input
                             value={form.address}
                             onChange={(e) => update('address', e.target.value)}
                             className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
-                            placeholder="Rua, número, complemento, cidade, UF, CEP"
+                            placeholder="Rua, número, complemento"
                         />
                     </Field>
+
+                    <Field label="Bairro" icon={<MapPin className="w-4 h-4" />}>
+                        <input
+                            value={form.bairro}
+                            onChange={(e) => update('bairro', e.target.value)}
+                            className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
+                            placeholder="Centro"
+                        />
+                    </Field>
+
+                    <div className="grid grid-cols-3 gap-2">
+                        <Field label="Cidade" icon={<MapPin className="w-4 h-4" />} className="col-span-2">
+                            <input
+                                value={form.cidade}
+                                onChange={(e) => update('cidade', e.target.value)}
+                                className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
+                                placeholder="São Paulo"
+                            />
+                        </Field>
+                        <Field label="UF">
+                            <input
+                                value={form.estado}
+                                onChange={(e) => update('estado', e.target.value.toUpperCase().slice(0, 2))}
+                                maxLength={2}
+                                className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px] uppercase font-mono"
+                                placeholder="SP"
+                            />
+                        </Field>
+                    </div>
 
                     <Field
                         label="URL do logo"

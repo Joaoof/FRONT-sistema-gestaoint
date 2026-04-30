@@ -5,6 +5,8 @@ const ORDER_FIELDS = `
   number
   customerId
   customerName
+  customerDocument
+  customerPhone
   sellerId
   sellerName
   commissionPercent
