@@ -19,6 +19,7 @@ import {
 } from '../../graphql/queries/product-detail';
 import { StockAdjustmentModal } from './StockAdjustmentModal';
 import { ProductImage } from '../../components/ProductImage';
+import { PRODUCT_UNITS, isKnownUnit, unitLabel } from '../../utils/productUnits';
 
 interface ProductImage {
     id: string;
@@ -350,13 +351,38 @@ export function ProductDetail() {
                             <FieldDisplay
                                 label="Unidade"
                                 value={editing && form ? (
-                                    <input
-                                        value={form.unit}
-                                        onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                                    <select
+                                        value={isKnownUnit(form.unit) ? form.unit : '__custom__'}
+                                        onChange={(e) => {
+                                            const v = e.target.value;
+                                            setForm({ ...form, unit: v === '__custom__' ? '' : v });
+                                        }}
                                         className="w-full p-2 border border-gray-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded"
-                                    />
-                                ) : product.unit}
+                                    >
+                                        {PRODUCT_UNITS.map((u) => (
+                                            <option key={u.value} value={u.value}>
+                                                {u.label} ({u.value})
+                                            </option>
+                                        ))}
+                                        <option value="__custom__">Outra (digitar)…</option>
+                                    </select>
+                                ) : (
+                                    <span title={unitLabel(product.unit)}>{product.unit}</span>
+                                )}
                             />
+                            {editing && form && !isKnownUnit(form.unit) && (
+                                <FieldDisplay
+                                    label="Unidade personalizada"
+                                    value={
+                                        <input
+                                            value={form.unit}
+                                            onChange={(e) => setForm({ ...form, unit: e.target.value.toUpperCase().slice(0, 8) })}
+                                            placeholder="Ex: BRL, FT2, etc."
+                                            className="w-full p-2 border border-gray-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded uppercase font-mono text-sm"
+                                        />
+                                    }
+                                />
+                            )}
                             <FieldDisplay
                                 label="Peso"
                                 value={editing && form ? (

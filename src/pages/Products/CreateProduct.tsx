@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { useMutation } from '@apollo/client';
 import { CREATE_PRODUCT_WITH_IMAGES } from '../../graphql/mutations/product-with-images';
 import { useCategories } from '../../hooks/useCategories';
+import { PRODUCT_UNITS } from '../../utils/productUnits';
 
 type ImageState = {
   id: string;
@@ -60,17 +61,7 @@ const INITIAL: FormData = {
   active: true,
 };
 
-const UNITS = [
-  { value: 'UN', label: 'Unidade' },
-  { value: 'KG', label: 'Quilograma' },
-  { value: 'G',  label: 'Grama' },
-  { value: 'L',  label: 'Litro' },
-  { value: 'ML', label: 'Mililitro' },
-  { value: 'M',  label: 'Metro' },
-  { value: 'CM', label: 'Centímetro' },
-  { value: 'CX', label: 'Caixa' },
-  { value: 'PC', label: 'Pacote' },
-];
+const UNITS = PRODUCT_UNITS;
 
 export function CreateProduct() {
   const navigate = useNavigate();
