@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Package, BarChart3, ShoppingCart, DollarSign, TrendingUp, Wallet, ArrowRight, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StatCard } from '../components/ui/StatCard';
 
 // Função utilitária DRY para calcular dados mensais
@@ -37,6 +38,7 @@ export function Dashboard({
   const dailyRevenue = getDailyRevenue();
   const dailyProfit = getDailyProfit();
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [mounted, setMounted] = useState(false);
 
@@ -161,7 +163,11 @@ export function Dashboard({
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all">
+          <button
+            type="button"
+            onClick={() => navigate('/produtos/cadastrar')}
+            className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all"
+          >
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-md bg-sky-50 text-sky-700 ring-1 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Package className="w-[18px] h-[18px]" strokeWidth={2} />
@@ -176,7 +182,11 @@ export function Dashboard({
             </div>
           </button>
 
-          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all">
+          <button
+            type="button"
+            onClick={() => navigate('/relatorios')}
+            className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all"
+          >
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-md bg-violet-50 text-violet-700 ring-1 ring-violet-100 dark:bg-violet-500/10 dark:text-violet-400 dark:ring-violet-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <BarChart3 className="w-[18px] h-[18px]" strokeWidth={2} />
@@ -191,7 +201,11 @@ export function Dashboard({
             </div>
           </button>
 
-          <button className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all">
+          <button
+            type="button"
+            onClick={() => navigate('/vendas')}
+            className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 hover:shadow-sm transition-all"
+          >
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-md bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <ShoppingCart className="w-[18px] h-[18px]" strokeWidth={2} />
