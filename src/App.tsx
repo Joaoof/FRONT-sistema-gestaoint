@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
 import { ProductEntry } from './pages/ProductEntry';
 import { ProductExit } from './pages/ProductExit';
+import { NewSale } from './pages/Sales/NewSale';
 import { CategoriesRegistration, CustomersRegistration, SupplierRegistration } from './pages/Register';
 import { Sidebar } from './components/Sidebar';
 import { useInventory } from './hooks/useInventory';
@@ -94,7 +95,8 @@ function AppContent() {
             <Route path="/categorias" element={<CategoriesRegistration />} />
             <Route path="/relatorios" element={<ReportsPage />} />
             <Route path="/relatorios/visao-geral" element={<BusinessOverview />} />
-            <Route path="/vendas" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
+            <Route path="/vendas" element={<NewSale />} />
+            <Route path="/vendas/saida-rapida" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
             <Route path="/fiscal-receber" element={<AccountsReceivableDashboard />} />
             <Route path="/fiscal-receber-cria" element={<CreateReceivable />} />
             <Route path="/fiscal-pagar" element={<AccountsPayableDashboard />} />

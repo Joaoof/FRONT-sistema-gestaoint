@@ -1,66 +1,25 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useQuery } from '@apollo/client';
+import { GET_ACTIVE_CATEGORIES } from '../graphql/queries/categories';
 
-type Category = {
+export interface Category {
     id: string;
     name: string;
-    status: string;
-};
+    color: string;
+    active?: boolean;
+}
 
 export function useCategories() {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const { data, loading, error, refetch } = useQuery<{ activeCategories: Category[] }>(
+        GET_ACTIVE_CATEGORIES,
+        {
+            fetchPolicy: 'cache-and-network',
+        },
+    );
 
-    useEffect(() => {
-        async function fetchCategories() {
-            setLoading(true);
-            setError(null);
-
-            try {
-                const token = localStorage.getItem('accessToken');
-
-                const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
-                if (!endpoint) {
-                    toast.error("env nullo. Contactar o desenvolvedo");
-                    return;
-                }
-
-                const res = await fetch(endpoint ?? '', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        query: `
-              query CategoriesActive {
-                categoriesActive {
-                  id
-                  name
-                  status
-                }
-              }
-            `,
-                    }),
-                });
-
-                const json = await res.json();
-
-                if (json.errors) {
-                    throw new Error(json.errors[0].message);
-                }
-
-                setCategories(json.data.categoriesActive);
-            } catch (err: any) {
-                setError(err.message || 'Erro ao buscar categorias');
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchCategories();
-    }, []);
-
-    return { categories, loading, error };
+    return {
+        categories: data?.activeCategories ?? [],
+        loading,
+        error: error?.message ?? null,
+        refetch,
+    };
 }
