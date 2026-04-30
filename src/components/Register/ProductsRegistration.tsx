@@ -112,7 +112,7 @@ export function ProductsRegistration() {
                             placeholder="Buscar produtos..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
                 </div>
@@ -128,10 +128,10 @@ export function ProductsRegistration() {
             {/* Form Modal */}
             {showForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-slate-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                                     {editingProduct ? 'Editar Produto' : 'Novo Produto'}
                                 </h3>
                                 <button
@@ -139,7 +139,7 @@ export function ProductsRegistration() {
                                         setShowForm(false);
                                         setEditingProduct(null);
                                     }}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-gray-400 hover:text-gray-600 dark:text-slate-300"
                                 >
                                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -150,7 +150,7 @@ export function ProductsRegistration() {
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                             Código *
                                         </label>
                                         <input
@@ -158,13 +158,13 @@ export function ProductsRegistration() {
                                             required
                                             value={formData.codigo}
                                             onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Ex: PROD001"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                             Nome *
                                         </label>
                                         <input
@@ -172,20 +172,20 @@ export function ProductsRegistration() {
                                             required
                                             value={formData.nome}
                                             onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Nome do produto"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                             Categoria *
                                         </label>
                                         <select
                                             required
                                             value={formData.categoria}
                                             onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         >
                                             <option value="">Selecione uma categoria</option>
                                             {categorias.map(cat => (
@@ -195,14 +195,14 @@ export function ProductsRegistration() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                             Unidade *
                                         </label>
                                         <select
                                             required
                                             value={formData.unidade}
                                             onChange={(e) => setFormData({ ...formData, unidade: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         >
                                             {unidades.map(unidade => (
                                                 <option key={unidade} value={unidade}>{unidade}</option>
@@ -211,7 +211,7 @@ export function ProductsRegistration() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                             Preço de Compra *
                                         </label>
                                         <input
@@ -220,13 +220,13 @@ export function ProductsRegistration() {
                                             required
                                             value={formData.precoCompra}
                                             onChange={(e) => setFormData({ ...formData, precoCompra: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="0,00"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                             Preço de Venda *
                                         </label>
                                         <input
@@ -235,33 +235,33 @@ export function ProductsRegistration() {
                                             required
                                             value={formData.precoVenda}
                                             onChange={(e) => setFormData({ ...formData, precoVenda: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="0,00"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                             Estoque Atual
                                         </label>
                                         <input
                                             type="number"
                                             value={formData.estoque}
                                             onChange={(e) => setFormData({ ...formData, estoque: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="0"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                             Estoque Mínimo
                                         </label>
                                         <input
                                             type="number"
                                             value={formData.estoqueMinimo}
                                             onChange={(e) => setFormData({ ...formData, estoqueMinimo: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="0"
                                         />
                                     </div>
@@ -273,9 +273,9 @@ export function ProductsRegistration() {
                                         id="ativo"
                                         checked={formData.ativo}
                                         onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-white/15 rounded"
                                     />
-                                    <label htmlFor="ativo" className="ml-2 block text-sm text-gray-700">
+                                    <label htmlFor="ativo" className="ml-2 block text-sm text-gray-700 dark:text-slate-200">
                                         Produto ativo
                                     </label>
                                 </div>
@@ -287,7 +287,7 @@ export function ProductsRegistration() {
                                             setShowForm(false);
                                             setEditingProduct(null);
                                         }}
-                                        className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                        className="px-4 py-2 text-gray-700 dark:text-slate-200 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:bg-slate-700 transition-colors"
                                     >
                                         Cancelar
                                     </button>
@@ -305,44 +305,44 @@ export function ProductsRegistration() {
             )}
 
             {/* Products Table */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gray-50 dark:bg-slate-950">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                     Produto
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                     Categoria
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                     Preços
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                     Estoque
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                     Status
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                     Ações
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200">
                             {filteredProdutos.map((produto) => (
-                                <tr key={produto.id} className="hover:bg-gray-50">
+                                <tr key={produto.id} className="hover:bg-gray-50 dark:bg-slate-950">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <div className="flex-shrink-0 h-10 w-10">
-                                                <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
-                                                    <Package className="h-5 w-5 text-gray-500" />
+                                                <div className="h-10 w-10 rounded-lg bg-gray-200 dark:bg-slate-700 flex items-center justify-center">
+                                                    <Package className="h-5 w-5 text-gray-500 dark:text-slate-400" />
                                                 </div>
                                             </div>
                                             <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">{produto.nome}</div>
-                                                <div className="text-sm text-gray-500">{produto.codigo}</div>
+                                                <div className="text-sm font-medium text-gray-900 dark:text-white">{produto.nome}</div>
+                                                <div className="text-sm text-gray-500 dark:text-slate-400">{produto.codigo}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -351,11 +351,11 @@ export function ProductsRegistration() {
                                             {produto.categoria}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                         <div>Compra: R$ {produto.precoCompra.toFixed(2)}</div>
                                         <div>Venda: R$ {produto.precoVenda.toFixed(2)}</div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                         <div className="flex items-center">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${produto.estoque <= produto.estoqueMinimo
                                                 ? 'bg-red-100 text-red-800'
@@ -364,7 +364,7 @@ export function ProductsRegistration() {
                                                 {produto.estoque} {produto.unidade}
                                             </span>
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-1">
+                                        <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">
                                             Mín: {produto.estoqueMinimo}
                                         </div>
                                     </td>
@@ -380,11 +380,11 @@ export function ProductsRegistration() {
                                         <div className="flex items-center justify-end space-x-2">
                                             <button
                                                 onClick={() => handleEdit(produto)}
-                                                className="text-blue-600 hover:text-blue-900"
+                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-900"
                                             >
                                                 <Edit className="h-4 w-4" />
                                             </button>
-                                            <button className="text-red-600 hover:text-red-900">
+                                            <button className="text-red-600 dark:text-red-400 hover:text-red-900">
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
                                         </div>

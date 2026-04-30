@@ -31,49 +31,49 @@ export function EditReceivableModal({ receivable, onSave, onClose }: EditReceiva
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Editar Conta a Receber</h3>
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Conta a Receber</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Cliente</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">Cliente</label>
                         <input
                             type="text"
                             value={client}
                             onChange={(e) => setClient(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            className="w-full p-2 border border-gray-300 dark:border-white/15 rounded-lg"
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">Valor (R$)</label>
                         <input
                             type="number"
                             step="0.01"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            className="w-full p-2 border border-gray-300 dark:border-white/15 rounded-lg"
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Data de Vencimento</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">Data de Vencimento</label>
                         <input
                             type="date"
                             value={dueDate}
                             onChange={(e) => setDueDate(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            className="w-full p-2 border border-gray-300 dark:border-white/15 rounded-lg"
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Status</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">Status</label>
                         <select
                             value={status}
                             onChange={(e) => setStatus(e.target.value as any)}
-                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            className="w-full p-2 border border-gray-300 dark:border-white/15 rounded-lg"
                         >
                             <option value="pending">Pendente</option>
                             <option value="paid">Pago</option>
@@ -82,23 +82,23 @@ export function EditReceivableModal({ receivable, onSave, onClose }: EditReceiva
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Juros diário (%)</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">Juros diário (%)</label>
                         <input
                             type="number"
                             step="0.001"
                             value={interestRate}
                             onChange={(e) => setInterestRate(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            className="w-full p-2 border border-gray-300 dark:border-white/15 rounded-lg"
                             placeholder="0.033 (≈1% ao mês)"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Observações</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">Observações</label>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            className="w-full p-2 border border-gray-300 dark:border-white/15 rounded-lg"
                             rows={2}
                         />
                     </div>

@@ -22,7 +22,7 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
                 onClick={() => onOpenChange(false)}
             ></div>
             <div
-                className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-auto"
+                className="relative bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md mx-auto"
                 onClick={e => e.stopPropagation()}
             >
                 {children}
@@ -36,12 +36,12 @@ export function DialogContent({ children }: { children: React.ReactNode }) {
 }
 
 export function DialogHeader({ children }: { children: React.ReactNode }) {
-    return <div className="border-b border-gray-200 pb-4">{children}</div>;
+    return <div className="border-b border-gray-200 dark:border-white/10 pb-4">{children}</div>;
 }
 
 export function DialogTitle({ children }: { children: React.ReactNode }) {
     return (
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {children}
         </h2>
     );

@@ -53,20 +53,20 @@ export function CreateReceivable() {
     return (
         <div className="space-y-8">
             <div className="flex items-center">
-                <button onClick={() => navigate(-1)} className="mr-4 text-blue-600">← Voltar</button>
-                <h1 className="text-3xl font-serif font-bold text-gray-900">Nova Conta a Receber</h1>
+                <button onClick={() => navigate(-1)} className="mr-4 text-blue-600 dark:text-blue-400">← Voltar</button>
+                <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Nova Conta a Receber</h1>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {error && (
-                        <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
+                        <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-700 dark:text-red-300 rounded text-sm">
                             {error}
                         </div>
                     )}
 
                     <div>
-                        <label htmlFor="clientName" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="clientName" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Cliente *
                         </label>
                         <div className="relative">
@@ -78,14 +78,14 @@ export function CreateReceivable() {
                                 value={formData.clientName}
                                 onChange={handleChange}
                                 required
-                                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500"
                                 placeholder="Nome do cliente"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Valor *
                         </label>
                         <div className="relative">
@@ -99,14 +99,14 @@ export function CreateReceivable() {
                                 value={formData.value}
                                 onChange={handleChange}
                                 required
-                                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500"
                                 placeholder="0,00"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Descrição *
                         </label>
                         <textarea
@@ -116,13 +116,13 @@ export function CreateReceivable() {
                             onChange={handleChange}
                             required
                             rows={3}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500"
                             placeholder="Ex: Venda de produtos, serviço prestado..."
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Data de Vencimento *
                         </label>
                         <div className="relative">
@@ -134,13 +134,13 @@ export function CreateReceivable() {
                                 value={formData.dueDate}
                                 onChange={handleChange}
                                 required
-                                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Status
                         </label>
                         <select
@@ -148,7 +148,7 @@ export function CreateReceivable() {
                             name="status"
                             value={formData.status}
                             onChange={handleChange}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="pendente">Pendente</option>
                             <option value="pago">Pago</option>
@@ -156,8 +156,8 @@ export function CreateReceivable() {
                         </select>
                     </div>
 
-                    <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                        <div className="text-sm text-gray-500">* Campos obrigatórios</div>
+                    <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-white/10">
+                        <div className="text-sm text-gray-500 dark:text-slate-400">* Campos obrigatórios</div>
                         <button
                             type="submit"
                             disabled={loading}

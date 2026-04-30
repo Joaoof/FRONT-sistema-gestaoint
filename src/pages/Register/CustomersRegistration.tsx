@@ -122,10 +122,10 @@ export function CustomersRegistration() {
     };
 
     return (
-        <div className="w-full space-y-6 px-4 py-6 bg-gray-50 min-h-screen text-gray-800">
+        <div className="w-full space-y-6 px-4 py-6 bg-gray-50 dark:bg-slate-950 min-h-screen text-gray-800 dark:text-slate-100">
             {/* 🔹 Header com Estatísticas */}
             <div className="mt-6 mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Clientes</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Clientes</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                     <div className="relative bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-2xl p-6 shadow-lg overflow-hidden">
                         <Users className="absolute right-3 bottom-3 h-12 w-12 opacity-20" />
@@ -154,7 +154,7 @@ export function CustomersRegistration() {
                         placeholder="Buscar clientes..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all shadow-sm placeholder-gray-400"
+                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-white/10 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all shadow-sm placeholder-gray-400 dark:placeholder-slate-500"
                     />
                 </div>
                 <button
@@ -168,7 +168,7 @@ export function CustomersRegistration() {
 
             {/* 🔹 Grid de Clientes (substitui tabela) */}
             {filteredClientes.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-40 text-gray-500 rounded-2xl border-2 border-dashed border-gray-200 bg-white">
+                <div className="flex flex-col items-center justify-center h-40 text-gray-500 dark:text-slate-400 rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900">
                     <User className="h-10 w-10 mb-2 opacity-40" />
                     <p className="text-sm">Nenhum cliente encontrado</p>
                 </div>
@@ -177,7 +177,7 @@ export function CustomersRegistration() {
                     {filteredClientes.map((cliente) => (
                         <div
                             key={cliente.id}
-                            className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group"
+                            className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group"
                         >
                             <div
                                 className="absolute top-0 left-0 w-full h-1.5 rounded-t-2xl"
@@ -185,24 +185,24 @@ export function CustomersRegistration() {
                             ></div>
 
                             <div className="flex items-start gap-4 mb-4">
-                                <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center">
-                                    <User className="h-6 w-6 text-gray-600" />
+                                <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
+                                    <User className="h-6 w-6 text-gray-600 dark:text-slate-300" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-gray-900 truncate">{cliente.nome}</h3>
-                                    <p className="text-sm text-gray-500">{cliente.documento}</p>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">{cliente.nome}</h3>
+                                    <p className="text-sm text-gray-500 dark:text-slate-400">{cliente.documento}</p>
                                 </div>
                                 <div className="flex space-x-2">
                                     <button
                                         onClick={() => handleEdit(cliente)}
-                                        className="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors"
+                                        className="p-2 rounded-full hover:bg-blue-100 text-blue-600 dark:text-blue-400 transition-colors"
                                         title="Editar cliente"
                                     >
                                         <Edit className="h-4 w-4" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(cliente.id)}
-                                        className="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors"
+                                        className="p-2 rounded-full hover:bg-red-100 text-red-600 dark:text-red-400 transition-colors"
                                         title="Excluir cliente"
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -210,7 +210,7 @@ export function CustomersRegistration() {
                                 </div>
                             </div>
 
-                            <div className="space-y-2 text-sm text-gray-600">
+                            <div className="space-y-2 text-sm text-gray-600 dark:text-slate-300">
                                 <div className="flex justify-between">
                                     <span className="font-medium">Email:</span>
                                     <span>{cliente.email}</span>
@@ -254,13 +254,13 @@ export function CustomersRegistration() {
             {/* 🔹 Modal de Formulário */}
             {showForm && (
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold text-gray-900">Novo Cliente</h3>
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Novo Cliente</h3>
                                 <button
                                     onClick={() => setShowForm(false)}
-                                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                                    className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-200 transition-colors"
                                 >
                                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -271,7 +271,7 @@ export function CustomersRegistration() {
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">
                                             Nome/Razão Social *
                                         </label>
                                         <input
@@ -279,20 +279,20 @@ export function CustomersRegistration() {
                                             required
                                             value={formData.nome}
                                             onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                                             placeholder="Ex: João Silva"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">
                                             Tipo *
                                         </label>
                                         <select
                                             required
                                             value={formData.tipo}
                                             onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'PF' | 'PJ' })}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all"
                                         >
                                             <option value="PF">Pessoa Física</option>
                                             <option value="PJ">Pessoa Jurídica</option>
@@ -300,7 +300,7 @@ export function CustomersRegistration() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">
                                             {formData.tipo === 'PF' ? 'CPF' : 'CNPJ'} *
                                         </label>
                                         <input
@@ -308,71 +308,71 @@ export function CustomersRegistration() {
                                             required
                                             value={formData.documento}
                                             onChange={(e) => setFormData({ ...formData, documento: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                                             placeholder={formData.tipo === 'PF' ? '000.000.000-00' : '00.000.000/0000-00'}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">
                                             Telefone
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.telefone}
                                             onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                                             placeholder="(00) 00000-0000"
                                         />
                                     </div>
 
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">
                                             E-mail
                                         </label>
                                         <input
                                             type="email"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                                             placeholder="cliente@email.com"
                                         />
                                     </div>
 
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">
                                             Endereço
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.endereco}
                                             onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                                             placeholder="Rua, número, bairro"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">
                                             Cidade
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.cidade}
                                             onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                                             placeholder="São Paulo"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">
                                             Estado
                                         </label>
                                         <select
                                             value={formData.estado}
                                             onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all"
                                         >
                                             <option value="">Selecione</option>
                                             {estados.map(estado => (
@@ -382,14 +382,14 @@ export function CustomersRegistration() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">
                                             CEP
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.cep}
                                             onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                                             placeholder="00000-000"
                                         />
                                     </div>
@@ -401,9 +401,9 @@ export function CustomersRegistration() {
                                         id="ativo"
                                         checked={formData.ativo}
                                         onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                                        className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                                        className="h-5 w-5 text-blue-600 dark:text-blue-400 rounded focus:ring-blue-500 border-gray-300 dark:border-white/15"
                                     />
-                                    <label htmlFor="ativo" className="text-sm font-medium text-gray-700">
+                                    <label htmlFor="ativo" className="text-sm font-medium text-gray-700 dark:text-slate-200">
                                         Cliente ativo
                                     </label>
                                 </div>
@@ -412,7 +412,7 @@ export function CustomersRegistration() {
                                     <button
                                         type="button"
                                         onClick={() => setShowForm(false)}
-                                        className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:scale-95 transition-all"
+                                        className="px-5 py-2.5 text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-gray-300 dark:border-white/15 rounded-lg hover:bg-gray-50 dark:bg-slate-950 active:scale-95 transition-all"
                                     >
                                         Cancelar
                                     </button>

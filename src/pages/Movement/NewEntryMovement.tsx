@@ -142,13 +142,13 @@ export function NewEntryMovement() {
                     <div className="mr-4 p-2">
                         <X className="w-5 h-5 text-gray-400" />
                     </div>
-                    <h1 className="text-3xl font-serif font-bold text-gray-900">Nova Entrada</h1>
+                    <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Nova Entrada</h1>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
                     <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-                        <p className="text-gray-600 text-lg">Registrando movimentação...</p>
+                        <p className="text-gray-600 dark:text-slate-300 text-lg">Registrando movimentação...</p>
                         <p className="text-gray-400 text-sm mt-2">Aguarde um momento</p>
                     </div>
                 </div>
@@ -164,24 +164,24 @@ export function NewEntryMovement() {
                         console.log('🔄 Navegando de volta para /movimentacoes');
                         navigate('/movimentacoes');
                     }}
-                    className="mr-4 p-2 hover:bg-gray-100 rounded"
+                    className="mr-4 p-2 hover:bg-gray-100 dark:bg-slate-800 rounded"
                     disabled={loading}
                 >
                     <X className="w-5 h-5" />
                 </button>
-                <h1 className="text-3xl font-serif font-bold text-gray-900">Nova Entrada</h1>
+                <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Nova Entrada</h1>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {error && (
-                        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                        <div className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-700 dark:text-red-300 rounded-lg text-sm">
                             <strong>Erro:</strong> {error}
                         </div>
                     )}
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Tipo de Entrada *
                         </label>
                         <div className="grid grid-cols-3 gap-4">
@@ -196,8 +196,8 @@ export function NewEntryMovement() {
                                     disabled={loading}
                                     onClick={() => setFormData({ ...formData, type: t.value as any })}
                                     className={`p-4 border-2 rounded-lg text-center transition-all disabled:opacity-50 disabled:cursor-not-allowed ${formData.type === t.value
-                                        ? 'border-green-500 bg-green-50 text-green-900'
-                                        : 'border-gray-200 hover:border-gray-300'
+                                        ? 'border-green-500 bg-green-50 dark:bg-emerald-950/40 text-green-900'
+                                        : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:border-white/15'
                                         }`}
                                 >
                                     <div className="text-2xl mb-1">{t.icon}</div>
@@ -208,7 +208,7 @@ export function NewEntryMovement() {
                     </div>
 
                     <div>
-                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Valor *
                         </label>
                         <div className="relative">
@@ -222,14 +222,14 @@ export function NewEntryMovement() {
                                 onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
                                 required
                                 disabled={loading}
-                                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
                                 placeholder="0,00"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Descrição *
                         </label>
                         <textarea
@@ -239,13 +239,13 @@ export function NewEntryMovement() {
                             required
                             rows={3}
                             disabled={loading}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
                             placeholder="Ex: Venda no PDV, troco de cliente..."
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Data e Hora
                         </label>
                         <input
@@ -254,11 +254,11 @@ export function NewEntryMovement() {
                             value={formData.date}
                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                             disabled={loading}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
                         />
                     </div>
 
-                    <div className="flex justify-end pt-6 border-t border-gray-200">
+                    <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-white/10">
                         <button
                             type="submit"
                             disabled={loading || !formData.description.trim() || !formData.value}

@@ -45,10 +45,10 @@ function SuccessMessage({
     return (
         <div className="text-center py-10">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Truck className="w-8 h-8 text-green-600" />
+                <Truck className="w-8 h-8 text-green-600 dark:text-emerald-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Entrega cadastrada com sucesso!</h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Entrega cadastrada com sucesso!</h3>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
                 Pedido <strong>{orderId}</strong> agendado para{' '}
                 {new Date(scheduledDate).toLocaleDateString('pt-BR')}.
             </p>
@@ -74,7 +74,7 @@ interface FormFieldProps {
 export function FormField({ label, name, error, children }: FormFieldProps) {
     return (
         <div>
-            <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 {label}
             </label>
             {children}
@@ -134,7 +134,7 @@ function DeliveryForm({
                                 {...field}
                                 type="text"
                                 placeholder="EX: ENT-1001"
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.orderId ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.orderId ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                                     }`}
                                 aria-invalid={!!errors.orderId}
                                 aria-describedby={errors.orderId ? 'orderId-error' : undefined}
@@ -153,7 +153,7 @@ function DeliveryForm({
                                 {...field}
                                 type="text"
                                 placeholder="Nome completo"
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.driver ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.driver ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                                     }`}
                                 aria-invalid={!!errors.driver}
                                 aria-describedby={errors.driver ? 'driver-error' : undefined}
@@ -172,7 +172,7 @@ function DeliveryForm({
                                 {...field}
                                 type="text"
                                 placeholder="Caminhão 123"
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.vehicle ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.vehicle ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                                     }`}
                             />
                         )}
@@ -187,7 +187,7 @@ function DeliveryForm({
                         render={({ field }) => (
                             <select
                                 {...field}
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.category ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.category ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                                     }`}
                             >
                                 <option value="Produtos Acabados">Produtos Acabados</option>
@@ -201,12 +201,12 @@ function DeliveryForm({
 
                 {/* Origem (fixa) */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Origem</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Origem</label>
                     <input
                         type="text"
                         value="Fábrica Central"
                         disabled
-                        className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500"
+                        className="w-full px-4 py-2 bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-white/15 rounded-lg text-gray-500 dark:text-slate-400"
                     />
                 </div>
 
@@ -220,7 +220,7 @@ function DeliveryForm({
                                 {...field}
                                 type="text"
                                 placeholder="Ex: Distribuidor SP"
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.destination ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.destination ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                                     }`}
                                 aria-invalid={!!errors.destination}
                                 aria-describedby={errors.destination ? 'destination-error' : undefined}
@@ -243,7 +243,7 @@ function DeliveryForm({
                                 {...field}
                                 type="date"
                                 min={getToday()}
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.scheduledDate ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.scheduledDate ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                                     }`}
                                 aria-invalid={!!errors.scheduledDate}
                                 aria-describedby={errors.scheduledDate ? 'scheduledDate-error' : undefined}
@@ -303,19 +303,19 @@ export function NewDeliveryPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white border-b border-gray-200 px-6 py-5 rounded-xl shadow-sm"
+                className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-6 py-5 rounded-xl shadow-sm"
             >
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 font-['Rubik']">
+                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white font-['Rubik']">
                             Nova Entrega
                         </h1>
-                        <p className="text-sm text-gray-600 mt-1.5">
+                        <p className="text-sm text-gray-600 dark:text-slate-300 mt-1.5">
                             Cadastre uma nova saída de produto da fábrica.
                         </p>
                     </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <User className="w-5 h-5 text-gray-500" />
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-300">
+                        <User className="w-5 h-5 text-gray-500 dark:text-slate-400" />
                         <span>{user?.name}</span>
                     </div>
                 </div>
@@ -327,7 +327,7 @@ export function NewDeliveryPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4 }}
                 onClick={() => navigate(-1)}
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-medium text-sm transition"
+                className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 font-medium text-sm transition"
                 aria-label="Voltar para a página anterior"
             >
                 <ArrowLeft className="w-5 h-5" />
@@ -339,7 +339,7 @@ export function NewDeliveryPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm"
+                className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm"
             >
                 {isSubmitted && formData ? (
                     <SuccessMessage

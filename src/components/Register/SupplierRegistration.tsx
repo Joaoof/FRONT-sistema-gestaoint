@@ -84,7 +84,7 @@ export function SupplierRegistration() {
                             placeholder="Buscar categorias..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
                 </div>
@@ -100,13 +100,13 @@ export function SupplierRegistration() {
             {/* Form Modal */}
             {showForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-md w-full">
+                    <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full">
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Nova Categoria</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Nova Categoria</h3>
                                 <button
                                     onClick={() => setShowForm(false)}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-gray-400 hover:text-gray-600 dark:text-slate-300"
                                 >
                                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -116,7 +116,7 @@ export function SupplierRegistration() {
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                         Nome *
                                     </label>
                                     <input
@@ -124,26 +124,26 @@ export function SupplierRegistration() {
                                         required
                                         value={formData.nome}
                                         onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Nome da categoria"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                         Descrição
                                     </label>
                                     <textarea
                                         value={formData.descricao}
                                         onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Descrição da categoria"
                                         rows={3}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                                         Cor
                                     </label>
                                     <div className="flex items-center space-x-2">
@@ -151,7 +151,7 @@ export function SupplierRegistration() {
                                             type="color"
                                             value={formData.cor}
                                             onChange={(e) => setFormData({ ...formData, cor: e.target.value })}
-                                            className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                                            className="w-12 h-10 border border-gray-300 dark:border-white/15 rounded-lg cursor-pointer"
                                         />
                                         <div className="flex space-x-1">
                                             {coresPredefinidas.map(cor => (
@@ -159,7 +159,7 @@ export function SupplierRegistration() {
                                                     key={cor}
                                                     type="button"
                                                     onClick={() => setFormData({ ...formData, cor })}
-                                                    className={`w-8 h-8 rounded-lg border-2 ${formData.cor === cor ? 'border-gray-400' : 'border-gray-200'
+                                                    className={`w-8 h-8 rounded-lg border-2 ${formData.cor === cor ? 'border-gray-400' : 'border-gray-200 dark:border-white/10'
                                                         }`}
                                                     style={{ backgroundColor: cor }}
                                                 />
@@ -174,9 +174,9 @@ export function SupplierRegistration() {
                                         id="ativo"
                                         checked={formData.ativo}
                                         onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-white/15 rounded"
                                     />
-                                    <label htmlFor="ativo" className="ml-2 block text-sm text-gray-700">
+                                    <label htmlFor="ativo" className="ml-2 block text-sm text-gray-700 dark:text-slate-200">
                                         Categoria ativa
                                     </label>
                                 </div>
@@ -185,7 +185,7 @@ export function SupplierRegistration() {
                                     <button
                                         type="button"
                                         onClick={() => setShowForm(false)}
-                                        className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                        className="px-4 py-2 text-gray-700 dark:text-slate-200 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:bg-slate-700 transition-colors"
                                     >
                                         Cancelar
                                     </button>
@@ -205,7 +205,7 @@ export function SupplierRegistration() {
             {/* Categories Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredCategorias.map((categoria) => (
-                    <div key={categoria.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                    <div key={categoria.id} className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-white/10 p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center">
                                 <div
@@ -215,7 +215,7 @@ export function SupplierRegistration() {
                                     <Tag className="h-4 w-4 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-medium text-gray-900">{categoria.nome}</h3>
+                                    <h3 className="font-medium text-gray-900 dark:text-white">{categoria.nome}</h3>
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${categoria.ativo
                                         ? 'bg-green-100 text-green-800'
                                         : 'bg-red-100 text-red-800'
@@ -225,16 +225,16 @@ export function SupplierRegistration() {
                                 </div>
                             </div>
                             <div className="flex items-center space-x-1">
-                                <button className="text-blue-600 hover:text-blue-900 p-1">
+                                <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 p-1">
                                     <Edit className="h-4 w-4" />
                                 </button>
-                                <button className="text-red-600 hover:text-red-900 p-1">
+                                <button className="text-red-600 dark:text-red-400 hover:text-red-900 p-1">
                                     <Trash2 className="h-4 w-4" />
                                 </button>
                             </div>
                         </div>
                         {categoria.descricao && (
-                            <p className="text-sm text-gray-600">{categoria.descricao}</p>
+                            <p className="text-sm text-gray-600 dark:text-slate-300">{categoria.descricao}</p>
                         )}
                     </div>
                 ))}

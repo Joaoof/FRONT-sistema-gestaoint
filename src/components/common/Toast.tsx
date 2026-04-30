@@ -30,17 +30,17 @@ export function Toast({ type, message, onClose, duration = 5000 }: ToastProps) {
   };
 
   const colors = {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
+    success: 'bg-green-50 dark:bg-emerald-950/40 border-green-200 text-green-800',
+    error: 'bg-red-50 dark:bg-red-950/40 border-red-200 text-red-800',
+    warning: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 text-yellow-800',
+    info: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 text-blue-800',
   };
 
   const iconColors = {
-    success: 'text-green-600',
-    error: 'text-red-600',
-    warning: 'text-yellow-600',
-    info: 'text-blue-600',
+    success: 'text-green-600 dark:text-emerald-400',
+    error: 'text-red-600 dark:text-red-400',
+    warning: 'text-yellow-600 dark:text-amber-400',
+    info: 'text-blue-600 dark:text-blue-400',
   };
 
   const Icon = icons[type];

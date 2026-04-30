@@ -205,27 +205,27 @@ export function FiscalPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-serif text-gray-900 mb-2">Gestão Fiscal</h1>
-                <p className="text-gray-600 font-light">Registre contas a receber e a pagar</p>
+                <h1 className="text-3xl font-serif text-gray-900 dark:text-white mb-2">Gestão Fiscal</h1>
+                <p className="text-gray-600 dark:text-slate-300 font-light">Registre contas a receber e a pagar</p>
             </div>
 
             {error && (
-                <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                <div className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-700 dark:text-red-300 rounded-lg text-sm">
                     {error}
                 </div>
             )}
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {/* Contas a Receber */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
                     <div className="flex items-center mb-6">
-                        <DollarSign className="w-6 h-6 text-blue-600 mr-3" />
-                        <h2 className="text-xl font-semibold text-gray-900">Contas a Receber</h2>
+                        <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3" />
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Contas a Receber</h2>
                     </div>
 
                     <form onSubmit={handleReceivableSubmit} className="space-y-6">
                         <div>
-                            <label htmlFor="clientName" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="clientName" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Cliente *
                             </label>
                             <input
@@ -235,13 +235,13 @@ export function FiscalPage() {
                                 value={receivable.clientName}
                                 onChange={handleReceivableChange}
                                 required
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="Nome do cliente"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="value" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Valor *
                             </label>
                             <input
@@ -253,13 +253,13 @@ export function FiscalPage() {
                                 value={receivable.value}
                                 onChange={handleReceivableChange}
                                 required
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="0,00"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Descrição *
                             </label>
                             <textarea
@@ -269,13 +269,13 @@ export function FiscalPage() {
                                 onChange={handleReceivableChange}
                                 required
                                 rows={3}
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="Ex: Venda de produtos, serviço prestado..."
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Data de Vencimento *
                             </label>
                             <input
@@ -285,12 +285,12 @@ export function FiscalPage() {
                                 value={receivable.dueDate}
                                 onChange={handleReceivableChange}
                                 required
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Status
                             </label>
                             <select
@@ -298,7 +298,7 @@ export function FiscalPage() {
                                 name="status"
                                 value={receivable.status}
                                 onChange={handleReceivableChange}
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
                                 <option value="pendente">Pendente</option>
                                 <option value="pago">Pago</option>
@@ -306,8 +306,8 @@ export function FiscalPage() {
                             </select>
                         </div>
 
-                        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                            <div className="text-sm text-gray-500">* Campos obrigatórios</div>
+                        <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-white/10">
+                            <div className="text-sm text-gray-500 dark:text-slate-400">* Campos obrigatórios</div>
                             <button
                                 type="submit"
                                 disabled={loadingReceivable}
@@ -340,15 +340,15 @@ export function FiscalPage() {
                 </div>
 
                 {/* Contas a Pagar */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
                     <div className="flex items-center mb-6">
-                        <FileText className="w-6 h-6 text-red-600 mr-3" />
-                        <h2 className="text-xl font-serif text-gray-900">Contas a Pagar</h2>
+                        <FileText className="w-6 h-6 text-red-600 dark:text-red-400 mr-3" />
+                        <h2 className="text-xl font-serif text-gray-900 dark:text-white">Contas a Pagar</h2>
                     </div>
 
                     <form onSubmit={handlePayableSubmit} className="space-y-6">
                         <div>
-                            <label htmlFor="supplierName" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="supplierName" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Fornecedor *
                             </label>
                             <input
@@ -358,13 +358,13 @@ export function FiscalPage() {
                                 value={payable.supplierName}
                                 onChange={handlePayableChange}
                                 required
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="Nome do fornecedor"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="value" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Valor *
                             </label>
                             <input
@@ -376,13 +376,13 @@ export function FiscalPage() {
                                 value={payable.value}
                                 onChange={handlePayableChange}
                                 required
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="0,00"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Descrição *
                             </label>
                             <textarea
@@ -392,13 +392,13 @@ export function FiscalPage() {
                                 onChange={handlePayableChange}
                                 required
                                 rows={3}
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="Ex: Compra de insumos, aluguel, energia..."
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Data de Vencimento *
                             </label>
                             <input
@@ -408,12 +408,12 @@ export function FiscalPage() {
                                 value={payable.dueDate}
                                 onChange={handlePayableChange}
                                 required
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                                 Status
                             </label>
                             <select
@@ -421,7 +421,7 @@ export function FiscalPage() {
                                 name="status"
                                 value={payable.status}
                                 onChange={handlePayableChange}
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                             >
                                 <option value="pendente">Pendente</option>
                                 <option value="pago">Pago</option>
@@ -429,8 +429,8 @@ export function FiscalPage() {
                             </select>
                         </div>
 
-                        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                            <div className="text-sm text-gray-500">* Campos obrigatórios</div>
+                        <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-white/10">
+                            <div className="text-sm text-gray-500 dark:text-slate-400">* Campos obrigatórios</div>
                             <button
                                 type="submit"
                                 disabled={loadingPayable}

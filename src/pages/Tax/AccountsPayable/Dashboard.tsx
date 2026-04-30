@@ -27,9 +27,9 @@ interface Payable {
 // ==============================
 function SummaryCard({ label, value, color, progress }: SummaryCardProps) {
     const colorClasses = {
-        red: 'bg-red-50 border-red-200 text-red-800 text-red-900',
-        yellow: 'bg-yellow-50 border-yellow-200 text-yellow-800 text-yellow-900',
-        green: 'bg-green-50 border-green-200 text-green-800 text-green-900',
+        red: 'bg-red-50 dark:bg-red-950/40 border-red-200 text-red-800 text-red-900',
+        yellow: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 text-yellow-800 text-yellow-900',
+        green: 'bg-green-50 dark:bg-emerald-950/40 border-green-200 text-green-800 text-green-900',
     };
 
     const [border, text, valueText] = colorClasses[color].split(' ');
@@ -51,7 +51,7 @@ function SummaryCard({ label, value, color, progress }: SummaryCardProps) {
 
             {progress !== undefined && (
                 <div className="mt-3">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                         <div
                             className={`bg-${color}-500 h-2 rounded-full transition-all duration-300`}
                             style={{ width: `${progress}%` }}
@@ -126,38 +126,38 @@ function RecentPayablesTable() {
             <table className="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                             Fornecedor
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                             Categoria
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                             Valor
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                             Vencimento
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                             Status
                         </th>
                     </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200">
                     {mockData.map((item) => (
                         <tr
                             key={item.id}
-                            className={`hover:bg-gray-50 transition-colors ${isOverdue(item.dueDate) ? 'bg-red-50' : ''}`}
+                            className={`hover:bg-gray-50 dark:bg-slate-950 transition-colors ${isOverdue(item.dueDate) ? 'bg-red-50 dark:bg-red-950/40' : ''}`}
                         >
-                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.supplier}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700">{item.category}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700">
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{item.supplier}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700 dark:text-slate-200">{item.category}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700 dark:text-slate-200">
                                 {new Intl.NumberFormat('pt-BR', {
                                     style: 'currency',
                                     currency: 'BRL',
                                 }).format(item.amount)}
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-700">
+                            <td className="px-4 py-3 text-sm text-gray-700 dark:text-slate-200">
                                 {new Date(item.dueDate).toLocaleDateString('pt-BR')}
                             </td>
                             <td className="px-4 py-3 text-sm">
@@ -196,15 +196,15 @@ export function AccountsPayableDashboard() {
     const paidPercentage = data.total > 0 ? Math.round((data.paid / data.total) * 100) : 0;
 
     if (loading) {
-        return <div className="p-8 text-center text-gray-500">Carregando...</div>;
+        return <div className="p-8 text-center text-gray-500 dark:text-slate-400">Carregando...</div>;
     }
 
     return (
         <div className="space-y-8">
             {/* Título */}
             <div>
-                <h1 className="text-3xl font-bold font-['Rajdhani'] text-gray-900 mb-2">Contas a Pagar</h1>
-                <p className="text-gray-600">Gestão de fornecedores, despesas e pagamentos</p>
+                <h1 className="text-3xl font-bold font-['Rajdhani'] text-gray-900 dark:text-white mb-2">Contas a Pagar</h1>
+                <p className="text-gray-600 dark:text-slate-300">Gestão de fornecedores, despesas e pagamentos</p>
             </div>
 
             {/* Ações Rápidas */}
@@ -254,8 +254,8 @@ export function AccountsPayableDashboard() {
             </motion.div>
 
             {/* Últimas Contas a Pagar */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Últimas Contas a Pagar</h2>
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Últimas Contas a Pagar</h2>
                 <RecentPayablesTable />
             </div>
         </div>

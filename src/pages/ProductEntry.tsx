@@ -387,27 +387,27 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
       <Toaster position="top-right" />
 
       <div>
-        <h1 className="text-3xl font-bold font-['Merriweather'] text-gray-900 mb-2">Entrada de Produtos</h1>
-        <p className="text-gray-600">Registre novos produtos no seu estoque</p>
+        <h1 className="text-3xl font-bold font-['Merriweather'] text-gray-900 dark:text-white mb-2">Entrada de Produtos</h1>
+        <p className="text-gray-600 dark:text-slate-300">Registre novos produtos no seu estoque</p>
       </div>
 
       {/* Botão de importação CSV com drag-and-drop */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6">
         <div className="flex items-center mb-4">
-          <Upload className="w-5 h-5 text-green-600 mr-2" />
-          <h3 className="text-lg font-semibold text-gray-800">Importar Produtos via CSV</h3>
+          <Upload className="w-5 h-5 text-green-600 dark:text-emerald-400 mr-2" />
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100">Importar Produtos via CSV</h3>
         </div>
 
         <Dropzone onDrop={handleDrop} accept={{ 'text/csv': ['.csv'] }} multiple={false}>
           {({ getRootProps, getInputProps, isDragActive }) => (
             <div
               {...getRootProps()}
-              className={`p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${isDragActive ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-gray-400'
+              className={`p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${isDragActive ? 'border-green-500 bg-green-50 dark:bg-emerald-950/40' : 'border-gray-300 dark:border-white/15 hover:border-gray-400'
                 }`}
             >
               <input {...getInputProps()} />
               <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-slate-300">
                 {isDragActive ? 'Solte o arquivo aqui...' : 'Arraste e solte um CSV ou clique para selecionar'}
               </p>
             </div>
@@ -416,7 +416,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
 
         {csvLoading && (
           <div className="mt-4 text-center">
-            <svg className="animate-spin h-5 w-5 mx-auto text-green-600" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-5 w-5 mx-auto text-green-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path
                 className="opacity-75"
@@ -436,7 +436,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
             <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
               {Object.keys(columnMapping).map((header) => (
                 <div key={header} className="flex items-center gap-2">
-                  <code className="bg-gray-100 px-2 py-1 rounded">{header}</code>
+                  <code className="bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded">{header}</code>
                   <select
                     value={columnMapping[header]}
                     onChange={(e) => handleColumnMapChange(header, e.target.value)}
@@ -457,7 +457,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
 
             <div className="overflow-auto max-h-60 border rounded">
               <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-slate-950">
                   <tr>
                     {Object.keys(columnMapping).map((h) => (
                       <th key={h} className="px-3 py-2 text-left border-b">
@@ -468,9 +468,9 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 </thead>
                 <tbody>
                   {csvData.slice(0, 5).map((row, i) => (
-                    <tr key={i} className="hover:bg-gray-50">
+                    <tr key={i} className="hover:bg-gray-50 dark:bg-slate-950">
                       {Object.keys(columnMapping).map((h) => (
-                        <td key={h} className="px-3 py-2 border-b text-gray-700">
+                        <td key={h} className="px-3 py-2 border-b text-gray-700 dark:text-slate-200">
                           {row[h]}
                         </td>
                       ))}
@@ -478,7 +478,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                   ))}
                   {csvData.length > 5 && (
                     <tr>
-                      <td colSpan={Object.keys(columnMapping).length} className="text-center py-2 text-gray-500">
+                      <td colSpan={Object.keys(columnMapping).length} className="text-center py-2 text-gray-500 dark:text-slate-400">
                         ... e mais {csvData.length - 5} linhas
                       </td>
                     </tr>
@@ -499,16 +499,16 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
       </div>
 
       {/* Formulário manual */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <Package className="w-6 h-6 text-blue-600 mr-3" />
-            <h2 className="text-xl font-bold font-['Montserrat'] text-gray-900">Novo Produto</h2>
+            <Package className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3" />
+            <h2 className="text-xl font-bold font-['Montserrat'] text-gray-900 dark:text-white">Novo Produto</h2>
           </div>
           <button
             type="button"
             onClick={duplicateLastProduct}
-            className="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600"
+            className="flex items-center gap-1 text-sm text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:text-blue-400"
           >
             <Copy className="w-4 h-4" /> Duplicar último
           </button>
@@ -517,7 +517,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
         <form onSubmit={(e) => handleSubmit(e, false)} onKeyDown={handleKeyDown} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="nameProduct" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="nameProduct" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Nome do Produto *
               </label>
               <input
@@ -526,7 +526,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 name="nameProduct"
                 value={formData.nameProduct}
                 onChange={handleInputChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.nameProduct ? 'border-red-500' : 'border-gray-300'
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.nameProduct ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                   }`}
                 placeholder="Ex: Smartphone Samsung Galaxy"
               />
@@ -534,7 +534,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
             </div>
 
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Categoria *
               </label>
               <select
@@ -542,7 +542,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.category ? 'border-red-500' : 'border-gray-300'
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.category ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                   }`}
               >
                 <option value="">Selecione uma categoria</option>
@@ -556,7 +556,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
             </div>
 
             <div>
-              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Quantidade *
               </label>
               <input
@@ -566,14 +566,14 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 value={formData.quantity}
                 onChange={handleInputChange}
                 min="1"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.quantity ? 'border-red-500' : 'border-gray-300'
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.quantity ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                   }`}
               />
               {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
             </div>
 
             <div>
-              <label htmlFor="costPrice" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="costPrice" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Preço de Custo *
               </label>
               <input
@@ -584,14 +584,14 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 onChange={handleInputChange}
                 min="0"
                 step="0.01"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.costPrice ? 'border-red-500' : 'border-gray-300'
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.costPrice ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                   }`}
               />
               {errors.costPrice && <p className="mt-1 text-sm text-red-500">{errors.costPrice}</p>}
             </div>
 
             <div>
-              <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Preço de Venda *
               </label>
               <input
@@ -602,14 +602,14 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 onChange={handleInputChange}
                 min="0"
                 step="0.01"
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.salePrice ? 'border-red-500' : 'border-gray-300'
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.salePrice ? 'border-red-500' : 'border-gray-300 dark:border-white/15'
                   }`}
               />
               {errors.salePrice && <p className="mt-1 text-sm text-red-500">{errors.salePrice}</p>}
             </div>
 
             <div>
-              <label htmlFor="supplier" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="supplier" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Fornecedor
               </label>
               <select
@@ -617,7 +617,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
                 name="supplier"
                 value={formData.supplier}
                 onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Selecione um fornecedor</option>
                 {(suppliers.length > 0 ? suppliers : cachedSuppliers).map((sup: any) => (
@@ -629,7 +629,7 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
             </div>
           </div>
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
               Descrição
             </label>
             <textarea
@@ -638,12 +638,12 @@ export function ProductEntry({ onAddEntry }: ProductEntryProps) {
               value={formData.description}
               onChange={handleInputChange}
               rows={3}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Descrição detalhada do produto..."
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200 dark:border-white/10">
             <button
               type="button"
               onClick={(e) => handleSubmit(e, true)}

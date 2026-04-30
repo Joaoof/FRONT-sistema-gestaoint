@@ -41,17 +41,17 @@ export function NewExitMovement() {
             <div className="flex items-center">
                 <button
                     onClick={() => navigate('/movimentacoes')}
-                    className="mr-4 p-2 hover:bg-gray-100 rounded"
+                    className="mr-4 p-2 hover:bg-gray-100 dark:bg-slate-800 rounded"
                 >
                     <X className="w-5 h-5" />
                 </button>
-                <h1 className="text-3xl font-serif font-bold text-gray-900">Nova Saída</h1>
+                <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Nova Saída</h1>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Saída *</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Tipo de Saída *</label>
                         <div className="grid grid-cols-3 gap-4">
                             {[
                                 { value: 'despesa', label: 'Despesa', icon: '📝' },
@@ -63,8 +63,8 @@ export function NewExitMovement() {
                                     type="button"
                                     onClick={() => setFormData({ ...formData, type: t.value as any })}
                                     className={`p-4 border-2 rounded-lg text-center transition-all ${formData.type === t.value
-                                        ? 'border-red-500 bg-red-50 text-red-900'
-                                        : 'border-gray-200 hover:border-gray-300'
+                                        ? 'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-900'
+                                        : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:border-white/15'
                                         }`}
                                 >
                                     <div className="text-2xl mb-1">{t.icon}</div>
@@ -75,7 +75,7 @@ export function NewExitMovement() {
                     </div>
 
                     <div>
-                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Valor *
                         </label>
                         <input
@@ -86,12 +86,12 @@ export function NewExitMovement() {
                             value={formData.value}
                             onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
                             required
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Descrição *
                         </label>
                         <textarea
@@ -100,13 +100,13 @@ export function NewExitMovement() {
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             required
                             rows={3}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500"
                             placeholder="Ex: Aluguel, retirada do sócio, pagamento de fornecedor..."
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Data e Hora
                         </label>
                         <input
@@ -114,11 +114,11 @@ export function NewExitMovement() {
                             id="date"
                             value={formData.date}
                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500"
                         />
                     </div>
 
-                    <div className="flex justify-end pt-6 border-t border-gray-200">
+                    <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-white/10">
                         <button
                             type="submit"
                             disabled={loading}

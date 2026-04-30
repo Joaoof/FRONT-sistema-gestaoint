@@ -5,7 +5,7 @@ export function Label({ className = '', children, ...props }: React.LabelHTMLAtt
     return (
         <label
             className={[
-                'text-sm font-medium leading-none text-gray-700 peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+                'text-sm font-medium leading-none text-gray-700 dark:text-slate-200 peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
                 className,
             ].join(' ')}
             {...props}

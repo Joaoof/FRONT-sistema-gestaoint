@@ -35,12 +35,12 @@ export class ErrorBoundary extends Component<Props, State> {
     render() {
         if (this.state.hasError) {
             return this.props.fallback || (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-950">
                     <div className="text-center p-8">
-                        <h1 className="text-2xl font-bold text-red-600 mb-4">
+                        <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">
                             Ops! Algo deu errado
                         </h1>
-                        <p className="text-gray-600 mb-4">
+                        <p className="text-gray-600 dark:text-slate-300 mb-4">
                             Ocorreu um erro inesperado na aplicação.
                         </p>
                         <button
@@ -50,10 +50,10 @@ export class ErrorBoundary extends Component<Props, State> {
                             Recarregar Página
                         </button>
                         <details className="mt-4 text-left">
-                            <summary className="cursor-pointer text-sm text-gray-500">
+                            <summary className="cursor-pointer text-sm text-gray-500 dark:text-slate-400">
                                 Detalhes técnicos
                             </summary>
-                            <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
+                            <pre className="mt-2 text-xs bg-gray-100 dark:bg-slate-800 p-2 rounded overflow-auto">
                                 {this.state.error?.toString()}
                             </pre>
                         </details>

@@ -57,7 +57,7 @@ export function EditableValue({
                         ? 'text-red-900'
                         : color === 'blue'
                             ? 'text-blue-900'
-                            : 'text-gray-900'
+                            : 'text-gray-900 dark:text-white'
                 }`}
         >
             {isEditing ? (

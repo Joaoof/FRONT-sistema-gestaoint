@@ -35,7 +35,7 @@ export function MetricCard({ title, value, color, icon, isCount = false }: Metri
       <div className="absolute top-2 right-2 text-white opacity-60">
         <span className="text-sm">{icon}</span>
       </div>
-      <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-white bg-opacity-10 rounded-full"></div>
+      <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-white dark:bg-slate-900 bg-opacity-10 rounded-full"></div>
     </div>
   );
 }

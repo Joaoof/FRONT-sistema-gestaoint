@@ -14,7 +14,7 @@ export function PieChart({ data }: PieChartProps) {
   
   if (total === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-gray-500">
+      <div className="flex items-center justify-center h-32 text-gray-500 dark:text-slate-400">
         <p className="text-xs">Nenhum dado disponível</p>
       </div>
     );
@@ -91,9 +91,9 @@ export function PieChart({ data }: PieChartProps) {
                 className="w-2 h-2 rounded-full mr-2 flex-shrink-0"
                 style={{ backgroundColor: segment.color }}
               ></div>
-              <span className="text-gray-600 truncate">{segment.name}</span>
+              <span className="text-gray-600 dark:text-slate-300 truncate">{segment.name}</span>
             </div>
-            <span className="font-medium text-gray-900 ml-2">{segment.percentage}%</span>
+            <span className="font-medium text-gray-900 dark:text-white ml-2">{segment.percentage}%</span>
           </div>
         ))}
       </div>

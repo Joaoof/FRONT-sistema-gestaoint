@@ -90,10 +90,10 @@ export function CategoriesRegistration() {
     };
 
     return (
-        <div className="w-full space-y-6 px-4 py-6 bg-gray-50 min-h-screen text-gray-800">
+        <div className="w-full space-y-6 px-4 py-6 bg-gray-50 dark:bg-slate-950 min-h-screen text-gray-800 dark:text-slate-100">
             {/* 🔹 Header com Estatísticas + Ícones decorativos */}
             <div className="mt-6 mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Categorias</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Categorias</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                     <div className="relative bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-2xl p-6 shadow-lg overflow-hidden">
                         <Layers className="absolute right-3 bottom-3 h-12 w-12 opacity-20" />
@@ -122,7 +122,7 @@ export function CategoriesRegistration() {
                         placeholder="Buscar categorias..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all shadow-sm placeholder-gray-400"
+                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-white/10 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all shadow-sm placeholder-gray-400 dark:placeholder-slate-500"
                     />
                 </div>
                 <button
@@ -140,7 +140,7 @@ export function CategoriesRegistration() {
                     <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
                 </div>
             ) : filteredCategorias.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-40 text-gray-500 rounded-2xl border-2 border-dashed border-gray-200 bg-white">
+                <div className="flex flex-col items-center justify-center h-40 text-gray-500 dark:text-slate-400 rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900">
                     <Tag className="h-10 w-10 mb-2 opacity-40" />
                     <p className="text-sm">Nenhuma categoria encontrada</p>
                 </div>
@@ -149,7 +149,7 @@ export function CategoriesRegistration() {
                     {filteredCategorias.map((categoria: any) => (
                         <div
                             key={categoria.id}
-                            className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group"
+                            className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group"
                         >
                             {/* 🔹 Barra superior colorida */}
                             <div
@@ -166,7 +166,7 @@ export function CategoriesRegistration() {
                                         <Tag className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-gray-900">{categoria.name}</h3>
+                                        <h3 className="font-semibold text-gray-900 dark:text-white">{categoria.name}</h3>
                                         <span
                                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoria.active
                                                     ? 'bg-green-100 text-green-800'
@@ -180,14 +180,14 @@ export function CategoriesRegistration() {
                                 <div className="flex space-x-2">
                                     <button
                                         onClick={() => handleEdit(categoria)}
-                                        className="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors"
+                                        className="p-2 rounded-full hover:bg-blue-100 text-blue-600 dark:text-blue-400 transition-colors"
                                         title="Editar categoria"
                                     >
                                         <Edit className="h-4 w-4" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(categoria.id)}
-                                        className="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors"
+                                        className="p-2 rounded-full hover:bg-red-100 text-red-600 dark:text-red-400 transition-colors"
                                         title="Excluir categoria"
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -195,7 +195,7 @@ export function CategoriesRegistration() {
                                 </div>
                             </div>
                             {categoria.description && (
-                                <p className="text-sm text-gray-600 line-clamp-2">{categoria.description}</p>
+                                <p className="text-sm text-gray-600 dark:text-slate-300 line-clamp-2">{categoria.description}</p>
                             )}
                         </div>
                     ))}
@@ -205,9 +205,9 @@ export function CategoriesRegistration() {
             {/* 🔹 Modal Aprimorado */}
             {showForm && (
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-2xl font-bold text-gray-900">
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {editingCategory ? 'Editar Categoria' : 'Nova Categoria'}
                             </h3>
                             <button
@@ -215,7 +215,7 @@ export function CategoriesRegistration() {
                                     setShowForm(false);
                                     resetForm();
                                 }}
-                                className="text-gray-500 hover:text-gray-700 transition-colors"
+                                className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-200 transition-colors"
                             >
                                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -225,36 +225,36 @@ export function CategoriesRegistration() {
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Nome *</label>
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">Nome *</label>
                                 <input
                                     type="text"
                                     required
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                                     placeholder="Ex: Eletrônicos"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Descrição</label>
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">Descrição</label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-white/15 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                                     placeholder="Detalhes da categoria..."
                                     rows={3}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Cor</label>
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2">Cor</label>
                                 <div className="flex items-center gap-3 flex-wrap">
                                     <input
                                         type="color"
                                         value={formData.color}
                                         onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                        className="w-12 h-12 rounded-lg cursor-pointer border border-gray-300"
+                                        className="w-12 h-12 rounded-lg cursor-pointer border border-gray-300 dark:border-white/15"
                                     />
                                     <div className="flex gap-2">
                                         {coresPredefinidas.map((cor) => (
@@ -264,7 +264,7 @@ export function CategoriesRegistration() {
                                                 onClick={() => setFormData({ ...formData, color: cor })}
                                                 className={`w-8 h-8 rounded-lg border-2 transition-transform ${formData.color === cor
                                                         ? 'border-gray-600 scale-110 ring-2 ring-gray-400 ring-opacity-50'
-                                                        : 'border-gray-300 hover:scale-105'
+                                                        : 'border-gray-300 dark:border-white/15 hover:scale-105'
                                                     }`}
                                                 style={{ backgroundColor: cor }}
                                                 aria-label={`Selecionar cor ${cor}`}
@@ -280,9 +280,9 @@ export function CategoriesRegistration() {
                                     id="ativo"
                                     checked={formData.active}
                                     onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                                    className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                                    className="h-5 w-5 text-blue-600 dark:text-blue-400 rounded focus:ring-blue-500 border-gray-300 dark:border-white/15"
                                 />
-                                <label htmlFor="ativo" className="text-sm font-medium text-gray-700">
+                                <label htmlFor="ativo" className="text-sm font-medium text-gray-700 dark:text-slate-200">
                                     Categoria ativa
                                 </label>
                             </div>
@@ -294,7 +294,7 @@ export function CategoriesRegistration() {
                                         setShowForm(false);
                                         resetForm();
                                     }}
-                                    className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:scale-95 transition-all"
+                                    className="px-5 py-2.5 text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-gray-300 dark:border-white/15 rounded-lg hover:bg-gray-50 dark:bg-slate-950 active:scale-95 transition-all"
                                 >
                                     Cancelar
                                 </button>

@@ -80,9 +80,9 @@ export function MovementDashboard() {
         const errorMessage = getGraphQLErrorMessages(error);
         notifyError(errorMessage as any);
         return (
-            <div className="p-8 text-center bg-red-50 border border-red-300 rounded-xl m-8">
-                <p className="text-xl font-bold text-red-700 mb-2">Ops, Ocorreu um Erro!</p>
-                <p className="text-red-600">Não foi possível carregar os dados do painel. Detalhes: {errorMessage}</p>
+            <div className="p-8 text-center bg-red-50 dark:bg-red-950/40 border border-red-300 rounded-xl m-8">
+                <p className="text-xl font-bold text-red-700 dark:text-red-300 mb-2">Ops, Ocorreu um Erro!</p>
+                <p className="text-red-600 dark:text-red-400">Não foi possível carregar os dados do painel. Detalhes: {errorMessage}</p>
                 <p className="text-sm text-red-500 mt-2">Por favor, tente recarregar a página. Se o erro persistir, verifique a conexão com o servidor.</p>
             </div>
         );
@@ -161,9 +161,9 @@ export function MovementDashboard() {
             icon: Box,
             color: 'gray', // Cor neutra
             borderColor: 'border-gray-500',
-            bgColor: 'bg-gray-200', // Fundo mais sutil para a borda lateral
+            bgColor: 'bg-gray-200 dark:bg-slate-700', // Fundo mais sutil para a borda lateral
             isModuleReady: false, // Módulo não pronto
-            valueClass: 'text-gray-500',
+            valueClass: 'text-gray-500 dark:text-slate-400',
             subText: 'Gerenciamento e alertas de inventário.',
             badgeText: 'Módulo'
         },
@@ -173,9 +173,9 @@ export function MovementDashboard() {
             icon: AlertTriangle,
             color: 'gray', // Cor neutra
             borderColor: 'border-gray-500',
-            bgColor: 'bg-gray-200', // Fundo mais sutil para a borda lateral
+            bgColor: 'bg-gray-200 dark:bg-slate-700', // Fundo mais sutil para a borda lateral
             isModuleReady: false, // Módulo não pronto
-            valueClass: 'text-gray-500',
+            valueClass: 'text-gray-500 dark:text-slate-400',
             subText: 'Gestão financeira avançada.',
             badgeText: 'Módulo'
         },
@@ -216,7 +216,7 @@ export function MovementDashboard() {
 
     return (
         <motion.div
-            className="space-y-8 p-6 bg-gray-50 min-h-screen"
+            className="space-y-8 p-6 bg-gray-50 dark:bg-slate-950 min-h-screen"
             variants={containerVariants}
             initial="hidden"
             animate="show"
@@ -227,14 +227,14 @@ export function MovementDashboard() {
                 variants={itemVariants}
             >
                 <div>
-                    <h1 className="text-3xl font-poppins tracking-tight text-gray-900 mb-2">Dashboard de Movimentações</h1>
-                    <p className="text-gray-600 font-open_sans text-sm">Controle completo de entradas e saídas do caixa</p>
+                    <h1 className="text-3xl font-poppins tracking-tight text-gray-900 dark:text-white mb-2">Dashboard de Movimentações</h1>
+                    <p className="text-gray-600 dark:text-slate-300 font-open_sans text-sm">Controle completo de entradas e saídas do caixa</p>
                 </div>
                 <motion.button
                     onClick={handleLogout}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors self-start"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 rounded-lg transition-colors self-start"
                 >
                     <span>Sair</span>
                     <LogOut className="w-4 h-4" />
@@ -259,14 +259,14 @@ export function MovementDashboard() {
             <motion.div variants={itemVariants}>
                 <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-lg font-open_sans">
                     <div className="flex flex-col sm:flex-row gap-4 items-center">
-                        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Filtrar por </label>
+                        <label className="text-sm font-medium text-gray-700 dark:text-slate-200 whitespace-nowrap">Filtrar por </label>
                         <div className="relative flex-1 max-w-md">
                             <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                             <input
                                 type="date"
                                 value={filterDate}
                                 onChange={(e) => setFilterDate(e.target.value)}
-                                className="w-full pl-10 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full pl-10 p-2 border border-gray-300 dark:border-white/15 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             />
                         </div>
                     </div>
@@ -285,7 +285,7 @@ export function MovementDashboard() {
                         className={`backdrop-blur-xl bg-gradient-to-br border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col justify-between relative overflow-hidden 
                             ${kpi.isModuleReady
                                 ? 'from-white to-purple-50/20 border-white/30'
-                                : 'from-gray-50 to-gray-200/50 border-gray-200/50 grayscale opacity-70 hover:opacity-100 cursor-not-allowed'
+                                : 'from-gray-50 to-gray-200/50 border-gray-200 dark:border-white/10/50 grayscale opacity-70 hover:opacity-100 cursor-not-allowed'
                             }
                         `}
                     >
@@ -298,12 +298,12 @@ export function MovementDashboard() {
                         <div className="absolute top-4 right-4">
                             <div className="p-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow">
                                 {/* Cor do ícone no canto com fallback para cinza */}
-                                <kpi.icon className={`w-4 h-4 ${kpi.isModuleReady ? `text-${kpi.color}-700` : 'text-gray-500'}`} />
+                                <kpi.icon className={`w-4 h-4 ${kpi.isModuleReady ? `text-${kpi.color}-700` : 'text-gray-500 dark:text-slate-400'}`} />
                             </div>
                         </div>
 
                         <div className="">
-                            <p className="text-xs uppercase tracking-wide text-gray-500">{kpi.label}</p>
+                            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">{kpi.label}</p>
 
                             {/* Conteúdo dinâmico */}
                             {kpi.isModuleReady ? (
@@ -315,21 +315,21 @@ export function MovementDashboard() {
                                                 return (
                                                     <div key={idx} className="group">
                                                         {idx > 0 && (
-                                                            <div className="w-full h-px bg-gray-200/60 my-1"></div>
+                                                            <div className="w-full h-px bg-gray-200 dark:bg-slate-700/60 my-1"></div>
                                                         )}
                                                         <div className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-white/50 transition-colors">
                                                             <div className="flex items-center gap-2">
                                                                 {isVenda && <span className="text-sm">💰</span>}
                                                                 {item.categoria === 'Troco' && <span className="text-sm">🔄</span>}
                                                                 <span
-                                                                    className={`text-sm font-medium ${isVenda ? 'text-purple-800' : 'text-gray-600'
+                                                                    className={`text-sm font-medium ${isVenda ? 'text-purple-800' : 'text-gray-600 dark:text-slate-300'
                                                                         }`}
                                                                 >
                                                                     {item.categoria}
                                                                 </span>
                                                             </div>
                                                             <span
-                                                                className={`font-extrabold tabular-nums text-sm ${isVenda ? 'text-purple-900' : 'text-gray-900'
+                                                                className={`font-extrabold tabular-nums text-sm ${isVenda ? 'text-purple-900' : 'text-gray-900 dark:text-white'
                                                                     }`}
                                                             >
                                                                 {formatCurrency(item.valor)}
@@ -354,8 +354,8 @@ export function MovementDashboard() {
                                     className="flex flex-col items-center justify-center h-28 w-full transition-opacity duration-300"
                                     title="Módulo em breve" // Tooltip nativo
                                 >
-                                    <Info className="w-10 h-10 text-gray-500 mb-2" />
-                                    <p className="text-xs text-gray-500 mt-1 text-center">{kpi.subText}</p>
+                                    <Info className="w-10 h-10 text-gray-500 dark:text-slate-400 mb-2" />
+                                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 text-center">{kpi.subText}</p>
                                 </motion.div>
                             )}
                         </div>
@@ -365,7 +365,7 @@ export function MovementDashboard() {
                             <div className={`p-2 rounded-full bg-${kpi.color}-100 text-${kpi.color}-600`}>
                                 <kpi.icon className="w-5 h-5 opacity-0" /> {/* Espaço reservado */}
                             </div>
-                            <span className={`px-2.5 py-1 ${kpi.isModuleReady ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-600'} text-xs font-medium rounded-full shadow-sm`}>
+                            <span className={`px-2.5 py-1 ${kpi.isModuleReady ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300'} text-xs font-medium rounded-full shadow-sm`}>
                                 {kpi.isModuleReady ? kpi.badgeText : 'Em Desenvolvimento'}
                             </span>
                         </div>
@@ -438,18 +438,18 @@ export function MovementDashboard() {
                 <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow min-h-48">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <div className="p-2 rounded-full bg-purple-100 text-purple-600">
+                            <div className="p-2 rounded-full bg-purple-100 text-purple-600 dark:text-purple-400">
                                 <Target className="w-5 h-5" />
                             </div>
                             <h3
-                                className="text-lg font-extrabold tracking-tight text-gray-900 font-poppins"
+                                className="text-lg font-extrabold tracking-tight text-gray-900 dark:text-white font-poppins"
                             >
                                 Meta de Faturamento Mensal
                             </h3>
                         </div>
 
                         {/* Bloco substituído pelo novo texto "Módulo em breve" */}
-                        <span className="text-sm font-open_sans text-gray-500 italic">
+                        <span className="text-sm font-open_sans text-gray-500 dark:text-slate-400 italic">
                             Módulo em breve
                         </span>
 
@@ -468,16 +468,16 @@ export function MovementDashboard() {
                                     autoFocus
                                     className="px-3 py-1 border border-blue-300 rounded-lg text-sm w-32 text-right focus:outline-none focus:ring-2 focus:ring-blue-500 font-open_sans"
                                 />
-                                <span className="text-gray-500">R$/mês</span>
+                                <span className="text-gray-500 dark:text-slate-400">R$/mês</span>
                             </div>
                         ) : (
-                            <p className="text-3xl font-extrabold font-open_sans text-gray-900 tabular-nums">
+                            <p className="text-3xl font-extrabold font-open_sans text-gray-900 dark:text-white tabular-nums">
                                 R$ {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                         )}
                     </div>
 
-                    <div className="w-full bg-gray-200 rounded-full h-3 mb-1 overflow-hidden ring-1 ring-white/40">
+                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3 mb-1 overflow-hidden ring-1 ring-white/40">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${Math.min((totalMes / metaMensal) * 100, 100)}%` }}
@@ -490,7 +490,7 @@ export function MovementDashboard() {
                                 }`}
                         ></motion.div>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-slate-300">
                         {totalMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} /{' '}
                         {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}{' '}
                         ({((totalMes / metaMensal) * 100).toFixed(1)}%)
@@ -529,10 +529,10 @@ export function MovementDashboard() {
                         className={`backdrop-blur-xl bg-gradient-to-br ${card.color}/20 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col items-center justify-center text-center`}
                     >
                         <div className={`p-3 rounded-full bg-${card.color.split(" ")[0].replace("from-", "")}/10 mb-4`}>
-                            <card.icon className="w-8 h-8 text-gray-700" />
+                            <card.icon className="w-8 h-8 text-gray-700 dark:text-slate-200" />
                         </div>
-                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 mb-2">{card.title}</h3>
-                        <p className="text-gray-600 text-sm font-poppins">Módulo em breve!</p>
+                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">{card.title}</h3>
+                        <p className="text-gray-600 dark:text-slate-300 text-sm font-poppins">Módulo em breve!</p>
                         <div className="mt-4 w-16 h-1 bg-gradient-to-r from-current to-transparent rounded-full opacity-30"></div>
                     </motion.div>
                 ))}
@@ -545,7 +545,7 @@ export function MovementDashboard() {
                         whileHover={{ scale: 1.01 }}
                         className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
                     >
-                        <h3 className="text-lg font-poppins tracking-tight text-gray-900 mb-4">Entradas vs Saídas</h3>
+                        <h3 className="text-lg font-poppins tracking-tight text-gray-900 dark:text-white mb-4">Entradas vs Saídas</h3>
                         <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={[{ name: 'Hoje', entries, exits }]}>
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -575,7 +575,7 @@ export function MovementDashboard() {
                         whileHover={{ scale: 1.01 }}
                         className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
                     >
-                        <h3 className="text-lg font-poppins tracking-tight text-gray-900 mb-4">Evolução Diária</h3>
+                        <h3 className="text-lg font-poppins tracking-tight text-gray-900 dark:text-white mb-4">Evolução Diária</h3>
                         <ResponsiveContainer width="100%" height={200}>
                             <LineChart data={monthlyData}>
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -605,18 +605,18 @@ export function MovementDashboard() {
             <motion.div variants={itemVariants}>
                 <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-shadow min-h-48">
                     <div className="p-6 border-b border-white/20">
-                        <h2 className="text-xl font-poppins tracking-tight text-gray-900">
+                        <h2 className="text-xl font-poppins tracking-tight text-gray-900 dark:text-white">
                             Movimentações de {new Date(filterDate).toLocaleDateString('pt-BR')}
                         </h2>
                     </div>
-                    <div className="p-8 text-center text-gray-500">
+                    <div className="p-8 text-center text-gray-500 dark:text-slate-400">
                         <p>Este painel exibe apenas métricas gerais.</p>
                         <p className="text-sm mt-1">Para ver movimentações detalhadas, vá ao histórico.</p>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => navigate('/historico')}
-                            className="mt-4 text-blue-600 hover:underline text-sm font-medium"
+                            className="mt-4 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
                         >
                             Ver histórico completo
                         </motion.button>

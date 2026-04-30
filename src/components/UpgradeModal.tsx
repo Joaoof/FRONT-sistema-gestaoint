@@ -19,10 +19,10 @@
 
 //     return (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-//             <div className="bg-white rounded-lg max-w-md w-full p-6">
+//             <div className="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full p-6">
 //                 <div className="flex items-center justify-between mb-4">
-//                     <h3 className="text-lg font-semibold text-gray-900">Upgrade Necessário</h3>
-//                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+//                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Upgrade Necessário</h3>
+//                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-slate-300 transition-colors">
 //                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 //                         </svg>
@@ -31,7 +31,7 @@
 
 //                 <div className="mb-6">
 //                     <div className="flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mx-auto mb-4">
-//                         <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                         <svg className="w-8 h-8 text-yellow-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                             <path
 //                                 strokeLinecap="round"
 //                                 strokeLinejoin="round"
@@ -41,11 +41,11 @@
 //                         </svg>
 //                     </div>
 
-//                     <p className="text-center text-gray-600 mb-4">
+//                     <p className="text-center text-gray-600 dark:text-slate-300 mb-4">
 //                         O módulo <strong>{moduleName}</strong> não está disponível no seu plano atual.
 //                     </p>
 
-//                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+//                     <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-lg p-4 mb-4">
 //                         <h4 className="font-semibold text-blue-900 mb-2">Plano Premium inclui:</h4>
 //                         <ul className="text-sm text-blue-800 space-y-1">
 //                             <li>✅ Todos os módulos disponíveis</li>
@@ -61,7 +61,7 @@
 //                 <div className="flex space-x-3">
 //                     <button
 //                         onClick={onClose}
-//                         className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+//                         className="flex-1 px-4 py-2 border border-gray-300 dark:border-white/15 text-gray-700 dark:text-slate-200 rounded-md hover:bg-gray-50 dark:bg-slate-950 transition-colors"
 //                     >
 //                         Voltar
 //                     </button>

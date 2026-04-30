@@ -12,7 +12,7 @@ export function CurrencyInput({ value, onChange, error }: CurrencyInputProps) {
             value={value}
             onValueChange={(values) => onChange(values.floatValue || 0)}
             prefix="R$ "
-            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 ${error ? 'border-red-500 pl-10' : 'border-gray-300 pl-10'
+            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 ${error ? 'border-red-500 pl-10' : 'border-gray-300 dark:border-white/15 pl-10'
                 }`}
         />
     );

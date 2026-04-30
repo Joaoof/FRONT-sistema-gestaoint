@@ -44,14 +44,14 @@ export function CreatePayable() {
     return (
         <div className="space-y-8">
             <div className="flex items-center">
-                <button onClick={() => navigate(-1)} className="mr-4 text-blue-600">← Voltar</button>
-                <h1 className="text-3xl font-serif font-bold text-gray-900">Nova Conta a Pagar</h1>
+                <button onClick={() => navigate(-1)} className="mr-4 text-blue-600 dark:text-blue-400">← Voltar</button>
+                <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Nova Conta a Pagar</h1>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label htmlFor="supplierName" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="supplierName" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Fornecedor *
                         </label>
                         <div className="relative">
@@ -63,14 +63,14 @@ export function CreatePayable() {
                                 value={formData.supplierName}
                                 onChange={handleChange}
                                 required
-                                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500"
                                 placeholder="Nome do fornecedor"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Valor *
                         </label>
                         <div className="relative">
@@ -84,14 +84,14 @@ export function CreatePayable() {
                                 value={formData.value}
                                 onChange={handleChange}
                                 required
-                                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500"
                                 placeholder="0,00"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Descrição *
                         </label>
                         <textarea
@@ -101,13 +101,13 @@ export function CreatePayable() {
                             onChange={handleChange}
                             required
                             rows={3}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500"
                             placeholder="Ex: Compra de insumos, aluguel..."
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Data de Vencimento *
                         </label>
                         <div className="relative">
@@ -119,13 +119,13 @@ export function CreatePayable() {
                                 value={formData.dueDate}
                                 onChange={handleChange}
                                 required
-                                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Status
                         </label>
                         <select
@@ -133,7 +133,7 @@ export function CreatePayable() {
                             name="status"
                             value={formData.status}
                             onChange={handleChange}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500"
                         >
                             <option value="pendente">Pendente</option>
                             <option value="pago">Pago</option>
@@ -141,8 +141,8 @@ export function CreatePayable() {
                         </select>
                     </div>
 
-                    <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                        <div className="text-sm text-gray-500">* Campos obrigatórios</div>
+                    <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-white/10">
+                        <div className="text-sm text-gray-500 dark:text-slate-400">* Campos obrigatórios</div>
                         <button
                             type="submit"
                             disabled={loading}

@@ -34,8 +34,8 @@ export function ReceivablesList() {
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-serif font-bold text-gray-900">Contas a Receber</h1>
-                    <p className="text-gray-600">Lista completa de recebíveis</p>
+                    <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Contas a Receber</h1>
+                    <p className="text-gray-600 dark:text-slate-300">Lista completa de recebíveis</p>
                 </div>
                 <button
                     onClick={() => navigate('/app/fiscal/receivables/create')}
@@ -47,7 +47,7 @@ export function ReceivablesList() {
             </div>
 
             {/* Filtros */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -56,13 +56,13 @@ export function ReceivablesList() {
                             placeholder="Buscar cliente..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg"
+                            className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg"
                         />
                     </div>
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value as any)}
-                        className="p-3 border border-gray-300 rounded-lg"
+                        className="p-3 border border-gray-300 dark:border-white/15 rounded-lg"
                     >
                         <option value="all">Todos</option>
                         <option value="pendente">Pendentes</option>
@@ -73,32 +73,32 @@ export function ReceivablesList() {
             </div>
 
             {/* Tabela */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gray-50 dark:bg-slate-950">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Cliente</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Descrição</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Valor</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Vencimento</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200">
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">Nenhuma conta encontrada.</td>
+                                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500 dark:text-slate-400">Nenhuma conta encontrada.</td>
                                 </tr>
                             ) : (
                                 filtered.map((r) => (
-                                    <tr key={r.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{r.clientName}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-700">{r.description}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
+                                    <tr key={r.id} className="hover:bg-gray-50 dark:bg-slate-950">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{r.clientName}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-700 dark:text-slate-200">{r.description}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-emerald-400 font-semibold">
                                             R$ {r.value.toFixed(2)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatDate(r.dueDate)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">{formatDate(r.dueDate)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${r.status === 'pago'

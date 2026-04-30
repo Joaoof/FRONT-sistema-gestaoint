@@ -14,11 +14,11 @@
 
 
 //     return (
-//         <div className="flex flex-col items-center justify-center p-8 bg-white shadow-lg rounded-xl max-w-lg mx-auto mt-10">
-//             <h1 className="text-2xl font-bold text-green-600 mb-4">
+//         <div className="flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 shadow-lg rounded-xl max-w-lg mx-auto mt-10">
+//             <h1 className="text-2xl font-bold text-green-600 dark:text-emerald-400 mb-4">
 //                 Bem-vindo(a), {firstName}!
 //             </h1>
-//             <p className="text-gray-700 text-center mb-6">
+//             <p className="text-gray-700 dark:text-slate-200 text-center mb-6">
 //                 Você não tem acesso a este módulo ou página específica.
 //                 <br />
 //                 Veja seus módulos disponíveis abaixo:
@@ -26,10 +26,10 @@
 
 //             {availableModules.length > 0 ? (
 //                 <div className="w-full">
-//                     <h2 className="text-lg font-semibold text-gray-800 mb-3">Módulos Acessíveis:</h2>
+//                     <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-3">Módulos Acessíveis:</h2>
 //                     <ul className="list-disc list-inside text-left space-y-1 pl-5">
 //                         {availableModules.map((module) => (
-//                             <li key={module.module_key} className="text-blue-600">
+//                             <li key={module.module_key} className="text-blue-600 dark:text-blue-400">
 //                                 {module.name || module.module_key}
 //                             </li>
 //                         ))}

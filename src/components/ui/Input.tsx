@@ -15,7 +15,7 @@ export function SearchInput({ value, onChange, placeholder }: InputProps) {
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
         </div>
     );

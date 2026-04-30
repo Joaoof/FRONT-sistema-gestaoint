@@ -121,25 +121,25 @@ export function EntryMovement() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">Registrar Entrada</h1>
-                <p className="text-gray-600">Registre a entrada de valores no caixa</p>
+                <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white mb-2">Registrar Entrada</h1>
+                <p className="text-gray-600 dark:text-slate-300">Registre a entrada de valores no caixa</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
                 <div className="flex items-center mb-6">
-                    <DollarSign className="w-6 h-6 text-green-600 mr-3" />
-                    <h2 className="text-xl font-semibold text-gray-900">Nova Entrada</h2>
+                    <DollarSign className="w-6 h-6 text-green-600 dark:text-emerald-400 mr-3" />
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Nova Entrada</h2>
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-700 dark:text-red-300 rounded-lg text-sm">
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="value" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Valor *
                         </label>
                         <input
@@ -151,13 +151,13 @@ export function EntryMovement() {
                             value={formData.value}
                             onChange={handleInputChange}
                             required
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                             placeholder="0,00"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Descrição *
                         </label>
                         <textarea
@@ -167,13 +167,13 @@ export function EntryMovement() {
                             onChange={handleInputChange}
                             required
                             rows={3}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                             placeholder="Descreva a origem da entrada"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Data e Hora
                         </label>
                         <input
@@ -182,12 +182,12 @@ export function EntryMovement() {
                             name="date"
                             value={formData.date}
                             onChange={handleInputChange}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                             Tipo de Entrada
                         </label>
                         <select
@@ -195,7 +195,7 @@ export function EntryMovement() {
                             name="type"
                             value={formData.type}
                             onChange={handleInputChange}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                         >
                             <option value="venda">Venda</option>
                             <option value="troco">Troco Recebido</option>
@@ -203,8 +203,8 @@ export function EntryMovement() {
                         </select>
                     </div>
 
-                    <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                        <div className="text-sm text-gray-500">
+                    <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-white/10">
+                        <div className="text-sm text-gray-500 dark:text-slate-400">
                             * Campos obrigatórios
                         </div>
                         <button

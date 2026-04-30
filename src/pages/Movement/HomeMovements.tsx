@@ -47,8 +47,8 @@ export function HomeMovement() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-serif text-gray-900 mb-2">Controle de Caixa</h1>
-                <p className="text-gray-700 font-light">Sistema de movimentações financeiras</p>
+                <h1 className="text-3xl font-serif text-gray-900 dark:text-white mb-2">Controle de Caixa</h1>
+                <p className="text-gray-700 dark:text-slate-200 font-light">Sistema de movimentações financeiras</p>
             </div>
 
             {/* Ações rápidas */}
@@ -71,18 +71,18 @@ export function HomeMovement() {
 
             {/* Resumo do dia */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                <div className="bg-green-50 dark:bg-emerald-950/40 border border-green-200 rounded-lg p-6 text-center">
+                    <DollarSign className="w-6 h-6 text-green-600 dark:text-emerald-400 mx-auto mb-2" />
                     <p className="text-sm text-green-800">Entradas do dia</p>
                     <p className="text-2xl font-bold text-green-900">R$ {entradas.toFixed(2)}</p>
                 </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 rounded-lg p-6 text-center">
+                    <DollarSign className="w-6 h-6 text-red-600 dark:text-red-400 mx-auto mb-2" />
                     <p className="text-sm text-red-800">Saídas do dia</p>
                     <p className="text-2xl font-bold text-red-900">R$ {saidas.toFixed(2)}</p>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-lg p-6 text-center">
+                    <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
                     <p className="text-sm text-blue-800">Saldo Final</p>
                     <p className={`text-2xl font-bold ${saldo >= 0 ? 'text-blue-900' : 'text-red-900'}`}>
                         R$ {saldo.toFixed(2)}
@@ -91,37 +91,37 @@ export function HomeMovement() {
             </div>
 
             {/* Filtro de data */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6">
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <label className="text-sm font-medium text-gray-700">Filtrar por data</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Filtrar por data</label>
                     <input
                         type="date"
                         value={filterDate}
                         onChange={(e) => setFilterDate(e.target.value)}
-                        className="p-2 border border-gray-300 rounded-lg text-sm"
+                        className="p-2 border border-gray-300 dark:border-white/15 rounded-lg text-sm"
                     />
                 </div>
             </div>
 
             {/* Lista de movimentações */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">Movimentações de {new Date(filterDate).toLocaleDateString('pt-BR')}</h2>
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 overflow-hidden">
+                <div className="p-6 border-b border-gray-200 dark:border-white/10">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Movimentações de {new Date(filterDate).toLocaleDateString('pt-BR')}</h2>
                 </div>
                 <div className="divide-y divide-gray-200">
                     {filteredMovements.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">Nenhuma movimentação encontrada para esta data.</div>
+                        <div className="p-8 text-center text-gray-500 dark:text-slate-400">Nenhuma movimentação encontrada para esta data.</div>
                     ) : (
                         filteredMovements.map((m) => (
-                            <div key={m.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div key={m.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:bg-slate-950">
                                 <div className="flex items-center space-x-3">
                                     <span className={`w-2 h-2 rounded-full ${['venda', 'troco', 'outros'].includes(m.type) ? 'bg-green-500' : 'bg-red-500'}`}></span>
                                     <div>
-                                        <p className="text-sm font-medium text-gray-900">{m.description}</p>
-                                        <p className="text-xs text-gray-500">{new Date(m.date).toLocaleTimeString('pt-BR')}</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">{m.description}</p>
+                                        <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(m.date).toLocaleTimeString('pt-BR')}</p>
                                     </div>
                                 </div>
-                                <p className={`text-sm font-semibold ${['venda', 'troco', 'outros'].includes(m.type) ? 'text-green-600' : 'text-red-600'}`}>
+                                <p className={`text-sm font-semibold ${['venda', 'troco', 'outros'].includes(m.type) ? 'text-green-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                                     {['venda', 'troco', 'outros'].includes(m.type) ? '+' : '-'} R$ {m.value.toFixed(2)}
                                 </p>
                             </div>

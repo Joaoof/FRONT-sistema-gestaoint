@@ -126,7 +126,15 @@ body {
 /* Hierarquia tipográfica equilibrada (UX: contraste de tamanho/peso, não de cor) */
 h1, h2, h3, h4 {
   letter-spacing: -0.02em;
-  color: rgb(var(--ink));
+}
+
+/* Canvas dark com leve textura para parecer intencional (não "vazio") */
+.dark body {
+  background-color: rgb(var(--surface));
+  background-image:
+    radial-gradient(ellipse at 20% 0%,  rgb(var(--brand-700) / 0.08), transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgb(var(--brand-500) / 0.05), transparent 55%);
+  background-attachment: fixed;
 }
 
 /* =========================================================================
@@ -340,76 +348,137 @@ header, .header, .fixed { z-index: 50; }
 }
 
 /* =========================================================================
-   DARK SHIM — retrofit dark mode em utilitários hardcoded sem `dark:`.
-   Estratégia: usar :where() para manter especificidade baixa (0,1,0), assim:
-     - utilitários base (`bg-white`, etc) — mesma especificidade, source-order
-       posterior faz nosso shim vencer.
-     - variantes `dark:` Tailwind (`.dark .dark\:bg-X`) — especificidade maior
-       (0,2,0), continuam vencendo.
-   Apenas NEUTROS são reescalados; cores intencionais (azul, vermelho, verde,
-   roxo) permanecem inalteradas para manter a identidade visual.
+   DARK SHIM v2 — mapeamento neutro→dark calibrado para alto contraste.
+   Estratégia:
+     - :where() mantém especificidade baixa (0,1,0). Variantes dark: do
+       Tailwind (.dark .dark\:X — especificidade 0,2,0) sempre vencem.
+     - Apenas neutros (gray, slate, zinc, neutral) são reescalados.
+       Cores intencionais (red/green/blue/yellow/brand…) NÃO são tocadas.
+     - Texto invertido para LUMINÂNCIA ALTA, não apenas "muted".
+     - Escape hatches: .no-dark-shim (zera overrides) e .invert-on-dark.
    ========================================================================= */
 
-/* Backgrounds neutros */
-.dark :where(.bg-white)          { background-color: rgb(var(--surface-1)); }
-.dark :where(.bg-gray-50, .bg-slate-50, .bg-zinc-50, .bg-neutral-50, .bg-stone-50)    { background-color: rgb(var(--surface)); }
-.dark :where(.bg-gray-100, .bg-slate-100, .bg-zinc-100, .bg-neutral-100)              { background-color: rgb(var(--surface-2)); }
-.dark :where(.bg-gray-200, .bg-slate-200)                                             { background-color: rgb(var(--neutral-800)); }
+/* —— Surfaces: cards e páginas ——————————————————————————————————— */
+.dark :where(.bg-white)                                              { background-color: rgb(15 23 42); }
+.dark :where(.bg-gray-50, .bg-slate-50, .bg-zinc-50, .bg-neutral-50, .bg-stone-50)  { background-color: rgb(8 12 23); }
+.dark :where(.bg-gray-100, .bg-slate-100, .bg-zinc-100, .bg-neutral-100)            { background-color: rgb(30 41 59); }
+.dark :where(.bg-gray-200, .bg-slate-200)                            { background-color: rgb(51 65 85); }
 
-/* Backgrounds com transparência (rgba) — bg-white/X */
-.dark :where(.bg-white\/50)      { background-color: rgb(var(--surface-1) / 0.5); }
-.dark :where(.bg-white\/60)      { background-color: rgb(var(--surface-1) / 0.6); }
-.dark :where(.bg-white\/70)      { background-color: rgb(var(--surface-1) / 0.7); }
-.dark :where(.bg-white\/80)      { background-color: rgb(var(--surface-1) / 0.8); }
-.dark :where(.bg-white\/90)      { background-color: rgb(var(--surface-1) / 0.9); }
+/* Translucências do branco — preservam o efeito glass */
+.dark :where(.bg-white\/10) { background-color: rgb(255 255 255 / 0.06); }
+.dark :where(.bg-white\/20) { background-color: rgb(255 255 255 / 0.08); }
+.dark :where(.bg-white\/30) { background-color: rgb(15 23 42 / 0.3); }
+.dark :where(.bg-white\/40) { background-color: rgb(15 23 42 / 0.4); }
+.dark :where(.bg-white\/50) { background-color: rgb(15 23 42 / 0.55); }
+.dark :where(.bg-white\/60) { background-color: rgb(15 23 42 / 0.65); }
+.dark :where(.bg-white\/70) { background-color: rgb(15 23 42 / 0.75); }
+.dark :where(.bg-white\/80) { background-color: rgb(15 23 42 / 0.85); }
+.dark :where(.bg-white\/90) { background-color: rgb(15 23 42 / 0.92); }
 
-/* Textos neutros */
-.dark :where(.text-black, .text-gray-900, .text-slate-900, .text-zinc-900, .text-neutral-900)  { color: rgb(var(--ink)); }
-.dark :where(.text-gray-800, .text-slate-800, .text-zinc-800)                                  { color: rgb(var(--ink)); }
-.dark :where(.text-gray-700, .text-slate-700, .text-zinc-700)                                  { color: rgb(var(--ink-muted)); }
-.dark :where(.text-gray-600, .text-slate-600, .text-zinc-600)                                  { color: rgb(var(--ink-muted)); }
-.dark :where(.text-gray-500, .text-slate-500, .text-zinc-500)                                  { color: rgb(var(--ink-subtle)); }
-.dark :where(.text-gray-400, .text-slate-400, .text-zinc-400)                                  { color: rgb(var(--ink-subtle)); }
-.dark :where(.text-gray-300, .text-slate-300)                                                  { color: rgb(var(--neutral-400)); }
+/* —— Textos — INVERTIDOS para luminância alta ———————————————————— */
+.dark :where(.text-black, .text-gray-900, .text-slate-900, .text-zinc-900, .text-neutral-900) { color: rgb(248 250 252); }
+.dark :where(.text-gray-800, .text-slate-800, .text-zinc-800)        { color: rgb(241 245 249); }
+.dark :where(.text-gray-700, .text-slate-700, .text-zinc-700)        { color: rgb(226 232 240); }
+.dark :where(.text-gray-600, .text-slate-600, .text-zinc-600)        { color: rgb(203 213 225); }
+.dark :where(.text-gray-500, .text-slate-500, .text-zinc-500)        { color: rgb(148 163 184); }
+/* text-X-400 / text-X-300 NÃO são reescalados — já são claros o suficiente
+   para contraste em fundo escuro e são frequentemente usados em sidebars/
+   shells dark-natives (Sidebar slate-950). Inverter quebraria esses casos. */
 
-/* Borders neutras */
-.dark :where(.border-gray-100, .border-slate-100)                                              { border-color: rgb(255 255 255 / 0.06); }
-.dark :where(.border-gray-200, .border-slate-200, .border-zinc-200, .border-neutral-200)       { border-color: rgb(255 255 255 / 0.08); }
-.dark :where(.border-gray-300, .border-slate-300)                                              { border-color: rgb(255 255 255 / 0.12); }
+/* —— Borders & rings ————————————————————————————————————————————— */
+.dark :where(.border-gray-100, .border-slate-100)                    { border-color: rgb(255 255 255 / 0.05); }
+.dark :where(.border-gray-200, .border-slate-200, .border-zinc-200, .border-neutral-200) { border-color: rgb(255 255 255 / 0.08); }
+.dark :where(.border-gray-300, .border-slate-300)                    { border-color: rgb(255 255 255 / 0.12); }
+.dark :where(.border-white)                                          { border-color: rgb(255 255 255 / 0.10); }
+.dark :where(.border-white\/20, .border-white\/30)                   { border-color: rgb(255 255 255 / 0.10); }
+.dark :where(.border-white\/40, .border-white\/50)                   { border-color: rgb(255 255 255 / 0.12); }
+.dark :where(.border-white\/60, .border-white\/70, .border-white\/80) { border-color: rgb(255 255 255 / 0.14); }
+.dark :where(.divide-gray-100 > * + *)                                { border-color: rgb(255 255 255 / 0.05); }
+.dark :where(.divide-gray-200 > * + *, .divide-slate-200 > * + *)     { border-color: rgb(255 255 255 / 0.08); }
+.dark :where(.ring-gray-200, .ring-slate-200)                        { --tw-ring-color: rgb(255 255 255 / 0.10); }
+.dark :where(.ring-gray-300, .ring-slate-300)                        { --tw-ring-color: rgb(255 255 255 / 0.14); }
 
-/* Divide neutros (entre filhos) */
-.dark :where(.divide-gray-100 > * + *)  { border-color: rgb(255 255 255 / 0.06); }
-.dark :where(.divide-gray-200 > * + *, .divide-slate-200 > * + *)  { border-color: rgb(255 255 255 / 0.08); }
+/* —— Placeholder ———————————————————————————————————————————————— */
+.dark :where(.placeholder-gray-400, .placeholder-slate-400)::placeholder { color: rgb(100 116 139); }
+.dark :where(.placeholder-gray-500, .placeholder-slate-500)::placeholder { color: rgb(148 163 184); }
 
-/* Ring neutros */
-.dark :where(.ring-gray-200, .ring-slate-200) { --tw-ring-color: rgb(255 255 255 / 0.10); }
+/* —— Hover de neutros (listas, botões secundários) ——————————————— */
+.dark :where(.hover\:bg-gray-50:hover, .hover\:bg-slate-50:hover)   { background-color: rgb(30 41 59); }
+.dark :where(.hover\:bg-gray-100:hover, .hover\:bg-slate-100:hover) { background-color: rgb(51 65 85); }
+.dark :where(.hover\:bg-gray-200:hover, .hover\:bg-slate-200:hover) { background-color: rgb(71 85 105); }
+.dark :where(.hover\:bg-white:hover)                                 { background-color: rgb(30 41 59); }
+.dark :where(.hover\:text-gray-900:hover, .hover\:text-slate-900:hover, .hover\:text-black:hover) { color: rgb(248 250 252); }
+.dark :where(.hover\:text-gray-800:hover, .hover\:text-slate-800:hover) { color: rgb(241 245 249); }
+.dark :where(.hover\:text-gray-700:hover, .hover\:text-slate-700:hover) { color: rgb(226 232 240); }
+.dark :where(.hover\:text-gray-600:hover, .hover\:text-slate-600:hover) { color: rgb(203 213 225); }
+.dark :where(.hover\:border-gray-300:hover, .hover\:border-slate-300:hover) { border-color: rgb(255 255 255 / 0.15); }
 
-/* Placeholder */
-.dark :where(.placeholder-gray-400, .placeholder-slate-400)::placeholder { color: rgb(var(--ink-subtle)); }
-.dark :where(.placeholder-gray-300)::placeholder { color: rgb(var(--neutral-500)); }
+/* —— Gradientes neutros (apenas branco/cinza, cores ficam) ——————— */
+.dark :where(.from-white)        { --tw-gradient-from: rgb(15 23 42) var(--tw-gradient-from-position); --tw-gradient-to: rgb(15 23 42 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.dark :where(.via-white)         { --tw-gradient-stops: var(--tw-gradient-from), rgb(15 23 42) var(--tw-gradient-via-position), var(--tw-gradient-to); }
+.dark :where(.to-white)          { --tw-gradient-to: rgb(15 23 42) var(--tw-gradient-to-position); }
+.dark :where(.from-gray-50, .from-slate-50)   { --tw-gradient-from: rgb(8 12 23) var(--tw-gradient-from-position); --tw-gradient-to: rgb(8 12 23 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.dark :where(.via-gray-50, .via-slate-50)     { --tw-gradient-stops: var(--tw-gradient-from), rgb(8 12 23) var(--tw-gradient-via-position), var(--tw-gradient-to); }
+.dark :where(.to-gray-50, .to-slate-50)       { --tw-gradient-to: rgb(8 12 23) var(--tw-gradient-to-position); }
+.dark :where(.from-gray-100, .from-slate-100) { --tw-gradient-from: rgb(30 41 59) var(--tw-gradient-from-position); --tw-gradient-to: rgb(30 41 59 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.dark :where(.to-gray-100, .to-slate-100)     { --tw-gradient-to: rgb(30 41 59) var(--tw-gradient-to-position); }
+.dark :where(.from-gray-200, .from-slate-200) { --tw-gradient-from: rgb(51 65 85) var(--tw-gradient-from-position); --tw-gradient-to: rgb(51 65 85 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.dark :where(.to-gray-200, .to-slate-200)     { --tw-gradient-to: rgb(51 65 85) var(--tw-gradient-to-position); }
 
-/* Hover neutros — comuns em listas, botões secundários */
-.dark :where(.hover\:bg-gray-50:hover, .hover\:bg-slate-50:hover)    { background-color: rgb(var(--surface-2)); }
-.dark :where(.hover\:bg-gray-100:hover, .hover\:bg-slate-100:hover)  { background-color: rgb(var(--neutral-800)); }
-.dark :where(.hover\:bg-gray-200:hover, .hover\:bg-slate-200:hover)  { background-color: rgb(var(--neutral-700)); }
-.dark :where(.hover\:bg-white:hover)                                  { background-color: rgb(var(--surface-1)); }
-.dark :where(.hover\:text-gray-800:hover, .hover\:text-slate-800:hover, .hover\:text-gray-900:hover) { color: rgb(var(--ink)); }
-.dark :where(.hover\:text-gray-600:hover, .hover\:text-slate-600:hover, .hover\:text-gray-700:hover) { color: rgb(var(--ink-muted)); }
+/* —— Caixas semânticas (-50 → tint escuro saturado) —————————————— */
+/* Mantém a identidade da cor mas adapta para o fundo escuro */
+.dark :where(.bg-red-50)     { background-color: rgb(127 29 29 / 0.25); }
+.dark :where(.bg-rose-50)    { background-color: rgb(136 19 55 / 0.25); }
+.dark :where(.bg-orange-50)  { background-color: rgb(124 45 18 / 0.25); }
+.dark :where(.bg-amber-50)   { background-color: rgb(120 53 15 / 0.25); }
+.dark :where(.bg-yellow-50)  { background-color: rgb(113 63 18 / 0.25); }
+.dark :where(.bg-green-50)   { background-color: rgb(20 83 45 / 0.25); }
+.dark :where(.bg-emerald-50) { background-color: rgb(6 78 59 / 0.25); }
+.dark :where(.bg-teal-50)    { background-color: rgb(19 78 74 / 0.25); }
+.dark :where(.bg-blue-50)    { background-color: rgb(30 58 138 / 0.25); }
+.dark :where(.bg-indigo-50)  { background-color: rgb(49 46 129 / 0.25); }
+.dark :where(.bg-purple-50)  { background-color: rgb(76 29 149 / 0.25); }
+.dark :where(.bg-pink-50)    { background-color: rgb(131 24 67 / 0.25); }
+.dark :where(.bg-red-100)    { background-color: rgb(127 29 29 / 0.4); }
+.dark :where(.bg-green-100)  { background-color: rgb(20 83 45 / 0.4); }
+.dark :where(.bg-blue-100)   { background-color: rgb(30 58 138 / 0.4); }
+.dark :where(.bg-yellow-100) { background-color: rgb(113 63 18 / 0.4); }
+.dark :where(.bg-purple-100) { background-color: rgb(76 29 149 / 0.4); }
 
-/* Gradientes brancos/cinzas → versões escuras sutis (apenas neutros) */
-.dark :where(.from-white)        { --tw-gradient-from: rgb(var(--surface-1)) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--surface-1) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.dark :where(.via-white)         { --tw-gradient-to: rgb(var(--surface-1) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), rgb(var(--surface-1)) var(--tw-gradient-via-position), var(--tw-gradient-to); }
-.dark :where(.to-white)          { --tw-gradient-to: rgb(var(--surface-1)) var(--tw-gradient-to-position); }
-.dark :where(.from-gray-50, .from-slate-50)   { --tw-gradient-from: rgb(var(--surface)) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--surface) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.dark :where(.via-gray-50, .via-slate-50)     { --tw-gradient-to: rgb(var(--surface) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), rgb(var(--surface)) var(--tw-gradient-via-position), var(--tw-gradient-to); }
-.dark :where(.to-gray-50, .to-slate-50)       { --tw-gradient-to: rgb(var(--surface)) var(--tw-gradient-to-position); }
-.dark :where(.from-gray-100, .from-slate-100) { --tw-gradient-from: rgb(var(--surface-2)) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--surface-2) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.dark :where(.to-gray-100, .to-slate-100)     { --tw-gradient-to: rgb(var(--surface-2)) var(--tw-gradient-to-position); }
+/* Texto semântico em badges escurecidos — boost de luminância */
+.dark :where(.text-red-700, .text-red-600, .text-rose-700)       { color: rgb(252 165 165); }
+.dark :where(.text-green-700, .text-green-600, .text-emerald-700){ color: rgb(134 239 172); }
+.dark :where(.text-yellow-700, .text-amber-700)                  { color: rgb(253 224 71); }
+.dark :where(.text-blue-700, .text-blue-600)                     { color: rgb(147 197 253); }
+.dark :where(.text-purple-700, .text-purple-600)                 { color: rgb(216 180 254); }
 
-/* Sombras — ajusta as do Tailwind para serem visíveis em fundo escuro */
-.dark :where(.shadow-sm)  { box-shadow: 0 1px 2px rgb(0 0 0 / 0.4); }
-.dark :where(.shadow)     { box-shadow: 0 1px 3px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.3); }
-.dark :where(.shadow-md)  { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3); }
-.dark :where(.shadow-lg)  { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3); }
-.dark :where(.shadow-xl)  { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.55), 0 8px 10px -6px rgb(0 0 0 / 0.3); }
-.dark :where(.shadow-2xl) { box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.7); }
+/* Bordas semânticas */
+.dark :where(.border-red-200, .border-rose-200)         { border-color: rgb(220 38 38 / 0.35); }
+.dark :where(.border-green-200, .border-emerald-200)    { border-color: rgb(22 163 74 / 0.35); }
+.dark :where(.border-yellow-200, .border-amber-200)     { border-color: rgb(217 119 6 / 0.35); }
+.dark :where(.border-blue-200)                          { border-color: rgb(37 99 235 / 0.35); }
+.dark :where(.border-purple-200)                        { border-color: rgb(147 51 234 / 0.35); }
+
+/* —— Sombras recalibradas para fundo escuro —————————————————————— */
+.dark :where(.shadow-sm)  { box-shadow: 0 1px 2px rgb(0 0 0 / 0.5); }
+.dark :where(.shadow)     { box-shadow: 0 1px 3px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.3); }
+.dark :where(.shadow-md)  { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.3); }
+.dark :where(.shadow-lg)  { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.55), 0 4px 6px -4px rgb(0 0 0 / 0.3); }
+.dark :where(.shadow-xl)  { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.3); }
+.dark :where(.shadow-2xl) { box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.75); }
+
+/* —— Escape hatches ——————————————————————————————————————————————
+   Caso encontre um elemento onde o shim não funcione bem:
+   • Adicione classe `no-dark-shim` para neutralizar todos os overrides.
+   • Use `invert-on-dark` em ícones PNG dark-on-transparent que viram
+     invisíveis em dark.
+   ———————————————————————————————————————————————————————————————— */
+.dark :where(.no-dark-shim, .no-dark-shim *) {
+  background-color: revert !important;
+  color: revert !important;
+  border-color: revert !important;
+}
+.dark img.invert-on-dark,
+.dark .invert-on-dark img {
+  filter: invert(1) hue-rotate(180deg);
+}

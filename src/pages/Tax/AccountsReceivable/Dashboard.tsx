@@ -21,9 +21,9 @@ interface SummaryCardProps {
 // ==============================
 function SummaryCard({ label, value, color, progress }: SummaryCardProps) {
     const colorClasses = {
-        blue: 'bg-blue-50 border-blue-200 text-blue-800 text-blue-900',
-        yellow: 'bg-yellow-50 border-yellow-200 text-yellow-800 text-yellow-900',
-        green: 'bg-green-50 border-green-200 text-green-800 text-green-900',
+        blue: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 text-blue-800 text-blue-900',
+        yellow: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 text-yellow-800 text-yellow-900',
+        green: 'bg-green-50 dark:bg-emerald-950/40 border-green-200 text-green-800 text-green-900',
     };
 
     const [border, text, valueText] = colorClasses[color].split(' ');
@@ -45,7 +45,7 @@ function SummaryCard({ label, value, color, progress }: SummaryCardProps) {
 
             {progress !== undefined && (
                 <div className="mt-3">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                         <div
                             className={`bg-${color}-500 h-2 rounded-full transition-all duration-300`}
                             style={{ width: `${progress}%` }}
@@ -137,27 +137,27 @@ function RecentReceivablesTable() {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead>
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                 Cliente
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                 Valor Original
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                 Vencimento
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                 Valor com Juros
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                 Status
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                                 Ações
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200">
                         {data.map((item) => {
                             const isOverdue = new Date(item.dueDate) < new Date() && item.status !== 'paid';
                             const finalAmount = isOverdue
@@ -165,15 +165,15 @@ function RecentReceivablesTable() {
                                 : item.amount;
 
                             return (
-                                <tr key={item.id} className={`hover:bg-gray-50 transition-colors ${isOverdue ? 'bg-red-50' : ''}`}>
-                                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.client}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                <tr key={item.id} className={`hover:bg-gray-50 dark:bg-slate-950 transition-colors ${isOverdue ? 'bg-red-50 dark:bg-red-950/40' : ''}`}>
+                                    <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{item.client}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-slate-200">
                                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.amount)}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">{formatDate(item.dueDate)}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-slate-200">{formatDate(item.dueDate)}</td>
                                     <td className="px-4 py-3 text-sm font-medium">
                                         {finalAmount !== item.amount ? (
-                                            <span className="text-red-600">
+                                            <span className="text-red-600 dark:text-red-400">
                                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(finalAmount)}
                                             </span>
                                         ) : (
@@ -190,7 +190,7 @@ function RecentReceivablesTable() {
                                     <td className="px-4 py-3 text-sm">
                                         <button
                                             onClick={() => setEditing(item)}
-                                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 text-sm font-medium"
                                         >
                                             Editar
                                         </button>
@@ -238,15 +238,15 @@ export function AccountsReceivableDashboard() {
     const paidPercentage = data.total > 0 ? Math.round((data.paid / data.total) * 100) : 0;
 
     if (loading) {
-        return <div className="p-8 text-center text-gray-500">Carregando...</div>;
+        return <div className="p-8 text-center text-gray-500 dark:text-slate-400">Carregando...</div>;
     }
 
     return (
         <div className="space-y-8">
             {/* Título */}
             <div>
-                <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">Contas a Receber</h1>
-                <p className="text-gray-600">Gestão de recebíveis: clientes, vencimentos e pagamentos</p>
+                <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white mb-2">Contas a Receber</h1>
+                <p className="text-gray-600 dark:text-slate-300">Gestão de recebíveis: clientes, vencimentos e pagamentos</p>
             </div>
 
             {/* Ações Rápidas */}
@@ -296,8 +296,8 @@ export function AccountsReceivableDashboard() {
             </motion.div>
 
             {/* Últimas Contas */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Últimas Contas Cadastradas</h2>
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Últimas Contas Cadastradas</h2>
                 <RecentReceivablesTable />
             </div>
         </div>

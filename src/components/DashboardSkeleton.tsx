@@ -2,9 +2,9 @@ export function DashboardSkeleton() {
     return (
         <div className="space-y-6 animate-pulse p-6">
             {/* Header */}
-            <div className="bg-gradient-to-r from-white to-gray-50 border-b border-gray-200 px-4 py-4 rounded shadow-sm">
+            <div className="bg-gradient-to-r from-white to-gray-50 border-b border-gray-200 dark:border-white/10 px-4 py-4 rounded shadow-sm">
                 <div className="h-8 w-40 bg-gray-300 rounded mb-2"></div>
-                <div className="h-4 w-64 bg-gray-200 rounded"></div>
+                <div className="h-4 w-64 bg-gray-200 dark:bg-slate-700 rounded"></div>
             </div>
 
             {/* Cards */}
@@ -24,7 +24,7 @@ export function DashboardSkeleton() {
                     {[...Array(3)].map((_, i) => (
                         <div
                             key={i}
-                            className="h-32 bg-gray-200 rounded-lg shadow-inner"
+                            className="h-32 bg-gray-200 dark:bg-slate-700 rounded-lg shadow-inner"
                         />
                     ))}
                 </div>

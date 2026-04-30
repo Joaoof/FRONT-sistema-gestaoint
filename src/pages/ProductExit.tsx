@@ -57,20 +57,20 @@ export function ProductExit({ onAddExit, products }: ProductExitProps) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold font-serif text-gray-900 mb-2">Saída de Produtos</h1>
-        <p className="text-gray-600">Registre vendas e movimentações de saída</p>
+        <h1 className="text-3xl font-bold font-serif text-gray-900 dark:text-white mb-2">Saída de Produtos</h1>
+        <p className="text-gray-600 dark:text-slate-300">Registre vendas e movimentações de saída</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
         <div className="flex items-center mb-6">
-          <ShoppingCart className="w-6 h-6 text-red-600 mr-3" />
-          <h2 className="text-xl font-semibold text-gray-900">Registrar Saída</h2>
+          <ShoppingCart className="w-6 h-6 text-red-600 dark:text-red-400 mr-3" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Registrar Saída</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="productId" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="productId" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Produto *
               </label>
               <select
@@ -79,7 +79,7 @@ export function ProductExit({ onAddExit, products }: ProductExitProps) {
                 value={formData.productId}
                 onChange={handleInputChange}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
               >
                 <option value="">Selecione um produto</option>
                 {products.map(product => (
@@ -91,7 +91,7 @@ export function ProductExit({ onAddExit, products }: ProductExitProps) {
             </div>
 
             <div>
-              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Quantidade *
               </label>
               <input
@@ -103,13 +103,13 @@ export function ProductExit({ onAddExit, products }: ProductExitProps) {
                 required
                 min="1"
                 max={selectedProduct?.stock || 999}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                 placeholder="0"
               />
             </div>
 
             <div>
-              <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="reason" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Motivo da Saída *
               </label>
               <select
@@ -118,7 +118,7 @@ export function ProductExit({ onAddExit, products }: ProductExitProps) {
                 value={formData.reason}
                 onChange={handleInputChange}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
               >
                 {reasons.map(reason => (
                   <option key={reason.value} value={reason.value}>
@@ -130,10 +130,10 @@ export function ProductExit({ onAddExit, products }: ProductExitProps) {
 
             {selectedProduct && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                   Valor Total
                 </label>
-                <div className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 font-semibold">
+                <div className="w-full p-3 bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-white/15 rounded-lg text-gray-900 dark:text-white font-semibold">
                   R$ {(selectedProduct.sellingPrice * formData.quantity).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </div>
               </div>
@@ -141,7 +141,7 @@ export function ProductExit({ onAddExit, products }: ProductExitProps) {
           </div>
 
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
               Observações
             </label>
             <textarea
@@ -150,37 +150,37 @@ export function ProductExit({ onAddExit, products }: ProductExitProps) {
               value={formData.notes}
               onChange={handleInputChange}
               rows={3}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+              className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
               placeholder="Observações adicionais sobre a saída..."
             />
           </div>
 
           {selectedProduct && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-lg p-4">
               <h3 className="font-semibold text-blue-900 mb-2">Informações do Produto</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <span className="text-blue-700 font-medium">Estoque Atual:</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-medium">Estoque Atual:</span>
                   <p className="text-blue-900">{selectedProduct.stock} unidades</p>
                 </div>
                 <div>
-                  <span className="text-blue-700 font-medium">Preço Unit.:</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-medium">Preço Unit.:</span>
                   <p className="text-blue-900">R$ {selectedProduct.sellingPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div>
-                  <span className="text-blue-700 font-medium">Categoria:</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-medium">Categoria:</span>
                   <p className="text-blue-900">{selectedProduct.category}</p>
                 </div>
                 <div>
-                  <span className="text-blue-700 font-medium">Estoque Após:</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-medium">Estoque Após:</span>
                   <p className="text-blue-900">{selectedProduct.stock - formData.quantity} unidades</p>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-            <div className="text-sm text-gray-500">
+          <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-white/10">
+            <div className="text-sm text-gray-500 dark:text-slate-400">
               * Campos obrigatórios
             </div>
             <button

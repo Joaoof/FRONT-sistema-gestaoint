@@ -11,7 +11,7 @@ interface FormInputProps {
 export function FormInput({ label, id, error, icon, children }: FormInputProps) {
     return (
         <div>
-            <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 {label}
             </label>
             <div className="relative">

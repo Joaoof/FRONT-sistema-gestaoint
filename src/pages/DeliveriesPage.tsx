@@ -81,26 +81,26 @@ export function DeliveriesPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white border-b border-gray-200 px-6 py-5 rounded-xl shadow-sm"
+                className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-6 py-5 rounded-xl shadow-sm"
             >
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 font-['Rubik']">
+                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white font-['Rubik']">
                             Controle de Entregas
                         </h1>
-                        <p className="text-sm text-gray-600 mt-1.5">
+                        <p className="text-sm text-gray-600 dark:text-slate-300 mt-1.5">
                             Olá,{' '}
-                            <span className="font-semibold text-gray-800">{user?.name}</span>!
+                            <span className="font-semibold text-gray-800 dark:text-slate-100">{user?.name}</span>!
                             {user?.role && (
-                                <span className="ml-1 capitalize font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full text-xs">
+                                <span className="ml-1 capitalize font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-full text-xs">
                                     {user.role}
                                 </span>
                             )}
                         </p>
                     </div>
                     <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
-                            <User className="w-5 h-5 text-gray-500" />
+                        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-300">
+                            <User className="w-5 h-5 text-gray-500 dark:text-slate-400" />
                             <span>{user?.email}</span>
                         </div>
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
@@ -162,10 +162,10 @@ export function DeliveriesPage() {
                 className="space-y-4 px-1"
             >
                 <div className="flex items-center justify-between border-b pb-2">
-                    <h2 className="text-lg font-semibold text-gray-900">Ações Rápidas</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Ações Rápidas</h2>
                     <button
                         onClick={() => navigate('/entregas/cadastrar')}
-                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition"
+                        className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 text-sm font-medium transition"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Nova Entrega</span>
@@ -177,42 +177,42 @@ export function DeliveriesPage() {
                     <motion.div
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
                         onClick={() => navigate('/entregas/cadastrar')}
                     >
                         <div className="w-16 h-16 bg-blue-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                            <Truck className="w-8 h-8 text-blue-600" />
+                            <Truck className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h3 className="font-semibold text-gray-900 mb-1">Nova Entrega</h3>
-                        <p className="text-sm text-gray-500">Registrar saída de produto</p>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Nova Entrega</h3>
+                        <p className="text-sm text-gray-500 dark:text-slate-400">Registrar saída de produto</p>
                     </motion.div>
 
                     {/* Agendar Rota */}
                     <motion.div
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
                         onClick={() => navigate('/entregas/agendar')}
                     >
                         <div className="w-16 h-16 bg-purple-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                            <Calendar className="w-8 h-8 text-purple-600" />
+                            <Calendar className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <h3 className="font-semibold text-gray-900 mb-1">Agendar Rota</h3>
-                        <p className="text-sm text-gray-500">Planeje entregas futuras</p>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Agendar Rota</h3>
+                        <p className="text-sm text-gray-500 dark:text-slate-400">Planeje entregas futuras</p>
                     </motion.div>
 
                     {/* Relatório de Rotas */}
                     <motion.div
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 text-center hover:shadow-lg transition-all duration-200 cursor-pointer"
                         onClick={() => navigate('/entregas/relatorios')}
                     >
                         <div className="w-16 h-16 bg-green-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                            <BarChart3 className="w-8 h-8 text-green-600" />
+                            <BarChart3 className="w-8 h-8 text-green-600 dark:text-emerald-400" />
                         </div>
-                        <h3 className="font-semibold text-gray-900 mb-1">Relatório de Rotas</h3>
-                        <p className="text-sm text-gray-500">Eficiência e atrasos</p>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Relatório de Rotas</h3>
+                        <p className="text-sm text-gray-500 dark:text-slate-400">Eficiência e atrasos</p>
                     </motion.div>
                 </div>
             </motion.div>
@@ -226,10 +226,10 @@ export function DeliveriesPage() {
             >
                 {/* Gráfico de Linha: Entregas vs Atrasos */}
                 <div className="xl:col-span-2">
-                    <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm h-full">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm h-full">
                         <div className="border-b pb-3 mb-4">
-                            <h3 className="text-base font-semibold text-gray-900">Entregas vs Atrasos</h3>
-                            <p className="text-sm text-gray-500">Últimos 12 meses</p>
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-white">Entregas vs Atrasos</h3>
+                            <p className="text-sm text-gray-500 dark:text-slate-400">Últimos 12 meses</p>
                         </div>
                         {isEmpty ? (
                             <div className="flex flex-col items-center justify-center h-64 text-gray-400">
@@ -254,19 +254,19 @@ export function DeliveriesPage() {
                             <div className="flex-1">
                                 <h4 className="text-sm font-medium">Precisa de ajuda com rotas?</h4>
                                 <p className="text-xs mt-1 opacity-90">Otimize com nossos especialistas em logística.</p>
-                                <button className="mt-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded text-xs font-medium transition">
+                                <button className="mt-2 px-3 py-1 bg-white dark:bg-slate-900 bg-opacity-20 hover:bg-opacity-30 rounded text-xs font-medium transition">
                                     Falar com logística
                                 </button>
                             </div>
-                            <MapPin className="w-8 h-8 bg-white bg-opacity-20 rounded-full p-1" />
+                            <MapPin className="w-8 h-8 bg-white dark:bg-slate-900 bg-opacity-20 rounded-full p-1" />
                         </div>
                     </motion.div>
 
                     {/* Gráfico de Pizza: por categoria */}
-                    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-5 shadow-sm">
                         <div className="border-b pb-3 mb-4">
-                            <h3 className="text-sm font-semibold text-gray-900">Entregas por Categoria</h3>
-                            <p className="text-xs text-gray-500">Distribuição de carga</p>
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Entregas por Categoria</h3>
+                            <p className="text-xs text-gray-500 dark:text-slate-400">Distribuição de carga</p>
                         </div>
                         {pieData.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-40 text-gray-400">
@@ -285,11 +285,11 @@ export function DeliveriesPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={mounted ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm px-1"
+                className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm px-1"
             >
                 <div className="border-b pb-3 mb-4">
-                    <h3 className="text-base font-semibold text-gray-900">Status das Entregas</h3>
-                    <p className="text-sm text-gray-500">Distribuição atual de todas as entregas</p>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Status das Entregas</h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">Distribuição atual de todas as entregas</p>
                 </div>
                 <div className="h-40">
 

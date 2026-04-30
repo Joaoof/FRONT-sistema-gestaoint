@@ -357,29 +357,29 @@ export function FinancialManagement() {
         })
 
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 overflow-hidden">
+                <div className="p-6 border-b border-gray-200 dark:border-white/10">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gray-50 dark:bg-slate-950">
                             <tr>
                                 <th
                                     scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800"
                                     onClick={() => requestSort(type === "receber" ? "clientName" : "supplierName")}
                                 >
                                     {type === "receber" ? "Cliente" : "Fornecedor"}
                                     {sortConfig?.key === (type === "receber" ? "clientName" : "supplierName") &&
                                         (sortConfig.direction === "asc" ? " ↑" : " ↓")}
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">
                                     Descrição
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800"
                                     onClick={() => requestSort("value")}
                                 >
                                     Valor
@@ -387,16 +387,16 @@ export function FinancialManagement() {
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800"
                                     onClick={() => requestSort("dueDate")}
                                 >
                                     Vencimento
                                     {sortConfig?.key === "dueDate" && (sortConfig.direction === "asc" ? " ↑" : " ↓")}
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">
                                     Status
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">
                                     Ações
                                 </th>
                             </tr>
@@ -404,7 +404,7 @@ export function FinancialManagement() {
                         <tbody className="divide-y divide-gray-200">
                             {sortedData.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-slate-400">
                                         Nenhum registro encontrado para os critérios especificados.
                                     </td>
                                 </tr>
@@ -419,18 +419,18 @@ export function FinancialManagement() {
                                     return (
                                         <tr
                                             key={item.id}
-                                            className={`hover:bg-gray-50 transition-colors ${overdue ? "bg-red-50" : nearDue ? "bg-orange-50" : ""}`}
+                                            className={`hover:bg-gray-50 dark:bg-slate-950 transition-colors ${overdue ? "bg-red-50 dark:bg-red-950/40" : nearDue ? "bg-orange-50 dark:bg-orange-950/40" : ""}`}
                                         >
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                                 {type === "receber" ? (item as Receivable).clientName : (item as Payable).supplierName}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">{item.description}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-700 dark:text-slate-200">{item.description}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
-                                                <span className={type === "receber" ? "text-green-600" : "text-red-600"}>
+                                                <span className={type === "receber" ? "text-green-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
                                                     {formatCurrency(item.value)}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatDate(item.dueDate)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">{formatDate(item.dueDate)}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span
                                                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.status === "pago"
@@ -451,7 +451,7 @@ export function FinancialManagement() {
                                                 <div className="relative group">
                                                     <button
                                                         onClick={() => toggleStatus(item.id, type)}
-                                                        className="text-gray-500 hover:text-blue-600 transition-all transform hover:scale-110 relative"
+                                                        className="text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:text-blue-400 transition-all transform hover:scale-110 relative"
                                                         aria-label={item.status === "pago" ? "Reverter liquidação" : "Confirmar liquidação"}
                                                     >
                                                         <Edit className="w-5 h-5" />
@@ -470,7 +470,7 @@ export function FinancialManagement() {
                     </table>
                 </div>
 
-                <div className="p-4 flex justify-between items-center text-sm text-gray-600">
+                <div className="p-4 flex justify-between items-center text-sm text-gray-600 dark:text-slate-300">
                     <span>
                         Exibindo {startIndex + 1}–{Math.min(startIndex + itemsPerPage, data.length)} de {data.length} registros
                     </span>
@@ -503,29 +503,29 @@ export function FinancialManagement() {
 
             {/* Cabeçalho Executivo */}
             <div>
-                <h1 className="text-3xl font-serif text-gray-900">Centro de Controle Financeiro</h1>
-                <p className="text-gray-600">
+                <h1 className="text-3xl font-serif text-gray-900 dark:text-white">Centro de Controle Financeiro</h1>
+                <p className="text-gray-600 dark:text-slate-300">
                     Plataforma integrada de gestão financeira com análises avançadas e relatórios executivos.
                 </p>
             </div>
 
             {/* Painel de Indicadores Estratégicos */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-lg p-6 text-center">
+                    <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
                     <p className="text-sm text-blue-800">Contas a Receber</p>
-                    <p className="text-2xl font-bold font-['Rajdhani'] text-blue-600">{formatCurrency(totalReceber)}</p>
+                    <p className="text-2xl font-bold font-['Rajdhani'] text-blue-600 dark:text-blue-400">{formatCurrency(totalReceber)}</p>
                 </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                    <FileText className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 rounded-lg p-6 text-center">
+                    <FileText className="w-6 h-6 text-red-600 dark:text-red-400 mx-auto mb-2" />
                     <p className="text-sm text-red-800">Contas a Pagar</p>
                     <p className="text-2xl font-bold font-['Rajdhani'] text-red-900">{formatCurrency(totalPagar)}</p>
                 </div>
                 <div
-                    className={`bg-green-50 border border-green-200 rounded-lg p-6 text-center ${saldo < 0 ? "bg-red-50 border-red-200" : ""}`}
+                    className={`bg-green-50 dark:bg-emerald-950/40 border border-green-200 rounded-lg p-6 text-center ${saldo < 0 ? "bg-red-50 dark:bg-red-950/40 border-red-200" : ""}`}
                 >
                     <CheckCircle
-                        className="w-6 h-6 text-green-600 mx-auto mb-2"
+                        className="w-6 h-6 text-green-600 dark:text-emerald-400 mx-auto mb-2"
                         style={{ color: saldo >= 0 ? "#16a34a" : "#dc2626" }}
                     />
                     <p className="text-sm text-green-800">Posição Financeira Líquida</p>
@@ -538,7 +538,7 @@ export function FinancialManagement() {
             {/* Dashboard Analítico */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 {/* Análise de Fluxo de Caixa */}
-                <div className="bg-white p-6 rounded-xl shadow-sm">
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm">
                     <h3 className="text-lg font-semibold mb-4">Análise de Fluxo de Caixa</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={chartData}>
@@ -555,7 +555,7 @@ export function FinancialManagement() {
                 </div>
 
                 {/* Comparativo de Recebimentos vs Pagamentos */}
-                <div className="bg-white p-6 rounded-xl shadow-sm">
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm">
                     <h3 className="text-lg font-semibold mb-4">Comparativo Financeiro</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={chartData}>
@@ -569,7 +569,7 @@ export function FinancialManagement() {
                 </div>
 
                 {/* Análise Estratégica de Performance */}
-                <div className="bg-white p-6 rounded-xl shadow-sm lg:col-span-2">
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm lg:col-span-2">
                     <h3 className="text-lg font-serif from-gray-500 mb-6">Análise Estratégica de Performance Comercial</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                         {/* Distribuição de Status de Recebimentos */}
@@ -622,7 +622,7 @@ export function FinancialManagement() {
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
-                            <div className="mt-4 text-sm text-gray-600 text-center">
+                            <div className="mt-4 text-sm text-gray-600 dark:text-slate-300 text-center">
                                 <p>Total de {receivables.length} contas a receber</p>
                             </div>
                         </div>
@@ -679,7 +679,7 @@ export function FinancialManagement() {
             </div>
 
             {/* Sistema de Busca Inteligente */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
@@ -687,7 +687,7 @@ export function FinancialManagement() {
                         placeholder="Pesquisar por cliente, fornecedor ou descrição..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                 </div>
             </div>

@@ -72,10 +72,10 @@ export function DeliveryReportsPage() {
 
     // KPIs
     const kpis: KPI[] = [
-        { value: '142', label: 'Entregas no mês', icon: <Truck className="w-5 h-5" />, trend: 'up', color: 'text-blue-600' },
-        { value: '92%', label: 'Pontualidade', icon: <CheckCircle className="w-5 h-5" />, trend: 'up', color: 'text-green-600' },
+        { value: '142', label: 'Entregas no mês', icon: <Truck className="w-5 h-5" />, trend: 'up', color: 'text-blue-600 dark:text-blue-400' },
+        { value: '92%', label: 'Pontualidade', icon: <CheckCircle className="w-5 h-5" />, trend: 'up', color: 'text-green-600 dark:text-emerald-400' },
         { value: '8', label: 'Atrasos', icon: <AlertTriangle className="w-5 h-5" />, trend: 'down', color: 'text-orange-600' },
-        { value: '2.4h', label: 'Tempo médio', icon: <Clock className="w-5 h-5" />, trend: 'up', color: 'text-purple-600' },
+        { value: '2.4h', label: 'Tempo médio', icon: <Clock className="w-5 h-5" />, trend: 'up', color: 'text-purple-600 dark:text-purple-400' },
     ];
 
     // Insights
@@ -98,7 +98,7 @@ export function DeliveryReportsPage() {
     const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
     return (
-        <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-950 relative overflow-hidden">
             {/* Background dinâmico (nodes & linhas) */}
             <div
                 className="absolute inset-0 opacity-5 pointer-events-none"
@@ -120,27 +120,27 @@ export function DeliveryReportsPage() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="bg-white border-b border-gray-200 px-6 py-5 rounded-xl shadow-sm mx-4 lg:mx-8 mb-6"
+                    className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-6 py-5 rounded-xl shadow-sm mx-4 lg:mx-8 mb-6"
                 >
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 font-['Rubik']">
+                            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white font-['Rubik']">
                                 Relatórios de Entregas
                             </h1>
-                            <div className="flex items-center mt-1.5 space-x-1 text-sm text-gray-600">
+                            <div className="flex items-center mt-1.5 space-x-1 text-sm text-gray-600 dark:text-slate-300">
                                 <Home className="w-4 h-4" />
                                 <span>/</span>
-                                <span className="hover:text-blue-600 hover:underline cursor-pointer">Dashboard</span>
+                                <span className="hover:text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Dashboard</span>
                                 <span>/</span>
-                                <span className="text-blue-600 font-medium">Relatórios</span>
+                                <span className="text-blue-600 dark:text-blue-400 font-medium">Relatórios</span>
                                 <span>/</span>
-                                <span className="text-gray-900 font-medium">Entregas</span>
+                                <span className="text-gray-900 dark:text-white font-medium">Entregas</span>
                             </div>
                         </div>
                         <div className="flex items-center space-x-3">
                             <button
                                 onClick={() => setLoading(true)}
-                                className="flex items-center space-x-2 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                                className="flex items-center space-x-2 px-4 py-2 text-sm bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:bg-slate-700 rounded-lg transition"
                             >
                                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                                 <span>Atualizar</span>
@@ -161,7 +161,7 @@ export function DeliveryReportsPage() {
                             onClick={() => setPeriod(preset)}
                             className={`px-4 py-2 text-sm rounded-lg transition capitalize ${period === preset
                                 ? 'bg-blue-600 text-white shadow-md'
-                                : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
+                                : 'bg-white dark:bg-slate-900 border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:bg-slate-950 text-gray-700 dark:text-slate-200'
                                 }`}
                         >
                             {preset === 'today' && 'Hoje'}
@@ -177,7 +177,7 @@ export function DeliveryReportsPage() {
                 {loading ? (
                     <div className="space-y-6 mx-4 lg:mx-8">
                         {[...Array(4)].map((_, i) => (
-                            <div key={i} className="bg-white h-24 rounded-2xl animate-pulse border border-gray-200" />
+                            <div key={i} className="bg-white dark:bg-slate-900 h-24 rounded-2xl animate-pulse border border-gray-200 dark:border-white/10" />
                         ))}
                     </div>
                 ) : (
@@ -190,17 +190,17 @@ export function DeliveryReportsPage() {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.4, delay: i * 0.1 }}
-                                    className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
+                                    className="bg-white/80 backdrop-blur-sm border border-gray-200 dark:border-white/10/50 rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
                                 >
                                     <div className={`inline-flex p-2 rounded-xl mb-2 ${kpi.color.replace('text-', 'bg-').replace('600', '100')}`}>
                                         {kpi.icon}
                                     </div>
-                                    <p className="text-2xl font-bold text-gray-900">
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                         <CountUp start={0} end={parseFloat(kpi.value)} duration={1.5} suffix={kpi.value.includes('h') ? 'h' : ''} />
                                     </p>
-                                    <p className="text-sm text-gray-600">{kpi.label}</p>
+                                    <p className="text-sm text-gray-600 dark:text-slate-300">{kpi.label}</p>
                                     {kpi.trend && (
-                                        <span className={`inline-flex items-center text-xs mt-1 ${kpi.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                                        <span className={`inline-flex items-center text-xs mt-1 ${kpi.trend === 'up' ? 'text-green-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                                             {kpi.trend === 'up' ? '↑' : '↓'} {kpi.trend === 'up' ? '0.8%' : '1.2%'}
                                         </span>
                                     )}
@@ -219,10 +219,10 @@ export function DeliveryReportsPage() {
                                         exit={{ opacity: 0, x: 20 }}
                                         transition={{ delay: i * 0.2 }}
                                         className={`p-3 rounded-lg text-sm font-medium ${insight.type === 'success'
-                                            ? 'bg-green-50 text-green-800 border border-green-200'
+                                            ? 'bg-green-50 dark:bg-emerald-950/40 text-green-800 border border-green-200'
                                             : insight.type === 'warning'
-                                                ? 'bg-orange-50 text-orange-800 border border-orange-200 animate-pulse'
-                                                : 'bg-blue-50 text-blue-800 border border-blue-200'
+                                                ? 'bg-orange-50 dark:bg-orange-950/40 text-orange-800 border border-orange-200 animate-pulse'
+                                                : 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 border border-blue-200'
                                             }`}
                                     >
                                         {insight.text}
@@ -233,9 +233,9 @@ export function DeliveryReportsPage() {
 
                         {/* Gráficos */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mx-4 lg:mx-8 mb-6">
-                            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6">
                                 <h3 className="text-base font-semibold mb-4 flex items-center">
-                                    <Truck className="w-5 h-5 mr-2 text-blue-600" />
+                                    <Truck className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                                     Entregas por Mês
                                 </h3>
                                 <ResponsiveContainer width="100%" height={300}>
@@ -255,7 +255,7 @@ export function DeliveryReportsPage() {
                                 </ResponsiveContainer>
                             </div>
 
-                            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6">
                                 <h3 className="text-base font-semibold mb-4 flex items-center">
                                     <AlertTriangle className="w-5 h-5 mr-2 text-orange-600" />
                                     Status das Entregas
@@ -283,9 +283,9 @@ export function DeliveryReportsPage() {
                                 </ResponsiveContainer>
                             </div>
 
-                            <div className="bg-white rounded-2xl border border-gray-200 p-6 lg:col-span-2">
+                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-white/10 p-6 lg:col-span-2">
                                 <h3 className="text-base font-semibold mb-4 flex items-center">
-                                    <MapPin className="w-5 h-5 mr-2 text-purple-600" />
+                                    <MapPin className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
                                     Principais Destinos
                                 </h3>
                                 <ResponsiveContainer width="100%" height={300}>
@@ -299,9 +299,9 @@ export function DeliveryReportsPage() {
                                                 if (payload && payload[0]) {
                                                     const data = payload[0].payload as DeliveryData;
                                                     return (
-                                                        <div className="bg-white p-3 rounded-lg shadow-lg border">
+                                                        <div className="bg-white dark:bg-slate-900 p-3 rounded-lg shadow-lg border">
                                                             <p><strong>{data.name}</strong>: {data.value}%</p>
-                                                            <p className="text-sm text-gray-600">Histórico: {data.history?.join(', ')}</p>
+                                                            <p className="text-sm text-gray-600 dark:text-slate-300">Histórico: {data.history?.join(', ')}</p>
                                                         </div>
                                                     );
                                                 }

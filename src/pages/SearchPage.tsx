@@ -126,17 +126,17 @@ export function SearchPage() {
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
     return (
-        <div className="space-y-8 px-4 py-6 bg-gray-50 min-h-screen">
+        <div className="space-y-8 px-4 py-6 bg-gray-50 dark:bg-slate-950 min-h-screen">
             <Toaster position="top-right" />
 
             <div>
-                <h1 className="text-3xl font-serif text-gray-900 mb-2">Centro de Consultas</h1>
-                <p className="text-gray-600">Análise avançada de dados com visualização em tempo real.</p>
+                <h1 className="text-3xl font-serif text-gray-900 dark:text-white mb-2">Centro de Consultas</h1>
+                <p className="text-gray-600 dark:text-slate-300">Análise avançada de dados com visualização em tempo real.</p>
             </div>
 
             {/* Tipo de Consulta */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Tipo de Consulta</label>
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-3">Tipo de Consulta</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                     {[
                         { id: 'produtos', label: 'Produtos', icon: '📦' },
@@ -152,7 +152,7 @@ export function SearchPage() {
                             onClick={() => setConsulta(item.id as ConsultaType)}
                             className={`p-3 text-sm text-center rounded-lg transition-all ${consulta === item.id
                                 ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                : 'bg-gray-50 dark:bg-slate-950 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:bg-slate-800'
                                 }`}
                         >
                             <div className="text-lg mb-1">{item.icon}</div>
@@ -163,10 +163,10 @@ export function SearchPage() {
             </div>
 
             {/* Filtros */}
-            <form onSubmit={handleSearch} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
+            <form onSubmit={handleSearch} className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row gap-4 items-end">
                     <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Pesquisar</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Pesquisar</label>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                             <input
@@ -174,28 +174,28 @@ export function SearchPage() {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Nome, ID, descrição..."
-                                className="w-full pl-10 p-3 border border-gray-300 rounded-lg"
+                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg"
                             />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 w-full sm:w-auto">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">De</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">De</label>
                             <input
                                 type="date"
                                 value={dateRange.start}
                                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                                className="p-3 border border-gray-300 rounded-lg text-sm"
+                                className="p-3 border border-gray-300 dark:border-white/15 rounded-lg text-sm"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Até</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Até</label>
                             <input
                                 type="date"
                                 value={dateRange.end}
                                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                                className="p-3 border border-gray-300 rounded-lg text-sm"
+                                className="p-3 border border-gray-300 dark:border-white/15 rounded-lg text-sm"
                             />
                         </div>
                     </div>
@@ -230,27 +230,27 @@ export function SearchPage() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <Package className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-lg p-6 text-center">
+                    <Package className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
                     <p className="text-sm text-blue-800">Total em Estoque</p>
-                    <p className="text-2xl font-bold text-blue-600">{totalEstoque}</p>
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalEstoque}</p>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                    <DollarSign className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                <div className="bg-green-50 dark:bg-emerald-950/40 border border-green-200 rounded-lg p-6 text-center">
+                    <DollarSign className="w-6 h-6 text-green-600 dark:text-emerald-400 mx-auto mb-2" />
                     <p className="text-sm text-green-800">Valor Total em Estoque</p>
-                    <p className="text-2xl font-bold text-green-600">{formatCurrency(valorTotal)}</p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-emerald-400">{formatCurrency(valorTotal)}</p>
                 </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 text-center">
-                    <TrendingUp className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                <div className="bg-purple-50 dark:bg-purple-950/40 border border-purple-200 rounded-lg p-6 text-center">
+                    <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
                     <p className="text-sm text-purple-800">Ticket Médio</p>
-                    <p className="text-2xl font-bold text-purple-600">{formatCurrency(ticketMedio)}</p>
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{formatCurrency(ticketMedio)}</p>
                 </div>
             </div>
 
             {/* Resultados */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">Resultados da Consulta</h2>
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 overflow-hidden">
+                <div className="p-6 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Resultados da Consulta</h2>
                     <div className="flex gap-2">
                         <CSVLink
                             data={results.map(r => ({ Nome: r.nome, Categoria: r.categoria, Estoque: r.estoque, Preço: r.preco }))}
@@ -269,36 +269,36 @@ export function SearchPage() {
                 </div>
 
                 {sortedResults.length === 0 ? (
-                    <div className="p-12 text-center text-gray-500">
+                    <div className="p-12 text-center text-gray-500 dark:text-slate-400">
                         <Database className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                         <p>Nenhum resultado encontrado.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-gray-50 dark:bg-slate-950">
                                 <tr>
-                                    <th onClick={() => requestSort('nome')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                                    <th onClick={() => requestSort('nome')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800">
                                         Nome {sortConfig?.key === 'nome' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
                                     </th>
-                                    <th onClick={() => requestSort('categoria')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                                    <th onClick={() => requestSort('categoria')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800">
                                         Categoria
                                     </th>
-                                    <th onClick={() => requestSort('estoque')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                                    <th onClick={() => requestSort('estoque')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800">
                                         Estoque {sortConfig?.key === 'estoque' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
                                     </th>
-                                    <th onClick={() => requestSort('preco')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                                    <th onClick={() => requestSort('preco')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase cursor-pointer hover:bg-gray-100 dark:bg-slate-800">
                                         Preço {sortConfig?.key === 'preco' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {sortedResults.map((item) => (
-                                    <tr key={item.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.nome}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{item.categoria}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{item.estoque}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
+                                    <tr key={item.id} className="hover:bg-gray-50 dark:bg-slate-950">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{item.nome}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">{item.categoria}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">{item.estoque}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-emerald-400 font-semibold">
                                             {formatCurrency(item.preco)}
                                         </td>
                                     </tr>
@@ -312,8 +312,8 @@ export function SearchPage() {
             {/* Gráficos Avançados */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Gráfico de Barras: Estoque vs Preço */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Estoque e Preço por Produto</h3>
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Estoque e Preço por Produto</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={sortedResults} margin={{ top: 20, right: 30, left: 0, bottom: 10 }}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -329,8 +329,8 @@ export function SearchPage() {
                 </div>
 
                 {/* Gráfico de Pizza: Valor por Produto */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Distribuição de Valor em Estoque</h3>
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Distribuição de Valor em Estoque</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                             <Pie
@@ -353,8 +353,8 @@ export function SearchPage() {
                 </div>
 
                 {/* Gráfico de Linha: Tendência de Vendas */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Tendência de Vendas Mensais</h3>
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-6 lg:col-span-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tendência de Vendas Mensais</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={monthlySales}>
                             <CartesianGrid strokeDasharray="3 3" />

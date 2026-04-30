@@ -235,7 +235,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             {options.map(opt => {
                 // A lógica de seleção funciona com null
                 const isSelected = formData.type === opt.type;
-                const baseClass = 'border-gray-200 hover:border-gray-300 text-gray-700';
+                const baseClass = 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:border-white/15 text-gray-700 dark:text-slate-200';
                 // As cores precisam estar no seu tailwind.config.js para funcionar corretamente
                 const selectedClass = `border-${colorClass}-500 bg-${colorClass}-50 text-${colorClass}-900`;
                 return (
@@ -264,8 +264,8 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         <div className="grid grid-cols-3 gap-4 sm:grid-cols-5">
             {options.map(opt => {
                 const isSelected = formData.paymentMethod === opt.type;
-                const baseClass = 'border-gray-200 hover:border-gray-300 text-gray-700';
-                const selectedClass = 'border-blue-500 bg-blue-50 text-blue-900';
+                const baseClass = 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:border-white/15 text-gray-700 dark:text-slate-200';
+                const selectedClass = 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-900';
                 return (
                     <button
                         key={opt.type}
@@ -289,13 +289,13 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
             {/* Botão Voltar */}
             <div className="mb-6">
                 <button
                     type="button"
                     onClick={handleGoBack}
-                    className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:text-slate-100 hover:bg-gray-100 dark:bg-slate-800 rounded-lg transition-colors"
                     disabled={loading}
                 >
                     <ArrowLeft className="w-4 h-4" />
@@ -303,24 +303,24 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 </button>
             </div>
 
-            <h2 className="text-2xl font-poppins text-gray-900 mb-6">Formulário de Movimentação</h2>
+            <h2 className="text-2xl font-poppins text-gray-900 dark:text-white mb-6">Formulário de Movimentação</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Alerta de erro de seleção */}
                 {error && error.includes('tipo de movimentação') && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                    <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-700 dark:text-red-300 rounded-lg text-sm">
                         {error}
                     </div>
                 )}
                 {/* Alerta de erro de tipo de pagamento */}
                 {error && error.includes('tipo de pagamento') && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                    <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-700 dark:text-red-300 rounded-lg text-sm">
                         {error}
                     </div>
                 )}
 
                 {/* Entradas */}
                 <div>
-                    <div className="flex items-center text-lg text-green-700 mb-3 font-poppins">
+                    <div className="flex items-center text-lg text-green-700 dark:text-emerald-300 mb-3 font-poppins">
                         <img src="https://cdn-icons-png.flaticon.com/512/4680/4680408.png" alt="Entrada" className="w-6 h-6 mr-2" />
                         <h3>Entrada</h3>
                     </div>
@@ -329,7 +329,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
                 {/* Saídas */}
                 <div>
-                    <div className="flex items-center text-lg text-red-700 mb-3 font-poppins">
+                    <div className="flex items-center text-lg text-red-700 dark:text-red-300 mb-3 font-poppins">
                         <img src="https://cdn-icons-png.flaticon.com/512/1828/1828407.png" alt="Saída" className="w-6 h-6 mr-2" />
                         <h3>Saída</h3>
                     </div>
@@ -339,7 +339,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 {/* NOVO: Tipo de Pagamento */}
                 {shouldShowPaymentMethod && (
                     <div className='font-poppins'>
-                        <div className="flex items-center text-lg text-blue-700 mb-3">
+                        <div className="flex items-center text-lg text-blue-700 dark:text-blue-300 mb-3">
                             <img src="https://cdn-icons-png.flaticon.com/512/4669/4669019.png" alt="Pagamento" className="w-6 h-6 mr-2" />
                             <h3>Meio de Pagamento {formData.type === 'venda' ? '*' : ''}</h3>
                         </div>
@@ -349,7 +349,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
                 {/* Valor */}
                 <div>
-                    <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="value" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                         Valor (R$) *
                     </label>
                     <div className="relative">
@@ -365,14 +365,14 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                             required
                             disabled={loading}
                             placeholder="0,00"
-                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                            className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 dark:bg-slate-950 disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>
 
                 {/* Descrição */}
                 <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                         Descrição *
                     </label>
                     <textarea
@@ -383,14 +383,14 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                         required
                         disabled={loading}
                         rows={3}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                        className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 dark:bg-slate-950 disabled:cursor-not-allowed"
                         placeholder="Ex: Venda de produtos X, Compra de material..."
                     />
                 </div>
 
                 {/* Data e Hora */}
                 <div>
-                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                         Data e Hora
                     </label>
                     <input
@@ -401,7 +401,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                         onChange={handleChange}
                         required
                         disabled={loading}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                        className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 dark:bg-slate-950 disabled:cursor-not-allowed"
                     />
                 </div>
 

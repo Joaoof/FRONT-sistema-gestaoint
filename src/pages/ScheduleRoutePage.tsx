@@ -171,7 +171,7 @@ function DriverRegistration() {
     };
 
     return (
-        <div className="bg-white p-6 rounded-xl border space-y-4">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border space-y-4">
             <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                     <User className="w-5 h-5" /> {t.driver}s
@@ -186,13 +186,13 @@ function DriverRegistration() {
 
             <div className="space-y-2 max-h-40 overflow-y-auto">
                 {drivers.map(d => (
-                    <div key={d.id} className="flex justify-between items-center p-2 border rounded text-sm bg-gray-50">
+                    <div key={d.id} className="flex justify-between items-center p-2 border rounded text-sm bg-gray-50 dark:bg-slate-950">
                         <div>
                             <span className="font-medium">{d.name}</span> • {d.license} • {d.phone}
                         </div>
                         <button
                             onClick={() => deleteDriver(d.id)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-500 hover:text-red-700 dark:text-red-300"
                             aria-label="Excluir motorista"
                         >
                             <Trash2 className="w-4 h-4" />
@@ -204,7 +204,7 @@ function DriverRegistration() {
             {/* Modal de Cadastro */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">Cadastrar Motorista</h3>
                         <form onSubmit={handleSubmit} className="space-y-3">
                             <div>
@@ -249,7 +249,7 @@ function DriverRegistration() {
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                                    className="px-4 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:text-slate-100 font-medium"
                                 >
                                     {t.cancel}
                                 </button>
@@ -498,18 +498,18 @@ function LiveNotifications() {
             case 'atraso': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
             case 'entrega': return <CheckCircle className="w-5 h-5 text-green-500" />;
             case 'manutencao': return <Truck className="w-5 h-5 text-red-500" />;
-            case 'alerta': return <AlertTriangle className="w-5 h-5 text-red-600" />;
+            case 'alerta': return <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />;
             default: return <Circle className="w-5 h-5 text-gray-400" />;
         }
     };
 
     const getColorClass = (type: string) => {
         switch (type) {
-            case 'atraso': return 'bg-yellow-50 border-l-4 border-yellow-400';
-            case 'entrega': return 'bg-green-50 border-l-4 border-green-400';
-            case 'manutencao': return 'bg-red-50 border-l-4 border-red-400';
+            case 'atraso': return 'bg-yellow-50 dark:bg-yellow-950/40 border-l-4 border-yellow-400';
+            case 'entrega': return 'bg-green-50 dark:bg-emerald-950/40 border-l-4 border-green-400';
+            case 'manutencao': return 'bg-red-50 dark:bg-red-950/40 border-l-4 border-red-400';
             case 'alerta': return 'bg-red-100 border-l-4 border-red-500';
-            default: return 'bg-gray-50';
+            default: return 'bg-gray-50 dark:bg-slate-950';
         }
     };
 
@@ -533,37 +533,37 @@ function LiveNotifications() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden"
+                    className="absolute mt-2 w-80 bg-white dark:bg-slate-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden"
                 >
-                    <div className="p-3 border-b bg-gray-50 flex justify-between items-center">
-                        <h3 className="font-semibold text-gray-900">{t.iaAssistant}</h3>
+                    <div className="p-3 border-b bg-gray-50 dark:bg-slate-950 flex justify-between items-center">
+                        <h3 className="font-semibold text-gray-900 dark:text-white">{t.iaAssistant}</h3>
                         <button
                             onClick={clearAll}
-                            className="text-xs text-gray-500 hover:text-gray-700"
+                            className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-200"
                         >
                             {t.cancel}
                         </button>
                     </div>
                     <div className="max-h-64 overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <p className="p-4 text-gray-500 text-sm text-center">{t.response}: Nenhuma notificação</p>
+                            <p className="p-4 text-gray-500 dark:text-slate-400 text-sm text-center">{t.response}: Nenhuma notificação</p>
                         ) : (
                             notifications.map(notif => (
                                 <div
                                     key={notif.id}
-                                    className={`p-3 border-b last:border-b-0 ${getColorClass(notif.type)} hover:bg-gray-50`}
+                                    className={`p-3 border-b last:border-b-0 ${getColorClass(notif.type)} hover:bg-gray-50 dark:bg-slate-950`}
                                 >
                                     <div className="flex items-start space-x-2">
                                         {getIcon(notif.type)}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm text-gray-800 truncate">{notif.message}</p>
-                                            <p className="text-xs text-gray-500 mt-0.5">
+                                            <p className="text-sm text-gray-800 dark:text-slate-100 truncate">{notif.message}</p>
+                                            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
                                                 {notif.timestamp.toLocaleTimeString()}
                                             </p>
                                         </div>
                                         <button
                                             onClick={() => remove(notif.id)}
-                                            className="text-gray-400 hover:text-gray-600 ml-1"
+                                            className="text-gray-400 hover:text-gray-600 dark:text-slate-300 ml-1"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -572,7 +572,7 @@ function LiveNotifications() {
                             ))
                         )}
                     </div>
-                    <div className="p-2 bg-gray-50 text-xs text-gray-500 text-center">
+                    <div className="p-2 bg-gray-50 dark:bg-slate-950 text-xs text-gray-500 dark:text-slate-400 text-center">
                         {t.estimatedTime}: Automático
                     </div>
                 </motion.div>
@@ -610,7 +610,7 @@ function IAAssistant() {
     };
 
     return (
-        <div className="bg-white p-4 rounded-xl border space-y-3">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border space-y-3">
             <h4 className="font-semibold flex items-center gap-2"><MessageCircle className="w-5 h-5" /> {t.iaAssistant}</h4>
             <input
                 value={query}
@@ -622,13 +622,13 @@ function IAAssistant() {
             <button onClick={handleAsk} className="text-sm bg-indigo-600 text-white px-3 py-1 rounded flex items-center gap-1">
                 <Send className="w-4 h-4" /> Enviar
             </button>
-            {response && <p className="text-sm text-gray-700 mt-2"><strong>{t.response}:</strong> {response}</p>}
+            {response && <p className="text-sm text-gray-700 dark:text-slate-200 mt-2"><strong>{t.response}:</strong> {response}</p>}
             {history.length > 0 && (
                 <div className="mt-4 border-t pt-3">
-                    <h5 className="text-xs font-medium text-gray-500 mb-2">Histórico</h5>
+                    <h5 className="text-xs font-medium text-gray-500 dark:text-slate-400 mb-2">Histórico</h5>
                     <ul className="text-xs space-y-1">
                         {history.map((h, i) => (
-                            <li key={i} className="p-2 bg-gray-50 rounded">
+                            <li key={i} className="p-2 bg-gray-50 dark:bg-slate-950 rounded">
                                 <strong>Você:</strong> {h.q} <br />
                                 <strong>IA:</strong> {h.a}
                             </li>
@@ -671,10 +671,10 @@ function RouteTimeline({ route }: { route: Route }) {
 
     return (
         <div className="space-y-4">
-            <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+            <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <Clock className="w-5 h-5" /> {t.timeline}
             </h4>
-            <div className="relative border-l-2 border-gray-200 pl-6">
+            <div className="relative border-l-2 border-gray-200 dark:border-white/10 pl-6">
                 {events.map((event, i) => {
                     const Icon = event.icon;
                     const isCompleted = event.status === 'entregue' || event.status === 'completed';
@@ -692,8 +692,8 @@ function RouteTimeline({ route }: { route: Route }) {
                                     <Clock className="w-3 h-3 text-white" />
                                 )}
                             </div>
-                            <p className="text-sm font-medium text-gray-900">{event.label}</p>
-                            <p className="text-xs text-gray-500">{event.time}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{event.label}</p>
+                            <p className="text-xs text-gray-500 dark:text-slate-400">{event.time}</p>
                         </div>
                     );
                 })}
@@ -735,7 +735,7 @@ function RouteReplay({ route }: { route: Route }) {
 
     return (
         <div className="space-y-3">
-            <h4 className="font-semibold text-gray-900">Replay da Rota</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-white">Replay da Rota</h4>
             <MapContainer center={positions[0] || [-23.55, -46.63]} zoom={13} style={{ height: '200px', width: '100%' }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <Polyline positions={positions.slice(0, currentStep + 1)} color="blue" weight={5} />
@@ -768,7 +768,7 @@ function RouteReplay({ route }: { route: Route }) {
                     Reiniciar
                 </button>
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-slate-400">
                 Etapa {currentStep + 1} de {positions.length}
             </p>
         </div>
@@ -935,10 +935,10 @@ export function ScheduleRoutePage() {
             cell: info => {
                 const status = info.getValue();
                 const config = {
-                    ativa: { label: 'Ativa', color: 'bg-green-100 text-green-700' },
-                    'em rota': { label: 'Em Rota', color: 'bg-yellow-100 text-yellow-700' },
-                    finalizada: { label: 'Finalizada', color: 'bg-blue-100 text-blue-700' },
-                }[status] || { label: status, color: 'bg-gray-100 text-gray-700' };
+                    ativa: { label: 'Ativa', color: 'bg-green-100 text-green-700 dark:text-emerald-300' },
+                    'em rota': { label: 'Em Rota', color: 'bg-yellow-100 text-yellow-700 dark:text-amber-300' },
+                    finalizada: { label: 'Finalizada', color: 'bg-blue-100 text-blue-700 dark:text-blue-300' },
+                }[status] || { label: status, color: 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200' };
                 return (
                     <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}>
                         {config.label}
@@ -972,12 +972,12 @@ export function ScheduleRoutePage() {
 
     return (
         <LanguageContext.Provider value={language}>
-            <div className="space-y-8 px-4 lg:px-8 py-6 w-full bg-gray-50 min-h-screen">
+            <div className="space-y-8 px-4 lg:px-8 py-6 w-full bg-gray-50 dark:bg-slate-950 min-h-screen">
                 <LiveNotifications />
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white border-b border-gray-200 px-6 py-5 rounded-2xl shadow-lg"
+                    className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-6 py-5 rounded-2xl shadow-lg"
                 >
                     <div className="flex items-center justify-between">
                         <h1 className="text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">
@@ -992,32 +992,32 @@ export function ScheduleRoutePage() {
                                 <option value="pt">Português</option>
                                 <option value="en">English</option>
                             </select>
-                            <span className="text-sm font-medium text-gray-700">{user?.name} ({role})</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-slate-200">{user?.name} ({role})</span>
                         </div>
                     </div>
                 </motion.div>
 
                 {/* Filtros Avançados */}
-                <div className="bg-white p-6 rounded-2xl border shadow-lg space-y-4">
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border shadow-lg space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">{t.search}</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">{t.search}</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-gray-400" />
                                 <input
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
                                     placeholder={t.search + " " + t.title.toLowerCase()}
-                                    className="pl-10 w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                    className="pl-10 w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">{t.status}</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">{t.status}</label>
                             <select
                                 value={filterStatus}
                                 onChange={e => setFilterStatus(e.target.value as any)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                className="w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-2"
                             >
                                 <option value="todos">Todos</option>
                                 <option value="ativa">Ativa</option>
@@ -1026,11 +1026,11 @@ export function ScheduleRoutePage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">{t.driver}</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">{t.driver}</label>
                             <select
                                 value={filterDriver}
                                 onChange={e => setFilterDriver(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                className="w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-2"
                             >
                                 <option value="">{t.driver}...</option>
                                 {mockDrivers.map(d => (
@@ -1039,11 +1039,11 @@ export function ScheduleRoutePage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">{t.vehicle}</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">{t.vehicle}</label>
                             <select
                                 value={filterVehicle}
                                 onChange={e => setFilterVehicle(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                className="w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-2"
                             >
                                 <option value="">{t.vehicle}...</option>
                                 {mockVehicles.map(v => (
@@ -1069,16 +1069,16 @@ export function ScheduleRoutePage() {
                 </div>
 
                 {/* Abas */}
-                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+                <div className="flex space-x-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-lg w-fit">
                     <button
                         onClick={() => setActiveTab('ativas')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'ativas' ? 'bg-white shadow' : ''}`}
+                        className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'ativas' ? 'bg-white dark:bg-slate-900 shadow' : ''}`}
                     >
                         {t.ativas}
                     </button>
                     <button
                         onClick={() => setActiveTab('historico')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'historico' ? 'bg-white shadow' : ''}`}
+                        className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'historico' ? 'bg-white dark:bg-slate-900 shadow' : ''}`}
                     >
                         {t.historico}
                     </button>
@@ -1093,19 +1093,19 @@ export function ScheduleRoutePage() {
                         { title: t.completion, value: metrics.taxaConclusao, icon: CheckCircle, color: 'green' },
                         { title: t.estimatedCost, value: metrics.custoEstimado, icon: FileText, color: 'purple' },
                     ].map((item, i) => (
-                        <div key={i} className="bg-white p-4 rounded-xl border text-center">
+                        <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-xl border text-center">
                             <div className={`inline-block p-2 rounded-full bg-${item.color}-100 text-${item.color}-600`}>
                                 <item.icon className="w-5 h-5" />
                             </div>
-                            <p className="mt-2 text-2xl font-bold text-gray-900">{item.value}</p>
-                            <p className="text-sm text-gray-500">{item.title}</p>
+                            <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{item.value}</p>
+                            <p className="text-sm text-gray-500 dark:text-slate-400">{item.title}</p>
                         </div>
                     ))}
                 </div>
 
                 {/* Gráficos */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white p-6 rounded-2xl border shadow">
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border shadow">
                         <h3 className="text-lg font-semibold mb-4">{t.routesByDriver}</h3>
                         <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={driverRanking}>
@@ -1118,7 +1118,7 @@ export function ScheduleRoutePage() {
                         </ResponsiveContainer>
                     </div>
 
-                    <div className="bg-white p-6 rounded-2xl border shadow">
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border shadow">
                         <h3 className="text-lg font-semibold mb-4">{t.routeStatus}</h3>
                         <ResponsiveContainer width="100%" height={200}>
                             <PieChart>
@@ -1146,9 +1146,9 @@ export function ScheduleRoutePage() {
                 </div>
 
                 {/* Tabela */}
-                <div className="bg-white rounded-2xl border shadow-lg overflow-hidden">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border shadow-lg overflow-hidden">
                     <div className="px-6 py-4 border-b flex justify-between items-center">
-                        <h2 className="text-lg font-semibold text-gray-900">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                             {activeTab === 'ativas' ? 'Rotas Ativas' : 'Histórico de Rotas'}
                         </h2>
                         {isManager && (
@@ -1163,7 +1163,7 @@ export function ScheduleRoutePage() {
 
                     <div className="overflow-x-auto max-h-96">
                         <table className="w-full">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-gray-50 dark:bg-slate-950">
                                 {table.getHeaderGroups().map(hg => (
                                     <tr key={hg.id}>
                                         {hg.headers.map(header => (
@@ -1176,9 +1176,9 @@ export function ScheduleRoutePage() {
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {table.getRowModel().rows.map(row => (
-                                    <tr key={row.id} className="hover:bg-gray-50">
+                                    <tr key={row.id} className="hover:bg-gray-50 dark:bg-slate-950">
                                         {row.getVisibleCells().map(cell => (
-                                            <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
+                                            <td key={cell.id} className="px-6 py-4 text-sm text-gray-700 dark:text-slate-200">
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </td>
                                         ))}
@@ -1210,7 +1210,7 @@ export function ScheduleRoutePage() {
                 {/* Modal de Detalhes */}
                 {selectedRoute && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                        <div className="bg-white rounded-2xl p-6 w-full max-w-4xl max-h-96 overflow-y-auto">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-4xl max-h-96 overflow-y-auto">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-xl font-bold">Detalhes da Rota: {selectedRoute.name}</h3>
                                 <button onClick={() => setSelectedRoute(null)}><X /></button>
@@ -1220,14 +1220,14 @@ export function ScheduleRoutePage() {
                                     <h4 className="font-semibold mb-2">{t.stops}</h4>
                                     <ul className="space-y-2">
                                         {selectedRoute.stops.map(stop => (
-                                            <li key={stop.id} className="text-sm p-2 border rounded bg-gray-50">
+                                            <li key={stop.id} className="text-sm p-2 border rounded bg-gray-50 dark:bg-slate-950">
                                                 <div>{stop.address}</div>
-                                                <div className="text-xs text-gray-500">
+                                                <div className="text-xs text-gray-500 dark:text-slate-400">
                                                     {t.estimatedTime}: {stop.expectedTime} | Real: {stop.actualTime || '—'}
                                                 </div>
                                                 {stop.notes && <div className="text-xs mt-1 italic">Nota: {stop.notes}</div>}
-                                                <span className={`text-xs px-2 py-1 rounded ${stop.status === 'entregue' ? 'bg-green-100 text-green-700' :
-                                                    stop.status === 'falha' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                                <span className={`text-xs px-2 py-1 rounded ${stop.status === 'entregue' ? 'bg-green-100 text-green-700 dark:text-emerald-300' :
+                                                    stop.status === 'falha' ? 'bg-red-100 text-red-700 dark:text-red-300' : 'bg-yellow-100 text-yellow-700 dark:text-amber-300'
                                                     }`}>
                                                     {stop.status}
                                                 </span>
@@ -1250,7 +1250,7 @@ export function ScheduleRoutePage() {
                 {/* Modal Nova Rota */}
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                        <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md">
                             <h3 className="text-xl font-bold mb-4">{t.newRoute}</h3>
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                                 {['name', 'driver', 'vehicle', 'distance', 'estimatedTime'].map(f => (
@@ -1289,7 +1289,7 @@ export function ScheduleRoutePage() {
                                     <button
                                         type="button"
                                         onClick={() => setIsModalOpen(false)}
-                                        className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium rounded-lg hover:bg-gray-100 transition"
+                                        className="px-4 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:text-slate-100 font-medium rounded-lg hover:bg-gray-100 dark:bg-slate-800 transition"
                                     >
                                         {t.cancel}
                                     </button>

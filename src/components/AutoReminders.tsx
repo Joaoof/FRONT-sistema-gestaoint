@@ -37,12 +37,12 @@ export function AutoReminders({ receivables, payables }: AutoRemindersProps) {
     }, [receivables, payables]);
 
     return (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
+        <div className="bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 rounded-lg p-4 mt-6">
             <h3 className="font-semibold text-yellow-800 flex items-center">
                 <Clock className="w-5 h-5 mr-2" />
                 Lembretes
             </h3>
-            <p className="text-sm text-yellow-700 mt-1">Verificando vencimentos nos próximos 3 dias...</p>
+            <p className="text-sm text-yellow-700 dark:text-amber-300 mt-1">Verificando vencimentos nos próximos 3 dias...</p>
         </div>
     );
 }

@@ -98,19 +98,19 @@ export function SettingsPage() {
     };
 
     return (
-        <div className="bg-gray-50 min-h-screen py-8 px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="bg-gray-50 dark:bg-slate-950 min-h-screen py-8 px-4 sm:px-6 lg:px-8 space-y-8">
             {/* Cabeçalho */}
             <div>
-                <h1 className="text-3xl font-serif text-gray-900 mb-2">Configurações</h1>
-                <p className="text-gray-600">Gerencie seu perfil, empresa e segurança</p>
+                <h1 className="text-3xl font-serif text-gray-900 dark:text-white mb-2">Configurações</h1>
+                <p className="text-gray-600 dark:text-slate-300">Gerencie seu perfil, empresa e segurança</p>
             </div>
 
             {/* Notificação Fixa no Canto (Toast) - Opcional */}
             {notification && (
                 <div
                     className={`fixed top-6 right-6 z-50 p-4 rounded-lg text-sm flex items-center gap-2 shadow-lg border-l-4 animate-fade-in ${notification.type === 'success'
-                        ? 'bg-green-50 text-green-800 border-green-500'
-                        : 'bg-red-50 text-red-800 border-red-500'
+                        ? 'bg-green-50 dark:bg-emerald-950/40 text-green-800 border-green-500'
+                        : 'bg-red-50 dark:bg-red-950/40 text-red-800 border-red-500'
                         }`}
                 >
                     {notification.type === 'success' ? (
@@ -123,58 +123,58 @@ export function SettingsPage() {
             )}
 
             {/* Perfil do Usuário */}
-            <div className="bg-white rounded-2xl shadow-md border border-white p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-white p-8">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-white text-white rounded-full">
+                    <div className="p-2 bg-white dark:bg-slate-900 text-white rounded-full">
                         <img src="https://icons.veryicon.com/png/o/miscellaneous/two-color-icon-library/user-286.png" alt="Usuário" className="w-6 h-6" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-sans text-gray-900">Perfil do Usuário</h2>
-                        <p className="text-sm font-serif text-gray-500">Atualize suas informações pessoais</p>
+                        <h2 className="text-xl font-sans text-gray-900 dark:text-white">Perfil do Usuário</h2>
+                        <p className="text-sm font-serif text-gray-500 dark:text-slate-400">Atualize suas informações pessoais</p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Nome</label>
                         <input
                             type="text"
                             value={profile.name}
                             onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                            className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">E-mail</label>
                         <input
                             type="email"
                             value={profile.email}
                             onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                            className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Telefone</label>
                         <input
                             type="tel"
                             value={profile.phone}
                             onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                             placeholder="(99) 99999-9999"
-                            className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Função</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Função</label>
                         <input
                             type="text"
                             value={profile.role}
                             disabled
-                            className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 text-gray-500 dark:text-slate-400 cursor-not-allowed"
                         />
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-gray-200 mt-6">
+                <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-white/10 mt-6">
                     <button
                         onClick={handleSaveProfile}
                         className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-md transition-all"
@@ -186,51 +186,51 @@ export function SettingsPage() {
             </div>
 
             {/* Dados da Empresa */}
-            <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-white/5 p-8">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-green-100 text-green-600 rounded-full">
+                    <div className="p-2 bg-green-100 text-green-600 dark:text-emerald-400 rounded-full">
                         <img src="https://images.icon-icons.com/3578/PNG/512/enterprise_building_icon_225731.png" alt="Empresa" className="w-6 h-6" />                    </div>
                     <div>
-                        <h2 className="text-xl font-sans text-gray-900">Dados da Empresa</h2>
-                        <p className="text-sm font-serif text-gray-500">Atualize as informações da sua empresa</p>
+                        <h2 className="text-xl font-sans text-gray-900 dark:text-white">Dados da Empresa</h2>
+                        <p className="text-sm font-serif text-gray-500 dark:text-slate-400">Atualize as informações da sua empresa</p>
                     </div>
                 </div>
 
                 <div className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Nome da Empresa</label>
                         <input
                             type="text"
                             value={companyData.name}
                             onChange={(e) => setCompanyData({ ...companyData, name: e.target.value })}
-                            className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-green-500"
                         />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">CNPJ</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">CNPJ</label>
                             <input
                                 type="text"
                                 value={companyData.cnpj}
                                 onChange={(e) => setCompanyData({ ...companyData, cnpj: e.target.value })}
                                 placeholder="00.000.000/0000-00"
-                                className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-green-500"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Endereço</label>
                             <input
                                 type="text"
                                 value={companyData.address}
                                 onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })}
                                 placeholder="Rua, número, bairro, cidade"
-                                className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-green-500"
                             />
                         </div>
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-gray-200 mt-6">
+                <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-white/10 mt-6">
                     <button
                         onClick={handleSaveCompany}
                         className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-md transition-all"
@@ -242,23 +242,23 @@ export function SettingsPage() {
             </div>
 
             {/* Plano e Módulos */}
-            <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-white/5 p-8">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-purple-100 text-purple-600 rounded-full">
+                    <div className="p-2 bg-purple-100 text-purple-600 dark:text-purple-400 rounded-full">
                         <img src="https://icones.pro/wp-content/uploads/2021/07/icone-d-entreprise-violet.png" alt="Empresa" className="w-6 h-6" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-sans text-gray-900">Plano e Módulos</h2>
-                        <p className="text-sm font-serif text-gray-500">Gerencie seu plano atual e módulos ativos</p>
+                        <h2 className="text-xl font-sans text-gray-900 dark:text-white">Plano e Módulos</h2>
+                        <p className="text-sm font-serif text-gray-500 dark:text-slate-400">Gerencie seu plano atual e módulos ativos</p>
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     <div>
-                        <p className="text-sm font-mono text-gray-700">
+                        <p className="text-sm font-mono text-gray-700 dark:text-slate-200">
                             <strong>Plano Atual:</strong> {user?.plan?.name || 'Grátis'}
                         </p>
-                        <p className="text-sm font-mono text-gray-700 mt-1">
+                        <p className="text-sm font-mono text-gray-700 dark:text-slate-200 mt-1">
                             <strong>Status:</strong>{' '}
                             <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium font-serif rounded-full">
                                 Ativo
@@ -266,14 +266,14 @@ export function SettingsPage() {
                         </p>
                     </div>
                     <div>
-                        <h3 className="text-sm font-medium text-gray-900 mb-2">Módulos Ativos</h3>
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Módulos Ativos</h3>
                         <div className="flex flex-wrap gap-2">
                             {user?.plan?.modules?.map((module) => (
                                 <span
                                     key={module.module_key}
                                     className={`px-3 py-1 rounded-full text-xs font-medium ${module.isActive
                                         ? 'bg-blue-100 text-blue-800'
-                                        : 'bg-gray-100 text-gray-500 line-through'
+                                        : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 line-through'
                                         }`}
                                 >
                                     {module.module_key}
@@ -285,52 +285,52 @@ export function SettingsPage() {
             </div>
 
             {/* Segurança */}
-            <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-white/5 p-8">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-red-100 text-red-600 rounded-full">
+                    <div className="p-2 bg-red-100 text-red-600 dark:text-red-400 rounded-full">
                         <img src="https://cdn-icons-png.flaticon.com/512/1746/1746650.png" alt="Segurança" className="w-6 h-6" />                       </div>
                     <div>
-                        <h2 className="text-xl font-sans text-gray-900">Segurança</h2>
-                        <p className="text-sm font-serif text-gray-500">Altere sua senha e mantenha sua conta segura</p>
+                        <h2 className="text-xl font-sans text-gray-900 dark:text-white">Segurança</h2>
+                        <p className="text-sm font-serif text-gray-500 dark:text-slate-400">Altere sua senha e mantenha sua conta segura</p>
                     </div>
                 </div>
 
                 <div className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Senha Atual</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Senha Atual</label>
                         <input
                             type="password"
                             value={password.current}
                             onChange={(e) => setPassword({ ...password, current: e.target.value })}
-                            className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-red-500"
                             disabled={loadingPassword}
                         />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Nova Senha</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Nova Senha</label>
                             <input
                                 type="password"
                                 value={password.new}
                                 onChange={(e) => setPassword({ ...password, new: e.target.value })}
-                                className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-red-500"
                                 disabled={loadingPassword}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar Nova Senha</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Confirmar Nova Senha</label>
                             <input
                                 type="password"
                                 value={password.confirm}
                                 onChange={(e) => setPassword({ ...password, confirm: e.target.value })}
-                                className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-red-500"
                                 disabled={loadingPassword}
                             />
                         </div>
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-gray-200 mt-6">
+                <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-white/10 mt-6">
                     <button
                         onClick={handleChangePassword}
                         className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
@@ -351,10 +351,10 @@ export function SettingsPage() {
             </div>
 
             {/* Logout */}
-            <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-white/5 p-8">
                 <button
                     onClick={logout}
-                    className="flex items-center gap-3 text-red-600 hover:text-red-800 font-medium transition-colors"
+                    className="flex items-center gap-3 text-red-600 dark:text-red-400 hover:text-red-800 font-medium transition-colors"
                 >
                     <img src="https://cdn-icons-png.flaticon.com/512/4400/4400828.png" alt="Sair da Conta" className="w-6 h-6" />                       <span>Sair da Conta</span>
                 </button>
