@@ -77,6 +77,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   categorias: 'cadastros',
   vendas: 'vendas',
   'vendas/saida-rapida': 'vendas',
+  pedidos: 'vendas',
   fiscal: 'fiscal',
   'fiscal-receber': 'fiscal',
   'fiscal-receber-criar': 'fiscal',
@@ -145,6 +146,7 @@ const sections: MenuSection[] = [
         icon: ShoppingCart,
         children: [
           { id: 'vendas' as View, label: 'Nova venda (PDV)', icon: Plus },
+          { id: 'pedidos' as View, label: 'Pedidos & impressão', icon: Receipt },
           { id: 'vendas/saida-rapida' as View, label: 'Saída rápida', icon: Sliders },
         ],
       },
@@ -209,7 +211,7 @@ const sections: MenuSection[] = [
 const groupedChildren: Record<string, View[]> = {
   produtos: ['produtos', 'produtos/cadastrar'],
   estoque: ['estoque', 'estoque/alertas'],
-  vendas: ['vendas', 'vendas/saida-rapida'],
+  vendas: ['vendas', 'pedidos' as View, 'vendas/saida-rapida'],
   entregas: ['entregas', 'entregas/cadastrar', 'entregas/agendar', 'entregas/relatorios'],
   movimentacoes: ['movimentacoes', 'formulario-movimentacao', 'historico-movimentacao'],
   fiscal: ['fiscal', 'fiscal-pagar', 'fiscal-pagar-criar', 'fiscal-receber', 'fiscal-receber-criar'],

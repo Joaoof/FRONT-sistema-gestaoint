@@ -40,6 +40,8 @@ import { StockAlertsReport } from './pages/Products/StockAlertsReport';
 import { ReportsPage } from './pages/Reports/ReportsPage';
 import { BusinessOverview } from './pages/Reports/BusinessOverview';
 import { WhatsAppReportPage } from './pages/WhatsAppReportPage';
+import { OrdersListPage } from './pages/Orders/OrdersListPage';
+import { PrintableOrder } from './pages/Orders/PrintableOrder';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -47,7 +49,8 @@ function AppContent() {
   const { user } = useAuth(); // ✅ Pega o user com permissions
   const inventory = useInventory(); // ✅ Dados do estoque
 
-  const showSidebar = location.pathname !== '/';
+  const isPrintRoute = /\/imprimir(\/|$)/.test(location.pathname);
+  const showSidebar = location.pathname !== '/' && !isPrintRoute;
 
   return (
     <div className="flex min-h-screen bg-surface text-ink antialiased">
@@ -67,7 +70,11 @@ function AppContent() {
         {showSidebar && <Topbar />}
         <main
           key={location.pathname}
-          className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in"
+          className={
+            isPrintRoute
+              ? 'flex-1'
+              : 'flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in'
+          }
         >
         <NotificationProvider>
           <Routes>
@@ -100,6 +107,8 @@ function AppContent() {
             <Route path="/relatorios/visao-geral" element={<BusinessOverview />} />
             <Route path="/vendas" element={<NewSale />} />
             <Route path="/vendas/saida-rapida" element={<ProductExit onAddExit={inventory.addExit} products={inventory.products} />} />
+            <Route path="/pedidos" element={<OrdersListPage />} />
+            <Route path="/pedidos/:id/imprimir" element={<PrintableOrder />} />
             <Route path="/fiscal-receber" element={<AccountsReceivableDashboard />} />
             <Route path="/fiscal-receber-cria" element={<CreateReceivable />} />
             <Route path="/fiscal-pagar" element={<AccountsPayableDashboard />} />

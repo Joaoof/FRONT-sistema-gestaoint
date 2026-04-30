@@ -39,6 +39,7 @@ export type View =
     | 'categorias'
     | 'vendas'
     | 'vendas/saida-rapida'
+    | 'pedidos'
     | 'fiscal'
     | 'fiscal-receber'
     | 'fiscal-receber-criar'
