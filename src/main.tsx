@@ -5,6 +5,7 @@ import { apolloClient } from './lib/apollo-client';
 import App from './App.tsx';
 import './index.css';
 import { NotificationProvider } from './contexts/NotificationContext.tsx';
+import { ThemeProvider } from './contexts/ThemeContext.tsx';
 import { Footer } from './components/Footer.tsx';
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
 import { SonnerToaster } from './components/SonnerToaster.tsx';
@@ -18,14 +19,16 @@ if (process.env.NODE_ENV !== "production") {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ApolloProvider client={apolloClient}>
-        <NotificationProvider>
-          <SonnerToaster />
-          <App />
-          <Footer />
-        </NotificationProvider>
-      </ApolloProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ApolloProvider client={apolloClient}>
+          <NotificationProvider>
+            <SonnerToaster />
+            <App />
+            <Footer />
+          </NotificationProvider>
+        </ApolloProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>
 );

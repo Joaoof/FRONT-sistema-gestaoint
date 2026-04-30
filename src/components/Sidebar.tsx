@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useCompany } from '../contexts/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut } from 'lucide-react'; // Importa o ícone de Sair
+import { LogOut, Moon, Sun } from 'lucide-react'; // Ícones
 import { useAuth } from '../contexts/AuthContext'; // Importa o hook de autenticação
+import { useTheme } from '../contexts/ThemeContext';
 
 interface MenuItem {
   id: View;
@@ -94,6 +95,7 @@ export function Sidebar({
   const { company, isLoading } = useCompany();
   // CHAMA O HOOK useAuth para obter a função logout
   const { logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   if (isLoading || !company) {
     return (
@@ -308,6 +310,29 @@ export function Sidebar({
 
       {/* Footer fixo na base */}
       <div className="relative shrink-0 px-3 pt-3 pb-4 border-t border-white/5 space-y-1">
+        {/* Toggle tema */}
+        <button
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+          className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+        >
+          <span className="flex items-center gap-3">
+            {theme === 'dark' ? (
+              <Moon className="w-[17px] h-[17px] text-indigo-300" />
+            ) : (
+              <Sun className="w-[17px] h-[17px] text-amber-300" />
+            )}
+            <span>Aparência</span>
+          </span>
+          <span className="relative inline-flex h-5 w-9 items-center rounded-full bg-white/10 transition-colors">
+            <span
+              className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-soft transform transition-transform duration-200 ease-smooth ${
+                theme === 'dark' ? 'translate-x-[18px]' : 'translate-x-1'
+              }`}
+            />
+          </span>
+        </button>
+
         <button
           onClick={logout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-slate-300 hover:bg-rose-500/15 hover:text-rose-200"

@@ -1,6 +1,8 @@
 import { Toaster } from 'sonner';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const SonnerToaster = () => {
+    const { theme } = useTheme();
     return (
         <Toaster
             position="top-right"
@@ -8,7 +10,7 @@ export const SonnerToaster = () => {
             closeButton
             expand={true}
             duration={4000}
-            theme="light"
+            theme={theme}
             toastOptions={{
                 style: {
                     fontSize: '14px',

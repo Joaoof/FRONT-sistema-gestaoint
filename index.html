@@ -22,7 +22,27 @@
       rel="stylesheet"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
     <title>Sistema de Gerenciamento de Estoque</title>
+    <script>
+      // Anti-FOUC: aplica o tema ANTES do React montar e do CSS pintar.
+      // Default = dark; respeita preferência salva em localStorage.
+      (function () {
+        try {
+          var saved = localStorage.getItem('theme');
+          var theme = (saved === 'light' || saved === 'dark') ? saved : 'dark';
+          var root = document.documentElement;
+          if (theme === 'dark') root.classList.add('dark');
+          root.style.colorScheme = theme;
+          // Pinta o background imediatamente para evitar flash branco
+          root.style.backgroundColor = theme === 'dark' ? '#08101c' : '#f8fafc';
+        } catch (_) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+          document.documentElement.style.backgroundColor = '#08101c';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
