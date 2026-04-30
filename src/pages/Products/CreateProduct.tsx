@@ -20,6 +20,7 @@ import { uploadProductImage, validateImage, UploadError, type UploadedAsset } fr
 import { toast } from 'sonner';
 import { useMutation } from '@apollo/client';
 import { CREATE_PRODUCT_WITH_IMAGES } from '../../graphql/mutations/product-with-images';
+import { useCategories } from '../../hooks/useCategories';
 
 type ImageState = {
   id: string;
@@ -71,13 +72,9 @@ const UNITS = [
   { value: 'PC', label: 'Pacote' },
 ];
 
-const CATEGORIES = [
-  'Alimentação', 'Bebidas', 'Limpeza', 'Higiene',
-  'Eletrônicos', 'Vestuário', 'Móveis', 'Ferramentas', 'Outros',
-];
-
 export function CreateProduct() {
   const navigate = useNavigate();
+  const { categories, loading: loadingCategories } = useCategories();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [images, setImages] = useState<ImageState[]>([]);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
@@ -406,14 +403,31 @@ export function CreateProduct() {
               />
             </Field>
 
-            <Field label="Categoria" required error={errors.category} className="sm:col-span-2">
+            <Field
+              label="Categoria"
+              required
+              error={errors.category}
+              hint={
+                loadingCategories
+                  ? 'Carregando categorias…'
+                  : categories.length === 0
+                  ? 'Nenhuma categoria cadastrada — crie em /categorias antes'
+                  : undefined
+              }
+              className="sm:col-span-2"
+            >
               <select
                 value={form.category}
                 onChange={(e) => update('category', e.target.value)}
+                disabled={loadingCategories}
                 className={inputClass(!!errors.category)}
               >
                 <option value="">Selecione uma categoria…</option>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </Field>
 
