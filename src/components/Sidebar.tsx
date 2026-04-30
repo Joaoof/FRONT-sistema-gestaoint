@@ -97,7 +97,7 @@ export function Sidebar({
 
   if (isLoading || !company) {
     return (
-      <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-[#780087] dark:from-[#580065] backdrop-blur-md shadow-xl border-r z-50 animate-pulse" />
+      <div className="fixed left-0 top-0 h-full w-64 bg-slate-950 border-r border-white/5 z-50 animate-pulse" />
     );
   }
 
@@ -140,36 +140,43 @@ export function Sidebar({
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-[#780087] to-[#000000] dark:from-[#580065] dark:to-[#380047] backdrop-blur-md shadow-xl border-r border-[#000000] z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+      className={`fixed left-0 top-0 h-full w-64 flex flex-col bg-slate-950 text-slate-100 border-r border-white/5 shadow-soft-xl z-50 transform transition-transform duration-300 ease-smooth ${isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
     >
+      {/* subtle brand glow no topo */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-brand-600/15 to-transparent" aria-hidden />
+
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+      <div className="relative px-5 py-5 border-b border-white/5 flex items-center justify-between">
         <div
           onClick={() => {
             onViewChange('dashboard');
             navigate('/dashboard');
           }}
-          className="flex items-center space-x-4 cursor-pointer"
+          className="flex items-center gap-3 cursor-pointer group"
           title="Voltar ao Início"
         >
           <img
             src={logo}
             alt="Logo da Empresa"
-            className="w-12 h-12 rounded-lg object-cover shadow-sm"
+            className="w-10 h-10 rounded-lg object-cover ring-1 ring-white/10 group-hover:ring-white/25 transition"
             onError={e =>
             ((e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
               company.name
             )}&background=3B82F6&color=fff`)
             }
           />
-          <span className="font-inter font-semibold text-lg text-white tracking-wide">
-            {company.name}
-          </span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-[13px] uppercase tracking-[0.14em] text-slate-400">Empresa</span>
+            <span className="font-semibold text-[15px] text-white truncate max-w-[150px]">
+              {company.name}
+            </span>
+          </div>
         </div>
         <button
           onClick={onToggle}
-          className="lg:hidden p-2 rounded-full text-gray-300 hover:bg-gray-700 transition-transform duration-200 transform hover:scale-110"
+          aria-label="Fechar menu"
+          className="lg:hidden p-2 rounded-md text-slate-300 hover:bg-white/10 hover:text-white"
         >
           <motion.svg
             animate={{ rotate: isOpen ? 180 : 0 }}
@@ -185,11 +192,15 @@ export function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="mt-4 px-3 space-y-1 overflow-y-auto font-open_sans scrollbar-thin scrollbar-thumb-gray-600">
+      <nav className="relative flex-1 mt-3 px-3 pb-3 space-y-0.5 overflow-y-auto">
+        <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          Navegação
+        </p>
         {filteredMenuItems.map(item => {
           const isActive = currentView === item.id;
           const isSectionActive = item.children?.some(c => c.id === currentView) ?? false;
           const isExpanded = expandedItems[item.id] ?? false;
+          const highlight = isActive || isSectionActive;
 
           // Single Item
           if (!item.children) {
@@ -198,106 +209,95 @@ export function Sidebar({
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
                 title={item.label}
-                className={`relative w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95 ${isActive
-                  ? 'bg-white text-black'
-                  : 'text-white hover:bg-[#8a00b3] dark:text-white dark:hover:bg-[#8a00b3]'
-                  }`}
+                aria-current={isActive ? 'page' : undefined}
+                className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium ${
+                  isActive
+                    ? 'bg-white/10 text-white'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
               >
                 <span
-                  className={`absolute left-0 h-full w-1 rounded-r bg-white transition-opacity ${isActive ? 'opacity-100' : 'opacity-0'
-                    }`}
+                  className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-brand-400 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0'}`}
+                  aria-hidden
                 />
                 <img
                   src={item.imageUrl}
-                  alt={item.label}
-                  className={`w-5 h-5 object-contain ${isActive ? 'opacity-100' : 'opacity-75'}`}
+                  alt=""
+                  aria-hidden
+                  className={`w-5 h-5 object-contain ${isActive ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`}
                 />
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </button>
             );
           }
 
           // Group Item
           return (
-            <div key={item.id} className="space-y-1">
+            <div key={item.id} className="space-y-0.5">
               <button
                 onClick={() => handleItemClick(item.id)}
                 title={item.label}
-                className={`relative w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95 ${isActive || isSectionActive
-                  ? 'bg-white text-black'
-                  : 'text-white hover:bg-[#8a00b3] dark:text-white dark:hover:bg-[#8a00b3]'
-                  }`}
+                aria-expanded={isExpanded}
+                className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium ${
+                  highlight
+                    ? 'bg-white/10 text-white'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
               >
                 <span
-                  className={`absolute left-0 h-full w-1 rounded-r bg-white transition-opacity ${isActive || isSectionActive ? 'opacity-100' : 'opacity-0'
-                    }`}
+                  className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-brand-400 transition-opacity ${highlight ? 'opacity-100' : 'opacity-0'}`}
+                  aria-hidden
                 />
                 <img
                   src={item.imageUrl}
-                  alt={item.label}
-                  className={`w-5 h-5 object-contain ${isActive || isSectionActive ? 'opacity-100' : 'opacity-75'}`}
+                  alt=""
+                  aria-hidden
+                  className={`w-5 h-5 object-contain ${highlight ? 'opacity-100' : 'opacity-70'}`}
                 />
-                <span>{item.label}</span>
-                <AnimatePresence initial={false}>
-                  {isExpanded && (
-                    <motion.span
-                      key="chevron"
-                      initial={{ rotate: 0 }}
-                      animate={{ rotate: 90 }}
-                      exit={{ rotate: 0 }}
-                      className="ml-auto text-white"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </motion.span>
-                  )}
-                  {!isExpanded && !isActive && (
-                    <motion.span
-                      key="chevron-collapsed"
-                      initial={{ rotate: 90 }}
-                      animate={{ rotate: 0 }}
-                      exit={{ rotate: 90 }}
-                      className="ml-auto text-white"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                <span className="truncate">{item.label}</span>
+                <motion.span
+                  animate={{ rotate: isExpanded ? 90 : 0 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                  className="ml-auto text-slate-400"
+                  aria-hidden
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </motion.span>
               </button>
 
               {/* Sub-menu */}
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {isExpanded && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="overflow-hidden"
                   >
-                    {item.children.map(child => {
-                      const isChildActive = currentView === child.id;
-                      return (
-                        <button
-                          key={child.id}
-                          onClick={() => handleItemClick(child.id)}
-                          title={child.label}
-                          className={`relative w-full flex items-center space-x-3 px-6 py-2 text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95 ${isChildActive
-                            ? 'bg-white text-black'
-                            : 'text-white hover:bg-[#8a00b3] dark:text-white dark:hover:bg-[#8a00b3]'
+                    <div className="ml-5 pl-3 border-l border-white/10 space-y-0.5 py-1">
+                      {item.children.map(child => {
+                        const isChildActive = currentView === child.id;
+                        return (
+                          <button
+                            key={child.id}
+                            onClick={() => handleItemClick(child.id)}
+                            title={child.label}
+                            aria-current={isChildActive ? 'page' : undefined}
+                            className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium ${
+                              isChildActive
+                                ? 'bg-brand-600/20 text-white'
+                                : 'text-slate-400 hover:bg-white/5 hover:text-white'
                             }`}
-                        >
-                          <span
-                            className={`absolute left-0 h-full w-1 rounded-r bg-white transition-opacity ${isChildActive ? 'opacity-100' : 'opacity-0'
-                              }`}
-                          />
-                          <img src={child.imageUrl} alt={child.label} className="w-4 h-4 object-contain" />
-                          <span>{child.label}</span>
-                        </button>
-                      );
-                    })}
+                          >
+                            <img src={child.imageUrl} alt="" aria-hidden className="w-4 h-4 object-contain opacity-80" />
+                            <span className="truncate">{child.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -306,21 +306,19 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="absolute bottom-4 w-full px-4 text-xs text-white">
-        {/* BOTÃO SAIR ADICIONADO AQUI */}
+      {/* Footer fixo na base */}
+      <div className="relative shrink-0 px-3 pt-3 pb-4 border-t border-white/5 space-y-1">
         <button
           onClick={logout}
-          className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-red-600/70 text-white mb-2"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-slate-300 hover:bg-rose-500/15 hover:text-rose-200"
         >
-          <LogOut className="w-5 h-5 text-red-400" />
+          <LogOut className="w-[18px] h-[18px] text-rose-400" />
           <span>Sair</span>
         </button>
-        {/* Fim do botão Sair */}
-        <div>v{"2.0.0"}</div>
-        <a href="/help" className="hover:underline">
-          Ajuda
-        </a>
+        <div className="flex items-center justify-between px-3 pt-2 text-[11px] text-slate-500">
+          <a href="/help" className="hover:text-slate-300 transition-colors">Ajuda</a>
+          <span>v2.0.0</span>
+        </div>
       </div>
     </div>
   );

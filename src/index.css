@@ -2,113 +2,323 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fonte nativa do sistema operacional:
-   - macOS/iOS: San Francisco (via -apple-system / BlinkMacSystemFont)
-   - Windows: Segoe UI
-   - Android/Chrome OS: Roboto
-   - Linux: o que o SO definir como system-ui
-   Aplicada apenas como base — classes font-sans/font-poppins/font-open_sans
-   continuam funcionando normalmente onde já foram declaradas. */
+/* =========================================================================
+   DESIGN TOKENS — single source of truth for the visual layer.
+   Every value below is a CSS var so themes (light/dark) can swap them
+   without touching component classes. RGB triplets allow alpha via
+   `rgb(var(--token) / 0.5)` in custom CSS where needed.
+   ========================================================================= */
+:root {
+  /* Brand */
+  --brand-50:  250 240 255;
+  --brand-100: 244 224 255;
+  --brand-200: 232 192 255;
+  --brand-300: 213 145 240;
+  --brand-400: 184 96 218;
+  --brand-500: 145 50 180;
+  --brand-600: 120 0 135;   /* #780087 — brand canónica */
+  --brand-700: 95 0 110;
+  --brand-800: 70 0 85;
+  --brand-900: 45 0 60;
+
+  /* Accent (laranja/âmbar para CTAs e destaques) */
+  --accent-400: 255 191 0;
+  --accent-500: 245 158 11;
+  --accent-600: 217 119 6;
+
+  /* Neutros — escala slate cuidadosamente equilibrada */
+  --neutral-0:   255 255 255;
+  --neutral-50:  248 250 252;
+  --neutral-100: 241 245 249;
+  --neutral-200: 226 232 240;
+  --neutral-300: 203 213 225;
+  --neutral-400: 148 163 184;
+  --neutral-500: 100 116 139;
+  --neutral-600: 71 85 105;
+  --neutral-700: 51 65 85;
+  --neutral-800: 30 41 59;
+  --neutral-900: 15 23 42;
+  --neutral-950: 8 12 23;
+
+  /* Semânticos */
+  --success: 22 163 74;
+  --warning: 217 119 6;
+  --danger:  220 38 38;
+  --info:    37 99 235;
+
+  /* Superfícies (light) */
+  --surface:    var(--neutral-50);     /* fundo principal */
+  --surface-1:  var(--neutral-0);      /* cards / containers */
+  --surface-2:  var(--neutral-100);    /* hover / sutil */
+  --hairline:   var(--neutral-200);    /* bordas / divisores */
+  --ink:        var(--neutral-900);    /* texto principal */
+  --ink-muted:  var(--neutral-600);    /* texto secundário */
+  --ink-subtle: var(--neutral-400);    /* placeholder / hint */
+
+  /* Tipografia */
+  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, system-ui, sans-serif,
+                 "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Raios — 4-step scale */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  /* Sombras — camadas suaves */
+  --shadow-xs: 0 1px 2px rgb(15 23 42 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 6px -2px rgb(15 23 42 / 0.06), 0 2px 4px -2px rgb(15 23 42 / 0.04);
+  --shadow-lg: 0 10px 20px -8px rgb(15 23 42 / 0.10), 0 4px 8px -4px rgb(15 23 42 / 0.06);
+  --shadow-xl: 0 24px 48px -12px rgb(15 23 42 / 0.18);
+
+  /* Foco — anel acessível e elegante */
+  --ring: rgb(var(--brand-600) / 0.35);
+  --ring-offset: rgb(var(--surface));
+
+  /* Transições */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 120ms;
+  --t-base: 200ms;
+  --t-slow: 320ms;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --surface:    var(--neutral-950);
+  --surface-1:  var(--neutral-900);
+  --surface-2:  var(--neutral-800);
+  --hairline:   var(--neutral-700);
+  --ink:        var(--neutral-50);
+  --ink-muted:  var(--neutral-300);
+  --ink-subtle: var(--neutral-500);
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 6px -2px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 20px -8px rgb(0 0 0 / 0.6);
+  --shadow-xl: 0 24px 48px -12px rgb(0 0 0 / 0.7);
+
+  --ring: rgb(var(--brand-400) / 0.45);
+  --ring-offset: rgb(var(--surface));
+}
+
+/* =========================================================================
+   TIPOGRAFIA BASE — fonte do sistema operacional + polimento.
+   macOS/iOS: San Francisco · Windows: Segoe UI · Android: Roboto · Linux: system-ui
+   ========================================================================= */
 html,
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji";
+  font-family: var(--font-system);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "kern", "liga", "calt", "ss01";
   font-kerning: normal;
+  letter-spacing: -0.005em;
+  background-color: rgb(var(--surface));
+  color: rgb(var(--ink));
 }
 
-.dark {
-  color-scheme: dark;
+/* Hierarquia tipográfica equilibrada (UX: contraste de tamanho/peso, não de cor) */
+h1, h2, h3, h4 {
+  letter-spacing: -0.02em;
+  color: rgb(var(--ink));
 }
+
+/* =========================================================================
+   SELEÇÃO DE TEXTO — usa a brand para reforçar identidade
+   ========================================================================= */
+::selection {
+  background: rgb(var(--brand-600) / 0.20);
+  color: rgb(var(--brand-900));
+}
+.dark ::selection {
+  background: rgb(var(--brand-400) / 0.30);
+  color: rgb(var(--neutral-50));
+}
+
+/* =========================================================================
+   FOCUS RING ACESSÍVEL — somente para tabs/keyboard (focus-visible).
+   Inputs/selects/textareas continuam usando os anéis Tailwind dos componentes
+   (focus:ring-*) sem duplicar; este fallback é só para botões/links/elementos
+   focáveis que não tenham foco próprio definido.
+   ========================================================================= */
+:focus { outline: none; }
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+  transition: outline-color var(--t-fast) var(--ease);
+}
+
+/* =========================================================================
+   SCROLLBAR — fina e discreta (Webkit + Firefox)
+   ========================================================================= */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--neutral-300)) transparent;
+}
+.dark * {
+  scrollbar-color: rgb(var(--neutral-700)) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgb(var(--neutral-300));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background-color: rgb(var(--neutral-400)); background-clip: padding-box; }
+.dark *::-webkit-scrollbar-thumb { background: rgb(var(--neutral-700)); background-clip: padding-box; }
+.dark *::-webkit-scrollbar-thumb:hover { background-color: rgb(var(--neutral-600)); background-clip: padding-box; }
+
+/* =========================================================================
+   IMAGENS — não-arrastáveis por padrão (UX: parece app nativo)
+   ========================================================================= */
+img { -webkit-user-drag: none; user-drag: none; }
+
+/* =========================================================================
+   BOTÕES & LINKS — transições suaves por toda a app, sem precisar repetir
+   ========================================================================= */
+button, a, input, select, textarea, [role="button"] {
+  transition: background-color var(--t-base) var(--ease),
+              color var(--t-base) var(--ease),
+              border-color var(--t-base) var(--ease),
+              box-shadow var(--t-base) var(--ease),
+              transform var(--t-fast) var(--ease),
+              opacity var(--t-base) var(--ease);
+}
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active {
+  transform: translateY(0.5px) scale(0.995);
+}
+button:disabled, [role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* =========================================================================
+   INPUTS / SELECTS / TEXTAREAS — base discreta.
+   Componentes que JÁ definem className próprio (ex: LoginForm, formulários)
+   continuam sobrescrevendo via Tailwind. Isso é só um fallback para inputs
+   sem estilo explícito.
+   ========================================================================= */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([class*="bg-"]):not([class*="border-"]),
+select:not([class*="bg-"]):not([class*="border-"]),
+textarea:not([class*="bg-"]):not([class*="border-"]) {
+  background: rgb(var(--surface-1));
+  color: rgb(var(--ink));
+  border: 1px solid rgb(var(--neutral-200));
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+}
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([class*="bg-"]):not([class*="border-"]),
+.dark select:not([class*="bg-"]):not([class*="border-"]),
+.dark textarea:not([class*="bg-"]):not([class*="border-"]) {
+  background: rgb(var(--surface-2));
+  border-color: rgb(var(--neutral-700));
+}
+
+/* Placeholders consistentes */
+::placeholder {
+  color: rgb(var(--ink-subtle));
+  opacity: 1;
+}
+
+/* =========================================================================
+   UTILITIES customizadas — atalhos opcionais para componentes adotarem
+   gradualmente sem refatoração massiva.
+   ========================================================================= */
+.surface { background-color: rgb(var(--surface-1)); }
+.surface-2 { background-color: rgb(var(--surface-2)); }
+.hairline { border-color: rgb(var(--neutral-200)); }
+.dark .hairline { border-color: rgb(255 255 255 / 0.08); }
+
+.card-elevated {
+  background-color: rgb(var(--surface-1));
+  border: 1px solid rgb(var(--neutral-200));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+}
+.card-elevated:hover {
+  box-shadow: var(--shadow-md);
+}
+.dark .card-elevated {
+  background-color: rgb(var(--surface-1));
+  border-color: rgb(255 255 255 / 0.06);
+}
+
+.glass {
+  background: rgb(var(--neutral-0) / 0.65);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border: 1px solid rgb(var(--neutral-0) / 0.4);
+}
+.dark .glass {
+  background: rgb(var(--neutral-900) / 0.55);
+  border-color: rgb(255 255 255 / 0.06);
+}
+
+/* =========================================================================
+   APP SHELL — mantém compat com regras existentes
+   ========================================================================= */
+header, .header, .fixed { z-index: 50; }
+.notification-bell { z-index: 60; }
+
+#root, body, html { overflow: visible !important; }
+
+[data-headlessui-portal] { z-index: 99999 !important; }
+.toast { z-index: 99999 !important; }
 
 .dark .dark\:invert {
   filter: invert(1) hue-rotate(180deg);
 }
 
-header, .header, .fixed {
-  z-index: 50;
-}
+/* =========================================================================
+   ANIMAÇÕES (preservadas do build anterior)
+   ========================================================================= */
+@keyframes bounce-up   { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes bounce-down { 0%,100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+.animate-bounce-up   { animation: bounce-up 1s ease-in-out infinite; }
+.animate-bounce-down { animation: bounce-down 1s ease-in-out infinite; }
 
-.notification-bell {
-  z-index: 60;
-}
-
-/* globals.css */
-#root,
-body,
-html {
-  overflow: visible !important;
-}
-
-/* Garante que o toast apareça acima de tudo */
-[data-headlessui-portal] {
-  z-index: 99999 !important;
-}
-
-.toast {
-  z-index: 99999 !important;
-}
-
-/* index.css */
-@keyframes bounce-up {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-@keyframes bounce-down {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(4px); }
-}
-.animate-bounce-up {
-  animation: bounce-up 1s ease-in-out infinite;
-}
-.animate-bounce-down {
-  animation: bounce-down 1s ease-in-out infinite;
-}
-
-/* Adicionar em src/index.css */
 @keyframes jump {
-  0%, 100% { 
-    transform: translateY(0); 
-  }
-  50% { 
-    transform: translateY(-3px) rotate(0deg); /* Pula 3px para cima */
-  }
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-3px) rotate(0deg); }
 }
-
-.animate-jump {
-  animation: jump 0.4s ease-out; /* Executa uma vez no hover */
-}
-
-/* animations.css */
-/* Efeitos customizados para animações */
+.animate-jump { animation: jump 0.4s ease-out; }
 
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes pulse-soft {
   0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251,191,36,0.4); }
   50%     { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(251,191,36,0); }
 }
-
 @keyframes shimmer {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes bounce-subtle { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes bounce-subtle {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .animate-slideDown    { animation: slideDown 0.2s ease-out; }
@@ -116,3 +326,15 @@ html {
 .animate-shimmer      { animation: shimmer 3s ease-in-out infinite; }
 .animate-spin-slow    { animation: spin-slow 3s linear infinite; }
 .animate-bounce-subtle{ animation: bounce-subtle 1s ease-in-out infinite; }
+.animate-fade-in-up   { animation: fade-in-up 0.4s var(--ease) both; }
+.animate-fade-in      { animation: fade-in 0.3s var(--ease) both; }
+
+/* Respeita preferência de reduzir movimento (a11y) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

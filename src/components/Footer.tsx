@@ -3,42 +3,39 @@ import { Heart, Github } from 'lucide-react';
 
 export function Footer() {
     const currentYear = new Date().getFullYear();
-    // A versão é um placeholder, na prática ela seria lida do package.json ou de uma variável de ambiente.
     const systemVersion = "v1.0.0";
 
     return (
-        <footer className="w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-600 dark:text-gray-400">
+        <footer className="w-full border-t border-slate-200 dark:border-white/5 bg-white/70 dark:bg-slate-900/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+            <div className="max-w-7xl mx-auto py-5 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
 
-                {/* Marca & Direitos Autorais */}
-                <div className="flex items-center space-x-1 mb-2 md:mb-0">
-                    <span className="font-semibold text-gray-800 dark:text-gray-300">
+                <div className="flex items-center gap-1.5 text-[13px]">
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
                         © {currentYear} Sistema de Gestão Integrado
                     </span>
-                    <span className="hidden sm:inline text-xs text-gray-400"> | {systemVersion}</span>
+                    <span className="hidden sm:inline text-slate-400 dark:text-slate-500">·</span>
+                    <span className="hidden sm:inline text-xs text-slate-400 dark:text-slate-500">{systemVersion}</span>
                 </div>
 
-                {/* Desenvolvedor & Links */}
-                <div className="flex flex-wrap items-center justify-center space-x-4">
-                    <span className="flex items-center mb-1 md:mb-0">
-                        Feito com <Heart className="w-4 h-4 mx-1 text-red-500" fill="currentColor" /> por
+                <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[13px]">
+                    <span className="inline-flex items-center">
+                        Feito com <Heart className="w-3.5 h-3.5 mx-1 text-rose-500" fill="currentColor" /> por
                         <a
                             href="https://github.com/Joaoof"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="ml-1 text-blue-600 dark:text-blue-400 hover:underline flex items-center transition-colors"
+                            className="ml-1 inline-flex items-center gap-1 text-brand-700 dark:text-brand-300 hover:underline underline-offset-4"
                         >
-                            João <Github className="w-3 h-3 ml-1" />
+                            João <Github className="w-3 h-3" />
                         </a>
                     </span>
 
-                    {/* Links de Navegação */}
-                    <nav className="space-x-3">
+                    <nav>
                         <a
                             href="/help"
-                            className="hover:underline text-gray-500 dark:text-gray-400 transition-colors"
+                            className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
                         >
-                            Ajuda & Suporte
+                            Ajuda &amp; Suporte
                         </a>
                     </nav>
                 </div>

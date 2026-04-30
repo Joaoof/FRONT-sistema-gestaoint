@@ -40,7 +40,7 @@ function AppContent() {
   const showSidebar = location.pathname !== '/';
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-surface text-ink antialiased">
       {showSidebar && (
         <PrivateRoute>
           <Sidebar
@@ -53,7 +53,14 @@ function AppContent() {
         </PrivateRoute>
       )}
 
-      <main className={showSidebar ? 'flex-1 lg:ml-64 p-6' : 'w-full p-6'}>
+      <main
+        key={location.pathname}
+        className={
+          showSidebar
+            ? 'flex-1 lg:ml-64 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in'
+            : 'w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in'
+        }
+      >
         <NotificationProvider>
           <Routes>
             <Route path="/" element={<LoginForm />} />
