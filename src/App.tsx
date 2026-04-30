@@ -42,6 +42,9 @@ import { BusinessOverview } from './pages/Reports/BusinessOverview';
 import { WhatsAppReportPage } from './pages/WhatsAppReportPage';
 import { OrdersListPage } from './pages/Orders/OrdersListPage';
 import { PrintableOrder } from './pages/Orders/PrintableOrder';
+import { CompanySettings } from './pages/Company/CompanySettings';
+import { DeliveriesDashboard } from './pages/Deliveries/DeliveriesDashboard';
+import { NewDeliveryFromOrder } from './pages/Deliveries/NewDeliveryFromOrder';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -85,8 +88,10 @@ function AppContent() {
                 <Dashboard {...inventory} />
               }
             />
-            <Route path='/entregas' element={<DeliveriesPage />} />
-            <Route path="/entregas/cadastrar" element={<NewDeliveryPage />} />
+            <Route path='/entregas' element={<DeliveriesDashboard />} />
+            <Route path="/entregas/cadastrar" element={<NewDeliveryFromOrder />} />
+            <Route path="/entregas/legado" element={<DeliveriesPage />} />
+            <Route path="/entregas/legado/cadastrar" element={<NewDeliveryPage />} />
             <Route
               path="/entregas/agendar"
               element={
@@ -135,6 +140,7 @@ function AppContent() {
             />
 
             <Route path="/configuracoes" element={<SettingsPage />} />
+            <Route path="/empresa" element={<CompanySettings />} />
 
             <Route path="/whatsapp/relatorio" element={<WhatsAppReportPage />} />
 

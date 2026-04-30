@@ -26,6 +26,7 @@ import {
   ChevronRight,
   AlertTriangle,
   BarChart3,
+  Building2,
   CircleDollarSign,
   HelpCircle,
   History,
@@ -92,6 +93,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   'historico-movimentacao': 'movimentacoes',
   historico: 'movimentacoes',
   help: 'dashboard',
+  empresa: 'configuracoes',
   configuracoes: 'configuracoes',
 };
 
@@ -202,6 +204,7 @@ const sections: MenuSection[] = [
   {
     label: 'Sistema',
     items: [
+      { id: 'empresa' as View, label: 'Empresa', icon: Building2 },
       { id: 'configuracoes' as View, label: 'Configurações', icon: Settings },
       { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },
     ],

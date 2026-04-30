@@ -333,8 +333,47 @@ export function PrintableOrder() {
                             </div>
                         </section>
 
+                        {/* Bloco de dados da empresa (emissora) */}
+                        <section className="mt-10 pt-5 border-t-2 border-slate-300">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2 text-center">
+                                Dados da empresa emissora
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-[11.5px] text-slate-700">
+                                <div className="flex gap-2">
+                                    <span className="text-slate-500 w-20 shrink-0">Razão social:</span>
+                                    <span className="font-semibold text-slate-900">
+                                        {company?.name ?? '—'}
+                                    </span>
+                                </div>
+                                {company?.cnpj && (
+                                    <div className="flex gap-2">
+                                        <span className="text-slate-500 w-20 shrink-0">CNPJ:</span>
+                                        <span className="font-mono text-slate-900">{company.cnpj}</span>
+                                    </div>
+                                )}
+                                {company?.email && (
+                                    <div className="flex gap-2">
+                                        <span className="text-slate-500 w-20 shrink-0">E-mail:</span>
+                                        <span className="text-slate-900">{company.email}</span>
+                                    </div>
+                                )}
+                                {company?.phone && (
+                                    <div className="flex gap-2">
+                                        <span className="text-slate-500 w-20 shrink-0">Telefone:</span>
+                                        <span className="text-slate-900">{company.phone}</span>
+                                    </div>
+                                )}
+                                {company?.address && (
+                                    <div className="flex gap-2 sm:col-span-2">
+                                        <span className="text-slate-500 w-20 shrink-0">Endereço:</span>
+                                        <span className="text-slate-900">{company.address}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+
                         {/* Rodapé */}
-                        <footer className="mt-10 pt-4 border-t border-slate-200 text-center">
+                        <footer className="mt-6 pt-3 border-t border-slate-200 text-center">
                             <p className="text-[10.5px] text-slate-500">
                                 Documento gerado eletronicamente em{' '}
                                 {new Date().toLocaleString('pt-BR')} ·{' '}

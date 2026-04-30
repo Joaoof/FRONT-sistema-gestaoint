@@ -243,6 +243,10 @@ async function fetchCompanyData(company_id: string): Promise<Company> {
                     company(id: $id) {
                         id
                         name
+                        email
+                        phone
+                        address
+                        cnpj
                         logoUrl
                     }
                 }

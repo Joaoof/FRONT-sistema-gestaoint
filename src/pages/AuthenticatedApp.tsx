@@ -54,6 +54,7 @@ export type View =
     | 'historico-movimentacao'
     | 'historico'
     | 'help'
+    | 'empresa'
     | 'configuracoes';
 
 const moduleNames: Record<View, string> = {
