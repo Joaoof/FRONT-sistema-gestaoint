@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, Scissors } from 'lucide-react';
 import { GET_ORDER } from '../../graphql/queries/orders';
 import { useCompany } from '../../contexts/CompanyContext';
 
@@ -23,6 +23,10 @@ interface OrderDetail {
     number: number;
     customerId?: string | null;
     customerName?: string | null;
+    sellerId?: string | null;
+    sellerName?: string | null;
+    commissionPercent?: number | null;
+    commissionAmount?: number | null;
     status: OrderStatus;
     paymentMethod?: PaymentMethod | null;
     subtotal?: number | null;
@@ -41,6 +45,15 @@ interface OrderDetail {
     items: OrderItem[];
 }
 
+interface CompanyLite {
+    name?: string;
+    cnpj?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    logoUrl?: string;
+}
+
 const formatBRL = (n: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
 
@@ -55,12 +68,200 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
     CASH: 'Dinheiro',
     PIX: 'PIX',
-    CREDIT_CARD: 'Cartão de crédito',
-    DEBIT_CARD: 'Cartão de débito',
-    BOLETO: 'Boleto bancário',
+    CREDIT_CARD: 'Cartão crédito',
+    DEBIT_CARD: 'Cartão débito',
+    BOLETO: 'Boleto',
     TRANSFER: 'Transferência',
     OTHER: 'Outro',
 };
+
+interface ReceiptProps {
+    order: OrderDetail;
+    company: CompanyLite | null | undefined;
+    via: 'empresa' | 'cliente';
+}
+
+function Receipt({ order, company, via }: ReceiptProps) {
+    const subtotal = Number(
+        order.subtotal ??
+            order.items.reduce((acc, it) => acc + Number(it.unitPrice) * Number(it.quantity), 0),
+    );
+    const discount = Number(order.discount ?? 0);
+    const total = Number(order.total ?? subtotal - discount);
+    const totalQty = order.items.reduce((acc, it) => acc + Number(it.quantity), 0);
+    const issuedAt = new Date(order.createdAt);
+
+    const viaLabel = via === 'empresa' ? 'VIA DA EMPRESA' : 'VIA DO CLIENTE';
+    const viaColor = via === 'empresa' ? 'bg-slate-900 text-white' : 'bg-blue-700 text-white';
+
+    return (
+        <section className="receipt p-4 text-[10.5px] leading-tight text-slate-900">
+            {/* Topo: identificação da via + número */}
+            <div className="flex items-center justify-between mb-2">
+                <span className={`inline-block px-1.5 py-0.5 text-[9px] font-bold tracking-[0.15em] rounded-sm ${viaColor}`}>
+                    {viaLabel}
+                </span>
+                <span className="text-[14px] font-bold tabular-nums">
+                    PEDIDO #{String(order.number).padStart(4, '0')}
+                </span>
+            </div>
+
+            {/* Cabeçalho compacto: logo+empresa | data+status */}
+            <header className="flex items-start justify-between gap-3 pb-2 border-b border-slate-900">
+                <div className="flex items-center gap-2 min-w-0">
+                    {company?.logoUrl ? (
+                        <img src={company.logoUrl} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-slate-200 shrink-0" />
+                    ) : (
+                        <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white font-bold text-[11px] shrink-0">
+                            {(company?.name ?? 'EM').slice(0, 2).toUpperCase()}
+                        </div>
+                    )}
+                    <div className="min-w-0">
+                        <p className="text-[11.5px] font-bold leading-tight truncate">{company?.name ?? 'Empresa'}</p>
+                        <p className="text-[9.5px] text-slate-600 leading-tight truncate">
+                            {company?.cnpj ? `CNPJ ${company.cnpj}` : null}
+                            {company?.cnpj && company?.phone ? ' · ' : null}
+                            {company?.phone ?? null}
+                        </p>
+                        {company?.address && (
+                            <p className="text-[9.5px] text-slate-600 leading-tight truncate">{company.address}</p>
+                        )}
+                    </div>
+                </div>
+                <div className="text-right shrink-0">
+                    <p className="text-[9.5px] text-slate-600 tabular-nums">
+                        {issuedAt.toLocaleDateString('pt-BR')}{' '}
+                        {issuedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    <span
+                        className={`inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold ${
+                            order.status === 'PAID'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : order.status === 'CANCELED' || order.status === 'REFUNDED'
+                                ? 'bg-rose-100 text-rose-800'
+                                : 'bg-sky-100 text-sky-800'
+                        }`}
+                    >
+                        {STATUS_LABEL[order.status]}
+                    </span>
+                </div>
+            </header>
+
+            {/* Linha cliente / vendedor / pagamento */}
+            <div className="grid grid-cols-3 gap-3 mt-2 text-[10px]">
+                <div className="min-w-0">
+                    <p className="text-[8.5px] uppercase tracking-wider text-slate-500">Cliente</p>
+                    <p className="font-semibold truncate">
+                        {order.customer?.name ?? order.customerName ?? 'Consumidor'}
+                    </p>
+                    {order.customer?.document && (
+                        <p className="text-slate-600 truncate">{order.customer.document}</p>
+                    )}
+                    {order.customer?.phone && (
+                        <p className="text-slate-600 truncate">{order.customer.phone}</p>
+                    )}
+                </div>
+                <div className="min-w-0">
+                    <p className="text-[8.5px] uppercase tracking-wider text-slate-500">Vendedor</p>
+                    <p className="font-semibold truncate">{order.sellerName ?? '—'}</p>
+                    {order.sellerName && Number(order.commissionPercent ?? 0) > 0 && via === 'empresa' && (
+                        <p className="text-slate-600 tabular-nums">
+                            Comissão: {Number(order.commissionPercent).toFixed(2)}% · {formatBRL(Number(order.commissionAmount ?? 0))}
+                        </p>
+                    )}
+                </div>
+                <div className="min-w-0 text-right">
+                    <p className="text-[8.5px] uppercase tracking-wider text-slate-500">Pagamento</p>
+                    <p className="font-semibold">
+                        {order.paymentMethod ? PAYMENT_LABEL[order.paymentMethod] : '—'}
+                    </p>
+                    <p className="text-slate-600 tabular-nums">
+                        {order.items.length} {order.items.length === 1 ? 'item' : 'itens'} · {totalQty}un
+                    </p>
+                </div>
+            </div>
+
+            {/* Itens */}
+            <table className="w-full mt-2 text-[10px]">
+                <thead>
+                    <tr className="text-left border-y border-slate-400">
+                        <th className="py-1 pr-1 font-semibold text-slate-700 w-6">#</th>
+                        <th className="py-1 px-1 font-semibold text-slate-700">Descrição</th>
+                        <th className="py-1 px-1 font-semibold text-slate-700 text-right tabular-nums w-9">Qt</th>
+                        <th className="py-1 px-1 font-semibold text-slate-700 text-right tabular-nums w-16">Unit.</th>
+                        <th className="py-1 pl-1 font-semibold text-slate-700 text-right tabular-nums w-20">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {order.items.map((it, idx) => (
+                        <tr key={it.id} className="border-b border-slate-200 align-top">
+                            <td className="py-0.5 pr-1 text-slate-500 tabular-nums">{idx + 1}</td>
+                            <td className="py-0.5 px-1 text-slate-800 truncate max-w-0">
+                                {it.productName}
+                                {Number(it.discount ?? 0) > 0 && (
+                                    <span className="text-slate-500"> (−{formatBRL(Number(it.discount))})</span>
+                                )}
+                            </td>
+                            <td className="py-0.5 px-1 text-right text-slate-800 tabular-nums">
+                                {Number(it.quantity).toLocaleString('pt-BR')}
+                            </td>
+                            <td className="py-0.5 px-1 text-right text-slate-800 tabular-nums">
+                                {formatBRL(Number(it.unitPrice))}
+                            </td>
+                            <td className="py-0.5 pl-1 text-right text-slate-900 font-semibold tabular-nums">
+                                {formatBRL(Number(it.total))}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+
+            {/* Totais */}
+            <div className="mt-2 flex justify-end">
+                <div className="min-w-[140px] text-[10px]">
+                    <div className="flex items-center justify-between text-slate-600">
+                        <span>Subtotal</span>
+                        <span className="tabular-nums">{formatBRL(subtotal)}</span>
+                    </div>
+                    {discount > 0 && (
+                        <div className="flex items-center justify-between text-slate-600">
+                            <span>Desconto</span>
+                            <span className="tabular-nums">−{formatBRL(discount)}</span>
+                        </div>
+                    )}
+                    <div className="border-t border-slate-900 mt-1 pt-1 flex items-center justify-between font-bold text-[12px]">
+                        <span>TOTAL</span>
+                        <span className="tabular-nums">{formatBRL(total)}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Observações (compactas) */}
+            {order.notes && (
+                <div className="mt-2 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-[9.5px] text-slate-700">
+                    <span className="text-[8.5px] uppercase tracking-wider text-slate-500">Obs:</span>{' '}
+                    {order.notes}
+                </div>
+            )}
+
+            {/* Assinatura */}
+            <div className="mt-4 grid grid-cols-2 gap-6 text-[9.5px]">
+                <div className="border-t border-slate-400 pt-1 text-center text-slate-600">
+                    Assinatura do cliente
+                </div>
+                <div className="border-t border-slate-400 pt-1 text-center text-slate-600">
+                    {company?.name ?? 'Empresa'}
+                </div>
+            </div>
+
+            {/* Rodapé minimalista */}
+            <p className="mt-2 text-center text-[8.5px] text-slate-400">
+                {viaLabel} · #{String(order.number).padStart(4, '0')} ·{' '}
+                <span className="font-mono">{order.id.slice(0, 8).toUpperCase()}</span> · não substitui documento fiscal
+            </p>
+        </section>
+    );
+}
 
 export function PrintableOrder() {
     const { id } = useParams<{ id: string }>();
@@ -75,9 +276,8 @@ export function PrintableOrder() {
 
     const order = data?.order;
 
-    // Atalho Ctrl/Cmd+P chama print nativo (já é o default, mas garantimos foco).
     useEffect(() => {
-        document.title = order ? `Pedido #${order.number}` : 'Pedido';
+        document.title = order ? `Pedido #${order.number} (2 vias)` : 'Pedido';
     }, [order]);
 
     if (loading && !order) {
@@ -104,29 +304,19 @@ export function PrintableOrder() {
         );
     }
 
-    const subtotal = Number(
-        order.subtotal ??
-            order.items.reduce((acc, it) => acc + Number(it.unitPrice) * Number(it.quantity), 0),
-    );
-    const discount = Number(order.discount ?? 0);
-    const total = Number(order.total ?? subtotal - discount);
-    const totalQty = order.items.reduce((acc, it) => acc + Number(it.quantity), 0);
-
-    const issuedAt = new Date(order.createdAt);
-
     return (
         <div className="min-h-screen bg-slate-200 dark:bg-slate-950 print:bg-white">
-            {/* Print styles */}
             <style>{`
-                @page { size: A4; margin: 14mm; }
+                @page { size: A4; margin: 10mm; }
                 @media print {
                     body { background: #fff !important; }
                     .no-print { display: none !important; }
                     .print-page { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; padding: 0 !important; border: 0 !important; }
+                    .receipt { page-break-inside: avoid; }
                 }
             `}</style>
 
-            {/* Toolbar (escondida na impressão) */}
+            {/* Toolbar */}
             <div className="no-print sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 shadow-sm">
                 <div className="max-w-[210mm] mx-auto flex items-center justify-between px-4 py-3">
                     <button
@@ -139,7 +329,7 @@ export function PrintableOrder() {
                     <div className="text-center">
                         <p className="text-[11px] uppercase tracking-wider text-slate-400">Pré-visualização</p>
                         <p className="text-[12.5px] font-semibold text-slate-700 dark:text-slate-200">
-                            Pedido #{order.number}
+                            Pedido #{order.number} · 2 vias
                         </p>
                     </div>
                     <button
@@ -147,243 +337,30 @@ export function PrintableOrder() {
                         className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-semibold shadow-sm"
                     >
                         <Printer className="w-4 h-4" />
-                        Imprimir
+                        Imprimir 2 vias
                     </button>
                 </div>
             </div>
 
-            {/* A4 */}
-            <div className="py-8 print:py-0 px-3">
+            {/* A4 com 2 vias */}
+            <div className="py-6 print:py-0 px-3">
                 <article
                     className="print-page mx-auto bg-white text-slate-900 shadow-xl print:shadow-none rounded-md print:rounded-none border border-slate-200 print:border-0"
                     style={{ maxWidth: '210mm', minHeight: '297mm' }}
                 >
-                    <div className="p-10 print:p-0">
-                        {/* Cabeçalho */}
-                        <header className="flex items-start justify-between gap-6 pb-5 border-b-2 border-slate-900">
-                            <div className="flex items-center gap-4 min-w-0">
-                                {company?.logoUrl ? (
-                                    <img
-                                        src={company.logoUrl}
-                                        alt=""
-                                        className="w-14 h-14 rounded-md object-cover ring-1 ring-slate-200"
-                                    />
-                                ) : (
-                                    <div className="w-14 h-14 rounded-md bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white font-bold text-lg">
-                                        {(company?.name ?? 'EM').slice(0, 2).toUpperCase()}
-                                    </div>
-                                )}
-                                <div className="min-w-0">
-                                    <h1 className="text-[18px] font-bold tracking-tight truncate">
-                                        {company?.name ?? 'Sua empresa'}
-                                    </h1>
-                                    {company?.cnpj && (
-                                        <p className="text-[11.5px] text-slate-600">CNPJ {company.cnpj}</p>
-                                    )}
-                                    {company?.address && (
-                                        <p className="text-[11.5px] text-slate-600 truncate">{company.address}</p>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                                <p className="text-[10.5px] uppercase tracking-[0.2em] text-slate-500">Pedido</p>
-                                <p className="text-[28px] font-bold tabular-nums leading-none">
-                                    #{String(order.number).padStart(4, '0')}
-                                </p>
-                                <p className="text-[11.5px] text-slate-600 mt-1 tabular-nums">
-                                    Emitido em {issuedAt.toLocaleDateString('pt-BR')} às{' '}
-                                    {issuedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                                <span
-                                    className={`inline-block mt-2 px-2 py-0.5 rounded text-[10.5px] font-semibold ${
-                                        order.status === 'PAID'
-                                            ? 'bg-emerald-100 text-emerald-800'
-                                            : order.status === 'CANCELED' || order.status === 'REFUNDED'
-                                            ? 'bg-rose-100 text-rose-800'
-                                            : 'bg-sky-100 text-sky-800'
-                                    }`}
-                                >
-                                    {STATUS_LABEL[order.status]}
-                                </span>
-                            </div>
-                        </header>
+                    {/* Via 1: Empresa */}
+                    <Receipt order={order} company={company} via="empresa" />
 
-                        {/* Cliente + Pagamento */}
-                        <section className="grid grid-cols-2 gap-6 mt-6">
-                            <div>
-                                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-1.5">
-                                    Cliente
-                                </p>
-                                <p className="text-[14px] font-semibold text-slate-900">
-                                    {order.customer?.name ?? order.customerName ?? 'Consumidor'}
-                                </p>
-                                {order.customer?.document && (
-                                    <p className="text-[11.5px] text-slate-600 mt-0.5">
-                                        Documento: {order.customer.document}
-                                    </p>
-                                )}
-                                {order.customer?.email && (
-                                    <p className="text-[11.5px] text-slate-600 mt-0.5">
-                                        {order.customer.email}
-                                    </p>
-                                )}
-                                {order.customer?.phone && (
-                                    <p className="text-[11.5px] text-slate-600 mt-0.5">
-                                        {order.customer.phone}
-                                    </p>
-                                )}
-                            </div>
-                            <div>
-                                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-1.5">
-                                    Pagamento
-                                </p>
-                                <p className="text-[14px] font-semibold text-slate-900">
-                                    {order.paymentMethod ? PAYMENT_LABEL[order.paymentMethod] : '—'}
-                                </p>
-                                <p className="text-[11.5px] text-slate-600 mt-0.5">
-                                    {order.items.length} item{order.items.length === 1 ? '' : 's'} · {totalQty} unidade{totalQty === 1 ? '' : 's'}
-                                </p>
-                            </div>
-                        </section>
-
-                        {/* Itens */}
-                        <section className="mt-7">
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2">Itens</p>
-                            <table className="w-full text-[12px]">
-                                <thead>
-                                    <tr className="text-left border-b-2 border-slate-300">
-                                        <th className="py-2 pr-2 font-semibold text-slate-700 w-8">#</th>
-                                        <th className="py-2 px-2 font-semibold text-slate-700">Descrição</th>
-                                        <th className="py-2 px-2 font-semibold text-slate-700 text-right tabular-nums w-16">Qtd</th>
-                                        <th className="py-2 px-2 font-semibold text-slate-700 text-right tabular-nums w-28">Unitário</th>
-                                        <th className="py-2 px-2 font-semibold text-slate-700 text-right tabular-nums w-24">Desc.</th>
-                                        <th className="py-2 pl-2 font-semibold text-slate-700 text-right tabular-nums w-32">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {order.items.map((it, idx) => (
-                                        <tr key={it.id} className="border-b border-slate-200 align-top">
-                                            <td className="py-2 pr-2 text-slate-500 tabular-nums">{String(idx + 1).padStart(2, '0')}</td>
-                                            <td className="py-2 px-2 text-slate-800">{it.productName}</td>
-                                            <td className="py-2 px-2 text-right text-slate-800 tabular-nums">
-                                                {Number(it.quantity).toLocaleString('pt-BR')}
-                                            </td>
-                                            <td className="py-2 px-2 text-right text-slate-800 tabular-nums">
-                                                {formatBRL(Number(it.unitPrice))}
-                                            </td>
-                                            <td className="py-2 px-2 text-right text-slate-600 tabular-nums">
-                                                {Number(it.discount ?? 0) > 0 ? `−${formatBRL(Number(it.discount))}` : '—'}
-                                            </td>
-                                            <td className="py-2 pl-2 text-right text-slate-900 font-semibold tabular-nums">
-                                                {formatBRL(Number(it.total))}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </section>
-
-                        {/* Totais */}
-                        <section className="mt-6 flex justify-end">
-                            <div className="w-full max-w-xs">
-                                <dl className="text-[12.5px] space-y-1.5">
-                                    <div className="flex items-center justify-between text-slate-600">
-                                        <dt>Subtotal</dt>
-                                        <dd className="tabular-nums">{formatBRL(subtotal)}</dd>
-                                    </div>
-                                    {discount > 0 && (
-                                        <div className="flex items-center justify-between text-slate-600">
-                                            <dt>Descontos</dt>
-                                            <dd className="tabular-nums">−{formatBRL(discount)}</dd>
-                                        </div>
-                                    )}
-                                    <div className="border-t-2 border-slate-900 mt-2 pt-2 flex items-center justify-between font-bold text-[15px] text-slate-900">
-                                        <dt>Total</dt>
-                                        <dd className="tabular-nums">{formatBRL(total)}</dd>
-                                    </div>
-                                </dl>
-                            </div>
-                        </section>
-
-                        {/* Observações */}
-                        {order.notes && (
-                            <section className="mt-7 rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
-                                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-1">
-                                    Observações
-                                </p>
-                                <p className="text-[12.5px] text-slate-700 whitespace-pre-wrap leading-relaxed">
-                                    {order.notes}
-                                </p>
-                            </section>
-                        )}
-
-                        {/* Assinaturas */}
-                        <section className="mt-12 grid grid-cols-2 gap-10">
-                            <div>
-                                <div className="border-t border-slate-400 pt-1.5">
-                                    <p className="text-[11px] text-slate-600 text-center">Assinatura do cliente</p>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="border-t border-slate-400 pt-1.5">
-                                    <p className="text-[11px] text-slate-600 text-center">
-                                        {company?.name ?? 'Vendedor'}
-                                    </p>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Bloco de dados da empresa (emissora) */}
-                        <section className="mt-10 pt-5 border-t-2 border-slate-300">
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2 text-center">
-                                Dados da empresa emissora
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-[11.5px] text-slate-700">
-                                <div className="flex gap-2">
-                                    <span className="text-slate-500 w-20 shrink-0">Razão social:</span>
-                                    <span className="font-semibold text-slate-900">
-                                        {company?.name ?? '—'}
-                                    </span>
-                                </div>
-                                {company?.cnpj && (
-                                    <div className="flex gap-2">
-                                        <span className="text-slate-500 w-20 shrink-0">CNPJ:</span>
-                                        <span className="font-mono text-slate-900">{company.cnpj}</span>
-                                    </div>
-                                )}
-                                {company?.email && (
-                                    <div className="flex gap-2">
-                                        <span className="text-slate-500 w-20 shrink-0">E-mail:</span>
-                                        <span className="text-slate-900">{company.email}</span>
-                                    </div>
-                                )}
-                                {company?.phone && (
-                                    <div className="flex gap-2">
-                                        <span className="text-slate-500 w-20 shrink-0">Telefone:</span>
-                                        <span className="text-slate-900">{company.phone}</span>
-                                    </div>
-                                )}
-                                {company?.address && (
-                                    <div className="flex gap-2 sm:col-span-2">
-                                        <span className="text-slate-500 w-20 shrink-0">Endereço:</span>
-                                        <span className="text-slate-900">{company.address}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-
-                        {/* Rodapé */}
-                        <footer className="mt-6 pt-3 border-t border-slate-200 text-center">
-                            <p className="text-[10.5px] text-slate-500">
-                                Documento gerado eletronicamente em{' '}
-                                {new Date().toLocaleString('pt-BR')} ·{' '}
-                                <span className="font-mono">{order.id.slice(0, 8).toUpperCase()}</span>
-                            </p>
-                            <p className="text-[10.5px] text-slate-400 mt-0.5">
-                                Não substitui documento fiscal. Conserve este comprovante.
-                            </p>
-                        </footer>
+                    {/* Linha de corte */}
+                    <div className="px-4 py-2 flex items-center gap-2 text-slate-400">
+                        <Scissors className="w-3 h-3 shrink-0 -scale-x-100" />
+                        <div className="flex-1 border-t border-dashed border-slate-400" />
+                        <span className="text-[8.5px] uppercase tracking-wider">corte aqui</span>
+                        <div className="flex-1 border-t border-dashed border-slate-400" />
                     </div>
+
+                    {/* Via 2: Cliente */}
+                    <Receipt order={order} company={company} via="cliente" />
                 </article>
             </div>
         </div>
