@@ -59,6 +59,19 @@ export const GET_DELIVERABLE_ORDERS = gql`
       customerName
       total
       createdAt
+      customer {
+        id
+        name
+        phone
+        document
+        address
+        bairro
+        cidade
+        estado
+        cep
+        latitude
+        longitude
+      }
     }
   }
 `;

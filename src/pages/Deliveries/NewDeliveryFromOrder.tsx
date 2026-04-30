@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { toast } from 'sonner';
@@ -7,9 +7,13 @@ import {
     Calendar,
     Car,
     Check,
+    ExternalLink,
+    Loader2,
     MapPin,
+    Navigation,
     Package,
     Receipt,
+    Route as RouteIcon,
     Search,
     Truck,
     User,
@@ -18,6 +22,15 @@ import {
     CREATE_DELIVERY,
     GET_DELIVERABLE_ORDERS,
 } from '../../graphql/queries/deliveries';
+import { useCompany } from '../../contexts/CompanyContext';
+import {
+    distanceKm,
+    fetchDrivingRoute,
+    formatKm,
+    formatMinutes,
+    googleMapsRouteUrl,
+    type DrivingRoute,
+} from '../../utils/location';
 
 interface DeliverableOrder {
     id: string;
@@ -25,20 +38,44 @@ interface DeliverableOrder {
     customerName?: string | null;
     total: number;
     createdAt: string;
+    customer?: {
+        id: string;
+        name: string;
+        phone?: string | null;
+        document?: string | null;
+        address?: string | null;
+        bairro?: string | null;
+        cidade?: string | null;
+        estado?: string | null;
+        cep?: string | null;
+        latitude?: number | null;
+        longitude?: number | null;
+    } | null;
 }
 
 const formatBRL = (n: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
 
+function buildAddressString(c: NonNullable<DeliverableOrder['customer']>): string {
+    const parts = [c.address, c.bairro, c.cidade && `${c.cidade}${c.estado ? `/${c.estado}` : ''}`, c.cep]
+        .filter(Boolean);
+    return parts.join(' - ');
+}
+
 export function NewDeliveryFromOrder() {
     const navigate = useNavigate();
+    const { company } = useCompany();
     const [search, setSearch] = useState('');
     const [orderId, setOrderId] = useState<string>('');
     const [driver, setDriver] = useState('');
     const [vehicle, setVehicle] = useState('');
     const [destination, setDestination] = useState('');
+    const [destinationManuallyEdited, setDestinationManuallyEdited] = useState(false);
     const [scheduledDate, setScheduledDate] = useState('');
     const [notes, setNotes] = useState('');
+
+    const [drivingRoute, setDrivingRoute] = useState<DrivingRoute | null>(null);
+    const [loadingRoute, setLoadingRoute] = useState(false);
 
     const { data, loading, refetch } = useQuery<{ deliverableOrders: DeliverableOrder[] }>(
         GET_DELIVERABLE_ORDERS,
@@ -59,6 +96,85 @@ export function NewDeliveryFromOrder() {
     }, [orders, search]);
 
     const selected = orders.find((o) => o.id === orderId);
+    const customer = selected?.customer ?? null;
+
+    // Distância em linha reta (calculada na hora, sem rede)
+    const straightKm = useMemo(() => {
+        if (
+            company?.latitude == null ||
+            company?.longitude == null ||
+            customer?.latitude == null ||
+            customer?.longitude == null
+        )
+            return null;
+        return distanceKm(
+            { latitude: company.latitude, longitude: company.longitude },
+            { latitude: customer.latitude, longitude: customer.longitude },
+        );
+    }, [company?.latitude, company?.longitude, customer?.latitude, customer?.longitude]);
+
+    // Auto-preenche destino sempre que muda o pedido selecionado (a menos que usuário tenha editado manualmente)
+    useEffect(() => {
+        if (!customer) return;
+        if (destinationManuallyEdited) return;
+        const addr = buildAddressString(customer);
+        if (addr) setDestination(addr);
+    }, [customer?.id, destinationManuallyEdited]);
+
+    // Quando o usuário troca de pedido, libera o autofill de novo
+    useEffect(() => {
+        setDestinationManuallyEdited(false);
+        setDrivingRoute(null);
+    }, [orderId]);
+
+    // Busca rota real (OSRM) sempre que tivermos coords da empresa + cliente
+    useEffect(() => {
+        if (
+            company?.latitude == null ||
+            company?.longitude == null ||
+            customer?.latitude == null ||
+            customer?.longitude == null
+        ) {
+            setDrivingRoute(null);
+            return;
+        }
+        let cancelled = false;
+        setLoadingRoute(true);
+        fetchDrivingRoute(
+            { latitude: company.latitude, longitude: company.longitude },
+            { latitude: customer.latitude, longitude: customer.longitude },
+        )
+            .then((r) => {
+                if (!cancelled) setDrivingRoute(r);
+            })
+            .finally(() => {
+                if (!cancelled) setLoadingRoute(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [company?.latitude, company?.longitude, customer?.latitude, customer?.longitude]);
+
+    const routeUrl = useMemo(() => {
+        if (!customer) return null;
+        const dest =
+            customer.latitude != null && customer.longitude != null
+                ? { latitude: customer.latitude, longitude: customer.longitude }
+                : buildAddressString(customer) || null;
+        if (!dest) return null;
+        const origin =
+            company?.latitude != null && company?.longitude != null
+                ? { latitude: company.latitude, longitude: company.longitude }
+                : [company?.address, company?.bairro, company?.cidade, company?.estado]
+                      .filter(Boolean)
+                      .join(', ') || null;
+        return googleMapsRouteUrl(origin, dest);
+    }, [customer, company]);
+
+    const detourPercent = useMemo(() => {
+        if (!drivingRoute || !straightKm || straightKm <= 0) return null;
+        return ((drivingRoute.distanceKm - straightKm) / straightKm) * 100;
+    }, [drivingRoute, straightKm]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -160,6 +276,7 @@ export function NewDeliveryFromOrder() {
                             <ul className="divide-y divide-slate-100 dark:divide-white/[0.06]">
                                 {filtered.map((o) => {
                                     const isSelected = orderId === o.id;
+                                    const hasGeo = o.customer?.latitude != null && o.customer?.longitude != null;
                                     return (
                                         <li key={o.id}>
                                             <button
@@ -181,8 +298,13 @@ export function NewDeliveryFromOrder() {
                                                     #{o.number}
                                                 </span>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-[13px] font-medium text-slate-900 dark:text-white truncate">
+                                                    <p className="text-[13px] font-medium text-slate-900 dark:text-white truncate flex items-center gap-1.5">
                                                         {o.customerName ?? 'Cliente avulso'}
+                                                        {hasGeo && (
+                                                            <span title="Cliente com localização cadastrada">
+                                                                <Navigation className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                                            </span>
+                                                        )}
                                                     </p>
                                                     <p className="text-[11.5px] text-slate-500 dark:text-slate-400">
                                                         {new Date(o.createdAt).toLocaleString('pt-BR', {
@@ -229,6 +351,86 @@ export function NewDeliveryFromOrder() {
                     </header>
 
                     <div className="p-5 space-y-4">
+                        {/* Card de distância — só aparece com pedido selecionado */}
+                        {customer && (
+                            <div
+                                className={`rounded-md border p-3.5 ${
+                                    drivingRoute || straightKm
+                                        ? 'bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/20'
+                                        : 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20'
+                                }`}
+                            >
+                                <div className="flex items-start gap-2.5">
+                                    <RouteIcon
+                                        className={`w-4 h-4 mt-0.5 shrink-0 ${
+                                            drivingRoute || straightKm
+                                                ? 'text-violet-600 dark:text-violet-400'
+                                                : 'text-amber-600 dark:text-amber-400'
+                                        }`}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[12px] font-semibold text-slate-900 dark:text-white">
+                                            Rota da empresa até o cliente
+                                        </p>
+                                        {company?.latitude == null || company?.longitude == null ? (
+                                            <p className="text-[11.5px] text-slate-700 dark:text-slate-300 mt-1">
+                                                A localização da empresa não está cadastrada. Vá em{' '}
+                                                <a href="/empresa" className="font-semibold underline">/empresa</a>{' '}
+                                                e clique em “Usar minha localização” para registrar.
+                                            </p>
+                                        ) : customer.latitude == null || customer.longitude == null ? (
+                                            <p className="text-[11.5px] text-slate-700 dark:text-slate-300 mt-1">
+                                                Este cliente não tem coordenadas registradas. Edite o cadastro e use o botão{' '}
+                                                <strong>Usar minha localização</strong> ou capture pelo CEP.
+                                            </p>
+                                        ) : loadingRoute ? (
+                                            <p className="text-[11.5px] text-slate-700 dark:text-slate-300 mt-1 inline-flex items-center gap-1.5">
+                                                <Loader2 className="w-3 h-3 animate-spin" /> Calculando rota real…
+                                            </p>
+                                        ) : (
+                                            <div className="mt-1.5 grid grid-cols-3 gap-3">
+                                                <DistanceMetric
+                                                    label="Linha reta"
+                                                    value={straightKm != null ? formatKm(straightKm) : '—'}
+                                                    hint="Haversine"
+                                                />
+                                                <DistanceMetric
+                                                    label="Estrada"
+                                                    value={
+                                                        drivingRoute
+                                                            ? formatKm(drivingRoute.distanceKm)
+                                                            : 'indisponível'
+                                                    }
+                                                    hint="OSRM (real)"
+                                                    highlight
+                                                />
+                                                <DistanceMetric
+                                                    label="Tempo estimado"
+                                                    value={drivingRoute ? formatMinutes(drivingRoute.durationMin) : '—'}
+                                                    hint={
+                                                        detourPercent != null
+                                                            ? `+${detourPercent.toFixed(0)}% vs reta`
+                                                            : 'dirigindo'
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+
+                                        {routeUrl && (
+                                            <a
+                                                href={routeUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-2 inline-flex items-center gap-1 text-[11.5px] font-semibold text-violet-700 dark:text-violet-300 hover:underline"
+                                            >
+                                                <ExternalLink className="w-3 h-3" /> Abrir rota no Google Maps
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <Field icon={<User className="w-4 h-4" />} label="Motorista">
                             <input
                                 value={driver}
@@ -247,13 +449,40 @@ export function NewDeliveryFromOrder() {
                             />
                         </Field>
 
-                        <Field icon={<MapPin className="w-4 h-4" />} label="Destino">
+                        <Field
+                            icon={<MapPin className="w-4 h-4" />}
+                            label={
+                                <span className="flex items-center gap-1.5">
+                                    Destino
+                                    {customer && !destinationManuallyEdited && destination && (
+                                        <span className="text-[10.5px] font-normal text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-0.5">
+                                            <Check className="w-3 h-3" /> preenchido pelo cadastro
+                                        </span>
+                                    )}
+                                </span>
+                            }
+                        >
                             <input
                                 value={destination}
-                                onChange={(e) => setDestination(e.target.value)}
+                                onChange={(e) => {
+                                    setDestination(e.target.value);
+                                    setDestinationManuallyEdited(true);
+                                }}
                                 placeholder="Endereço completo do destino"
                                 className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
                             />
+                            {customer && destinationManuallyEdited && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setDestination(buildAddressString(customer));
+                                        setDestinationManuallyEdited(false);
+                                    }}
+                                    className="mt-1 text-[11px] text-violet-600 dark:text-violet-400 hover:underline"
+                                >
+                                    ↻ restaurar endereço do cadastro
+                                </button>
+                            )}
                         </Field>
 
                         <Field icon={<Calendar className="w-4 h-4" />} label="Data agendada">
@@ -304,7 +533,7 @@ function Field({
     icon,
     children,
 }: {
-    label: string;
+    label: React.ReactNode;
     icon?: React.ReactNode;
     children: React.ReactNode;
 }) {
@@ -315,6 +544,38 @@ function Field({
                 {label}
             </label>
             {children}
+        </div>
+    );
+}
+
+function DistanceMetric({
+    label,
+    value,
+    hint,
+    highlight,
+}: {
+    label: string;
+    value: string;
+    hint?: string;
+    highlight?: boolean;
+}) {
+    return (
+        <div
+            className={`p-2 rounded ${
+                highlight
+                    ? 'bg-white dark:bg-slate-900 ring-1 ring-violet-300 dark:ring-violet-500/40'
+                    : 'bg-white/60 dark:bg-slate-900/40'
+            }`}
+        >
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
+            <p
+                className={`text-[14px] font-bold tabular-nums leading-tight ${
+                    highlight ? 'text-violet-700 dark:text-violet-300' : 'text-slate-900 dark:text-white'
+                }`}
+            >
+                {value}
+            </p>
+            {hint && <p className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5">{hint}</p>}
         </div>
     );
 }

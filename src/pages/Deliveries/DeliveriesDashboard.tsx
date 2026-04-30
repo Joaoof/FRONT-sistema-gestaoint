@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { toast } from 'sonner';
@@ -20,7 +20,14 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
-import { distanceKm, formatKm, googleMapsRouteUrl } from '../../utils/location';
+import {
+    distanceKm,
+    fetchDrivingRoute,
+    formatKm,
+    formatMinutes,
+    googleMapsRouteUrl,
+    type DrivingRoute,
+} from '../../utils/location';
 import {
     CANCEL_DELIVERY,
     COMPLETE_DELIVERY,
@@ -432,18 +439,37 @@ function DeliveryRow({
 
     const { company } = useCompany();
     const customerObj = delivery.order?.customer;
-    const distance = (() => {
-        if (
-            company?.latitude == null ||
-            company?.longitude == null ||
-            customerObj?.latitude == null ||
-            customerObj?.longitude == null
-        ) return null;
-        return distanceKm(
-            { latitude: company.latitude, longitude: company.longitude },
-            { latitude: customerObj.latitude, longitude: customerObj.longitude },
-        );
-    })();
+    const haveCoords =
+        company?.latitude != null &&
+        company?.longitude != null &&
+        customerObj?.latitude != null &&
+        customerObj?.longitude != null;
+    const straightDistance = haveCoords
+        ? distanceKm(
+              { latitude: company!.latitude!, longitude: company!.longitude! },
+              { latitude: customerObj!.latitude!, longitude: customerObj!.longitude! },
+          )
+        : null;
+    const [drivingRoute, setDrivingRoute] = useState<DrivingRoute | null>(null);
+    useEffect(() => {
+        if (!haveCoords) {
+            setDrivingRoute(null);
+            return;
+        }
+        let cancelled = false;
+        fetchDrivingRoute(
+            { latitude: company!.latitude!, longitude: company!.longitude! },
+            { latitude: customerObj!.latitude!, longitude: customerObj!.longitude! },
+        ).then((r) => {
+            if (!cancelled) setDrivingRoute(r);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [haveCoords, company?.latitude, company?.longitude, customerObj?.latitude, customerObj?.longitude]);
+    // distância exibida: prefere a real (OSRM), fallback pra linha reta
+    const distance = drivingRoute?.distanceKm ?? straightDistance;
+    const isRealRoute = drivingRoute != null;
     const routeUrl = (() => {
         if (!customerObj) {
             if (delivery.destination) return googleMapsRouteUrl(null, delivery.destination);
@@ -504,10 +530,23 @@ function DeliveryRow({
                         )}
                         {distance !== null && (
                             <span
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
-                                title={`Distância em linha reta entre a empresa e o cliente`}
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-semibold ${
+                                    isRealRoute
+                                        ? 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300'
+                                        : 'bg-slate-100 text-slate-600 dark:bg-white/[0.05] dark:text-slate-400'
+                                }`}
+                                title={
+                                    isRealRoute
+                                        ? `Distância real de estrada (OSRM)`
+                                        : `Distância em linha reta — calculando rota real…`
+                                }
                             >
                                 <MapIcon className="w-3 h-3" /> {formatKm(distance)}
+                                {isRealRoute && drivingRoute && (
+                                    <span className="ml-1 text-[9.5px] text-violet-600/80 dark:text-violet-300/80">
+                                        · {formatMinutes(drivingRoute.durationMin)}
+                                    </span>
+                                )}
                             </span>
                         )}
                         {routeUrl && (

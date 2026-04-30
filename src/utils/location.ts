@@ -144,6 +144,47 @@ export function formatKm(km: number): string {
     return `${km.toFixed(km < 10 ? 1 : 0)} km`;
 }
 
+export interface DrivingRoute {
+    distanceKm: number; // distância de estrada em km
+    durationMin: number; // tempo estimado em minutos
+}
+
+/**
+ * Calcula rota real de carro entre dois pontos usando o servidor público do OSRM
+ * (https://project-osrm.org/). Sem chave / sem custo. Retorna distância em km e
+ * duração estimada em minutos. Retorna null em caso de falha (offline / sem rota).
+ *
+ * Para produção em escala, usar um servidor próprio do OSRM ou Google Distance Matrix
+ * (com chave). O endpoint público tem rate-limit razoável para uso interno.
+ */
+export async function fetchDrivingRoute(
+    a: { latitude: number; longitude: number },
+    b: { latitude: number; longitude: number },
+): Promise<DrivingRoute | null> {
+    try {
+        const url = `https://router.project-osrm.org/route/v1/driving/${a.longitude},${a.latitude};${b.longitude},${b.latitude}?overview=false&alternatives=false&steps=false`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const route = data?.routes?.[0];
+        if (!route) return null;
+        return {
+            distanceKm: Number(route.distance) / 1000,
+            durationMin: Number(route.duration) / 60,
+        };
+    } catch {
+        return null;
+    }
+}
+
+export function formatMinutes(min: number): string {
+    if (!isFinite(min) || min <= 0) return '—';
+    if (min < 60) return `${Math.round(min)} min`;
+    const h = Math.floor(min / 60);
+    const m = Math.round(min % 60);
+    return m > 0 ? `${h}h ${m}min` : `${h}h`;
+}
+
 /**
  * Gera URL do Google Maps abrindo a rota da origem (latLng ou endereço) até o destino.
  */
