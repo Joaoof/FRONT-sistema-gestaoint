@@ -25,12 +25,20 @@ import { DeliveriesPage } from './DeliveriesPage';
 // Tipos
 export type View =
     | 'dashboard'
+    | 'relatorios'
+    | 'relatorios/visao-geral'
     | 'entregas'
+    | 'entregas/cadastrar'
+    | 'entregas/agendar'
+    | 'entregas/relatorios'
     | 'cadastros'
     | 'estoque'
+    | 'estoque/alertas'
     | 'produtos'
+    | 'produtos/cadastrar'
     | 'categorias'
     | 'vendas'
+    | 'vendas/saida-rapida'
     | 'fiscal'
     | 'fiscal-receber'
     | 'fiscal-receber-criar'
@@ -44,6 +52,7 @@ export type View =
     | 'formulario-movimentacao'
     | 'historico-movimentacao'
     | 'historico'
+    | 'help'
     | 'configuracoes';
 
 const moduleNames: Record<View, string> = {

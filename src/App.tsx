@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { ProductEntry } from './pages/ProductEntry';
 import { ProductExit } from './pages/ProductExit';
 import { NewSale } from './pages/Sales/NewSale';
+import { InventoryHub } from './pages/Inventory/InventoryHub';
 import { CategoriesRegistration, CustomersRegistration, SupplierRegistration } from './pages/Register';
 import { Sidebar } from './components/Sidebar';
 import { useInventory } from './hooks/useInventory';
@@ -87,7 +88,8 @@ function AppContent() {
               }
             />
             <Route path="/entregas/relatorios" element={<DeliveryReportsPage />} />
-            <Route path="/estoque" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
+            <Route path="/estoque" element={<InventoryHub />} />
+            <Route path="/estoque/entrada-rapida" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
             <Route path="/estoque/alertas" element={<StockAlertsReport />} />
             <Route path="/produtos" element={<ProductsList />} />
             <Route path="/produtos/cadastrar" element={<CreateProduct />} />

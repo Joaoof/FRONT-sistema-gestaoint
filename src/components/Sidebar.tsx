@@ -23,6 +23,17 @@ import {
   ScanSearch,
   ArrowRightLeft,
   ChevronRight,
+  AlertTriangle,
+  BarChart3,
+  CircleDollarSign,
+  HelpCircle,
+  History,
+  PieChart,
+  Plus,
+  Sliders,
+  TrendingUp,
+  UserPlus,
+  Warehouse,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -51,12 +62,20 @@ interface SidebarProps {
 
 const VIEW_TO_MODULE: Record<View, string> = {
   dashboard: 'dashboard',
+  relatorios: 'dashboard',
+  'relatorios/visao-geral': 'dashboard',
   entregas: 'entregas',
+  'entregas/cadastrar': 'entregas',
+  'entregas/agendar': 'entregas',
+  'entregas/relatorios': 'entregas',
   cadastros: 'cadastros',
   estoque: 'estoque',
+  'estoque/alertas': 'estoque',
   produtos: 'estoque',
+  'produtos/cadastrar': 'estoque',
   categorias: 'cadastros',
   vendas: 'vendas',
+  'vendas/saida-rapida': 'vendas',
   fiscal: 'fiscal',
   'fiscal-receber': 'fiscal',
   'fiscal-receber-criar': 'fiscal',
@@ -65,11 +84,14 @@ const VIEW_TO_MODULE: Record<View, string> = {
   financeiro: 'financeiro',
   ecommerce: 'ecommerce',
   consultas: 'consultas',
+  entrada: 'estoque',
   movimentacoes: 'movimentacoes',
   'formulario-movimentacao': 'movimentacoes',
   'historico-movimentacao': 'movimentacoes',
+  historico: 'movimentacoes',
+  help: 'dashboard',
   configuracoes: 'configuracoes',
-} as any;
+};
 
 function hasPermission(
   permissions: { module_key: string; permissions: string[] }[],
@@ -84,24 +106,59 @@ const sections: MenuSection[] = [
     label: 'Geral',
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
       { id: 'consultas', label: 'Consultas', icon: ScanSearch },
     ],
   },
   {
     label: 'Catálogo',
     items: [
-      { id: 'produtos', label: 'Produtos', icon: Package },
-      { id: 'categorias', label: 'Categorias', icon: Tag },
-      { id: 'estoque', label: 'Estoque', icon: Boxes },
-      { id: 'cadastros', label: 'Cadastros gerais', icon: ClipboardList },
+      {
+        id: 'produtos' as View,
+        label: 'Produtos',
+        icon: Package,
+        children: [
+          { id: 'produtos' as View, label: 'Listar', icon: Package },
+          { id: 'produtos/cadastrar' as View, label: 'Novo produto', icon: Plus },
+        ],
+      },
+      { id: 'categorias' as View, label: 'Categorias', icon: Tag },
+      {
+        id: 'estoque' as View,
+        label: 'Estoque',
+        icon: Warehouse,
+        children: [
+          { id: 'estoque' as View, label: 'Central', icon: Boxes },
+          { id: 'estoque/alertas' as View, label: 'Alertas críticos', icon: AlertTriangle },
+        ],
+      },
+      { id: 'cadastros' as View, label: 'Clientes & Fornecedores', icon: UserPlus },
     ],
   },
   {
     label: 'Operação',
     items: [
-      { id: 'vendas', label: 'Vendas', icon: ShoppingCart },
-      { id: 'entregas', label: 'Entregas', icon: Truck },
-      { id: 'ecommerce', label: 'E-commerce', icon: Globe },
+      {
+        id: 'vendas' as View,
+        label: 'Vendas',
+        icon: ShoppingCart,
+        children: [
+          { id: 'vendas' as View, label: 'Nova venda (PDV)', icon: Plus },
+          { id: 'vendas/saida-rapida' as View, label: 'Saída rápida', icon: Sliders },
+        ],
+      },
+      {
+        id: 'entregas' as View,
+        label: 'Entregas',
+        icon: Truck,
+        children: [
+          { id: 'entregas' as View, label: 'Painel', icon: Truck },
+          { id: 'entregas/cadastrar' as View, label: 'Nova entrega', icon: Plus },
+          { id: 'entregas/agendar' as View, label: 'Agendar rota', icon: ClipboardList },
+          { id: 'entregas/relatorios' as View, label: 'Relatórios', icon: BarChart3 },
+        ],
+      },
+      { id: 'ecommerce' as View, label: 'E-commerce', icon: Globe },
     ],
   },
   {
@@ -112,29 +169,50 @@ const sections: MenuSection[] = [
         label: 'Movimentações',
         icon: ArrowRightLeft,
         children: [
-          { id: 'formulario-movimentacao', label: 'Nova movimentação', icon: ArrowRightLeft },
-          { id: 'historico-movimentacao', label: 'Histórico', icon: ClipboardList },
+          { id: 'movimentacoes' as View, label: 'Painel', icon: ArrowRightLeft },
+          { id: 'formulario-movimentacao', label: 'Nova movimentação', icon: Plus },
+          { id: 'historico-movimentacao', label: 'Histórico', icon: History },
         ],
       },
       {
         id: 'fiscal',
-        label: 'Fiscal',
+        label: 'Contas',
         icon: Receipt,
         children: [
-          { id: 'fiscal-receber', label: 'Contas a Receber', icon: Wallet },
-          { id: 'fiscal-receber-criar', label: 'Nova Receita', icon: Wallet },
-          { id: 'fiscal-pagar', label: 'Contas a Pagar', icon: Wallet },
-          { id: 'fiscal-pagar-criar', label: 'Nova Despesa', icon: Wallet },
+          { id: 'fiscal-receber', label: 'A Receber', icon: TrendingUp },
+          { id: 'fiscal-receber-criar', label: 'Nova receita', icon: Plus },
+          { id: 'fiscal-pagar', label: 'A Pagar', icon: CircleDollarSign },
+          { id: 'fiscal-pagar-criar', label: 'Nova despesa', icon: Plus },
         ],
       },
-      { id: 'financeiro', label: 'Financeiro', icon: Wallet },
+      {
+        id: 'financeiro' as View,
+        label: 'Financeiro',
+        icon: Wallet,
+        children: [
+          { id: 'financeiro' as View, label: 'Visão geral', icon: PieChart },
+          { id: 'relatorios/visao-geral' as View, label: 'Painel completo', icon: BarChart3 },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { id: 'configuracoes' as View, label: 'Configurações', icon: Settings },
+      { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },
     ],
   },
 ];
 
 const groupedChildren: Record<string, View[]> = {
+  produtos: ['produtos', 'produtos/cadastrar'],
+  estoque: ['estoque', 'estoque/alertas'],
+  vendas: ['vendas', 'vendas/saida-rapida'],
+  entregas: ['entregas', 'entregas/cadastrar', 'entregas/agendar', 'entregas/relatorios'],
   movimentacoes: ['movimentacoes', 'formulario-movimentacao', 'historico-movimentacao'],
   fiscal: ['fiscal', 'fiscal-pagar', 'fiscal-pagar-criar', 'fiscal-receber', 'fiscal-receber-criar'],
+  financeiro: ['financeiro', 'relatorios/visao-geral'],
 };
 
 export function Sidebar({

@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { StatCard } from '../components/ui/StatCard';
 import { LowStockAlert } from '../components/LowStockAlert';
 import { RecentActivityWidget } from '../components/RecentActivityWidget';
+import { DashboardCharts } from '../components/DashboardCharts';
 
 // Função utilitária DRY para calcular dados mensais
 const getMonthlyData = (
@@ -158,6 +159,9 @@ export function Dashboard({
 
       {/* Alerta de estoque baixo */}
       <LowStockAlert />
+
+      {/* Gráficos analíticos completos */}
+      <DashboardCharts />
 
       {/* Atividade recente */}
       <RecentActivityWidget />
