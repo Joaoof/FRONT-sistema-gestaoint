@@ -280,8 +280,19 @@ export function Topbar() {
           aria-expanded={menuOpen}
           className="flex items-center gap-2 h-8 pl-1 pr-2 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors"
         >
-          <span className="relative w-6 h-6 rounded bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[10.5px] font-semibold flex items-center justify-center shadow-[0_0_0_1px_rgb(139_92_246_/_0.25)]">
-            {initials(user?.name)}
+          <span className="relative w-6 h-6 rounded overflow-hidden bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[10.5px] font-semibold flex items-center justify-center shadow-[0_0_0_1px_rgb(139_92_246_/_0.25)]">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user?.name || 'avatar'}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <span>{initials(user?.name)}</span>
+            )}
             <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-950" aria-label="Online" />
           </span>
           <span className="hidden sm:inline text-[12.5px] font-medium text-slate-700 dark:text-slate-200 truncate max-w-[100px]">
@@ -295,9 +306,25 @@ export function Topbar() {
             role="menu"
             className="absolute right-0 top-[calc(100%+6px)] w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-md shadow-soft-lg overflow-hidden animate-fade-in-up"
           >
-            <div className="px-3 py-2.5 border-b border-slate-100 dark:border-white/[0.06]">
-              <div className="text-[12.5px] font-medium text-slate-900 dark:text-white truncate">{user?.name}</div>
-              <div className="text-[11.5px] text-slate-500 dark:text-slate-400 truncate">{user?.email}</div>
+            <div className="px-3 py-2.5 border-b border-slate-100 dark:border-white/[0.06] flex items-center gap-2.5">
+              <span className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[12px] font-semibold flex items-center justify-center shrink-0">
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user?.name || 'avatar'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <span>{initials(user?.name)}</span>
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[12.5px] font-medium text-slate-900 dark:text-white truncate">{user?.name}</div>
+                <div className="text-[11.5px] text-slate-500 dark:text-slate-400 truncate">{user?.email}</div>
+              </div>
             </div>
             <div className="py-1">
               <button

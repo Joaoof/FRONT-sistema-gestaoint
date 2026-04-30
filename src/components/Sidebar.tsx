@@ -448,8 +448,19 @@ export function Sidebar({
 
         <div className="px-2 pb-2.5">
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-md bg-white/[0.03] border border-white/[0.05]">
-            <span className="relative w-7 h-7 rounded bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[11px] font-semibold flex items-center justify-center shrink-0">
-              {initials}
+            <span className="relative w-7 h-7 rounded overflow-hidden bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[11px] font-semibold flex items-center justify-center shrink-0">
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user?.name || 'avatar'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <span>{initials}</span>
+              )}
               <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-slate-950" aria-label="Online" />
             </span>
             <div className="min-w-0 flex-1">
