@@ -5,6 +5,10 @@ const ORDER_FIELDS = `
   number
   customerId
   customerName
+  sellerId
+  sellerName
+  commissionPercent
+  commissionAmount
   status
   paymentMethod
   subtotal

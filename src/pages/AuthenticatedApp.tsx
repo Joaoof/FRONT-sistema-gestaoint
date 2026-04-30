@@ -55,6 +55,7 @@ export type View =
     | 'historico'
     | 'help'
     | 'empresa'
+    | 'vendedores'
     | 'configuracoes';
 
 const moduleNames: Record<View, string> = {
@@ -78,6 +79,7 @@ const moduleNames: Record<View, string> = {
     financeiro: 'Financeiro',
     ecommerce: 'E-commerce',
     consultas: 'Consultas',
+    vendedores: 'Vendedores',
     configuracoes: 'Configurações',
 } as any;
 

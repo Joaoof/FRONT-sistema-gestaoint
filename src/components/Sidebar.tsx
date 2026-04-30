@@ -150,6 +150,7 @@ const sections: MenuSection[] = [
           { id: 'vendas' as View, label: 'Nova venda (PDV)', icon: Plus },
           { id: 'pedidos' as View, label: 'Pedidos & impressão', icon: Receipt },
           { id: 'vendas/saida-rapida' as View, label: 'Saída rápida', icon: Sliders },
+          { id: 'vendedores' as View, label: 'Vendedores', icon: UserPlus },
         ],
       },
       {

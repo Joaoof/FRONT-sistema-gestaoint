@@ -21,6 +21,7 @@ import { LIST_PRODUCTS_WITH_IMAGES } from '../../graphql/mutations/product-with-
 import { GET_CUSTOMERS_LIST } from '../../graphql/queries/accounts';
 import { CREATE_CUSTOMER_BASIC } from '../../graphql/mutations/accounts';
 import { CREATE_ORDER } from '../../graphql/queries/orders';
+import { GET_SELLERS } from '../../graphql/queries/sellers';
 import { ProductImage } from '../../components/ProductImage';
 
 type PaymentMethod = 'CASH' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'BOLETO' | 'TRANSFER' | 'OTHER';
@@ -79,6 +80,8 @@ export function NewSale() {
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
     const [orderDiscount, setOrderDiscount] = useState<string>('0');
     const [notes, setNotes] = useState('');
+    const [sellerId, setSellerId] = useState<string>('');
+    const [commissionPercent, setCommissionPercent] = useState<string>('');
 
     const { data: productsData, loading: loadingProducts } = useQuery<{ products: ProductOption[] }>(
         LIST_PRODUCTS_WITH_IMAGES,
@@ -87,13 +90,20 @@ export function NewSale() {
     const { data: customersData, refetch: refetchCustomers } = useQuery<{ customers: CustomerOption[] }>(
         GET_CUSTOMERS_LIST,
     );
+    const { data: sellersData } = useQuery<{
+        sellers: { id: string; name: string; commissionPercent: number; active: boolean }[];
+    }>(GET_SELLERS, { variables: { activeOnly: true }, fetchPolicy: 'cache-and-network' });
 
     const [createOrder, { loading: creatingOrder }] = useMutation(CREATE_ORDER);
     const [createCustomer, { loading: creatingCustomer }] = useMutation(CREATE_CUSTOMER_BASIC);
 
     const products = productsData?.products ?? [];
     const customers = customersData?.customers ?? [];
+    const sellers = sellersData?.sellers ?? [];
     const selectedCustomer = customers.find((c) => c.id === customerId);
+    const selectedSeller = sellers.find((s) => s.id === sellerId);
+    const effectiveCommissionPercent =
+        commissionPercent !== '' ? Number(commissionPercent) : selectedSeller?.commissionPercent ?? 0;
 
     const filteredProducts = useMemo(() => {
         const term = search.trim().toLowerCase();
@@ -215,6 +225,11 @@ export function NewSale() {
                     input: {
                         customerId: customerId || undefined,
                         customerName: customerId ? undefined : customerName || undefined,
+                        sellerId: sellerId || undefined,
+                        commissionPercent:
+                            sellerId && commissionPercent !== ''
+                                ? Number(commissionPercent)
+                                : undefined,
                         status: 'CONFIRMED',
                         paymentMethod,
                         discount: discountValue,
@@ -583,6 +598,53 @@ export function NewSale() {
                                     );
                                 })}
                             </ul>
+                        )}
+                    </section>
+
+                    {/* Vendedor */}
+                    <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4">
+                        <h2 className="text-[13.5px] font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <User className="w-4 h-4 text-emerald-500" /> Vendedor
+                        </h2>
+                        <select
+                            value={sellerId}
+                            onChange={(e) => {
+                                setSellerId(e.target.value);
+                                setCommissionPercent('');
+                            }}
+                            className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
+                        >
+                            <option value="">— Sem vendedor vinculado —</option>
+                            {sellers.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                    {s.name} {Number(s.commissionPercent) > 0 ? `(${Number(s.commissionPercent).toFixed(1)}% padrão)` : ''}
+                                </option>
+                            ))}
+                        </select>
+                        {sellers.length === 0 && (
+                            <p className="mt-2 text-[11.5px] text-slate-500 dark:text-slate-400">
+                                Nenhum vendedor cadastrado. <a href="/vendedores" className="text-violet-600 dark:text-violet-400 underline">Cadastre um agora</a>.
+                            </p>
+                        )}
+                        {sellerId && (
+                            <div className="mt-3">
+                                <label className="block text-[11px] font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Comissão (%) — opcional, sobrescreve o padrão
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    max="100"
+                                    value={commissionPercent}
+                                    onChange={(e) => setCommissionPercent(e.target.value)}
+                                    placeholder={String(selectedSeller?.commissionPercent ?? 0)}
+                                    className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] tabular-nums"
+                                />
+                                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                                    Comissão estimada: {formatBRL((total * effectiveCommissionPercent) / 100)} ({effectiveCommissionPercent.toFixed(2)}% de {formatBRL(total)})
+                                </p>
+                            </div>
                         )}
                     </section>
 
