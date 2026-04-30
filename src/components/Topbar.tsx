@@ -48,7 +48,7 @@ export function Topbar() {
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [isMac, setIsMac] = useState(true);
-  const { lowStock, count: lowStockCount, outOfStockCount } = useLowStock();
+  const { lowStock, count: lowStockCount, outOfStockCount } = useLowStock({ liveToasts: true });
 
   useEffect(() => {
     setIsMac(typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform));
@@ -183,11 +183,14 @@ export function Topbar() {
           onClick={() => setAlertsOpen(v => !v)}
           className="relative w-8 h-8 flex items-center justify-center rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors"
         >
-          <Bell className="w-[15px] h-[15px]" strokeWidth={1.75} />
+          <Bell className={`w-[15px] h-[15px] ${lowStockCount > 0 ? 'animate-wiggle' : ''}`} strokeWidth={1.75} />
           {lowStockCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 inline-flex items-center justify-center text-[10px] font-bold text-white bg-amber-500 rounded-full ring-2 ring-white dark:ring-slate-950 tabular-nums">
-              {lowStockCount > 9 ? '9+' : lowStockCount}
-            </span>
+            <>
+              <span className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 inline-flex items-center justify-center text-[10px] font-bold text-white rounded-full ring-2 ring-white dark:ring-slate-950 tabular-nums ${outOfStockCount > 0 ? 'bg-rose-500' : 'bg-amber-500'}`}>
+                {lowStockCount > 9 ? '9+' : lowStockCount}
+              </span>
+              <span className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] rounded-full animate-ping ${outOfStockCount > 0 ? 'bg-rose-500' : 'bg-amber-500'} opacity-60`} aria-hidden />
+            </>
           )}
         </button>
 

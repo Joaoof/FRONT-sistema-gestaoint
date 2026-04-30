@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { SidebarStockAlerts } from './SidebarStockAlerts';
 
 interface MenuItem {
   id: View;
@@ -297,6 +298,9 @@ export function Sidebar({
           </div>
         )}
       </nav>
+
+      {/* Painel de alertas de estoque ao vivo */}
+      <SidebarStockAlerts />
 
       {/* Footer */}
       <div className="relative shrink-0 border-t border-white/[0.06]">

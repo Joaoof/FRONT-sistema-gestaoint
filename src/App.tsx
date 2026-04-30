@@ -34,6 +34,7 @@ import { Topbar } from './components/Topbar';
 import { CreateProduct } from './pages/Products/CreateProduct';
 import { ProductsList } from './pages/Products/ProductsList';
 import { ProductDetail } from './pages/Products/ProductDetail';
+import { StockAlertsReport } from './pages/Products/StockAlertsReport';
 import { ReportsPage } from './pages/Reports/ReportsPage';
 
 function AppContent() {
@@ -85,6 +86,7 @@ function AppContent() {
             />
             <Route path="/entregas/relatorios" element={<DeliveryReportsPage />} />
             <Route path="/estoque" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
+            <Route path="/estoque/alertas" element={<StockAlertsReport />} />
             <Route path="/produtos" element={<ProductsList />} />
             <Route path="/produtos/cadastrar" element={<CreateProduct />} />
             <Route path="/produtos/:id" element={<ProductDetail />} />

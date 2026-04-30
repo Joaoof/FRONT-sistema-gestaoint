@@ -84,10 +84,15 @@ export default {
       keyframes: {
         "fade-in":    { "0%": { opacity: 0, transform: "scale(0.97)" }, "100%": { opacity: 1, transform: "scale(1)" } },
         "fade-in-up": { "0%": { opacity: 0, transform: "translateY(8px)" }, "100%": { opacity: 1, transform: "translateY(0)" } },
+        wiggle: {
+          "0%, 100%": { transform: "rotate(-3deg)" },
+          "50%":      { transform: "rotate(3deg)" },
+        },
       },
       animation: {
         "fade-in":    "fade-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both",
         "fade-in-up": "fade-in-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both",
+        wiggle:       "wiggle 1s ease-in-out infinite",
       },
     },
   },

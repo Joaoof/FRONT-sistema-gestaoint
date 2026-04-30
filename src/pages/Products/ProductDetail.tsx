@@ -9,6 +9,7 @@ import {
     Edit3,
     Package,
     Save,
+    Sliders,
     Tag,
     X,
 } from 'lucide-react';
@@ -16,6 +17,7 @@ import {
     GET_PRODUCT_DETAIL,
     UPDATE_PRODUCT_DETAIL,
 } from '../../graphql/queries/product-detail';
+import { StockAdjustmentModal } from './StockAdjustmentModal';
 
 interface ProductImage {
     id: string;
@@ -73,6 +75,7 @@ export function ProductDetail() {
     const { id = '' } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [editing, setEditing] = useState(false);
+    const [adjusting, setAdjusting] = useState(false);
     const [form, setForm] = useState<FormState | null>(null);
 
     const { data, loading, refetch } = useQuery<{ product: ProductDetail | null }>(
@@ -166,13 +169,22 @@ export function ProductDetail() {
                 </button>
                 <div className="flex items-center gap-2">
                     {!editing ? (
-                        <button
-                            onClick={() => setEditing(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                        >
-                            <Edit3 className="w-4 h-4" /> Editar
-                        </button>
-                    ) : (
+                        <>
+                            <button
+                                onClick={() => setAdjusting(true)}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+                            >
+                                <Sliders className="w-4 h-4" /> Ajustar estoque
+                            </button>
+                            <button
+                                onClick={() => setEditing(true)}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                                <Edit3 className="w-4 h-4" /> Editar
+                            </button>
+                        </>
+                    ) : null}
+                    {editing && (
                         <>
                             <button
                                 onClick={() => {
@@ -411,6 +423,21 @@ export function ProductDetail() {
                     </div>
                 </div>
             </div>
+
+            {adjusting && (
+                <StockAdjustmentModal
+                    productId={product.id}
+                    productName={product.nameProduct}
+                    currentQuantity={product.quantity}
+                    minStock={product.minStock}
+                    unit={product.unit}
+                    onClose={() => setAdjusting(false)}
+                    onSaved={() => {
+                        setAdjusting(false);
+                        refetch();
+                    }}
+                />
+            )}
         </div>
     );
 }
