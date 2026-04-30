@@ -13,6 +13,9 @@ const COMPANY_FIELDS = `
   bairro
   cidade
   estado
+  cep
+  latitude
+  longitude
   logoUrl
 `;
 

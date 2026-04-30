@@ -7,6 +7,8 @@ import {
     ArrowLeft,
     Banknote,
     CreditCard,
+    Loader2,
+    MapPin,
     Minus,
     Package,
     Plus,
@@ -22,6 +24,7 @@ import { GET_CUSTOMERS_LIST } from '../../graphql/queries/accounts';
 import { CREATE_CUSTOMER_BASIC } from '../../graphql/mutations/accounts';
 import { CREATE_ORDER } from '../../graphql/queries/orders';
 import { GET_SELLERS } from '../../graphql/queries/sellers';
+import { getCurrentPosition, lookupCep, reverseGeocode } from '../../utils/location';
 import { ProductImage } from '../../components/ProductImage';
 
 type PaymentMethod = 'CASH' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'BOLETO' | 'TRANSFER' | 'OTHER';
@@ -78,7 +81,21 @@ export function NewSale() {
     const [customerDocument, setCustomerDocument] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [showNewCustomer, setShowNewCustomer] = useState(false);
-    const [newCustomer, setNewCustomer] = useState({ name: '', document: '', email: '', phone: '' });
+    const [newCustomer, setNewCustomer] = useState({
+        razaoSocial: '',
+        nomeFantasia: '',
+        document: '',
+        phone: '',
+        cep: '',
+        address: '',
+        bairro: '',
+        cidade: '',
+        estado: '',
+        latitude: null as number | null,
+        longitude: null as number | null,
+    });
+    const [cepLoading, setCepLoading] = useState(false);
+    const [gpsLoading, setGpsLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
     const [orderDiscount, setOrderDiscount] = useState<string>('0');
     const [notes, setNotes] = useState('');
@@ -194,19 +211,86 @@ export function NewSale() {
         setCart((prev) => prev.filter((i) => i.productId !== productId));
     }
 
+    async function handleCepLookup() {
+        const raw = newCustomer.cep.replace(/\D/g, '');
+        if (raw.length !== 8) {
+            toast.error('CEP inválido. Digite os 8 números.');
+            return;
+        }
+        setCepLoading(true);
+        try {
+            const result = await lookupCep(raw);
+            if (!result) {
+                toast.error('CEP não encontrado.');
+                return;
+            }
+            setNewCustomer((p) => ({
+                ...p,
+                cep: result.cep ?? p.cep,
+                address: result.address ?? p.address,
+                bairro: result.bairro ?? p.bairro,
+                cidade: result.cidade ?? p.cidade,
+                estado: result.estado ?? p.estado,
+            }));
+            toast.success('Endereço preenchido a partir do CEP.');
+        } finally {
+            setCepLoading(false);
+        }
+    }
+
+    async function handleCaptureLocation() {
+        setGpsLoading(true);
+        try {
+            const coords = await getCurrentPosition();
+            setNewCustomer((p) => ({
+                ...p,
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+            }));
+            // Tenta enriquecer endereço a partir das coords
+            const addr = await reverseGeocode(coords.latitude, coords.longitude);
+            if (addr) {
+                setNewCustomer((p) => ({
+                    ...p,
+                    address: addr.address ?? p.address,
+                    bairro: addr.bairro ?? p.bairro,
+                    cidade: addr.cidade ?? p.cidade,
+                    estado: addr.estado ?? p.estado,
+                    cep: addr.cep ?? p.cep,
+                }));
+                toast.success('Localização capturada e endereço preenchido.');
+            } else {
+                toast.success(`Localização capturada (${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}).`);
+            }
+        } catch (err: any) {
+            toast.error(err?.message ?? 'Erro ao obter localização.');
+        } finally {
+            setGpsLoading(false);
+        }
+    }
+
     async function handleCreateCustomer() {
-        if (!newCustomer.name) {
-            toast.error('Informe o nome do cliente');
+        const displayName = newCustomer.nomeFantasia.trim() || newCustomer.razaoSocial.trim();
+        if (!displayName) {
+            toast.error('Informe a razão social ou o nome fantasia.');
             return;
         }
         try {
             const res = await createCustomer({
                 variables: {
                     input: {
-                        name: newCustomer.name,
-                        document: newCustomer.document || undefined,
-                        email: newCustomer.email || undefined,
-                        phone: newCustomer.phone || undefined,
+                        name: displayName,
+                        nomeFantasia: newCustomer.nomeFantasia.trim() || undefined,
+                        razaoSocial: newCustomer.razaoSocial.trim() || undefined,
+                        document: newCustomer.document.trim() || undefined,
+                        phone: newCustomer.phone.trim() || undefined,
+                        cep: newCustomer.cep.trim() || undefined,
+                        address: newCustomer.address.trim() || undefined,
+                        bairro: newCustomer.bairro.trim() || undefined,
+                        cidade: newCustomer.cidade.trim() || undefined,
+                        estado: newCustomer.estado.trim() || undefined,
+                        latitude: newCustomer.latitude ?? undefined,
+                        longitude: newCustomer.longitude ?? undefined,
                     },
                 },
             });
@@ -216,7 +300,19 @@ export function NewSale() {
                 await refetchCustomers();
                 setCustomerId(created.id);
                 setShowNewCustomer(false);
-                setNewCustomer({ name: '', document: '', email: '', phone: '' });
+                setNewCustomer({
+                    razaoSocial: '',
+                    nomeFantasia: '',
+                    document: '',
+                    phone: '',
+                    cep: '',
+                    address: '',
+                    bairro: '',
+                    cidade: '',
+                    estado: '',
+                    latitude: null,
+                    longitude: null,
+                });
             }
         } catch (err: any) {
             toast.error(err?.message ?? 'Erro ao criar cliente');
@@ -454,33 +550,117 @@ export function NewSale() {
 
                         {showNewCustomer && (
                             <div className="mt-3 p-3 border border-dashed border-slate-300 dark:border-white/15 rounded space-y-2">
+                                <FieldLabel>RAZÃO SOCIAL *</FieldLabel>
                                 <input
-                                    placeholder="Nome *"
-                                    value={newCustomer.name}
-                                    onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                                    placeholder="Empresa Ltda"
+                                    value={newCustomer.razaoSocial}
+                                    onChange={(e) => setNewCustomer({ ...newCustomer, razaoSocial: e.target.value })}
+                                    className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
+                                />
+                                <FieldLabel>FANTASIA</FieldLabel>
+                                <input
+                                    placeholder="Como é conhecido"
+                                    value={newCustomer.nomeFantasia}
+                                    onChange={(e) => setNewCustomer({ ...newCustomer, nomeFantasia: e.target.value })}
                                     className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
                                 />
                                 <div className="grid grid-cols-2 gap-2">
-                                    <input
-                                        placeholder="CPF/CNPJ"
-                                        value={newCustomer.document}
-                                        onChange={(e) => setNewCustomer({ ...newCustomer, document: e.target.value })}
-                                        className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
-                                    />
-                                    <input
-                                        placeholder="Telefone"
-                                        value={newCustomer.phone}
-                                        onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                                        className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
-                                    />
+                                    <div>
+                                        <FieldLabel>FONE</FieldLabel>
+                                        <input
+                                            placeholder="(63) 99999-9999"
+                                            value={newCustomer.phone}
+                                            onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                                            className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] tabular-nums"
+                                        />
+                                    </div>
+                                    <div>
+                                        <FieldLabel>CNPJ/CPF</FieldLabel>
+                                        <input
+                                            placeholder="000.000.000-00"
+                                            value={newCustomer.document}
+                                            onChange={(e) => setNewCustomer({ ...newCustomer, document: e.target.value })}
+                                            className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] tabular-nums"
+                                        />
+                                    </div>
                                 </div>
+                                <FieldLabel>CEP</FieldLabel>
+                                <div className="flex gap-1.5">
+                                    <input
+                                        placeholder="00000-000"
+                                        value={newCustomer.cep}
+                                        onChange={(e) => setNewCustomer({ ...newCustomer, cep: e.target.value })}
+                                        onBlur={() => newCustomer.cep.replace(/\D/g, '').length === 8 && handleCepLookup()}
+                                        className="flex-1 p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] tabular-nums"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleCepLookup}
+                                        disabled={cepLoading}
+                                        title="Buscar endereço pelo CEP"
+                                        className="px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded text-[12px] font-medium disabled:opacity-50"
+                                    >
+                                        {cepLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Buscar'}
+                                    </button>
+                                </div>
+                                <FieldLabel>ENDEREÇO</FieldLabel>
                                 <input
-                                    placeholder="E-mail"
-                                    value={newCustomer.email}
-                                    onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                                    placeholder="Rua, número, complemento"
+                                    value={newCustomer.address}
+                                    onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
                                     className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
                                 />
-                                <div className="flex gap-2">
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="col-span-1">
+                                        <FieldLabel>BAIRRO</FieldLabel>
+                                        <input
+                                            value={newCustomer.bairro}
+                                            onChange={(e) => setNewCustomer({ ...newCustomer, bairro: e.target.value })}
+                                            className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
+                                        <FieldLabel>CIDADE</FieldLabel>
+                                        <input
+                                            value={newCustomer.cidade}
+                                            onChange={(e) => setNewCustomer({ ...newCustomer, cidade: e.target.value })}
+                                            className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
+                                        <FieldLabel>UF</FieldLabel>
+                                        <input
+                                            maxLength={2}
+                                            value={newCustomer.estado}
+                                            onChange={(e) => setNewCustomer({ ...newCustomer, estado: e.target.value.toUpperCase().slice(0, 2) })}
+                                            className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] uppercase font-mono"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={handleCaptureLocation}
+                                    disabled={gpsLoading}
+                                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 mt-1 border border-dashed border-emerald-400 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 rounded text-[12px] font-medium hover:bg-emerald-100 dark:hover:bg-emerald-500/20 disabled:opacity-50"
+                                >
+                                    {gpsLoading ? (
+                                        <>
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Capturando…
+                                        </>
+                                    ) : (
+                                        <>
+                                            <MapPin className="w-3.5 h-3.5" /> Usar minha localização
+                                        </>
+                                    )}
+                                </button>
+                                {newCustomer.latitude !== null && newCustomer.longitude !== null && (
+                                    <p className="text-[11px] text-emerald-700 dark:text-emerald-400 tabular-nums text-center">
+                                        📍 {newCustomer.latitude.toFixed(5)}, {newCustomer.longitude.toFixed(5)} (registrado para entrega)
+                                    </p>
+                                )}
+
+                                <div className="flex gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
                                     <button
                                         type="button"
                                         onClick={() => setShowNewCustomer(false)}
@@ -774,5 +954,13 @@ export function NewSale() {
                 </aside>
             </form>
         </div>
+    );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+    return (
+        <label className="block text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5 mt-1">
+            {children}
+        </label>
     );
 }

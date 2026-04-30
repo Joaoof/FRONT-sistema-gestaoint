@@ -41,6 +41,9 @@ export interface Company {
     bairro?: string | null
     cidade?: string | null
     estado?: string | null
+    cep?: string | null
+    latitude?: number | null
+    longitude?: number | null
     cnpj?: string | null
     email?: string | null
     phone?: string | null

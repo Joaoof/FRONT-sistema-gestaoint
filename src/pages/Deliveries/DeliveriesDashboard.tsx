@@ -7,7 +7,9 @@ import {
     BadgeCheck,
     CheckCircle2,
     Clock,
+    ExternalLink,
     Filter,
+    Map as MapIcon,
     Package,
     PackageCheck,
     PackageX,
@@ -17,6 +19,8 @@ import {
     User,
     XCircle,
 } from 'lucide-react';
+import { useCompany } from '../../contexts/CompanyContext';
+import { distanceKm, formatKm, googleMapsRouteUrl } from '../../utils/location';
 import {
     CANCEL_DELIVERY,
     COMPLETE_DELIVERY,
@@ -44,7 +48,19 @@ interface Delivery {
         number: number;
         customerName?: string | null;
         total: number;
-        customer?: { id: string; name: string; phone?: string | null; document?: string | null } | null;
+        customer?: {
+            id: string;
+            name: string;
+            phone?: string | null;
+            document?: string | null;
+            address?: string | null;
+            bairro?: string | null;
+            cidade?: string | null;
+            estado?: string | null;
+            cep?: string | null;
+            latitude?: number | null;
+            longitude?: number | null;
+        } | null;
         items?: { productName: string; quantity: number }[];
     } | null;
 }
@@ -414,6 +430,41 @@ function DeliveryRow({
     const itemsText =
         delivery.order?.items?.map((i) => `${i.quantity}× ${i.productName}`).slice(0, 2).join(' · ') ?? '';
 
+    const { company } = useCompany();
+    const customerObj = delivery.order?.customer;
+    const distance = (() => {
+        if (
+            company?.latitude == null ||
+            company?.longitude == null ||
+            customerObj?.latitude == null ||
+            customerObj?.longitude == null
+        ) return null;
+        return distanceKm(
+            { latitude: company.latitude, longitude: company.longitude },
+            { latitude: customerObj.latitude, longitude: customerObj.longitude },
+        );
+    })();
+    const routeUrl = (() => {
+        if (!customerObj) {
+            if (delivery.destination) return googleMapsRouteUrl(null, delivery.destination);
+            return null;
+        }
+        const dest =
+            customerObj.latitude != null && customerObj.longitude != null
+                ? { latitude: customerObj.latitude, longitude: customerObj.longitude }
+                : [customerObj.address, customerObj.bairro, customerObj.cidade, customerObj.estado]
+                      .filter(Boolean)
+                      .join(', ') || delivery.destination || null;
+        if (!dest) return null;
+        const origin =
+            company?.latitude != null && company?.longitude != null
+                ? { latitude: company.latitude, longitude: company.longitude }
+                : [company?.address, company?.bairro, company?.cidade, company?.estado]
+                      .filter(Boolean)
+                      .join(', ') || null;
+        return googleMapsRouteUrl(origin, dest);
+    })();
+
     return (
         <li className={compact ? 'px-5 py-3' : 'px-5 py-4'}>
             <div className="flex items-start gap-3">
@@ -450,6 +501,25 @@ function DeliveryRow({
                         )}
                         {delivery.destination && (
                             <span className="truncate max-w-xs">📍 {delivery.destination}</span>
+                        )}
+                        {distance !== null && (
+                            <span
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+                                title={`Distância em linha reta entre a empresa e o cliente`}
+                            >
+                                <MapIcon className="w-3 h-3" /> {formatKm(distance)}
+                            </span>
+                        )}
+                        {routeUrl && (
+                            <a
+                                href={routeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+                                title="Abrir rota no Google Maps"
+                            >
+                                <ExternalLink className="w-3 h-3" /> Abrir rota
+                            </a>
                         )}
                         {delivery.scheduledDate && (
                             <span className="inline-flex items-center gap-1">

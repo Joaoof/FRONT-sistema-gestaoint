@@ -126,7 +126,8 @@ export const GET_ACCOUNTS_PAYABLE_SUMMARY = gql`
 export const GET_CUSTOMERS_LIST = gql`
   query GetCustomersList($search: String) {
     customers(search: $search) {
-      id name document email phone
+      id name nomeFantasia razaoSocial document email phone
+      address bairro cidade estado cep latitude longitude
     }
   }
 `;

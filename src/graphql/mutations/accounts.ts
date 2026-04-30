@@ -47,10 +47,23 @@ export const DELETE_ACCOUNT_PAYABLE = gql`
   }
 `;
 
+const CUSTOMER_FULL_FIELDS = `
+  id name nomeFantasia razaoSocial document email phone
+  address bairro cidade estado cep latitude longitude
+`;
+
 export const CREATE_CUSTOMER_BASIC = gql`
   mutation CreateCustomerBasic($input: CreateCustomerInput!) {
     createCustomer(input: $input) {
-      id name document email phone
+      ${CUSTOMER_FULL_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_CUSTOMER_BASIC = gql`
+  mutation UpdateCustomerBasic($id: String!, $input: CreateCustomerInput!) {
+    updateCustomer(id: $id, input: $input) {
+      ${CUSTOMER_FULL_FIELDS}
     }
   }
 `;

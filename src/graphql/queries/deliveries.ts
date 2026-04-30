@@ -18,7 +18,7 @@ const DELIVERY_FIELDS = `
     number
     customerName
     total
-    customer { id name phone document }
+    customer { id name phone document address bairro cidade estado cep latitude longitude }
     items { productName quantity unitPrice total }
   }
 `;

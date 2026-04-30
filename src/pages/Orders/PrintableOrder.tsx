@@ -62,7 +62,17 @@ interface CompanyLite {
     bairro?: string | null;
     cidade?: string | null;
     estado?: string | null;
+    cep?: string | null;
     logoUrl?: string | null;
+}
+
+function buildCompanyAddressLine(c: CompanyLite | null | undefined): string | null {
+    if (!c) return null;
+    const parts: string[] = [];
+    if (c.address) parts.push(c.address);
+    if (c.bairro) parts.push(c.bairro);
+    if (c.cidade) parts.push(`${c.cidade}${c.estado ? `/${c.estado}` : ''}`);
+    return parts.length > 0 ? parts.join(' - ') : null;
 }
 
 const formatBRL = (n: number) =>
@@ -105,12 +115,10 @@ function CompanyRow({
 }) {
     if (!value) return null;
     return (
-        <div className="flex gap-1.5">
-            <dt className="text-slate-500 font-semibold tracking-wide text-[8.5px] uppercase shrink-0 pt-[1px]">
-                {label}:
-            </dt>
+        <div className="flex gap-1 min-w-0">
+            <dt className="text-slate-500 shrink-0">{label}:</dt>
             <dd
-                className={`text-slate-900 truncate ${bold ? 'font-semibold' : ''} ${mono ? 'font-mono' : ''}`}
+                className={`text-slate-900 truncate min-w-0 ${bold ? 'font-semibold' : ''} ${mono ? 'font-mono' : ''}`}
             >
                 {value}
             </dd>
@@ -147,31 +155,31 @@ function Receipt({ order, company, via }: ReceiptProps) {
             <header className="flex items-start justify-between gap-3 pb-2 border-b border-slate-900">
                 <div className="flex items-start gap-2 min-w-0 flex-1">
                     {company?.logoUrl ? (
-                        <img src={company.logoUrl} alt="" className="w-10 h-10 rounded object-cover ring-1 ring-slate-200 shrink-0" />
+                        <img src={company.logoUrl} alt="" className="w-12 h-12 rounded object-cover ring-1 ring-slate-200 shrink-0" />
                     ) : (
-                        <div className="w-10 h-10 rounded bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white font-bold text-[11px] shrink-0">
+                        <div className="w-12 h-12 rounded bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white font-bold text-[12px] shrink-0">
                             {(company?.nomeFantasia ?? company?.name ?? 'EM').slice(0, 2).toUpperCase()}
                         </div>
                     )}
-                    <dl className="min-w-0 flex-1 grid grid-cols-1 gap-y-0 text-[9.5px] leading-tight">
-                        <CompanyRow label="RAZÃO SOCIAL" value={company?.razaoSocial ?? company?.name} bold />
-                        <CompanyRow label="FANTASIA" value={company?.nomeFantasia ?? company?.name} />
-                        <CompanyRow label="FONE" value={company?.phone} />
-                        <CompanyRow label="CNPJ/CPF" value={company?.cnpj} mono />
-                        {company?.inscricaoEstadual && (
-                            <CompanyRow label="I.E." value={company.inscricaoEstadual} mono />
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[12.5px] font-bold uppercase leading-tight">
+                            {company?.nomeFantasia ?? company?.name ?? 'Empresa'}
+                        </p>
+                        {buildCompanyAddressLine(company) && (
+                            <p className="text-[9.5px] text-slate-700 leading-tight uppercase">
+                                {buildCompanyAddressLine(company)}
+                            </p>
                         )}
-                        <CompanyRow label="ENDEREÇO" value={company?.address} />
-                        <CompanyRow label="BAIRRO" value={company?.bairro} />
-                        <CompanyRow
-                            label="CIDADE"
-                            value={
-                                company?.cidade
-                                    ? `${company.cidade}${company.estado ? ` / ${company.estado}` : ''}`
-                                    : null
-                            }
-                        />
-                    </dl>
+                        <dl className="mt-0.5 grid grid-cols-2 gap-x-3 gap-y-0 text-[9.5px] leading-tight">
+                            <CompanyRow label="CEP" value={company?.cep} mono />
+                            <CompanyRow label="Fone" value={company?.phone} />
+                            <CompanyRow label="Insc. Est" value={company?.inscricaoEstadual} mono />
+                            <CompanyRow label="CNPJ" value={company?.cnpj} mono />
+                            {company?.razaoSocial && company?.razaoSocial !== company?.nomeFantasia && (
+                                <CompanyRow label="Razão" value={company.razaoSocial} />
+                            )}
+                        </dl>
+                    </div>
                 </div>
                 <div className="text-right shrink-0">
                     <p className="text-[9.5px] text-slate-600 tabular-nums">
