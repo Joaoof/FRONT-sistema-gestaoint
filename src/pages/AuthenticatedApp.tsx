@@ -59,7 +59,17 @@ export type View =
     | 'ia'
     | 'agente-ia'
     | 'motoristas'
-    | 'configuracoes';
+    | 'configuracoes'
+    | 'obras'
+    | 'obras/cadastrar'
+    | 'obras/transacoes'
+    | 'obras/transacoes/cadastrar'
+    | 'obras/cadastros/centros-custo'
+    | 'obras/cadastros/categorias'
+    | 'obras/relatorios/previsto-realizado'
+    | 'obras/relatorios/desvio'
+    | 'obras/relatorios/fluxo-caixa'
+    | 'obras/relatorios/quebra-custos';
 
 const moduleNames: Record<View, string> = {
     dashboard: 'Dashboard',

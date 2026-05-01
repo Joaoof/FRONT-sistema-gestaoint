@@ -37,6 +37,11 @@ import {
   TrendingUp,
   UserPlus,
   Warehouse,
+  HardHat,
+  ArrowLeftRight,
+  Banknote,
+  FileText,
+  TrendingDown,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -99,6 +104,16 @@ const VIEW_TO_MODULE: Record<View, string> = {
   motoristas: 'entregas',
   ia: 'dashboard',
   'agente-ia': 'dashboard',
+  obras: 'construction',
+  'obras/cadastrar': 'construction',
+  'obras/transacoes': 'construction',
+  'obras/transacoes/cadastrar': 'construction',
+  'obras/cadastros/centros-custo': 'construction',
+  'obras/cadastros/categorias': 'construction',
+  'obras/relatorios/previsto-realizado': 'construction',
+  'obras/relatorios/desvio': 'construction',
+  'obras/relatorios/fluxo-caixa': 'construction',
+  'obras/relatorios/quebra-custos': 'construction',
 };
 
 function hasPermission(
@@ -210,6 +225,42 @@ const sections: MenuSection[] = [
         children: [
           { id: 'financeiro' as View, label: 'Visão geral', icon: PieChart },
           { id: 'relatorios/visao-geral' as View, label: 'Painel completo', icon: BarChart3 },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Construção civil',
+    items: [
+      {
+        id: 'obras' as View,
+        label: 'Obras',
+        icon: HardHat,
+        children: [
+          { id: 'obras' as View, label: 'Painel de obras', icon: HardHat },
+          { id: 'obras/cadastrar' as View, label: 'Nova obra', icon: Plus },
+          { id: 'obras/transacoes' as View, label: 'Transações', icon: ArrowLeftRight },
+          { id: 'obras/transacoes/cadastrar' as View, label: 'Nova transação', icon: Plus },
+        ],
+      },
+      {
+        id: 'obras/relatorios/previsto-realizado' as View,
+        label: 'Relatórios de obra',
+        icon: BarChart3,
+        children: [
+          { id: 'obras/relatorios/previsto-realizado' as View, label: 'Previsto vs Realizado', icon: BarChart3 },
+          { id: 'obras/relatorios/desvio' as View, label: 'Análise de desvio', icon: TrendingDown },
+          { id: 'obras/relatorios/fluxo-caixa' as View, label: 'Fluxo de caixa', icon: Banknote },
+          { id: 'obras/relatorios/quebra-custos' as View, label: 'Quebra de custos', icon: PieChart },
+        ],
+      },
+      {
+        id: 'obras/cadastros/centros-custo' as View,
+        label: 'Cadastros',
+        icon: FileText,
+        children: [
+          { id: 'obras/cadastros/centros-custo' as View, label: 'Centros de custo', icon: Building2 },
+          { id: 'obras/cadastros/categorias' as View, label: 'Categorias', icon: Tag },
         ],
       },
     ],

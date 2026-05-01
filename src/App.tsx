@@ -53,6 +53,19 @@ import { SellersPage } from './pages/Sellers/SellersPage';
 import { AIStudioPage } from './pages/AI/AIStudioPage';
 import { DriversPage } from './pages/Drivers/DriversPage';
 import { DriverProfilePage } from './pages/Drivers/DriverProfilePage';
+import { ConstructionDashboard } from './pages/Construction/ConstructionDashboard';
+import { ObrasList } from './pages/Construction/Obras/ObrasList';
+import { ObraCreate } from './pages/Construction/Obras/ObraCreate';
+import { ObraDetail } from './pages/Construction/Obras/ObraDetail';
+import { VersaoEditor } from './pages/Construction/Orcamento/VersaoEditor';
+import { TransacoesList } from './pages/Construction/Transacoes/TransacoesList';
+import { TransacaoCreate } from './pages/Construction/Transacoes/TransacaoCreate';
+import { CentrosCustoList } from './pages/Construction/Cadastros/CentrosCustoList';
+import { CategoriasConstrucaoList } from './pages/Construction/Cadastros/CategoriasConstrucaoList';
+import { PrevistoVsRealizado } from './pages/Construction/Relatorios/PrevistoVsRealizado';
+import { AnaliseDesvio } from './pages/Construction/Relatorios/AnaliseDesvio';
+import { FluxoCaixa } from './pages/Construction/Relatorios/FluxoCaixa';
+import { QuebraCustos } from './pages/Construction/Relatorios/QuebraCustos';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -160,6 +173,22 @@ function AppContent() {
             <Route path="/whatsapp/relatorio" element={<WhatsAppReportPage />} />
 
             <Route path='/help' element={<HelpPage />} />
+
+            {/* Construção civil */}
+            <Route path="/obras" element={<ObrasList />} />
+            <Route path="/obras/painel" element={<ConstructionDashboard />} />
+            <Route path="/obras/cadastrar" element={<ObraCreate />} />
+            <Route path="/obras/:id" element={<ObraDetail />} />
+            <Route path="/obras/:id/orcamento/novo" element={<VersaoEditor />} />
+            <Route path="/obras/:id/orcamento/:versaoId" element={<VersaoEditor />} />
+            <Route path="/obras/transacoes" element={<TransacoesList />} />
+            <Route path="/obras/transacoes/cadastrar" element={<TransacaoCreate />} />
+            <Route path="/obras/cadastros/centros-custo" element={<CentrosCustoList />} />
+            <Route path="/obras/cadastros/categorias" element={<CategoriasConstrucaoList />} />
+            <Route path="/obras/relatorios/previsto-realizado" element={<PrevistoVsRealizado />} />
+            <Route path="/obras/relatorios/desvio" element={<AnaliseDesvio />} />
+            <Route path="/obras/relatorios/fluxo-caixa" element={<FluxoCaixa />} />
+            <Route path="/obras/relatorios/quebra-custos" element={<QuebraCustos />} />
 
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>

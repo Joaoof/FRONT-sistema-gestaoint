@@ -51,3 +51,10 @@ ModuleRegistry.registerModule({
   description: "Manage product catalog",
   requiredPermissions: ["products:read"],
 })
+
+ModuleRegistry.registerModule({
+  id: "construction",
+  name: "Construção Civil",
+  description: "Gestão de obras, orçamentos e custos",
+  requiredPermissions: ["construction:read"],
+})
