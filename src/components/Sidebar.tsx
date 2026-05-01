@@ -116,12 +116,16 @@ const VIEW_TO_MODULE: Record<View, string> = {
   'obras/relatorios/quebra-custos': 'construction',
 };
 
+const ALWAYS_VISIBLE_MODULES = new Set(['construction']);
+
 function hasPermission(
   permissions: { module_key: string; permissions: string[] }[],
   view: View,
 ): boolean {
   const moduleKey = VIEW_TO_MODULE[view];
-  return moduleKey ? permissions.some((p) => p.module_key === moduleKey) : false;
+  if (!moduleKey) return false;
+  if (ALWAYS_VISIBLE_MODULES.has(moduleKey)) return true;
+  return permissions.some((p) => p.module_key === moduleKey);
 }
 
 const sections: MenuSection[] = [
