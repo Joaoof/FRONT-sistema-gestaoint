@@ -22,6 +22,7 @@ import { ReceivablesList } from './pages/Tax/AccountsReceivable/List';
 import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { NotificationsCenterProvider } from './contexts/NotificationsCenterContext';
 import { PrivateRoute } from './components/ProtectedRoute';
 import { CompanyProvider } from './contexts/CompanyContext';
 import { CashMovementForm } from './pages/CashMovementForm';
@@ -47,6 +48,8 @@ import { DeliveriesDashboard } from './pages/Deliveries/DeliveriesDashboard';
 import { NewDeliveryFromOrder } from './pages/Deliveries/NewDeliveryFromOrder';
 import { SellersPage } from './pages/Sellers/SellersPage';
 import { AIStudioPage } from './pages/AI/AIStudioPage';
+import { DriversPage } from './pages/Drivers/DriversPage';
+import { DriverProfilePage } from './pages/Drivers/DriverProfilePage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -82,6 +85,7 @@ function AppContent() {
           }
         >
         <NotificationProvider>
+        <NotificationsCenterProvider>
           <Routes>
             <Route path="/" element={<LoginForm />} />
             <Route
@@ -143,6 +147,8 @@ function AppContent() {
 
             <Route path="/vendedores" element={<SellersPage />} />
             <Route path="/ia" element={<AIStudioPage />} />
+            <Route path="/motoristas" element={<DriversPage />} />
+            <Route path="/motoristas/:id" element={<DriverProfilePage />} />
             <Route path="/configuracoes" element={<SettingsPage />} />
             <Route path="/empresa" element={<CompanySettings />} />
 
@@ -152,6 +158,7 @@ function AppContent() {
 
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>
+        </NotificationsCenterProvider>
         </NotificationProvider>
         </main>
       </div>

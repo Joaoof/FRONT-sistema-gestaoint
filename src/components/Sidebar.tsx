@@ -161,6 +161,7 @@ const sections: MenuSection[] = [
         children: [
           { id: 'entregas' as View, label: 'Painel', icon: Truck },
           { id: 'entregas/cadastrar' as View, label: 'Nova entrega', icon: Plus },
+          { id: 'motoristas' as View, label: 'Motoristas', icon: UserPlus },
           { id: 'entregas/agendar' as View, label: 'Agendar rota', icon: ClipboardList },
           { id: 'entregas/relatorios' as View, label: 'Relatórios', icon: BarChart3 },
         ],

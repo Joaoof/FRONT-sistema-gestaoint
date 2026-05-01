@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { Bell, Search, ChevronRight, Slash, Command } from "lucide-react";
+import { Bell, BellRing, Check, Search, ChevronRight, Slash, Command, Trash2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useCompany } from "../contexts/CompanyContext";
 import { useLowStock } from "../hooks/useLowStock";
+import { useNotificationsCenter } from "../contexts/NotificationsCenterContext";
 
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
@@ -46,6 +47,19 @@ export function Topbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const { items: notifications, unreadCount: notifUnread, markAllRead, markRead, remove: removeNotif, clear: clearNotifs } = useNotificationsCenter();
+
+  // Fecha o dropdown de atividade ao clicar fora
+  useEffect(() => {
+    if (!activityOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-activity-menu]')) setActivityOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [activityOpen]);
   const [searchFocused, setSearchFocused] = useState(false);
   const [isMac, setIsMac] = useState(true);
   const { lowStock, count: lowStockCount, outOfStockCount } = useLowStock({ liveToasts: true });
@@ -173,7 +187,115 @@ export function Topbar() {
         </kbd>
       </div>
 
-      {/* Notifications */}
+      {/* Central de atividades (notificações in-app) */}
+      <div className="relative" data-activity-menu>
+        <button
+          type="button"
+          aria-label={`Atividades${notifUnread > 0 ? ` — ${notifUnread} não lida${notifUnread === 1 ? '' : 's'}` : ''}`}
+          aria-haspopup="menu"
+          aria-expanded={activityOpen}
+          onClick={() => {
+            setActivityOpen(v => !v);
+            if (!activityOpen && notifUnread > 0) markAllRead();
+          }}
+          className="relative w-8 h-8 flex items-center justify-center rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors"
+        >
+          {notifUnread > 0 ? (
+            <BellRing className="w-[15px] h-[15px] animate-wiggle" strokeWidth={1.75} />
+          ) : (
+            <Bell className="w-[15px] h-[15px]" strokeWidth={1.75} />
+          )}
+          {notifUnread > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 inline-flex items-center justify-center text-[10px] font-bold text-white rounded-full ring-2 ring-white dark:ring-slate-950 tabular-nums bg-violet-600">
+              {notifUnread > 9 ? '9+' : notifUnread}
+            </span>
+          )}
+        </button>
+
+        {activityOpen && (
+          <div
+            role="menu"
+            className="absolute right-0 top-[calc(100%+6px)] w-96 max-h-[480px] overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-md shadow-soft-lg flex flex-col animate-fade-in-up z-50"
+          >
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+              <div>
+                <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Atividades</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Eventos recentes do sistema</p>
+              </div>
+              {notifications.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearNotifs}
+                  title="Limpar tudo"
+                  className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 rounded"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {notifications.length === 0 ? (
+              <div className="px-4 py-10 text-center text-[12.5px] text-slate-500 dark:text-slate-400">
+                Sem atividades por aqui ainda.<br />
+                <span className="text-[11px]">Vendas, entregas e alertas aparecem em tempo real.</span>
+              </div>
+            ) : (
+              <ul className="overflow-y-auto divide-y divide-slate-100 dark:divide-white/[0.06]">
+                {notifications.map((n) => (
+                  <li key={n.id} className={!n.read ? 'bg-violet-50/50 dark:bg-violet-500/5' : ''}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        markRead(n.id);
+                        if (n.href) {
+                          setActivityOpen(false);
+                          navigate(n.href);
+                        }
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors flex gap-3"
+                    >
+                      {n.iconUrl ? (
+                        <img src={n.iconUrl} alt="" className="w-9 h-9 object-contain shrink-0 mt-0.5" />
+                      ) : (
+                        <span className={`w-8 h-8 rounded-md grid place-items-center text-[10px] font-bold uppercase shrink-0 mt-0.5 ${
+                          n.type === 'order' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' :
+                          n.type === 'delivery' ? 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300' :
+                          n.type === 'stock' ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300' :
+                          n.type === 'driver' ? 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300' :
+                          'bg-slate-100 text-slate-600 dark:bg-white/[0.05] dark:text-slate-300'
+                        }`}>
+                          {n.type.slice(0, 3)}
+                        </span>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12.5px] font-semibold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+                          {n.title}
+                          {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />}
+                        </p>
+                        {n.message && (
+                          <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{n.message}</p>
+                        )}
+                        <p className="text-[10.5px] text-slate-400 dark:text-slate-500 mt-1 tabular-nums">
+                          {new Date(n.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeNotif(n.id); }}
+                        className="text-slate-300 hover:text-slate-600 dark:hover:text-slate-200 p-1 -mr-1 self-start"
+                        aria-label="Remover notificação"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Notifications (alertas de estoque) */}
       <div className="relative" data-alerts-menu>
         <button
           type="button"

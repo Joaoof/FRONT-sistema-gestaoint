@@ -3,7 +3,10 @@ import { gql } from '@apollo/client';
 const DELIVERY_FIELDS = `
   id
   orderId
+  driverId
   driver
+  driverPhotoUrl
+  driverPhone
   vehicle
   destination
   scheduledDate

@@ -22,7 +22,9 @@ import {
     CREATE_DELIVERY,
     GET_DELIVERABLE_ORDERS,
 } from '../../graphql/queries/deliveries';
+import { GET_DRIVERS } from '../../graphql/queries/drivers';
 import { useCompany } from '../../contexts/CompanyContext';
+import { useNotificationsCenter } from '../../contexts/NotificationsCenterContext';
 import {
     distanceKm,
     fetchDrivingRoute,
@@ -65,8 +67,10 @@ function buildAddressString(c: NonNullable<DeliverableOrder['customer']>): strin
 export function NewDeliveryFromOrder() {
     const navigate = useNavigate();
     const { company } = useCompany();
+    const { push: pushNotification } = useNotificationsCenter();
     const [search, setSearch] = useState('');
     const [orderId, setOrderId] = useState<string>('');
+    const [driverId, setDriverId] = useState('');
     const [driver, setDriver] = useState('');
     const [vehicle, setVehicle] = useState('');
     const [destination, setDestination] = useState('');
@@ -81,7 +85,32 @@ export function NewDeliveryFromOrder() {
         GET_DELIVERABLE_ORDERS,
         { fetchPolicy: 'cache-and-network' },
     );
+    const { data: driversData } = useQuery<{
+        drivers: {
+            id: string;
+            name: string;
+            photoUrl: string | null;
+            phone: string | null;
+            cnhCategory: string | null;
+            vehicle: string | null;
+            vehiclePlate: string | null;
+            active: boolean;
+        }[];
+    }>(GET_DRIVERS, { variables: { activeOnly: true }, fetchPolicy: 'cache-and-network' });
+    const drivers = driversData?.drivers ?? [];
+    const selectedDriver = drivers.find((d) => d.id === driverId);
+
     const [createDelivery, { loading: creating }] = useMutation(CREATE_DELIVERY);
+    const [confirmModal, setConfirmModal] = useState<{
+        deliveryId: string;
+        driverName: string;
+        driverPhotoUrl: string | null;
+        driverPhone: string | null;
+        cnhCategory: string | null;
+        vehicle: string | null;
+        destination: string | null;
+        orderNumber: number;
+    } | null>(null);
 
     const orders = data?.deliverableOrders ?? [];
     const filtered = useMemo(() => {
@@ -187,7 +216,8 @@ export function NewDeliveryFromOrder() {
                 variables: {
                     input: {
                         orderId,
-                        driver: driver || undefined,
+                        driverId: driverId || undefined,
+                        driver: !driverId && driver ? driver : undefined,
                         vehicle: vehicle || undefined,
                         destination: destination || undefined,
                         scheduledDate: scheduledDate ? new Date(scheduledDate).toISOString() : undefined,
@@ -196,10 +226,30 @@ export function NewDeliveryFromOrder() {
                 },
             });
             const created = res.data?.createDelivery;
-            toast.success(`Entrega criada para o pedido #${selected?.number}`, {
-                description: created?.id ? `ID ${created.id.slice(0, 8)}` : undefined,
+            toast.success(`Entrega criada para o pedido #${selected?.number}`);
+            const driverName = selectedDriver?.name ?? driver;
+            pushNotification({
+                type: 'delivery',
+                title: `Entrega designada · pedido #${selected?.number}`,
+                message: driverName ? `Motorista: ${driverName}` : 'Sem motorista vinculado',
+                href: '/entregas',
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/5952/5952766.png',
             });
-            navigate('/entregas');
+            // Abre modal de confirmação celebrando a designação
+            if (created && (selectedDriver || driver)) {
+                setConfirmModal({
+                    deliveryId: created.id,
+                    driverName: selectedDriver?.name ?? driver,
+                    driverPhotoUrl: selectedDriver?.photoUrl ?? null,
+                    driverPhone: selectedDriver?.phone ?? null,
+                    cnhCategory: selectedDriver?.cnhCategory ?? null,
+                    vehicle: vehicle || (selectedDriver?.vehicle ?? null),
+                    destination: destination || null,
+                    orderNumber: selected?.number ?? 0,
+                });
+            } else {
+                navigate('/entregas');
+            }
         } catch (err: any) {
             toast.error(err?.message ?? 'Erro ao criar entrega');
         }
@@ -432,12 +482,40 @@ export function NewDeliveryFromOrder() {
                         )}
 
                         <Field icon={<User className="w-4 h-4" />} label="Motorista">
-                            <input
-                                value={driver}
-                                onChange={(e) => setDriver(e.target.value)}
-                                placeholder="Nome do entregador"
+                            <select
+                                value={driverId}
+                                onChange={(e) => {
+                                    const id = e.target.value;
+                                    setDriverId(id);
+                                    const d = drivers.find((dd) => dd.id === id);
+                                    if (d && !vehicle && d.vehicle) {
+                                        setVehicle([d.vehicle, d.vehiclePlate ? `(${d.vehiclePlate})` : null].filter(Boolean).join(' '));
+                                    }
+                                }}
                                 className="w-full p-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
-                            />
+                            >
+                                <option value="">— Sem motorista vinculado —</option>
+                                {drivers.map((d) => (
+                                    <option key={d.id} value={d.id}>
+                                        {d.name}
+                                        {d.cnhCategory ? ` · CNH ${d.cnhCategory}` : ''}
+                                        {d.vehicle ? ` · ${d.vehicle}` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            {drivers.length === 0 && (
+                                <p className="mt-1 text-[11.5px] text-slate-500">
+                                    Nenhum motorista cadastrado. <a href="/motoristas" className="text-violet-600 underline">Cadastre agora</a>.
+                                </p>
+                            )}
+                            {!driverId && drivers.length > 0 && (
+                                <input
+                                    value={driver}
+                                    onChange={(e) => setDriver(e.target.value)}
+                                    placeholder="Ou digite um nome avulso"
+                                    className="mt-2 w-full p-2 border border-dashed border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[12px]"
+                                />
+                            )}
                         </Field>
 
                         <Field icon={<Car className="w-4 h-4" />} label="Veículo">
@@ -524,6 +602,113 @@ export function NewDeliveryFromOrder() {
                     </div>
                 </section>
             </form>
+
+            {/* Modal celebratório: entrega designada */}
+            {confirmModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                        {/* Topo: ícone da van + mensagem */}
+                        <div className="px-6 pt-6 pb-4 text-center bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-500/15 dark:to-transparent">
+                            <img
+                                src="https://cdn-icons-png.flaticon.com/512/5952/5952766.png"
+                                alt="Entrega"
+                                className="w-28 h-28 mx-auto object-contain animate-bounce-slow"
+                                style={{ animation: 'bounce-slow 1.6s ease-in-out infinite' }}
+                            />
+                            <h3 className="mt-3 text-[16px] font-bold text-slate-900 dark:text-white">
+                                Entrega será realizada!
+                            </h3>
+                            <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-1">
+                                Pedido <span className="font-semibold">#{confirmModal.orderNumber}</span> foi designado.
+                            </p>
+                        </div>
+
+                        {/* Card do motorista */}
+                        <div className="px-5 py-4 border-y border-slate-100 dark:border-white/[0.06] flex items-center gap-3">
+                            <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-violet-500 to-fuchsia-500 grid place-items-center text-white text-[16px] font-bold ring-2 ring-white dark:ring-slate-900 shrink-0">
+                                {confirmModal.driverPhotoUrl ? (
+                                    <img src={confirmModal.driverPhotoUrl} alt={confirmModal.driverName} className="w-full h-full object-cover" />
+                                ) : (
+                                    <span>
+                                        {confirmModal.driverName
+                                            .trim()
+                                            .split(/\s+/)
+                                            .slice(0, 2)
+                                            .map((n) => n[0]?.toUpperCase() ?? '')
+                                            .join('')}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[14px] font-semibold text-slate-900 dark:text-white truncate">
+                                    {confirmModal.driverName}
+                                </p>
+                                <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                                    {confirmModal.cnhCategory && (
+                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20">
+                                            CNH {confirmModal.cnhCategory}
+                                        </span>
+                                    )}
+                                    {confirmModal.driverPhone && (
+                                        <span className="text-[11px] text-slate-600 dark:text-slate-400 tabular-nums">
+                                            📞 {confirmModal.driverPhone}
+                                        </span>
+                                    )}
+                                </div>
+                                {confirmModal.vehicle && (
+                                    <p className="text-[11.5px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                        🛵 {confirmModal.vehicle}
+                                    </p>
+                                )}
+                                {confirmModal.destination && (
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-500 truncate mt-0.5">
+                                        📍 {confirmModal.destination}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Ações */}
+                        <div className="px-5 py-3 flex flex-col gap-2 bg-slate-50 dark:bg-white/[0.02]">
+                            {selectedDriver && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setConfirmModal(null);
+                                        navigate(`/motoristas/${selectedDriver.id}`);
+                                    }}
+                                    className="inline-flex items-center justify-center gap-1.5 h-10 px-4 text-[13px] font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-md shadow-sm"
+                                >
+                                    Ver perfil do motorista
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setConfirmModal(null);
+                                    navigate('/entregas');
+                                }}
+                                className="h-9 px-4 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-md"
+                            >
+                                Ir para painel de entregas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Animação custom */}
+            <style>{`
+                @keyframes bounce-slow {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-6px); }
+                }
+                @keyframes fade-in {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                .animate-fade-in { animation: fade-in 0.2s ease-out; }
+            `}</style>
         </div>
     );
 }

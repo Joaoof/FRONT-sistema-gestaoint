@@ -27,6 +27,7 @@ import { CREATE_CUSTOMER_BASIC } from '../../graphql/mutations/accounts';
 import { CREATE_ORDER } from '../../graphql/queries/orders';
 import { GET_SELLERS } from '../../graphql/queries/sellers';
 import { getCurrentPosition, lookupCep, reverseGeocode } from '../../utils/location';
+import { useNotificationsCenter } from '../../contexts/NotificationsCenterContext';
 import { ProductImage } from '../../components/ProductImage';
 
 type PaymentMethod = 'CASH' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'BOLETO' | 'TRANSFER' | 'OTHER';
@@ -76,6 +77,7 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ReactN
 
 export function NewSale() {
     const navigate = useNavigate();
+    const { push: pushNotification } = useNotificationsCenter();
     const [search, setSearch] = useState('');
     const [cart, setCart] = useState<CartItem[]>([]);
     const [customerId, setCustomerId] = useState<string>('');
@@ -359,6 +361,12 @@ export function NewSale() {
                 description: `Total: ${formatBRL(order?.total ?? total)}`,
             });
             if (order?.id) {
+                pushNotification({
+                    type: 'order',
+                    title: `Pedido #${order.number} criado`,
+                    message: `Cliente: ${selectedCustomer?.name ?? customerName ?? 'Avulso'} · Total: ${formatBRL(Number(order.total ?? total))}`,
+                    href: `/pedidos/${order.id}/imprimir`,
+                });
                 setPrintPrompt({
                     id: order.id,
                     number: Number(order.number ?? 0),
