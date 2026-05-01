@@ -95,6 +95,10 @@ const VIEW_TO_MODULE: Record<View, string> = {
   help: 'dashboard',
   empresa: 'configuracoes',
   configuracoes: 'configuracoes',
+  vendedores: 'vendas',
+  motoristas: 'entregas',
+  ia: 'dashboard',
+  'agente-ia': 'dashboard',
 };
 
 function hasPermission(
