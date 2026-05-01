@@ -23,6 +23,9 @@ import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { NotificationsCenterProvider } from './contexts/NotificationsCenterContext';
+import { AIAgentProvider } from './contexts/AIAgentContext';
+import { AIAgentWidget } from './components/AIAgentWidget';
+import { AIAgentPage } from './pages/AI/AIAgentPage';
 import { PrivateRoute } from './components/ProtectedRoute';
 import { CompanyProvider } from './contexts/CompanyContext';
 import { CashMovementForm } from './pages/CashMovementForm';
@@ -62,6 +65,7 @@ function AppContent() {
 
   return (
     <NotificationsCenterProvider>
+    <AIAgentProvider>
     <div className="flex min-h-screen bg-surface text-ink antialiased">
       {showSidebar && (
         <PrivateRoute>
@@ -147,6 +151,7 @@ function AppContent() {
 
             <Route path="/vendedores" element={<SellersPage />} />
             <Route path="/ia" element={<AIStudioPage />} />
+            <Route path="/agente-ia" element={<AIAgentPage />} />
             <Route path="/motoristas" element={<DriversPage />} />
             <Route path="/motoristas/:id" element={<DriverProfilePage />} />
             <Route path="/configuracoes" element={<SettingsPage />} />
@@ -160,8 +165,10 @@ function AppContent() {
           </Routes>
         </NotificationProvider>
         </main>
+        {showSidebar && <AIAgentWidget />}
       </div>
     </div>
+    </AIAgentProvider>
     </NotificationsCenterProvider>
   );
 }

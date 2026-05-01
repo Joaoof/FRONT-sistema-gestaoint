@@ -41,7 +41,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { SidebarStockAlerts } from './SidebarStockAlerts';
 
 interface MenuItem {
   id: View;
@@ -173,6 +172,7 @@ const sections: MenuSection[] = [
     label: 'Inteligência',
     items: [
       { id: 'ia' as View, label: 'IA Studio', icon: Sparkles },
+      { id: 'agente-ia' as View, label: 'Agente de IA', icon: MessageCircle },
     ],
   },
   {
@@ -391,9 +391,6 @@ export function Sidebar({
           </div>
         )}
       </nav>
-
-      {/* Painel de alertas de estoque ao vivo */}
-      <SidebarStockAlerts />
 
       {/* Atalho WhatsApp */}
       <div className="px-2 pb-2">
