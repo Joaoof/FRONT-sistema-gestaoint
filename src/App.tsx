@@ -61,6 +61,7 @@ function AppContent() {
   const showSidebar = location.pathname !== '/' && !isPrintRoute;
 
   return (
+    <NotificationsCenterProvider>
     <div className="flex min-h-screen bg-surface text-ink antialiased">
       {showSidebar && (
         <PrivateRoute>
@@ -85,7 +86,6 @@ function AppContent() {
           }
         >
         <NotificationProvider>
-        <NotificationsCenterProvider>
           <Routes>
             <Route path="/" element={<LoginForm />} />
             <Route
@@ -158,11 +158,11 @@ function AppContent() {
 
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>
-        </NotificationsCenterProvider>
         </NotificationProvider>
         </main>
       </div>
     </div>
+    </NotificationsCenterProvider>
   );
 }
 
