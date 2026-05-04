@@ -51,6 +51,7 @@ import { DeliveriesDashboard } from './pages/Deliveries/DeliveriesDashboard';
 import { NewDeliveryFromOrder } from './pages/Deliveries/NewDeliveryFromOrder';
 import { SellersPage } from './pages/Sellers/SellersPage';
 import { BanksPage } from './pages/Banks/BanksPage';
+import { AlertsPage } from './pages/Alerts/AlertsPage';
 import { AIStudioPage } from './pages/AI/AIStudioPage';
 import { DriversPage } from './pages/Drivers/DriversPage';
 import { DriverProfilePage } from './pages/Drivers/DriverProfilePage';
@@ -165,6 +166,7 @@ function AppContent() {
 
             <Route path="/vendedores" element={<SellersPage />} />
             <Route path="/bancos" element={<BanksPage />} />
+            <Route path="/alertas" element={<AlertsPage />} />
             <Route path="/ia" element={<AIStudioPage />} />
             <Route path="/agente-ia" element={<AIAgentPage />} />
             <Route path="/motoristas" element={<DriversPage />} />

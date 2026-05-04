@@ -39,6 +39,7 @@ import {
   Warehouse,
   HardHat,
   Landmark,
+  Bell,
   ArrowLeftRight,
   Banknote,
   FileText,
@@ -103,6 +104,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   configuracoes: 'configuracoes',
   vendedores: 'vendas',
   bancos: 'bancos',
+  alertas: 'alertas',
   motoristas: 'entregas',
   ia: 'dashboard',
   'agente-ia': 'dashboard',
@@ -118,7 +120,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   'obras/relatorios/quebra-custos': 'construction',
 };
 
-const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos']);
+const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas']);
 
 function hasPermission(
   permissions: { module_key: string; permissions: string[] }[],
@@ -275,6 +277,7 @@ const sections: MenuSection[] = [
   {
     label: 'Sistema',
     items: [
+      { id: 'alertas' as View, label: 'Alertas', icon: Bell },
       { id: 'empresa' as View, label: 'Empresa', icon: Building2 },
       { id: 'configuracoes' as View, label: 'Configurações', icon: Settings },
       { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },
