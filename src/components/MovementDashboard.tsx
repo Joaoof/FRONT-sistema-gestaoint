@@ -1,20 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-    DollarSign,
-    ArrowUpCircle,
+    ArrowUpRight,
+    ArrowDownRight,
     Calendar,
-    TrendingUp,
-    TrendingDown,
-    Target,
-    Box,
-    GraduationCap,
+    Plus,
     LogOut,
-    AlertTriangle,
-    Info,
+    Receipt,
+    History,
+    Landmark,
+    Sparkles,
+    ArrowUp,
+    ArrowDown,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-// Recharts
 import {
     BarChart,
     Bar,
@@ -22,594 +20,715 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
-    LineChart,
-    Line,
     ResponsiveContainer,
+    AreaChart,
+    Area,
+    Cell,
 } from 'recharts';
-
-// Framer Motion
-import { motion, Variants } from 'framer-motion'; // Importamos 'Variants' explicitamente
+import { motion } from 'framer-motion';
+import CountUp from 'react-countup';
 import { useQuery } from '@apollo/client';
 import { GET_DASHBOARD_STATS } from '../graphql/queries/dashboard';
+import { GET_CASH_MOVEMENTS } from '../graphql/queries/queries';
+import { GET_BANKS } from '../graphql/queries/banks';
 import { LoadingSpinner } from './common/LoadingSpinner';
 import { formatCurrency } from '../utils/formatValue';
 import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../hooks/useNotification';
 
+const PAYMENT_LABEL: Record<string, string> = {
+    CASH: 'Dinheiro',
+    PIX: 'PIX',
+    CREDIT_CARD: 'Crédito',
+    DEBIT_CARD: 'Débito',
+    BANK_TRANSFER: 'Transferência',
+    BANK_SLIP: 'Boleto',
+    CHECK: 'Cheque',
+    OTHER: 'Outros',
+};
+
+const CATEGORY_LABEL: Record<string, string> = {
+    SALE: 'Venda',
+    CHANGE: 'Troco',
+    OTHER_IN: 'Outros',
+    EXPENSE: 'Despesa',
+    WITHDRAWAL: 'Saque',
+    PAYMENT: 'Pagamento',
+};
+
+const CATEGORY_COLOR: Record<string, string> = {
+    SALE: '#10b981',
+    CHANGE: '#14b8a6',
+    OTHER_IN: '#22c55e',
+    EXPENSE: '#ef4444',
+    WITHDRAWAL: '#f97316',
+    PAYMENT: '#e11d48',
+};
+
+function timeAgo(date: Date) {
+    const diff = Date.now() - date.getTime();
+    const min = Math.floor(diff / 60000);
+    const hr = Math.floor(min / 60);
+    const day = Math.floor(hr / 24);
+    if (day > 0) return `há ${day}d`;
+    if (hr > 0) return `há ${hr}h`;
+    if (min > 0) return `há ${min} min`;
+    return 'agora';
+}
+
 export function MovementDashboard() {
     const navigate = useNavigate();
     const today = new Date().toISOString().split('T')[0];
     const [filterDate, setFilterDate] = useState<string>(today);
-    const [metaMensal, setMetaMensal] = useState<number>(20000);
-    const [isEditing, setIsEditing] = useState<boolean>(false);
-    const [inputValue, setInputValue] = useState<string>(metaMensal.toFixed(2));
     const { notifyError } = useNotification();
-
     const { user, isLoading: isAuthLoading, logout } = useAuth();
-    const userId = user?.id; // Obtém o ID do usuário
+    const userId = user?.id;
 
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem('accessToken');
     const shouldSkip = !userId || isAuthLoading;
 
     const { data, loading, error } = useQuery(GET_DASHBOARD_STATS, {
-        variables: {
-            input: { date: filterDate, userId }
-        },
+        variables: { input: { date: filterDate, userId } },
         skip: shouldSkip,
         pollInterval: 30000,
-        context: {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
+        context: { headers: { Authorization: `Bearer ${token}` } },
     });
 
-    const handleLogout = async () => {
-        await logout();
-    };
+    const { data: movesData } = useQuery(GET_CASH_MOVEMENTS, {
+        fetchPolicy: 'cache-and-network',
+    });
+    const allMoves = (movesData?.cashMovements ?? []) as Array<{
+        id: string;
+        type: 'ENTRY' | 'EXIT';
+        category: string;
+        value: number;
+        description: string;
+        date: string;
+        typePayment?: string | null;
+        bankId?: string | null;
+    }>;
 
-    console.log("GraphQL endpoint:", import.meta.env.VITE_GRAPHQL_ENDPOINT);
+    const { data: banksData } = useQuery(GET_BANKS, {
+        fetchPolicy: 'cache-and-network',
+    });
+    const bankMap = useMemo(() => {
+        const m = new Map<string, { name: string; corHex: string }>();
+        for (const b of (banksData?.banks ?? []) as any[]) m.set(b.id, b);
+        return m;
+    }, [banksData]);
 
-    if (isAuthLoading) return <LoadingSpinner />;
+    // ============= analytics =============
+    const dashboardStats = data?.dashboardStats;
+    const entries = dashboardStats?.todayEntries || 0;
+    const exits = dashboardStats?.todayExits || 0;
+    const balance = dashboardStats?.todayBalance || 0;
+    const totalMes = dashboardStats?.monthlyTotal || 0;
+    const totalMovements = dashboardStats?.totalMovements || allMoves.length;
 
-    if (loading) return <LoadingSpinner />;
+    // 14 dias de tendência derivada das movimentações (real, não mock)
+    const dailyTrend = useMemo(() => {
+        const map = new Map<string, { date: string; entradas: number; saidas: number; saldo: number; label: string }>();
+        const days: string[] = [];
+        const t = new Date();
+        for (let i = 13; i >= 0; i--) {
+            const d = new Date(t);
+            d.setDate(t.getDate() - i);
+            const key = d.toISOString().slice(0, 10);
+            days.push(key);
+            map.set(key, {
+                date: key,
+                entradas: 0,
+                saidas: 0,
+                saldo: 0,
+                label: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            });
+        }
+        for (const m of allMoves) {
+            if (!m.date) continue;
+            const key = new Date(m.date).toISOString().slice(0, 10);
+            const slot = map.get(key);
+            if (!slot) continue;
+            if (m.type === 'ENTRY') slot.entradas += Number(m.value);
+            else slot.saidas += Number(m.value);
+            slot.saldo = slot.entradas - slot.saidas;
+        }
+        return days.map((k) => map.get(k)!);
+    }, [allMoves]);
+
+    // comparação 7 dias atuais vs 7 anteriores
+    const comparison = useMemo(() => {
+        const last7 = dailyTrend.slice(-7);
+        const prev7 = dailyTrend.slice(0, 7);
+        const sumE = (a: typeof dailyTrend) => a.reduce((acc, b) => acc + b.entradas, 0);
+        const sumS = (a: typeof dailyTrend) => a.reduce((acc, b) => acc + b.saidas, 0);
+        const cur = sumE(last7) - sumS(last7);
+        const prev = sumE(prev7) - sumS(prev7);
+        const delta = prev === 0 ? 0 : ((cur - prev) / Math.abs(prev)) * 100;
+        const eDelta = sumE(prev7) === 0 ? 0 : ((sumE(last7) - sumE(prev7)) / Math.abs(sumE(prev7))) * 100;
+        const sDelta = sumS(prev7) === 0 ? 0 : ((sumS(last7) - sumS(prev7)) / Math.abs(sumS(prev7))) * 100;
+        return { delta, entriesDelta: eDelta, exitsDelta: sDelta };
+    }, [dailyTrend]);
+
+    // top categorias do filtro do dia
+    const categoryBreakdown = useMemo(() => {
+        const counter = new Map<string, { count: number; total: number }>();
+        for (const m of allMoves) {
+            if (!m.date) continue;
+            const key = new Date(m.date).toISOString().slice(0, 10);
+            if (key !== filterDate) continue;
+            const cat = m.category;
+            const cur = counter.get(cat) ?? { count: 0, total: 0 };
+            cur.count += 1;
+            cur.total += Number(m.value);
+            counter.set(cat, cur);
+        }
+        return Array.from(counter.entries())
+            .map(([cat, v]) => ({
+                category: cat,
+                label: CATEGORY_LABEL[cat] ?? cat,
+                color: CATEGORY_COLOR[cat] ?? '#94a3b8',
+                count: v.count,
+                total: v.total,
+            }))
+            .sort((a, b) => b.total - a.total);
+    }, [allMoves, filterDate]);
+
+    const totalCatVolume = categoryBreakdown.reduce((acc, c) => acc + c.total, 0);
+
+    // bar chart "hoje": valor por categoria — mais útil que entries vs exits do dia
+    const todayBars = useMemo(() => {
+        return categoryBreakdown.slice(0, 6).map((c) => ({
+            name: c.label,
+            valor: c.total,
+            color: c.color,
+        }));
+    }, [categoryBreakdown]);
+
+    // recent activity (últimas 6, ordenadas por data desc)
+    const recentMoves = useMemo(() => {
+        return [...allMoves]
+            .sort((a, b) => {
+                const da = a.date ? new Date(a.date).getTime() : 0;
+                const db = b.date ? new Date(b.date).getTime() : 0;
+                return db - da;
+            })
+            .slice(0, 6);
+    }, [allMoves]);
+
+    // saldo por banco
+    const bankBalance = useMemo(() => {
+        const map = new Map<string, { name: string; color: string; total: number }>();
+        for (const m of allMoves) {
+            if (!m.bankId) continue;
+            const b = bankMap.get(m.bankId);
+            if (!b) continue;
+            const cur = map.get(m.bankId) ?? { name: b.name, color: b.corHex, total: 0 };
+            cur.total += m.type === 'ENTRY' ? Number(m.value) : -Number(m.value);
+            map.set(m.bankId, cur);
+        }
+        return Array.from(map.values()).sort((a, b) => Math.abs(b.total) - Math.abs(a.total));
+    }, [allMoves, bankMap]);
+
+    if (isAuthLoading || loading) return <LoadingSpinner />;
 
     if (error) {
         const errorMessage = getGraphQLErrorMessages(error);
         notifyError(errorMessage as any);
         return (
-            <div className="p-8 text-center bg-red-50 dark:bg-red-950/40 border border-red-300 rounded-xl m-8">
-                <p className="text-xl font-bold text-red-700 dark:text-red-300 mb-2">Ops, Ocorreu um Erro!</p>
-                <p className="text-red-600 dark:text-red-400">Não foi possível carregar os dados do painel. Detalhes: {errorMessage}</p>
-                <p className="text-sm text-red-500 mt-2">Por favor, tente recarregar a página. Se o erro persistir, verifique a conexão com o servidor.</p>
+            <div className="p-8 text-center bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 rounded-xl m-8">
+                <p className="text-lg font-semibold text-rose-700 dark:text-rose-300 mb-2">Falha ao carregar painel</p>
+                <p className="text-sm text-rose-600 dark:text-rose-400">{String(errorMessage)}</p>
             </div>
         );
     }
 
-    const dashboardStats = data?.dashboardStats;
-
-    const entries = dashboardStats?.todayEntries || 0;
-    const exits = dashboardStats?.todayExits || 0;
-    const balance = dashboardStats?.todayBalance || 0;
-    const totalMes = dashboardStats?.monthlyTotal || 0;
-    const totalMovements = dashboardStats?.totalMovements || 0;
-
-    const monthlyData = Array.from({ length: 7 }, (_, i) => {
-        const base = Math.random() > 0.5 ? 1 : -1;
-        return {
-            day: i + 1,
-            entradas: Number((Math.random() * 1000).toFixed(2)),
-            saidas: Number((Math.random() * 600).toFixed(2)),
-            saldo: Number((Math.random() * 800 * base).toFixed(2)),
-        };
-    });
-
-    const entriesPerCategory = dashboardStats?.entriesPerCategory || {};
-
-    type EntradaCategoria = { categoria: string; valor: number };
-
-    const top3Entradas: EntradaCategoria[] = Object.entries(entriesPerCategory)
-        .map(([categoria, valor]) => ({ categoria, valor: Number(valor) }))
-        .sort((a, b) => b.valor - a.valor)
-        .slice(0, 3);
-
-    const margemLucroValue = entries > 0 ? ((balance / entries) * 100) : 0;
-    const isMargemPositiva = margemLucroValue >= 0;
-    const margemLucroDisplay = `${margemLucroValue.toFixed(1)}%`;
-    const mockModuleKpis = [
-        {
-            label: 'Margem de Lucro',
-            value: margemLucroDisplay,
-            icon: TrendingUp,
-            color: isMargemPositiva ? 'green' : 'red',
-            borderColor: isMargemPositiva ? 'border-green-900' : 'border-red-900',
-            bgColor: isMargemPositiva ? 'bg-green-700' : 'bg-red-700',
-            isModuleReady: true,
-            valueClass: isMargemPositiva ? 'text-green-900' : 'text-red-900',
-            subText: 'Atualizado para o período selecionado',
-            badgeText: isMargemPositiva ? 'Positiva' : 'Atenção'
-        },
-        {
-            label: 'Total de Lançamentos',
-            value: totalMovements.toLocaleString('pt-BR'),
-            icon: DollarSign,
-            color: 'blue',
-            borderColor: 'border-blue-900',
-            bgColor: 'bg-blue-700',
-            isModuleReady: true,
-            valueClass: 'text-blue-900',
-            subText: 'Contagem de entradas e saídas',
-            badgeText: 'Contagem'
-        },
-        {
-            label: 'Top Categoria (Entradas)',
-            value: top3Entradas,
-            icon: GraduationCap,
-            color: 'purple',
-            borderColor: 'border-purple-900',
-            bgColor: 'bg-purple-700',
-            isModuleReady: true,
-            valueClass: 'text-purple-900',
-            subText: top3Entradas.length > 0 ? formatCurrency(top3Entradas[0].valor) : 'N/A',
-            badgeText: top3Entradas.length > 0 ? top3Entradas[0].categoria : 'Sem dados'
-        },
-        {
-            label: 'Controle de Estoque',
-            value: 'EM BREVE',
-            icon: Box,
-            color: 'gray', // Cor neutra
-            borderColor: 'border-gray-500',
-            bgColor: 'bg-gray-200 dark:bg-slate-700', // Fundo mais sutil para a borda lateral
-            isModuleReady: false, // Módulo não pronto
-            valueClass: 'text-gray-500 dark:text-slate-400',
-            subText: 'Gerenciamento e alertas de inventário.',
-            badgeText: 'Módulo'
-        },
-        {
-            label: 'Contas a Pagar/Receber',
-            value: 'EM BREVE',
-            icon: AlertTriangle,
-            color: 'gray', // Cor neutra
-            borderColor: 'border-gray-500',
-            bgColor: 'bg-gray-200 dark:bg-slate-700', // Fundo mais sutil para a borda lateral
-            isModuleReady: false, // Módulo não pronto
-            valueClass: 'text-gray-500 dark:text-slate-400',
-            subText: 'Gestão financeira avançada.',
-            badgeText: 'Módulo'
-        },
-    ];
-    const handleSave = () => {
-        const value = parseFloat(inputValue);
-        if (!isNaN(value) && value > 0) {
-            setMetaMensal(value);
-        } else {
-            setInputValue(metaMensal.toFixed(2));
-        }
-        setIsEditing(false);
-    };
-
-    const containerVariants: Variants = {
-        hidden: { opacity: 0, y: 10 },
-        show: {
-            opacity: 1,
-            y: 0,
-            transition: { staggerChildren: 0.08, delayChildren: 0.15 },
-        },
-    };
-
-    const itemVariants: Variants = {
-        hidden: { opacity: 0, y: 10, scale: 0.99 },
-        show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6 } },
-    };
-
-    const chartVariants: Variants = {
-        hidden: { opacity: 0, scale: 0.95 },
-        show: { opacity: 1, scale: 1, transition: { duration: 0.7 } },
-    };
-
-    const buttonVariants = {
-        hover: { scale: 1.03, boxShadow: "0px 8px 24px rgba(0,0,0,0.1)" },
-        tap: { scale: 0.98 },
+    const handleLogout = async () => {
+        await logout();
     };
 
     return (
-        <motion.div
-            className="space-y-8 p-6 bg-gray-50 dark:bg-slate-950 min-h-screen"
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-        >
-            {/* Header SaaS */}
-            <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
+        <div className="w-full max-w-[1400px] mx-auto pb-12">
+            {/* HEADER */}
+            <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-6 mb-6 border-b border-slate-200 dark:border-white/[0.06]">
                 <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Movimentações</h1>
-                        <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 text-[10.5px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 rounded">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Live
-                        </span>
-                    </div>
-                    <p className="text-[13px] text-slate-500 dark:text-slate-400">Controle completo de entradas e saídas do caixa</p>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                        Painel · {new Date(filterDate).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+                    </p>
+                    <h1 className="mt-2 text-[32px] sm:text-[36px] font-semibold text-slate-900 dark:text-white tracking-[-0.02em] leading-[1.05]">
+                        Movimentações
+                    </h1>
+                    <p className="mt-2 text-[13px] text-slate-500 dark:text-slate-400">
+                        Visão consolidada do caixa em tempo real · atualizado a cada 30 s
+                    </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     <div className="relative">
-                        <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" strokeWidth={1.75} />
+                        <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
                         <input
                             type="date"
                             value={filterDate}
                             onChange={(e) => setFilterDate(e.target.value)}
-                            className="h-8 pl-8 pr-2.5 text-[12.5px] text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-md focus:outline-none focus:ring-[3px] focus:ring-violet-500/15 focus:border-violet-500 hover:border-slate-300 dark:hover:border-white/15"
+                            className="h-9 pl-8 pr-2.5 text-[12.5px] text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-md focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-colors"
                         />
                     </div>
-                    <button
+                    <motion.button
                         onClick={() => navigate('/formulario-movimentacao')}
-                        className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-white bg-gradient-to-b from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 rounded-md shadow-sm transition-colors"
+                        whileTap={{ scale: 0.97 }}
+                        className="inline-flex items-center gap-1.5 h-9 px-3 text-[12.5px] font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 rounded-md shadow-sm transition-colors"
                     >
-                        <ArrowUpCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                        <Plus className="w-3.5 h-3.5" strokeWidth={2.2} />
                         Nova movimentação
-                    </button>
+                    </motion.button>
                     <button
                         onClick={handleLogout}
-                        className="hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 text-[12.5px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md transition-colors"
+                        className="hidden sm:inline-flex items-center gap-1.5 h-9 px-2.5 text-[12px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md transition-colors"
+                        title="Sair"
                     >
-                        <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
-                        Sair
+                        <LogOut className="w-3.5 h-3.5" />
                     </button>
                 </div>
-            </div>
+            </header>
 
-            {/* KPIs - Módulos */}
-            <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 font-poppins" variants={containerVariants}>
-                {mockModuleKpis.map((kpi, i) => (
-                    <motion.div
-                        key={i}
-                        variants={itemVariants}
-                        // Hover menos agressivo para módulos não prontos
-                        whileHover={{ scale: kpi.isModuleReady ? 1.03 : 1.01 }}
-                        // Aplica classes de cinza/opacidade se não estiver pronto
-                        className={`backdrop-blur-xl bg-gradient-to-br border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col justify-between relative overflow-hidden 
-                            ${kpi.isModuleReady
-                                ? 'from-white to-purple-50/20 border-white/30'
-                                : 'from-gray-50 to-gray-200/50 border-gray-200 dark:border-white/10/50 grayscale opacity-70 hover:opacity-100 cursor-not-allowed'
-                            }
-                        `}
-                    >
-                        {/* Borda lateral com glow suave */}
-                        <div
-                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${kpi.isModuleReady ? kpi.bgColor : 'bg-gray-300'} rounded-r-lg shadow-lg ${kpi.isModuleReady ? 'shadow-purple-500/30' : 'shadow-gray-400/30'}`}
-                        ></div>
-
-                        {/* Ícone no canto superior direito */}
-                        <div className="absolute top-4 right-4">
-                            <div className="p-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow">
-                                {/* Cor do ícone no canto com fallback para cinza */}
-                                <kpi.icon className={`w-4 h-4 ${kpi.isModuleReady ? `text-${kpi.color}-700` : 'text-gray-500 dark:text-slate-400'}`} />
-                            </div>
-                        </div>
-
-                        <div className="">
-                            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">{kpi.label}</p>
-
-                            {/* Conteúdo dinâmico */}
-                            {kpi.isModuleReady ? (
-                                kpi.label.includes('Top Categoria') && Array.isArray(kpi.value) ? (
-                                    <div className="mt-3 space-y-2">
-                                        {kpi.value.length > 0 ? (
-                                            kpi.value.map((item, idx) => {
-                                                const isVenda = item.categoria === 'Venda' || item.categoria === 'SALE';
-                                                return (
-                                                    <div key={idx} className="group">
-                                                        {idx > 0 && (
-                                                            <div className="w-full h-px bg-gray-200 dark:bg-slate-700/60 my-1"></div>
-                                                        )}
-                                                        <div className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-white/50 transition-colors">
-                                                            <div className="flex items-center gap-2">
-                                                                {isVenda && <span className="text-sm">💰</span>}
-                                                                {item.categoria === 'Troco' && <span className="text-sm">🔄</span>}
-                                                                <span
-                                                                    className={`text-sm font-medium ${isVenda ? 'text-purple-800' : 'text-gray-600 dark:text-slate-300'
-                                                                        }`}
-                                                                >
-                                                                    {item.categoria}
-                                                                </span>
-                                                            </div>
-                                                            <span
-                                                                className={`font-extrabold tabular-nums text-sm ${isVenda ? 'text-purple-900' : 'text-gray-900 dark:text-white'
-                                                                    }`}
-                                                            >
-                                                                {formatCurrency(item.valor)}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })
-                                        ) : (
-                                            <span className="text-gray-400 text-sm">— Sem dados —</span>
-                                        )}
-                                    </div>
-                                ) : (
-                                    /* Outros cards prontos (Margem, Lançamentos) */
-                                    <p className={`text-3xl font-extrabold tabular-nums mt-2 ${kpi.valueClass}`}>
-                                        {kpi.value}
-                                    </p>
-                                )
-                            ) : (
-                                /* Módulos em breve - NOVO LAYOUT COM ÍCONE CENTRAL */
-                                <motion.div
-                                    className="flex flex-col items-center justify-center h-28 w-full transition-opacity duration-300"
-                                    title="Módulo em breve" // Tooltip nativo
-                                >
-                                    <Info className="w-10 h-10 text-gray-500 dark:text-slate-400 mb-2" />
-                                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 text-center">{kpi.subText}</p>
-                                </motion.div>
-                            )}
-                        </div>
-
-                        {/* Badge de Status/Crescimento (posição e estilo mantidos) */}
-                        <div className="flex items-center justify-between mt-3">
-                            <div className={`p-2 rounded-full bg-${kpi.color}-100 text-${kpi.color}-600`}>
-                                <kpi.icon className="w-5 h-5 opacity-0" /> {/* Espaço reservado */}
-                            </div>
-                            <span className={`px-2.5 py-1 ${kpi.isModuleReady ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300'} text-xs font-medium rounded-full shadow-sm`}>
-                                {kpi.isModuleReady ? kpi.badgeText : 'Em Desenvolvimento'}
-                            </span>
-                        </div>
-                    </motion.div>
-                ))}
-            </motion.div>
-
-            {/* Resumo com gradientes vibrantes e badges (Mantido) */}
-            <motion.div className="grid grid-cols-1 md:grid-cols-4 gap-6 font-poppins" variants={containerVariants}>
-                {[
-                    {
-                        label: 'Entradas do Dia',
-                        value: formatCurrency(entries),
-                        // Ícone Lucide TrendindUp substituído por Imagem
-                        image: 'https://cdn-icons-png.flaticon.com/512/2916/2916115.png',
-                        color: 'green',
-                        gradient: 'from-green-900 to-emerald-900',
-                    },
-                    {
-                        label: 'Saídas do Dia',
-                        value: formatCurrency(exits),
-                        // Ícone Lucide TrendindDown substituído por Imagem
-                        image: 'https://cdn-icons-png.flaticon.com/512/2331/2331668.png',
-                        color: 'red',
-                        gradient: 'from-red-700 to-rose-700',
-                    },
-                    {
-                        label: 'Saldo do Dia',
-                        value: formatCurrency(balance),
-                        // Ícone Lucide DollarSign substituído por Imagem
-                        image: balance >= 0
-                            ? 'https://png.pngtree.com/png-clipart/20230805/original/pngtree-payment-icon-circle-balance-commerce-vector-picture-image_9731293.png'
-                            : 'https://cdn-icons-png.flaticon.com/512/334/334047.png',
-                        color: balance >= 0 ? 'blue' : 'red',
-                        gradient: balance >= 0 ? 'from-blue-700 to-sky-700' : 'from-red-700 to-pink-700',
-                    },
-                    {
-                        label: 'Total do Mês',
-                        value: formatCurrency(totalMes),
-                        // Ícone Lucide Calendar substituído por Imagem
-                        image: 'https://cdn-icons-png.flaticon.com/512/13/13530.png',
-                        color: 'purple',
-                        gradient: 'from-purple-400 to-violet-400',
-                    },
-                ].map((item, i) => (
-                    <motion.div
-                        key={i}
-                        variants={itemVariants}
-                        whileHover={{ scale: 1.02 }}
-                        // Adicionado 'text-white' ao card para garantir que o texto seja visível no gradiente escuro
-                        className={`bg-gradient-to-br ${item.gradient} border border-${item.color}-200/40 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all min-h-48 flex flex-col justify-between text-white`}
-                    >
-                        <div>
-                            <p className="text-sm font-medium text-white">{item.label}</p>
-                            {/* Cor do valor ajustada para usar a cor base do card (white) já que os fundos são escuros */}
-                            <p className={`text-3xl tabular-nums font-extrabold text-white mt-1`}>
-                                {item.value}
-                            </p>
-                        </div>
-                        {/* Bloco do Ícone: Agora usa a tag <img> */}
-                        <div className={`p-2 rounded-full bg-white/20 w-fit`}>
-                            <img src={item.image} alt={item.label} className="w-6 h-6 invert" />
-                        </div>
-                    </motion.div>
-                ))}
-            </motion.div>
-
-            {/* Meta Editável com efeito premium (Mantido) */}
-            <motion.div variants={itemVariants}>
-                <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow min-h-48">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 rounded-full bg-purple-100 text-purple-600 dark:text-purple-400">
-                                <Target className="w-5 h-5" />
-                            </div>
-                            <h3
-                                className="text-lg font-extrabold tracking-tight text-gray-900 dark:text-white font-poppins"
-                            >
-                                Meta de Faturamento Mensal
-                            </h3>
-                        </div>
-
-                        {/* Bloco substituído pelo novo texto "Módulo em breve" */}
-                        <span className="text-sm font-open_sans text-gray-500 dark:text-slate-400 italic">
-                            Módulo em breve
+            {/* HERO: saldo + KPIs */}
+            <section className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6 mb-10">
+                <div className="lg:col-span-5">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Saldo do dia</p>
+                    <p className={`mt-3 text-[56px] sm:text-[64px] font-semibold tracking-[-0.035em] leading-none tabular-nums font-mono ${balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-600 dark:text-rose-400'}`}>
+                        <CountUp end={balance} decimal="," decimals={2} prefix="R$ " separator="." duration={0.8} />
+                    </p>
+                    <div className="mt-4 flex items-center gap-3 text-[12.5px]">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium tabular-nums ${comparison.delta >= 0 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400'}`}>
+                            {comparison.delta >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                            {Math.abs(comparison.delta).toFixed(1)}%
                         </span>
-
+                        <span className="text-slate-500 dark:text-slate-400">vs. semana anterior</span>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-4">
-                        {isEditing ? (
-                            <div className="flex gap-2 items-center">
-                                <input
-                                    type="number"
-                                    step="100"
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onBlur={handleSave}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSave()}
-                                    autoFocus
-                                    className="px-3 py-1 border border-blue-300 rounded-lg text-sm w-32 text-right focus:outline-none focus:ring-2 focus:ring-blue-500 font-open_sans"
+                    {/* progress entries vs exits do dia */}
+                    {(entries > 0 || exits > 0) && (
+                        <div className="mt-5">
+                            <div className="flex items-center justify-between text-[11px] mb-1.5">
+                                <span className="text-slate-500 dark:text-slate-400">Composição do dia</span>
+                                <span className="text-slate-400 tabular-nums">{formatCurrency(entries + exits)}</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-rose-100 dark:bg-rose-950/30 overflow-hidden flex">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${(entries / (entries + exits)) * 100}%` }}
+                                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                                    className="h-full bg-emerald-500"
                                 />
-                                <span className="text-gray-500 dark:text-slate-400">R$/mês</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] mt-1.5">
+                                <span className="text-emerald-600 dark:text-emerald-400">{((entries / (entries + exits)) * 100).toFixed(0)}% entradas</span>
+                                <span className="text-rose-600 dark:text-rose-400">{((exits / (entries + exits)) * 100).toFixed(0)}% saídas</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-5">
+                    <KpiCell
+                        label="Entradas"
+                        value={entries}
+                        delta={comparison.entriesDelta}
+                        spark={dailyTrend.slice(-7).map((d) => ({ v: d.entradas }))}
+                        color="#10b981"
+                    />
+                    <KpiCell
+                        label="Saídas"
+                        value={exits}
+                        delta={comparison.exitsDelta}
+                        spark={dailyTrend.slice(-7).map((d) => ({ v: d.saidas }))}
+                        color="#ef4444"
+                        invertDelta
+                    />
+                    <KpiCell
+                        label="Lançamentos"
+                        value={totalMovements}
+                        kind="count"
+                        sub={categoryBreakdown.length > 0 ? `${categoryBreakdown.length} categoria(s)` : 'Sem dados hoje'}
+                    />
+                    <KpiCell
+                        label="Total no mês"
+                        value={totalMes}
+                        sub="Receita acumulada"
+                        muted
+                    />
+                    <KpiCell
+                        label="Maior do dia"
+                        value={Math.max(0, ...allMoves.filter((m) => m.date && new Date(m.date).toISOString().slice(0, 10) === filterDate).map((m) => Number(m.value)))}
+                        sub="Movimentação"
+                        muted
+                    />
+                    <KpiCell
+                        label="Bancos ativos"
+                        value={bankBalance.length}
+                        kind="count"
+                        sub={bankBalance.length > 0 ? 'com movimentações' : 'cadastre em /bancos'}
+                    />
+                </div>
+            </section>
+
+            {/* GRÁFICOS PRINCIPAIS */}
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-px mb-10 bg-slate-200 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
+                {/* Tendência 14 dias */}
+                <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-5">
+                    <div className="flex items-baseline justify-between mb-1">
+                        <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-tight">Fluxo</h2>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">últimos 14 dias</span>
+                    </div>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-4">Comparativo diário entre entradas e saídas</p>
+                    <div className="h-60 -ml-2">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={dailyTrend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="dgrad-en" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.28} />
+                                        <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="dgrad-ex" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#ef4444" stopOpacity={0.22} />
+                                        <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="2 4" stroke="currentColor" className="text-slate-200 dark:text-white/[0.05]" vertical={false} />
+                                <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'currentColor' }} className="text-slate-400" axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} className="text-slate-400" axisLine={false} tickLine={false} width={42} tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v))} />
+                                <Tooltip
+                                    formatter={(value: number, name: string) => [formatCurrency(value), name === 'entradas' ? 'Entradas' : 'Saídas']}
+                                    contentStyle={{ backgroundColor: 'rgba(15,23,42,0.95)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: '#fff', fontSize: 12, padding: '8px 10px' }}
+                                    labelStyle={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}
+                                    cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '3 3' }}
+                                />
+                                <Area type="monotone" dataKey="entradas" stroke="#10b981" strokeWidth={1.75} fill="url(#dgrad-en)" isAnimationActive animationDuration={500} />
+                                <Area type="monotone" dataKey="saidas" stroke="#ef4444" strokeWidth={1.75} fill="url(#dgrad-ex)" isAnimationActive animationDuration={500} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Hoje por categoria */}
+                <div className="bg-white dark:bg-slate-900 p-5">
+                    <div className="flex items-baseline justify-between mb-1">
+                        <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-tight">Categorias do dia</h2>
+                    </div>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-4">Distribuição em {new Date(filterDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</p>
+                    {categoryBreakdown.length === 0 ? (
+                        <div className="py-12 text-center text-[12.5px] text-slate-400">Sem movimentações</div>
+                    ) : (
+                        <ul className="space-y-2.5">
+                            {categoryBreakdown.map((c) => {
+                                const pct = totalCatVolume > 0 ? (c.total / totalCatVolume) * 100 : 0;
+                                return (
+                                    <li key={c.category}>
+                                        <div className="flex items-baseline justify-between mb-1">
+                                            <span className="flex items-center gap-2 text-[12.5px] text-slate-700 dark:text-slate-200">
+                                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.color }} />
+                                                {c.label}
+                                                <span className="text-[10.5px] text-slate-400">{c.count}</span>
+                                            </span>
+                                            <span className="font-mono text-[12.5px] tabular-nums text-slate-900 dark:text-white">{formatCurrency(c.total)}</span>
+                                        </div>
+                                        <div className="h-[3px] rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${pct}%` }}
+                                                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                                                className="h-full rounded-full"
+                                                style={{ backgroundColor: c.color }}
+                                            />
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </div>
+            </section>
+
+            {/* SECUNDÁRIA: bar chart por categoria + bancos */}
+            {(todayBars.length > 0 || bankBalance.length > 0) && (
+                <section className="grid grid-cols-1 lg:grid-cols-3 gap-px mb-10 bg-slate-200 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
+                    {/* Bar chart */}
+                    {todayBars.length > 0 && (
+                        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-5">
+                            <div className="flex items-baseline justify-between mb-1">
+                                <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-tight">Volume por categoria</h2>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400">{new Date(filterDate).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-4">Top {todayBars.length} categorias do dia</p>
+                            <div className="h-56 -ml-2">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={todayBars} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="2 4" stroke="currentColor" className="text-slate-200 dark:text-white/[0.05]" vertical={false} />
+                                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'currentColor' }} className="text-slate-400" axisLine={false} tickLine={false} />
+                                        <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} className="text-slate-400" axisLine={false} tickLine={false} width={42} tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v))} />
+                                        <Tooltip
+                                            formatter={(v: number) => formatCurrency(v)}
+                                            contentStyle={{ backgroundColor: 'rgba(15,23,42,0.95)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: '#fff', fontSize: 12, padding: '8px 10px' }}
+                                            labelStyle={{ color: '#94a3b8', fontSize: 11 }}
+                                            cursor={{ fill: 'rgba(148,163,184,0.06)' }}
+                                        />
+                                        <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
+                                            {todayBars.map((b, i) => (
+                                                <Cell key={i} fill={b.color} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Bancos */}
+                    <div className="bg-white dark:bg-slate-900 p-5">
+                        <div className="flex items-baseline justify-between mb-1">
+                            <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-tight">Por banco</h2>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400">{bankBalance.length}</span>
+                        </div>
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-4">Saldo líquido por conta</p>
+                        {bankBalance.length === 0 ? (
+                            <div className="py-12 text-center">
+                                <Landmark className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
+                                <p className="text-[12.5px] text-slate-500 dark:text-slate-400">Nenhuma movimentação vinculada a banco ainda</p>
+                                <button
+                                    onClick={() => navigate('/bancos')}
+                                    className="mt-3 text-[12px] text-slate-700 dark:text-slate-200 underline-offset-4 hover:underline"
+                                >
+                                    Ir para bancos
+                                </button>
                             </div>
                         ) : (
-                            <p className="text-3xl font-extrabold font-open_sans text-gray-900 dark:text-white tabular-nums">
-                                R$ {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </p>
+                            <ul className="space-y-2.5">
+                                {bankBalance.slice(0, 6).map((b) => (
+                                    <li key={b.name} className="flex items-center justify-between py-1">
+                                        <span className="flex items-center gap-2 text-[12.5px] text-slate-700 dark:text-slate-200 min-w-0">
+                                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: b.color }} />
+                                            <span className="truncate">{b.name}</span>
+                                        </span>
+                                        <span className={`font-mono text-[12.5px] tabular-nums ${b.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                            {b.total >= 0 ? '+' : '−'}{formatCurrency(Math.abs(b.total)).replace('R$', '').trim()}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
                         )}
                     </div>
+                </section>
+            )}
 
-                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3 mb-1 overflow-hidden ring-1 ring-white/40">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min((totalMes / metaMensal) * 100, 100)}%` }}
-                            transition={{ duration: 0.8 }}
-                            className={`h-full rounded-full ${totalMes >= metaMensal
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                                : totalMes / metaMensal >= 0.7
-                                    ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
-                                    : 'bg-gradient-to-r from-red-500 to-pink-600'
-                                }`}
-                        ></motion.div>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-slate-300">
-                        {totalMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} /{' '}
-                        {metaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}{' '}
-                        ({((totalMes / metaMensal) * 100).toFixed(1)}%)
-                    </p>
-                </div>
-            </motion.div>
-
-            {/* Gráficos de Módulos Futuros (Mantidos) */}
-            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8 font-open_sans" variants={containerVariants}>
-                {[
-                    {
-                        title: "Previsão de Caixa",
-                        icon: TrendingUp,
-                        color: "from-green-400 to-emerald-500",
-                    },
-                    {
-                        title: "Heatmap de Vendas",
-                        icon: Calendar,
-                        color: "from-orange-400 to-red-500",
-                    },
-                    {
-                        title: "Top Produtos",
-                        icon: Box,
-                        color: "from-purple-400 to-violet-500",
-                    },
-                    {
-                        title: "Insights Inteligentes",
-                        icon: GraduationCap,
-                        color: "from-blue-400 to-cyan-500",
-                    },
-                ].map((card, i) => (
-                    <motion.div
-                        key={i}
-                        variants={itemVariants}
-                        whileHover={{ scale: 1.02 }}
-                        className={`backdrop-blur-xl bg-gradient-to-br ${card.color}/20 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48 flex flex-col items-center justify-center text-center`}
-                    >
-                        <div className={`p-3 rounded-full bg-${card.color.split(" ")[0].replace("from-", "")}/10 mb-4`}>
-                            <card.icon className="w-8 h-8 text-gray-700 dark:text-slate-200" />
+            {/* ATIVIDADE RECENTE + AÇÕES */}
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Recent activity */}
+                <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                        <div>
+                            <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-tight">Atividade recente</h2>
+                            <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Últimas movimentações registradas</p>
                         </div>
-                        <h3 className="text-lg font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">{card.title}</h3>
-                        <p className="text-gray-600 dark:text-slate-300 text-sm font-poppins">Módulo em breve!</p>
-                        <div className="mt-4 w-16 h-1 bg-gradient-to-r from-current to-transparent rounded-full opacity-30"></div>
-                    </motion.div>
-                ))}
-            </motion.div>
-
-            {/* Gráficos Menores (Mantidos) */}
-            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" variants={containerVariants}>
-                <motion.div variants={chartVariants}>
-                    <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
-                    >
-                        <h3 className="text-lg font-poppins tracking-tight text-gray-900 dark:text-white mb-4">Entradas vs Saídas</h3>
-                        <ResponsiveContainer width="100%" height={200}>
-                            <BarChart data={[{ name: 'Hoje', entries, exits }]}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                                <Legend />
-                                <Bar dataKey="entries" fill="url(#entryGradient)" name="Entradas" />
-                                <Bar dataKey="exits" fill="url(#exitGradient)" name="Saídas" />
-                                <defs>
-                                    <linearGradient id="entryGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
-                                        <stop offset="100%" stopColor="#22c55e" stopOpacity={0.3} />
-                                    </linearGradient>
-                                    <linearGradient id="exitGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
-                                        <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3} />
-                                    </linearGradient>
-                                </defs>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </motion.div>
-                </motion.div>
-
-                <motion.div variants={chartVariants}>
-                    <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all min-h-48"
-                    >
-                        <h3 className="text-lg font-poppins tracking-tight text-gray-900 dark:text-white mb-4">Evolução Diária</h3>
-                        <ResponsiveContainer width="100%" height={200}>
-                            <LineChart data={monthlyData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="day" />
-                                <YAxis />
-                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                                <Legend />
-                                <Line type="monotone" dataKey="entradas" stroke="url(#lineEntry)" strokeWidth={3} dot={false} />
-                                <Line type="monotone" dataKey="saidas" stroke="url(#lineExit)" strokeWidth={3} dot={false} />
-                                <defs>
-                                    <linearGradient id="lineEntry" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="lineExit" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </motion.div>
-                </motion.div>
-            </motion.div>
-
-            {/* Histórico (Mantido) */}
-            <motion.div variants={itemVariants}>
-                <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-shadow min-h-48">
-                    <div className="p-6 border-b border-white/20">
-                        <h2 className="text-xl font-poppins tracking-tight text-gray-900 dark:text-white">
-                            Movimentações de {new Date(filterDate).toLocaleDateString('pt-BR')}
-                        </h2>
-                    </div>
-                    <div className="p-8 text-center text-gray-500 dark:text-slate-400">
-                        <p>Este painel exibe apenas métricas gerais.</p>
-                        <p className="text-sm mt-1">Para ver movimentações detalhadas, vá ao histórico.</p>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                        <button
                             onClick={() => navigate('/historico')}
-                            className="mt-4 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                            className="text-[12px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white inline-flex items-center gap-1"
                         >
-                            Ver histórico completo
-                        </motion.button>
+                            Ver tudo <ArrowUpRight className="w-3 h-3" />
+                        </button>
                     </div>
+                    {recentMoves.length === 0 ? (
+                        <div className="py-16 text-center">
+                            <Receipt className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
+                            <p className="text-[13px] font-medium text-slate-700 dark:text-slate-200">Sem movimentações</p>
+                            <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1">Comece registrando uma entrada ou saída</p>
+                            <button
+                                onClick={() => navigate('/formulario-movimentacao')}
+                                className="mt-4 inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-medium"
+                            >
+                                <Plus className="w-3.5 h-3.5" /> Nova
+                            </button>
+                        </div>
+                    ) : (
+                        <ul className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+                            {recentMoves.map((m, idx) => {
+                                const sub = m.category;
+                                const bank = m.bankId ? bankMap.get(m.bankId) : null;
+                                return (
+                                    <motion.li
+                                        key={m.id}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.25, delay: idx * 0.02 }}
+                                        className="px-5 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <span className={`w-8 h-8 rounded-md grid place-items-center shrink-0 ${m.type === 'ENTRY' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                                {m.type === 'ENTRY' ? <ArrowDownRight className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                                            </span>
+                                            <div className="min-w-0">
+                                                <p className="text-[13px] font-medium text-slate-900 dark:text-white truncate">{m.description}</p>
+                                                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                                    <span>{CATEGORY_LABEL[sub] ?? sub}</span>
+                                                    {m.typePayment && (
+                                                        <>
+                                                            <span className="text-slate-300 dark:text-slate-600">·</span>
+                                                            <span>{PAYMENT_LABEL[m.typePayment] ?? m.typePayment}</span>
+                                                        </>
+                                                    )}
+                                                    {bank && (
+                                                        <>
+                                                            <span className="text-slate-300 dark:text-slate-600">·</span>
+                                                            <span className="inline-flex items-center gap-1">
+                                                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: bank.corHex }} />
+                                                                {bank.name}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                    <span className="text-slate-300 dark:text-slate-600">·</span>
+                                                    <span>{m.date ? timeAgo(new Date(m.date)) : '—'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span className={`text-[13.5px] font-mono font-medium tabular-nums shrink-0 ml-3 ${m.type === 'ENTRY' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                            {m.type === 'ENTRY' ? '+' : '−'}{formatCurrency(Number(m.value)).replace('R$', '').trim()}
+                                        </span>
+                                    </motion.li>
+                                );
+                            })}
+                        </ul>
+                    )}
                 </div>
-            </motion.div>
-        </motion.div>
+
+                {/* Quick actions + insight */}
+                <div className="space-y-3">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
+                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                            <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-tight">Atalhos</h2>
+                        </div>
+                        <div className="p-2">
+                            {[
+                                { label: 'Nova entrada', sub: 'Venda, troco ou outros', icon: ArrowDownRight, accent: 'emerald', to: '/formulario-movimentacao' },
+                                { label: 'Nova saída', sub: 'Despesa, saque ou pagamento', icon: ArrowUpRight, accent: 'rose', to: '/formulario-movimentacao' },
+                                { label: 'Histórico completo', sub: 'Filtrar e exportar', icon: History, accent: 'slate', to: '/historico' },
+                                { label: 'Bancos', sub: 'Cadastros e saldos', icon: Landmark, accent: 'slate', to: '/bancos' },
+                            ].map((a) => {
+                                const Icon = a.icon;
+                                return (
+                                    <button
+                                        key={a.label}
+                                        onClick={() => navigate(a.to)}
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors group text-left"
+                                    >
+                                        <span className={`w-8 h-8 rounded-md grid place-items-center shrink-0 ${a.accent === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : a.accent === 'rose' ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300'}`}>
+                                            <Icon className="w-4 h-4" />
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[12.5px] font-medium text-slate-900 dark:text-white">{a.label}</p>
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400">{a.sub}</p>
+                                        </div>
+                                        <ArrowUpRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors" />
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Insight */}
+                    {(entries > 0 || exits > 0) && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 border border-slate-900 dark:border-white rounded-xl p-5"
+                        >
+                            <div className="flex items-center gap-2 mb-2">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                <span className="text-[10.5px] font-semibold uppercase tracking-wider opacity-60">Insight</span>
+                            </div>
+                            <p className="text-[13.5px] leading-snug">
+                                {balance >= 0 ? (
+                                    <>
+                                        Saldo positivo de <span className="font-semibold tabular-nums">{formatCurrency(balance)}</span> hoje
+                                        {comparison.delta > 0 && <>, {comparison.delta.toFixed(0)}% acima da semana anterior</>}.
+                                    </>
+                                ) : (
+                                    <>
+                                        Saldo negativo de <span className="font-semibold tabular-nums">{formatCurrency(Math.abs(balance))}</span> — saídas superam entradas em {((exits - entries) / Math.max(entries, 1) * 100).toFixed(0)}%.
+                                    </>
+                                )}
+                            </p>
+                            {categoryBreakdown.length > 0 && (
+                                <p className="text-[12px] mt-2 opacity-60">
+                                    Categoria líder: <span className="font-medium opacity-100">{categoryBreakdown[0].label}</span> com {formatCurrency(categoryBreakdown[0].total)}.
+                                </p>
+                            )}
+                        </motion.div>
+                    )}
+                </div>
+            </section>
+        </div>
+    );
+}
+
+// ============= componentes auxiliares =============
+
+function KpiCell({
+    label,
+    value,
+    delta,
+    sub,
+    spark,
+    color,
+    invertDelta,
+    muted,
+    kind,
+}: {
+    label: string;
+    value: number;
+    delta?: number;
+    sub?: string;
+    spark?: { v: number }[];
+    color?: string;
+    invertDelta?: boolean;
+    muted?: boolean;
+    kind?: 'count';
+}) {
+    const showDelta = typeof delta === 'number' && Math.abs(delta) >= 0.1;
+    const positive = invertDelta ? (delta ?? 0) < 0 : (delta ?? 0) >= 0;
+    return (
+        <div>
+            <div className="flex items-center justify-between">
+                <p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">{label}</p>
+                {showDelta && (
+                    <span className={`text-[10.5px] tabular-nums font-medium ${positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                        {(delta as number) >= 0 ? '+' : ''}{(delta as number).toFixed(0)}%
+                    </span>
+                )}
+            </div>
+            <p
+                className={`mt-2 text-[22px] font-semibold tracking-tight tabular-nums font-mono leading-none ${muted ? 'text-slate-700 dark:text-slate-200' : 'text-slate-900 dark:text-white'}`}
+                style={color && !muted ? { color } : {}}
+            >
+                {kind === 'count' ? (
+                    <CountUp end={value} duration={0.7} separator="." />
+                ) : (
+                    <CountUp end={value} decimal="," decimals={2} prefix="R$ " separator="." duration={0.7} />
+                )}
+            </p>
+            {spark && spark.length > 0 && (
+                <div className="h-7 mt-2 -mx-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={spark} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id={`dspk-${label}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={color || '#64748b'} stopOpacity={0.35} />
+                                    <stop offset="100%" stopColor={color || '#64748b'} stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="v" stroke={color || '#64748b'} strokeWidth={1.25} fill={`url(#dspk-${label})`} />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            {sub && <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">{sub}</p>}
+        </div>
     );
 }
