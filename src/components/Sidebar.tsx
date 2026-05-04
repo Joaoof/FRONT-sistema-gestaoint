@@ -102,7 +102,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   empresa: 'configuracoes',
   configuracoes: 'configuracoes',
   vendedores: 'vendas',
-  bancos: 'financeiro',
+  bancos: 'bancos',
   motoristas: 'entregas',
   ia: 'dashboard',
   'agente-ia': 'dashboard',
@@ -118,7 +118,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   'obras/relatorios/quebra-custos': 'construction',
 };
 
-const ALWAYS_VISIBLE_MODULES = new Set(['construction']);
+const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos']);
 
 function hasPermission(
   permissions: { module_key: string; permissions: string[] }[],
