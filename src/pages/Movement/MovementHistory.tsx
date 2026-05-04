@@ -19,20 +19,9 @@ import {
     ChevronsRight,
     ArrowUp,
     ArrowDown,
-    ArrowDownCircle,
-    ArrowUpCircle,
-    Wallet,
-    Receipt,
-    Activity,
     SlidersHorizontal,
-    ListFilter,
     LayoutGrid,
     List as ListIcon,
-    Hash,
-    Landmark,
-    CreditCard,
-    Filter as FilterIcon,
-    Layers,
 } from "lucide-react"
 import { useQuery, useMutation } from "@apollo/client"
 import { GET_CASH_MOVEMENTS, CREATE_CASH_MOVEMENT, UPDATE_CASH_MOVEMENT } from "../../graphql/queries/queries"
@@ -41,7 +30,7 @@ import { generateMovementPdfDoc } from "../../utils/generatePDF"
 import type { CategoryType, Movement, MovementType, MovementTypePayment } from "../../types"
 import { RotateCcw } from "lucide-react"
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts"
+import { ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts"
 import { motion, AnimatePresence } from "framer-motion"
 
 import * as Dialog from "@radix-ui/react-dialog"
@@ -618,13 +607,49 @@ export function MovementHistory() {
     // mini sparkline para cada KPI (últimos 7 dias)
     const sparkEntries = dailyTrend.slice(-7).map((d) => ({ v: d.entradas }))
     const sparkExits = dailyTrend.slice(-7).map((d) => ({ v: d.saidas }))
-    const sparkCount = useMemo(() => {
-        return dailyTrend.slice(-7).map((d) => {
-            const dateStr = (d as any).date as string
-            const c = filtered.filter((m) => m.date && new Date(m.date).toISOString().slice(0, 10) === dateStr).length
-            return { v: c }
+
+    // comparação 7 dias atuais vs 7 anteriores
+    const comparison = useMemo(() => {
+        const last7 = dailyTrend.slice(-7)
+        const prev7 = dailyTrend.slice(0, 7)
+        const sumE = (arr: typeof dailyTrend) => arr.reduce((a, b) => a + b.entradas, 0)
+        const sumS = (arr: typeof dailyTrend) => arr.reduce((a, b) => a + b.saidas, 0)
+        const cur = sumE(last7) - sumS(last7)
+        const prev = sumE(prev7) - sumS(prev7)
+        const delta = prev === 0 ? 0 : ((cur - prev) / Math.abs(prev)) * 100
+        const entriesDelta = sumE(prev7) === 0 ? 0 : ((sumE(last7) - sumE(prev7)) / Math.abs(sumE(prev7))) * 100
+        const exitsDelta = sumS(prev7) === 0 ? 0 : ((sumS(last7) - sumS(prev7)) / Math.abs(sumS(prev7))) * 100
+        return { delta, entriesDelta, exitsDelta }
+    }, [dailyTrend])
+
+    // melhor / pior dia
+    const bestWorst = useMemo(() => {
+        if (dailyTrend.length === 0) return { best: null, worst: null }
+        const sorted = [...dailyTrend].sort((a, b) => (b.entradas - b.saidas) - (a.entradas - a.saidas))
+        return { best: sorted[0], worst: sorted[sorted.length - 1] }
+    }, [dailyTrend])
+
+    // última atividade
+    const lastActivity = useMemo(() => {
+        if (filtered.length === 0) return null
+        const sorted = [...filtered].sort((a, b) => {
+            const da = a.date ? new Date(a.date).getTime() : 0
+            const db = b.date ? new Date(b.date).getTime() : 0
+            return db - da
         })
-    }, [dailyTrend, filtered])
+        const m = sorted[0]
+        if (!m.date) return null
+        const diff = Date.now() - new Date(m.date).getTime()
+        const min = Math.floor(diff / 60000)
+        const hr = Math.floor(min / 60)
+        const day = Math.floor(hr / 24)
+        let label = ""
+        if (day > 0) label = `há ${day} dia${day > 1 ? "s" : ""}`
+        else if (hr > 0) label = `há ${hr}h`
+        else if (min > 0) label = `há ${min} min`
+        else label = "agora"
+        return { movement: m, label }
+    }, [filtered])
 
     // active filter chips (para mostrar "filtros ativos")
     const activeFilters: { key: string; label: string; onClear: () => void }[] = []
@@ -656,497 +681,308 @@ export function MovementHistory() {
 
     return (
         <>
-            <div className="relative w-full -mx-4 sm:-mx-6 lg:-mx-8 -my-6 lg:-my-8 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+            <div className="w-full max-w-[1400px] mx-auto">
 
-                {/* HERO */}
-                <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35 }}
-                    className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-gradient-to-br from-white via-white to-violet-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-violet-950/20 p-6 lg:p-7 shadow-sm mb-6"
-                >
-                    <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-violet-300/20 dark:bg-violet-500/10 blur-3xl pointer-events-none" />
-                    <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-emerald-300/15 dark:bg-emerald-500/10 blur-3xl pointer-events-none" />
-                    <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 text-[11px] font-medium border border-violet-200 dark:border-violet-900/40">
-                                    <Activity className="w-3 h-3" /> Caixa em tempo real
-                                </span>
-                                <span className="text-[11.5px] text-slate-500 dark:text-slate-400">{filtered.length} lançamentos no recorte</span>
-                            </div>
-                            <h1 className="text-[28px] font-semibold text-slate-900 dark:text-white tracking-tight leading-tight">
-                                Histórico de movimentações
-                            </h1>
-                            <p className="text-[13.5px] text-slate-500 dark:text-slate-400 mt-1.5 max-w-xl">
-                                Visão completa de entradas e saídas — filtre, exporte e analise tendências do seu caixa
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                            <CashMovementBackupActions onImported={() => refetch()} />
-                            <motion.button
-                                type="button"
-                                onClick={() => refetch()}
-                                disabled={loading}
-                                whileTap={{ scale: 0.97 }}
-                                className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-lg disabled:opacity-50 transition-colors group"
-                            >
-                                <RotateCcw className={`w-3.5 h-3.5 transition-transform ${loading ? "animate-spin text-violet-500" : "group-hover:rotate-12"}`} strokeWidth={2} />
-                                <span>{loading ? "Atualizando…" : "Atualizar"}</span>
-                            </motion.button>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* KPIs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
-                    {/* Entradas */}
-                    <motion.button
-                        type="button"
-                        onClick={() => handleAdjustment("ENTRY")}
-                        whileHover={{ y: -3 }}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.05 }}
-                        className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5 transition-all"
-                    >
-                        <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-500 to-teal-500" />
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 flex items-center justify-center">
-                                        <ArrowDownCircle className="w-4 h-4" strokeWidth={2} />
-                                    </span>
-                                    <div>
-                                        <p className="text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Entradas</p>
-                                    </div>
-                                </div>
-                                <p className="mt-3 text-[22px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
-                                    <CountUp end={totalEntries} decimal="," decimals={2} prefix="R$ " separator="." duration={0.8} />
-                                </p>
-                                <p className="mt-1.5 text-[10.5px] text-emerald-600 dark:text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">+ ajustar caixa</p>
-                            </div>
-                        </div>
-                        {/* sparkline */}
-                        <div className="absolute bottom-0 right-0 w-24 h-12 opacity-70">
-                            <ResponsiveContainer>
-                                <AreaChart data={sparkEntries}>
-                                    <defs>
-                                        <linearGradient id="spk-en" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.45} />
-                                            <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <Area type="monotone" dataKey="v" stroke="#10b981" strokeWidth={1.5} fill="url(#spk-en)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </motion.button>
-
-                    {/* Saídas */}
-                    <motion.button
-                        type="button"
-                        onClick={() => handleAdjustment("EXIT")}
-                        whileHover={{ y: -3 }}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.1 }}
-                        className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 hover:border-rose-300 dark:hover:border-rose-500/40 hover:shadow-lg hover:shadow-rose-500/5 transition-all"
-                    >
-                        <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-rose-500 to-red-500" />
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-8 h-8 rounded-lg bg-rose-50 text-rose-700 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20 flex items-center justify-center">
-                                        <ArrowUpCircle className="w-4 h-4" strokeWidth={2} />
-                                    </span>
-                                    <p className="text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Saídas</p>
-                                </div>
-                                <p className="mt-3 text-[22px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
-                                    <CountUp end={totalExits} decimal="," decimals={2} prefix="R$ " separator="." duration={0.8} />
-                                </p>
-                                <p className="mt-1.5 text-[10.5px] text-rose-600 dark:text-rose-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">+ ajustar caixa</p>
-                            </div>
-                        </div>
-                        <div className="absolute bottom-0 right-0 w-24 h-12 opacity-70">
-                            <ResponsiveContainer>
-                                <AreaChart data={sparkExits}>
-                                    <defs>
-                                        <linearGradient id="spk-ex" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#ef4444" stopOpacity={0.45} />
-                                            <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <Area type="monotone" dataKey="v" stroke="#ef4444" strokeWidth={1.5} fill="url(#spk-ex)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </motion.button>
-
-                    {/* Saldo */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.15 }}
-                        className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors"
-                    >
-                        <span className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${balance >= 0 ? "from-sky-500 to-blue-500" : "from-rose-500 to-red-500"}`} />
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className={`w-8 h-8 rounded-lg flex items-center justify-center ring-1 ${balance >= 0
-                                        ? "bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20"
-                                        : "bg-rose-50 text-rose-700 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20"
-                                        }`}>
-                                        <Wallet className="w-4 h-4" strokeWidth={2} />
-                                    </span>
-                                    <p className="text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Saldo</p>
-                                </div>
-                                <p className={`mt-3 text-[22px] font-semibold leading-none tabular-nums tracking-tight ${balance >= 0 ? "text-slate-900 dark:text-white" : "text-rose-700 dark:text-rose-400"}`}>
-                                    <CountUp end={balance} decimal="," decimals={2} prefix="R$ " separator="." duration={0.8} />
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => handleAdjustment("ADJUSTMENT")}
-                                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-md transition-colors"
-                                title="Ajustar saldo"
-                            >
-                                <Edit className="w-3.5 h-3.5" strokeWidth={2} />
-                            </button>
-                        </div>
-                        {/* mini progress */}
-                        <div className="mt-3 h-1.5 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${Math.min(100, entriesShare)}%` }}
-                                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500"
-                            />
-                        </div>
-                        <p className="mt-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
-                            {entriesShare.toFixed(0)}% do volume foi entrada
+                {/* HEADER editorial */}
+                <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-6 mb-6 border-b border-slate-200 dark:border-white/[0.06]">
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                            Caixa · {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
                         </p>
-                    </motion.div>
-
-                    {/* Total transações */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.2 }}
-                        className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 hover:border-violet-300 dark:hover:border-violet-500/40 hover:shadow-lg hover:shadow-violet-500/5 transition-all"
-                    >
-                        <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-violet-500 to-fuchsia-500" />
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-8 h-8 rounded-lg bg-violet-50 text-violet-700 ring-1 ring-violet-100 dark:bg-violet-500/10 dark:text-violet-400 dark:ring-violet-500/20 flex items-center justify-center">
-                                        <Receipt className="w-4 h-4" strokeWidth={2} />
-                                    </span>
-                                    <p className="text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Lançamentos</p>
-                                </div>
-                                <p className="mt-3 text-[22px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
-                                    <CountUp end={totalCount} duration={0.8} separator="." />
-                                </p>
-                                <p className="mt-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
-                                    Ticket médio <span className="font-mono text-slate-700 dark:text-slate-200">{formatCurrency(avgTicket)}</span>
-                                </p>
-                            </div>
-                        </div>
-                        <div className="absolute bottom-0 right-0 w-24 h-12 opacity-70">
-                            <ResponsiveContainer>
-                                <BarChart data={sparkCount}>
-                                    <Bar dataKey="v" fill="#a78bfa" radius={[2, 2, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* CHARTS row: composição + tendência diária */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-6">
-                    {/* DONUT */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.25 }}
-                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl"
-                    >
-                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                            <div>
-                                <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Composição</h3>
-                                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Entradas vs saídas</p>
-                            </div>
-                            <Layers className="w-4 h-4 text-slate-400" />
-                        </div>
-                        <div className="p-4">
-                            {totalVolume === 0 ? (
-                                <div className="h-44 grid place-items-center text-[12.5px] text-slate-400">Sem dados no recorte</div>
-                            ) : (
-                                <div className="h-44">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={[
-                                                    { name: "Entradas", value: totalEntries, color: "#10b981" },
-                                                    { name: "Saídas", value: totalExits, color: "#ef4444" },
-                                                ]}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={48}
-                                                outerRadius={72}
-                                                paddingAngle={3}
-                                                dataKey="value"
-                                                stroke="none"
-                                                isAnimationActive
-                                                animationDuration={500}
-                                            >
-                                                <Cell fill="#10b981" />
-                                                <Cell fill="#ef4444" />
-                                            </Pie>
-                                            <Tooltip
-                                                formatter={(value: number) => formatCurrency(value)}
-                                                contentStyle={{
-                                                    backgroundColor: "#0f172a",
-                                                    border: "none",
-                                                    borderRadius: 8,
-                                                    color: "#fff",
-                                                    fontSize: 12,
-                                                }}
-                                            />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            )}
-                            <div className="grid grid-cols-2 gap-2 mt-2 text-[12px]">
-                                <div className="flex items-center justify-between p-2 rounded-md bg-emerald-50/60 dark:bg-emerald-950/20">
-                                    <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-500" /> Entradas
-                                    </span>
-                                    <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-300">{entriesShare.toFixed(0)}%</span>
-                                </div>
-                                <div className="flex items-center justify-between p-2 rounded-md bg-rose-50/60 dark:bg-rose-950/20">
-                                    <span className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300">
-                                        <span className="w-2 h-2 rounded-full bg-rose-500" /> Saídas
-                                    </span>
-                                    <span className="font-mono font-semibold text-rose-700 dark:text-rose-300">{(100 - entriesShare).toFixed(0)}%</span>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* TREND 14 dias */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.3 }}
-                        className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl"
-                    >
-                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                            <div>
-                                <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Tendência diária</h3>
-                                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Fluxo dos últimos 14 dias</p>
-                            </div>
-                            <div className="flex items-center gap-3 text-[11px]">
-                                <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500" /> Entradas
+                        <h1 className="mt-2 text-[32px] sm:text-[36px] font-semibold text-slate-900 dark:text-white tracking-[-0.02em] leading-[1.05]">
+                            Movimentações
+                        </h1>
+                        {lastActivity && (
+                            <p className="mt-2 text-[13px] text-slate-500 dark:text-slate-400">
+                                Última: <span className="text-slate-700 dark:text-slate-200 font-medium">{lastActivity.movement.description}</span>
+                                <span className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
+                                <span className={lastActivity.movement.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400 font-mono font-medium" : "text-rose-600 dark:text-rose-400 font-mono font-medium"}>
+                                    {lastActivity.movement.type === "ENTRY" ? "+" : "−"}{formatCurrency(lastActivity.movement.value)}
                                 </span>
-                                <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                                    <span className="w-2 h-2 rounded-full bg-rose-500" /> Saídas
-                                </span>
-                            </div>
+                                <span className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
+                                {lastActivity.label}
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <CashMovementBackupActions onImported={() => refetch()} />
+                        <button
+                            type="button"
+                            onClick={() => refetch()}
+                            disabled={loading}
+                            className="inline-flex items-center gap-1.5 h-9 px-3 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/15 rounded-md disabled:opacity-50 transition-colors group"
+                        >
+                            <RotateCcw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
+                            <span>{loading ? "Atualizando" : "Atualizar"}</span>
+                        </button>
+                    </div>
+                </header>
+
+                {/* Big number + KPIs grid editorial */}
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6 mb-10">
+                    {/* Saldo grande */}
+                    <div className="lg:col-span-5">
+                        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Saldo do recorte</p>
+                        <p className={`mt-3 text-[56px] sm:text-[64px] font-semibold tracking-[-0.035em] leading-none tabular-nums font-mono ${balance >= 0 ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-rose-400"}`}>
+                            <CountUp end={balance} decimal="," decimals={2} prefix="R$ " separator="." duration={0.8} />
+                        </p>
+                        <div className="mt-4 flex items-center gap-3 text-[12.5px]">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium tabular-nums ${comparison.delta >= 0 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400"}`}>
+                                {comparison.delta >= 0 ? "↑" : "↓"} {Math.abs(comparison.delta).toFixed(1)}%
+                            </span>
+                            <span className="text-slate-500 dark:text-slate-400">vs. semana anterior</span>
                         </div>
-                        <div className="p-3 h-48">
+                        <button
+                            type="button"
+                            onClick={() => handleAdjustment("ADJUSTMENT")}
+                            className="mt-3 text-[12px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 underline-offset-4 hover:underline"
+                        >
+                            Ajustar manualmente
+                        </button>
+                    </div>
+
+                    {/* mini kpis col direita */}
+                    <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-5">
+                        <KpiCell
+                            label="Entradas"
+                            value={totalEntries}
+                            delta={comparison.entriesDelta}
+                            spark={sparkEntries}
+                            color="#10b981"
+                            onClick={() => handleAdjustment("ENTRY")}
+                        />
+                        <KpiCell
+                            label="Saídas"
+                            value={totalExits}
+                            delta={comparison.exitsDelta}
+                            spark={sparkExits}
+                            color="#ef4444"
+                            invertDelta
+                            onClick={() => handleAdjustment("EXIT")}
+                        />
+                        <KpiCell
+                            label="Lançamentos"
+                            value={totalCount}
+                            kind="count"
+                            sub={`Ticket ${formatCurrency(avgTicket)}`}
+                        />
+                        {bestWorst.best && (
+                            <KpiCell
+                                label="Melhor dia"
+                                value={bestWorst.best.entradas - bestWorst.best.saidas}
+                                sub={(bestWorst.best as any).label}
+                                color="#10b981"
+                                muted
+                            />
+                        )}
+                        {bestWorst.worst && (bestWorst.worst.entradas - bestWorst.worst.saidas) < 0 && (
+                            <KpiCell
+                                label="Pior dia"
+                                value={bestWorst.worst.entradas - bestWorst.worst.saidas}
+                                sub={(bestWorst.worst as any).label}
+                                color="#ef4444"
+                                muted
+                            />
+                        )}
+                        <KpiCell
+                            label="Volume total"
+                            value={totalVolume}
+                            sub={`${entriesShare.toFixed(0)}% entrada · ${(100 - entriesShare).toFixed(0)}% saída`}
+                            muted
+                        />
+                    </div>
+                </section>
+
+                {/* TENDÊNCIA + BREAKDOWN side by side */}
+                <section className="grid grid-cols-1 lg:grid-cols-3 gap-px mb-10 bg-slate-200 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
+                    {/* Trend chart */}
+                    <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-5">
+                        <div className="flex items-baseline justify-between mb-1">
+                            <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-tight">Fluxo</h2>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400">últimos 14 dias</span>
+                        </div>
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-4">Comparativo diário entre entradas e saídas</p>
+                        <div className="h-56 -ml-2">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={dailyTrend} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                                <AreaChart data={dailyTrend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="grad-en" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
+                                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.28} />
                                             <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="grad-ex" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#ef4444" stopOpacity={0.35} />
+                                            <stop offset="0%" stopColor="#ef4444" stopOpacity={0.22} />
                                             <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.45} vertical={false} />
-                                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                                    <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)} />
+                                    <CartesianGrid strokeDasharray="2 4" stroke="currentColor" className="text-slate-200 dark:text-white/[0.05]" vertical={false} />
+                                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: "currentColor" }} className="text-slate-400" axisLine={false} tickLine={false} interval={"preserveStartEnd"} />
+                                    <YAxis tick={{ fontSize: 10, fill: "currentColor" }} className="text-slate-400" axisLine={false} tickLine={false} width={40} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)} />
                                     <Tooltip
-                                        formatter={(value: number) => formatCurrency(value)}
-                                        contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: 8, color: "#fff", fontSize: 12 }}
-                                        labelStyle={{ color: "#cbd5e1" }}
+                                        formatter={(value: number, name: string) => [formatCurrency(value), name === "entradas" ? "Entradas" : "Saídas"]}
+                                        contentStyle={{ backgroundColor: "rgba(15,23,42,0.95)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: "#fff", fontSize: 12, padding: "8px 10px" }}
+                                        labelStyle={{ color: "#94a3b8", fontSize: 11, marginBottom: 2 }}
+                                        cursor={{ stroke: "#94a3b8", strokeWidth: 1, strokeDasharray: "3 3" }}
                                     />
-                                    <Area type="monotone" dataKey="entradas" stroke="#10b981" strokeWidth={2} fill="url(#grad-en)" isAnimationActive animationDuration={700} />
-                                    <Area type="monotone" dataKey="saidas" stroke="#ef4444" strokeWidth={2} fill="url(#grad-ex)" isAnimationActive animationDuration={700} />
+                                    <Area type="monotone" dataKey="entradas" stroke="#10b981" strokeWidth={1.75} fill="url(#grad-en)" isAnimationActive animationDuration={500} />
+                                    <Area type="monotone" dataKey="saidas" stroke="#ef4444" strokeWidth={1.75} fill="url(#grad-ex)" isAnimationActive animationDuration={500} />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
-                    </motion.div>
-                </div>
+                    </div>
 
-                {/* CATEGORY BREAKDOWN */}
-                {categoryBreakdown.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.35 }}
-                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl mb-6"
-                    >
-                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                            <div>
-                                <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Por categoria</h3>
-                                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">{categoryBreakdown.length} categoria(s) ativas</p>
-                            </div>
-                            <Hash className="w-4 h-4 text-slate-400" />
+                    {/* Breakdown lista vertical compacta */}
+                    <div className="bg-white dark:bg-slate-900 p-5">
+                        <div className="flex items-baseline justify-between mb-1">
+                            <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white tracking-tight">Por categoria</h2>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400">{categoryBreakdown.length}</span>
                         </div>
-                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {categoryBreakdown.map((c) => {
-                                const pct = totalVolume > 0 ? (c.total / totalVolume) * 100 : 0
-                                return (
-                                    <motion.div
-                                        key={c.category}
-                                        whileHover={{ scale: 1.02 }}
-                                        className="p-3 rounded-lg border border-slate-200 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/15 transition-colors cursor-pointer"
-                                        onClick={() => handleFilterChange(c.category as FilterType)}
-                                    >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} />
-                                                <span className="text-[12.5px] font-medium text-slate-700 dark:text-slate-200">{c.label}</span>
-                                            </div>
-                                            <span className="text-[10.5px] text-slate-500 dark:text-slate-400">{c.count}x</span>
-                                        </div>
-                                        <p className="text-[16px] font-mono font-semibold text-slate-900 dark:text-white tabular-nums">
-                                            {formatCurrency(c.total)}
-                                        </p>
-                                        <div className="mt-2 h-1.5 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${pct}%` }}
-                                                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                                                className="h-full rounded-full"
-                                                style={{ backgroundColor: c.color }}
-                                            />
-                                        </div>
-                                        <p className="mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">{pct.toFixed(1)}% do volume</p>
-                                    </motion.div>
-                                )
-                            })}
-                        </div>
-                    </motion.div>
-                )}
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-4">Distribuição do volume total</p>
+                        {categoryBreakdown.length === 0 ? (
+                            <p className="text-[12px] text-slate-400 py-6 text-center">Sem dados no recorte</p>
+                        ) : (
+                            <ul className="space-y-2.5">
+                                {categoryBreakdown.map((c) => {
+                                    const pct = totalVolume > 0 ? (c.total / totalVolume) * 100 : 0
+                                    return (
+                                        <li key={c.category}>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleFilterChange(c.category as FilterType)}
+                                                className="w-full text-left group"
+                                            >
+                                                <div className="flex items-baseline justify-between mb-1">
+                                                    <span className="flex items-center gap-2 text-[12.5px] text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white">
+                                                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.color }} />
+                                                        {c.label}
+                                                        <span className="text-[10.5px] text-slate-400">{c.count}</span>
+                                                    </span>
+                                                    <span className="font-mono text-[12.5px] tabular-nums text-slate-900 dark:text-white">{formatCurrency(c.total)}</span>
+                                                </div>
+                                                <div className="h-[3px] rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${pct}%` }}
+                                                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                                                        className="h-full rounded-full"
+                                                        style={{ backgroundColor: c.color }}
+                                                    />
+                                                </div>
+                                            </button>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                        )}
+                    </div>
+                </section>
 
-                {/* FILTERS + TABLE */}
-                <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.4 }}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl"
-                >
-                    {/* TOOLBAR */}
-                    <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
-                        <div className="flex flex-col lg:flex-row gap-3 lg:items-center justify-between mb-3">
-                            <div className="relative flex-1 max-w-md">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
-                                <input
-                                    type="text"
-                                    placeholder="Buscar por descrição…"
-                                    value={search}
-                                    onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }}
-                                    className="w-full h-10 pl-10 pr-3 text-[13px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/[0.08] rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-violet-500/15 focus:border-violet-500 transition-colors"
-                                />
+                {/* TABELA com toolbar minimal */}
+                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
+                    {/* Toolbar */}
+                    <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/[0.06] flex flex-col gap-3">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div className="flex items-baseline gap-2">
+                                <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white tracking-tight">Lançamentos</h2>
+                                <span className="text-[12px] text-slate-400">{sorted.length}</span>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5">
                                 <ExportPdfDropdown
                                     movements={movements}
                                     generateAllPdf={generateMovementsPdf}
                                     generateTodayPdf={generateTodayPdf}
                                 />
-                                <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/[0.08] p-0.5 bg-slate-50 dark:bg-slate-950">
+                                <div className="inline-flex rounded-md border border-slate-200 dark:border-white/[0.08] p-0.5">
                                     <button
                                         type="button"
                                         onClick={() => setViewMode("table")}
-                                        className={`flex items-center gap-1 h-8 px-2.5 rounded-md text-[11.5px] font-medium transition-colors ${viewMode === "table" ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}
-                                    >
-                                        <ListIcon className="w-3.5 h-3.5" /> Tabela
-                                    </button>
+                                        className={`flex items-center gap-1 h-7 px-2 rounded text-[11.5px] transition-colors ${viewMode === "table" ? "bg-slate-100 dark:bg-white/[0.06] text-slate-900 dark:text-white" : "text-slate-500 hover:text-slate-700"}`}
+                                        title="Tabela"
+                                    ><ListIcon className="w-3.5 h-3.5" /></button>
                                     <button
                                         type="button"
                                         onClick={() => setViewMode("cards")}
-                                        className={`flex items-center gap-1 h-8 px-2.5 rounded-md text-[11.5px] font-medium transition-colors ${viewMode === "cards" ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}
-                                    >
-                                        <LayoutGrid className="w-3.5 h-3.5" /> Cards
-                                    </button>
+                                        className={`flex items-center gap-1 h-7 px-2 rounded text-[11.5px] transition-colors ${viewMode === "cards" ? "bg-slate-100 dark:bg-white/[0.06] text-slate-900 dark:text-white" : "text-slate-500 hover:text-slate-700"}`}
+                                        title="Cards"
+                                    ><LayoutGrid className="w-3.5 h-3.5" /></button>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setShowFilters(!showFilters)}
-                                    className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[12.5px] font-medium border transition-colors ${showFilters ? "bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-800" : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]"}`}
+                                    className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[12px] font-medium transition-colors ${showFilters ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
                                 >
                                     <SlidersHorizontal className="w-3.5 h-3.5" />
-                                    Filtros avançados
+                                    Filtros
+                                    {activeFilters.length > 0 && (
+                                        <span className={`text-[10.5px] tabular-nums px-1.5 rounded-full ${showFilters ? "bg-white/20" : "bg-slate-200 dark:bg-white/[0.08]"}`}>{activeFilters.length}</span>
+                                    )}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Quick date pills */}
-                        <div className="flex items-center gap-1.5 flex-wrap mb-3">
-                            <CalendarDays className="w-3.5 h-3.5 text-slate-400 mr-1" />
-                            {[
-                                { value: "", label: "Tudo" },
-                                { value: "today", label: "Hoje" },
-                                { value: "yesterday", label: "Ontem" },
-                                { value: "this-week", label: "Semana" },
-                                { value: "last-7-days", label: "7 dias" },
-                                { value: "this-month", label: "Mês" },
-                                { value: "last-month", label: "Mês anterior" },
-                                { value: "last-30-days", label: "30 dias" },
-                            ].map((f) => (
-                                <motion.button
-                                    key={f.value}
-                                    onClick={() => handleQuickDateFilterChange(f.value)}
-                                    whileTap={{ scale: 0.95 }}
-                                    className={`px-3 h-7 rounded-full text-[11.5px] font-medium transition-colors border ${quickDateFilter === f.value
-                                        ? "bg-violet-600 text-white border-violet-600"
-                                        : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:border-violet-300 hover:text-violet-700"}`}
-                                >
-                                    {f.label}
-                                </motion.button>
-                            ))}
+                        {/* search */}
+                        <div className="flex flex-col md:flex-row gap-2 md:items-center">
+                            <div className="relative flex-1 max-w-lg">
+                                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" strokeWidth={2} />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por descrição, contato, código…"
+                                    value={search}
+                                    onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }}
+                                    className="w-full h-9 pl-9 pr-3 text-[13px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/[0.06] rounded-md text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-colors"
+                                />
+                            </div>
+                            {/* período inline */}
+                            <div className="flex items-center gap-1 text-[12px]">
+                                {[
+                                    { value: "today", label: "Hoje" },
+                                    { value: "this-week", label: "Semana" },
+                                    { value: "this-month", label: "Mês" },
+                                    { value: "last-30-days", label: "30d" },
+                                    { value: "", label: "Tudo" },
+                                ].map((f) => (
+                                    <button
+                                        key={f.value}
+                                        onClick={() => handleQuickDateFilterChange(f.value)}
+                                        className={`h-7 px-2.5 rounded-md text-[12px] font-medium transition-colors ${quickDateFilter === f.value
+                                            ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                                            : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
+                                    >
+                                        {f.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Category chips */}
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                            <ListFilter className="w-3.5 h-3.5 text-slate-400 mr-1" />
+                        {/* tipo (segmented) */}
+                        <div className="flex items-center gap-1 text-[12px] -mx-1 overflow-x-auto">
                             {[
-                                { value: "ALL", label: "Todas", icon: "💸", color: "slate" },
-                                { value: "ENTRY", label: "Entradas", icon: "➕", color: "emerald" },
-                                { value: "EXIT", label: "Saídas", icon: "➖", color: "rose" },
-                                { value: "SALE", label: "Vendas", icon: "💰", color: "emerald" },
-                                { value: "EXPENSE", label: "Despesas", icon: "🧾", color: "rose" },
-                                { value: "CHANGE", label: "Troco", icon: "💱", color: "teal" },
-                                { value: "WITHDRAWAL", label: "Saques", icon: "🏧", color: "orange" },
-                                { value: "PAYMENT", label: "Pagamentos", icon: "💳", color: "red" },
+                                { value: "ALL", label: "Todas" },
+                                { value: "ENTRY", label: "Entradas" },
+                                { value: "EXIT", label: "Saídas" },
+                                { value: "SALE", label: "Vendas" },
+                                { value: "EXPENSE", label: "Despesas" },
+                                { value: "PAYMENT", label: "Pagamentos" },
+                                { value: "WITHDRAWAL", label: "Saques" },
+                                { value: "CHANGE", label: "Troco" },
+                                { value: "OTHER_IN", label: "Outros" },
                             ].map((f) => {
                                 const active = filter === f.value
                                 return (
-                                    <motion.button
+                                    <button
                                         key={f.value}
                                         onClick={() => handleFilterChange(f.value as FilterType)}
-                                        whileTap={{ scale: 0.95 }}
-                                        className={`flex items-center gap-1 px-2.5 h-7 rounded-full text-[11.5px] font-medium transition-colors border ${active
-                                            ? `bg-${f.color}-50 dark:bg-${f.color}-950/40 text-${f.color}-700 dark:text-${f.color}-300 border-${f.color}-300 dark:border-${f.color}-800`
-                                            : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:border-slate-300"}`}
+                                        className={`h-7 px-2.5 mx-1 rounded-md text-[12px] font-medium whitespace-nowrap transition-colors ${active
+                                            ? "bg-slate-100 dark:bg-white/[0.06] text-slate-900 dark:text-white ring-1 ring-slate-300 dark:ring-white/15"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/[0.02]"}`}
                                     >
-                                        <span>{f.icon}</span>
-                                        <span>{f.label}</span>
-                                    </motion.button>
+                                        {f.label}
+                                    </button>
                                 )
                             })}
                         </div>
 
-                        {/* Advanced filters */}
+                        {/* Advanced */}
                         <AnimatePresence>
                             {showFilters && (
                                 <motion.div
@@ -1155,70 +991,48 @@ export function MovementHistory() {
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 mt-3 border-t border-slate-100 dark:border-white/[0.06]">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-3">
                                         <div>
-                                            <label className="block text-[11.5px] font-medium text-slate-600 dark:text-slate-300 mb-1.5">Tipo detalhado</label>
-                                            <select
-                                                value={filter}
-                                                onChange={(e) => handleFilterChange(e.target.value as FilterType)}
-                                                className="w-full p-2.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-[13px] bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                                            >
-                                                <option value="ALL">Todos</option>
-                                                <option value="ENTRY">➕ Entradas</option>
-                                                <option value="EXIT">➖ Saídas</option>
-                                                <option value="SALE">💰 Vendas</option>
-                                                <option value="CHANGE">💱 Troco</option>
-                                                <option value="OTHER_IN">📦 Outros (Entrada)</option>
-                                                <option value="EXPENSE">🧾 Despesas</option>
-                                                <option value="WITHDRAWAL">🏧 Saques</option>
-                                                <option value="PAYMENT">💳 Pagamentos</option>
-                                            </select>
+                                            <label className="block text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Data inicial</label>
+                                            <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setQuickDateFilter(""); setCurrentPage(1) }} className="w-full p-2 border border-slate-200 dark:border-white/[0.06] rounded-md text-[12.5px] bg-white dark:bg-slate-950" />
                                         </div>
                                         <div>
-                                            <label className="block text-[11.5px] font-medium text-slate-600 dark:text-slate-300 mb-1.5">Data inicial</label>
-                                            <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setQuickDateFilter(""); setCurrentPage(1) }} className="w-full p-2.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-[13px] bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[11.5px] font-medium text-slate-600 dark:text-slate-300 mb-1.5">Data final</label>
-                                            <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setQuickDateFilter(""); setCurrentPage(1) }} className="w-full p-2.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-[13px] bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                                            <label className="block text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Data final</label>
+                                            <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setQuickDateFilter(""); setCurrentPage(1) }} className="w-full p-2 border border-slate-200 dark:border-white/[0.06] rounded-md text-[12.5px] bg-white dark:bg-slate-950" />
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
-                                            <Input label="Valor mín." value={valueMin} onChange={(v: string) => { setValueMin(v); setCurrentPage(1) }} />
-                                            <Input label="Valor máx." value={valueMax} onChange={(v: string) => { setValueMax(v); setCurrentPage(1) }} />
+                                            <Input label="Mín. R$" value={valueMin} onChange={(v: string) => { setValueMin(v); setCurrentPage(1) }} />
+                                            <Input label="Máx. R$" value={valueMax} onChange={(v: string) => { setValueMax(v); setCurrentPage(1) }} />
+                                        </div>
+                                        <div className="flex items-end">
+                                            <button onClick={clearAllFilters} className="text-[12px] text-slate-500 hover:text-rose-600 underline-offset-2 hover:underline">Limpar todos os filtros</button>
                                         </div>
                                     </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
 
-                        {/* Active filter chips */}
+                        {/* Active chips */}
                         {activeFilters.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                className="flex items-center gap-1.5 flex-wrap mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.06]"
-                            >
-                                <FilterIcon className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-[11px] text-slate-500 dark:text-slate-400 mr-1">Filtros ativos:</span>
+                            <div className="flex items-center gap-1.5 flex-wrap pt-1">
                                 {activeFilters.map((f) => (
-                                    <span key={f.key} className="inline-flex items-center gap-1 px-2.5 h-6 rounded-full text-[11px] font-medium bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-900/40">
+                                    <span key={f.key} className="inline-flex items-center gap-1 pl-2.5 pr-1 h-6 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200">
                                         {f.label}
-                                        <button type="button" onClick={f.onClear} className="hover:bg-violet-200 dark:hover:bg-violet-900/40 rounded-full p-0.5 -mr-1">
+                                        <button type="button" onClick={f.onClear} className="hover:bg-slate-200 dark:hover:bg-white/[0.08] rounded p-0.5">
                                             <X className="w-2.5 h-2.5" />
                                         </button>
                                     </span>
                                 ))}
-                                <button type="button" onClick={clearAllFilters} className="text-[11px] text-rose-600 hover:text-rose-700 ml-1 underline-offset-2 hover:underline">
-                                    Limpar tudo
-                                </button>
-                            </motion.div>
+                            </div>
                         )}
                     </div>
 
-                    {/* SORT BAR */}
-                    <div className="px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.01]">
-                        <div className="flex items-center gap-2 text-[12px]">
-                            <span className="text-slate-500 dark:text-slate-400">Ordenar:</span>
+                    {/* Sort row */}
+                    <div className="px-5 py-2 flex items-center justify-between border-b border-slate-100 dark:border-white/[0.06] text-[11.5px]">
+                        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
+                            {sorted.length === 0 ? "Nenhum resultado" : `${startIndex + 1}–${Math.min(endIndex, sorted.length)} de ${sorted.length}`}
+                            <span className="text-slate-300 dark:text-slate-600">·</span>
+                            <span>Ordenar:</span>
                             {(["date", "value", "description"] as SortField[]).map((field) => {
                                 const active = sortField === field
                                 const labels = { date: "Data", value: "Valor", description: "Descrição" }
@@ -1226,229 +1040,189 @@ export function MovementHistory() {
                                     <button
                                         key={field}
                                         onClick={() => handleSortChange(field)}
-                                        className={`flex items-center gap-1 h-7 px-2.5 rounded-md text-[12px] font-medium transition-colors ${active ? "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
+                                        className={`inline-flex items-center gap-0.5 h-6 px-1.5 rounded transition-colors ${active ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
                                     >
                                         {labels[field]}
-                                        {active && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        {active && (sortOrder === "asc" ? <ArrowUp className="w-2.5 h-2.5" /> : <ArrowDown className="w-2.5 h-2.5" />)}
                                     </button>
                                 )
                             })}
                         </div>
-                        <div className="flex items-center gap-3 text-[12px]">
-                            <span className="text-slate-500 dark:text-slate-400">
-                                {sorted.length === 0 ? "Nenhum resultado" : `${startIndex + 1}–${Math.min(endIndex, sorted.length)} de ${sorted.length}`}
-                            </span>
-                            <select
-                                value={itemsPerPage}
-                                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1) }}
-                                className="px-2 h-7 border border-slate-200 dark:border-white/[0.08] rounded-md text-[12px] bg-white dark:bg-slate-900"
-                            >
-                                <option value={5}>5/pág</option>
-                                <option value={10}>10/pág</option>
-                                <option value={20}>20/pág</option>
-                                <option value={50}>50/pág</option>
-                                <option value={100}>100/pág</option>
-                            </select>
-                        </div>
+                        <select
+                            value={itemsPerPage}
+                            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1) }}
+                            className="text-[11.5px] bg-transparent border-0 text-slate-500 dark:text-slate-400 focus:outline-none cursor-pointer"
+                        >
+                            <option value={10}>10 por página</option>
+                            <option value={20}>20 por página</option>
+                            <option value={50}>50 por página</option>
+                            <option value={100}>100 por página</option>
+                        </select>
                     </div>
 
-                    {/* CONTENT: TABLE / CARDS */}
+                    {/* CONTENT */}
                     {paginatedMovements.length === 0 ? (
-                        <div className="text-center py-20">
-                            <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 dark:bg-white/[0.04] grid place-items-center mb-4">
-                                <Search className="w-7 h-7 text-slate-400" />
-                            </div>
-                            <p className="text-[15px] font-medium text-slate-700 dark:text-slate-200">Nenhuma movimentação encontrada</p>
-                            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5">Ajuste os filtros para ver mais resultados.</p>
+                        <div className="text-center py-24 px-6">
+                            <p className="text-[14px] font-medium text-slate-700 dark:text-slate-200">Sem lançamentos</p>
+                            <p className="mt-1.5 text-[12.5px] text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                                Nenhuma movimentação corresponde aos filtros aplicados.
+                            </p>
                             {activeFilters.length > 0 && (
-                                <button onClick={clearAllFilters} className="mt-4 inline-flex items-center gap-1.5 px-4 h-9 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[12.5px] font-medium">
-                                    <X className="w-3.5 h-3.5" /> Limpar filtros
+                                <button onClick={clearAllFilters} className="mt-4 text-[12px] text-slate-700 dark:text-slate-200 underline-offset-4 hover:underline">
+                                    Limpar filtros
                                 </button>
                             )}
                         </div>
                     ) : viewMode === "table" ? (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/[0.06]">
-                                    <tr className="text-[10.5px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                        <th className="px-5 py-3 text-left font-semibold">Data</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Descrição</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Categoria</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Pagamento</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Banco</th>
-                                        <th className="px-5 py-3 text-right font-semibold">Valor</th>
-                                        <th className="px-5 py-3 text-center font-semibold w-12"></th>
+                                <thead>
+                                    <tr className="text-[10.5px] uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-white/[0.04]">
+                                        <th className="px-5 py-2.5 text-left font-medium">Data</th>
+                                        <th className="px-5 py-2.5 text-left font-medium">Descrição</th>
+                                        <th className="px-5 py-2.5 text-left font-medium hidden md:table-cell">Categoria</th>
+                                        <th className="px-5 py-2.5 text-left font-medium hidden lg:table-cell">Pagamento</th>
+                                        <th className="px-5 py-2.5 text-left font-medium hidden lg:table-cell">Banco</th>
+                                        <th className="px-5 py-2.5 text-right font-medium">Valor</th>
+                                        <th className="px-3 py-2.5 w-12"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <AnimatePresence>
-                                        {paginatedMovements.map((m, idx) => {
-                                            const sub = mapCategoryToSubtype(m.category as string)
-                                            const COLORS: Record<Subtype, string> = {
-                                                SALE: "border-l-emerald-500",
-                                                CHANGE: "border-l-teal-500",
-                                                OTHER_IN: "border-l-green-500",
-                                                EXPENSE: "border-l-rose-500",
-                                                WITHDRAWAL: "border-l-orange-500",
-                                                PAYMENT: "border-l-red-500",
-                                            }
-                                            const bank = m.bankId ? bankMap.get(m.bankId) : null
-                                            return (
-                                                <motion.tr
-                                                    key={m.id}
-                                                    initial={{ opacity: 0, y: 6 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0 }}
-                                                    transition={{ duration: 0.2, delay: idx * 0.015 }}
-                                                    className={`group border-b border-slate-100 dark:border-white/[0.04] border-l-2 ${COLORS[sub]} hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors`}
-                                                >
-                                                    <td className="px-5 py-3 text-[12.5px] text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                                                        <div className="font-medium">{formatDate(m.date)}</div>
-                                                        {m.date && <div className="text-[10.5px] text-slate-500 dark:text-slate-400">{formatTime(m.date)}</div>}
-                                                    </td>
-                                                    <td className="px-5 py-3 text-[12.5px] font-medium text-slate-900 dark:text-white max-w-md">
-                                                        <div className="line-clamp-2">{m.description}</div>
-                                                    </td>
-                                                    <td className="px-5 py-3 text-[12.5px]">
-                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${m.type === "ENTRY" ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40" : "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40"}`}>
-                                                            {typeLabels[sub]}
+                                    {paginatedMovements.map((m, idx) => {
+                                        const sub = mapCategoryToSubtype(m.category as string)
+                                        const bank = m.bankId ? bankMap.get(m.bankId) : null
+                                        return (
+                                            <motion.tr
+                                                key={m.id}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                transition={{ duration: 0.25, delay: idx * 0.012 }}
+                                                className="group border-b border-slate-50 dark:border-white/[0.03] hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors"
+                                            >
+                                                <td className="px-5 py-3.5 text-[12.5px] text-slate-600 dark:text-slate-300 whitespace-nowrap tabular-nums">
+                                                    <div>{formatDate(m.date)}</div>
+                                                    {m.date && <div className="text-[10.5px] text-slate-400 mt-0.5">{formatTime(m.date)}</div>}
+                                                </td>
+                                                <td className="px-5 py-3.5 text-[13px] text-slate-900 dark:text-white max-w-md">
+                                                    <div className="line-clamp-2 leading-snug">{m.description}</div>
+                                                </td>
+                                                <td className="px-5 py-3.5 hidden md:table-cell">
+                                                    <span className="inline-flex items-center gap-1.5 text-[11.5px] text-slate-600 dark:text-slate-300">
+                                                        <span className={`w-1 h-1 rounded-full ${m.type === "ENTRY" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                                                        {typeLabels[sub]}
+                                                    </span>
+                                                </td>
+                                                <td className="px-5 py-3.5 hidden lg:table-cell text-[11.5px] text-slate-600 dark:text-slate-300">
+                                                    {m.typePayment ? paymentMethodLabels[m.typePayment].split(" ")[0] : <span className="text-slate-400">—</span>}
+                                                </td>
+                                                <td className="px-5 py-3.5 hidden lg:table-cell">
+                                                    {bank ? (
+                                                        <span className="inline-flex items-center gap-1.5 text-[11.5px] text-slate-600 dark:text-slate-300">
+                                                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: bank.corHex }} />
+                                                            {bank.name}
                                                         </span>
-                                                    </td>
-                                                    <td className="px-5 py-3 text-[12.5px]">
-                                                        {m.typePayment ? (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300">
-                                                                <CreditCard className="w-2.5 h-2.5" />
-                                                                {paymentMethodLabels[m.typePayment]}
-                                                            </span>
-                                                        ) : (<span className="text-slate-400 text-[11px]">—</span>)}
-                                                    </td>
-                                                    <td className="px-5 py-3 text-[12.5px]">
-                                                        {bank ? (
-                                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200">
-                                                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: bank.corHex }} />
-                                                                {bank.name}
-                                                            </span>
-                                                        ) : (<span className="text-slate-400 text-[11px]">—</span>)}
-                                                    </td>
-                                                    <td className="px-5 py-3 text-right whitespace-nowrap">
-                                                        <span className={`text-[13.5px] font-mono font-semibold tabular-nums ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                                                            {m.type === "ENTRY" ? "+" : "−"} {formatCurrency(m.value)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-3 py-3 text-center">
-                                                        <ActionsDropdown
-                                                            movement={m}
-                                                            onView={openViewModal}
-                                                            onEdit={openEditModal}
-                                                            onDelete={openDeleteModal}
-                                                            onReverse={handleReverse}
-                                                            isDeleting={deletingId === m.id}
-                                                        />
-                                                    </td>
-                                                </motion.tr>
-                                            )
-                                        })}
-                                    </AnimatePresence>
+                                                    ) : (<span className="text-slate-400 text-[11.5px]">—</span>)}
+                                                </td>
+                                                <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                                                    <span className={`text-[13.5px] font-mono font-medium tabular-nums ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                                        {m.type === "ENTRY" ? "+" : "−"}{formatCurrency(m.value).replace("R$", "").trim()}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-3.5 text-center">
+                                                    <ActionsDropdown
+                                                        movement={m}
+                                                        onView={openViewModal}
+                                                        onEdit={openEditModal}
+                                                        onDelete={openDeleteModal}
+                                                        onReverse={handleReverse}
+                                                        isDeleting={deletingId === m.id}
+                                                    />
+                                                </td>
+                                            </motion.tr>
+                                        )
+                                    })}
                                 </tbody>
                             </table>
                         </div>
                     ) : (
                         <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <AnimatePresence>
-                                {paginatedMovements.map((m, idx) => {
-                                    const sub = mapCategoryToSubtype(m.category as string)
-                                    const bank = m.bankId ? bankMap.get(m.bankId) : null
-                                    return (
-                                        <motion.div
-                                            key={m.id}
-                                            initial={{ opacity: 0, scale: 0.97 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.2, delay: idx * 0.02 }}
-                                            whileHover={{ y: -3 }}
-                                            className={`relative p-4 rounded-xl border bg-white dark:bg-slate-900 hover:shadow-md transition-all ${m.type === "ENTRY" ? "border-emerald-200/60 dark:border-emerald-900/30" : "border-rose-200/60 dark:border-rose-900/30"}`}
-                                        >
-                                            <div className={`absolute inset-x-0 top-0 h-[3px] rounded-t-xl ${m.type === "ENTRY" ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-gradient-to-r from-rose-500 to-red-500"}`} />
-                                            <div className="flex items-start justify-between mb-2">
-                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium border ${m.type === "ENTRY" ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40" : "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40"}`}>
-                                                    {typeLabels[sub]}
+                            {paginatedMovements.map((m, idx) => {
+                                const sub = mapCategoryToSubtype(m.category as string)
+                                const bank = m.bankId ? bankMap.get(m.bankId) : null
+                                return (
+                                    <motion.div
+                                        key={m.id}
+                                        initial={{ opacity: 0, y: 4 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.2, delay: idx * 0.015 }}
+                                        whileHover={{ y: -2 }}
+                                        className="p-4 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-white/15 transition-colors"
+                                    >
+                                        <div className="flex items-start justify-between mb-3">
+                                            <span className="inline-flex items-center gap-1.5 text-[11.5px] text-slate-500 dark:text-slate-400">
+                                                <span className={`w-1 h-1 rounded-full ${m.type === "ENTRY" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                                                {typeLabels[sub]}
+                                            </span>
+                                            <ActionsDropdown
+                                                movement={m}
+                                                onView={openViewModal}
+                                                onEdit={openEditModal}
+                                                onDelete={openDeleteModal}
+                                                onReverse={handleReverse}
+                                                isDeleting={deletingId === m.id}
+                                            />
+                                        </div>
+                                        <p className={`text-[22px] font-mono font-semibold tabular-nums tracking-tight leading-none ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                            {m.type === "ENTRY" ? "+" : "−"}{formatCurrency(m.value).replace("R$", "").trim()}
+                                        </p>
+                                        <p className="mt-2 text-[12.5px] text-slate-700 dark:text-slate-200 line-clamp-2 leading-snug">{m.description}</p>
+                                        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                                            <span>{formatDate(m.date)} · {formatTime(m.date)}</span>
+                                            {bank && (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: bank.corHex }} />
+                                                    {bank.name}
                                                 </span>
-                                                <ActionsDropdown
-                                                    movement={m}
-                                                    onView={openViewModal}
-                                                    onEdit={openEditModal}
-                                                    onDelete={openDeleteModal}
-                                                    onReverse={handleReverse}
-                                                    isDeleting={deletingId === m.id}
-                                                />
-                                            </div>
-                                            <p className="text-[13px] font-medium text-slate-900 dark:text-white line-clamp-2 mb-3">{m.description}</p>
-                                            <p className={`text-[20px] font-mono font-semibold tabular-nums ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                                                {m.type === "ENTRY" ? "+" : "−"} {formatCurrency(m.value)}
-                                            </p>
-                                            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04] space-y-1.5 text-[11px]">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><Calendar className="w-3 h-3" /> Data</span>
-                                                    <span className="text-slate-700 dark:text-slate-200">{formatDate(m.date)} · {formatTime(m.date)}</span>
-                                                </div>
-                                                {m.typePayment && (
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Pagamento</span>
-                                                        <span className="text-slate-700 dark:text-slate-200">{paymentMethodLabels[m.typePayment]}</span>
-                                                    </div>
-                                                )}
-                                                {bank && (
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><Landmark className="w-3 h-3" /> Banco</span>
-                                                        <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-200">
-                                                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: bank.corHex }} />
-                                                            {bank.name}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    )
-                                })}
-                            </AnimatePresence>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )
+                            })}
                         </div>
                     )}
 
-                    {/* PAGINATION */}
+                    {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3 border-t border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.01]">
-                            <div className="text-[12px] text-slate-500 dark:text-slate-400">
-                                Página <span className="font-semibold text-slate-700 dark:text-slate-200">{currentPage}</span> de <span className="font-semibold text-slate-700 dark:text-slate-200">{totalPages}</span>
+                        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 dark:border-white/[0.06] text-[12px]">
+                            <div className="text-slate-500 dark:text-slate-400 tabular-nums">
+                                Página {currentPage} de {totalPages}
                             </div>
                             <div className="flex items-center gap-1">
-                                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Primeira"><ChevronsLeft className="w-4 h-4" /></button>
-                                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Anterior"><ChevronLeft className="w-4 h-4" /></button>
-                                <div className="flex gap-1 mx-1">
-                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                        let pageNum
-                                        if (totalPages <= 5) pageNum = i + 1
-                                        else if (currentPage <= 3) pageNum = i + 1
-                                        else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i
-                                        else pageNum = currentPage - 2 + i
-                                        const active = currentPage === pageNum
-                                        return (
-                                            <motion.button
-                                                key={pageNum}
-                                                onClick={() => setCurrentPage(pageNum)}
-                                                whileTap={{ scale: 0.95 }}
-                                                className={`min-w-[28px] h-7 px-2 rounded-md text-[12px] font-medium transition-colors ${active ? "bg-violet-600 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
-                                            >
-                                                {pageNum}
-                                            </motion.button>
-                                        )
-                                    })}
-                                </div>
-                                <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Próxima"><ChevronRight className="w-4 h-4" /></button>
-                                <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Última"><ChevronsRight className="w-4 h-4" /></button>
+                                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-slate-500" title="Primeira"><ChevronsLeft className="w-3.5 h-3.5" /></button>
+                                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-slate-500" title="Anterior"><ChevronLeft className="w-3.5 h-3.5" /></button>
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum
+                                    if (totalPages <= 5) pageNum = i + 1
+                                    else if (currentPage <= 3) pageNum = i + 1
+                                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i
+                                    else pageNum = currentPage - 2 + i
+                                    const active = currentPage === pageNum
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            className={`min-w-[26px] h-7 px-1.5 rounded-md text-[12px] font-medium transition-colors tabular-nums ${active ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    )
+                                })}
+                                <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-slate-500" title="Próxima"><ChevronRight className="w-3.5 h-3.5" /></button>
+                                <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-slate-500" title="Última"><ChevronsRight className="w-3.5 h-3.5" /></button>
                             </div>
                         </div>
                     )}
-                </motion.div>
+                </section>
             </div>
 
             {/* Modais */}
@@ -1731,16 +1505,85 @@ function MetricCard({ title, value, icon, bg, text, actionClick }: {
 function Input({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
     return (
         <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{label}</label>
+            <label className="block text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">{label}</label>
             <input
                 type="number"
                 step="0.01"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={label.includes("Mín") ? "0" : "9999"}
-                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl"
+                className="w-full p-2 border border-slate-200 dark:border-white/[0.06] rounded-md text-[12.5px] bg-white dark:bg-slate-950 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-colors"
             />
         </div>
+    )
+}
+
+function KpiCell({
+    label,
+    value,
+    delta,
+    sub,
+    spark,
+    color,
+    invertDelta,
+    muted,
+    kind,
+    onClick,
+}: {
+    label: string
+    value: number
+    delta?: number
+    sub?: string
+    spark?: { v: number }[]
+    color?: string
+    invertDelta?: boolean
+    muted?: boolean
+    kind?: "count"
+    onClick?: () => void
+}) {
+    const Wrap: any = onClick ? "button" : "div"
+    const showDelta = typeof delta === "number" && Math.abs(delta) >= 0.1
+    const positive = invertDelta ? (delta ?? 0) < 0 : (delta ?? 0) >= 0
+    return (
+        <Wrap
+            type={onClick ? "button" : undefined}
+            onClick={onClick}
+            className={`group text-left ${onClick ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-white/[0.02] -mx-2 px-2 -my-1 py-1 rounded-md transition-colors" : ""}`}
+        >
+            <div className="flex items-center justify-between">
+                <p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">{label}</p>
+                {showDelta && (
+                    <span className={`text-[10.5px] tabular-nums font-medium ${positive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        {(delta as number) >= 0 ? "+" : ""}{(delta as number).toFixed(0)}%
+                    </span>
+                )}
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+                <p className={`text-[22px] font-semibold tracking-tight tabular-nums font-mono leading-none ${muted ? "text-slate-700 dark:text-slate-200" : "text-slate-900 dark:text-white"}`} style={color && !muted ? { color } : {}}>
+                    {kind === "count" ? (
+                        <CountUp end={value} duration={0.7} separator="." />
+                    ) : (
+                        <CountUp end={value} decimal="," decimals={2} prefix="R$ " separator="." duration={0.7} />
+                    )}
+                </p>
+            </div>
+            {spark && spark.length > 0 && (
+                <div className="h-7 mt-2 -mx-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={spark} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id={`spk-${label}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={color || "#64748b"} stopOpacity={0.35} />
+                                    <stop offset="100%" stopColor={color || "#64748b"} stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="v" stroke={color || "#64748b"} strokeWidth={1.25} fill={`url(#spk-${label})`} />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            {sub && <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">{sub}</p>}
+        </Wrap>
     )
 }
 
