@@ -289,6 +289,14 @@ export function OrdersListPage() {
                                                     Imprimir
                                                 </button>
                                                 <button
+                                                    onClick={() => navigate(`/notas/nova?orderId=${o.id}`)}
+                                                    title="Emitir nota fiscal a partir deste pedido"
+                                                    className="inline-flex items-center gap-1 h-7 px-2 rounded text-[11.5px] font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                >
+                                                    <FileText className="w-3 h-3" />
+                                                    Emitir NF
+                                                </button>
+                                                <button
                                                     onClick={() => navigate(`/pedidos/${o.id}/imprimir`)}
                                                     title="Visualizar"
                                                     className="w-7 h-7 grid place-items-center rounded text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10"

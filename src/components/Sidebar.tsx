@@ -118,9 +118,12 @@ const VIEW_TO_MODULE: Record<View, string> = {
   'obras/relatorios/desvio': 'construction',
   'obras/relatorios/fluxo-caixa': 'construction',
   'obras/relatorios/quebra-custos': 'construction',
-};
+  notas: 'notas',
+  'notas/nova': 'notas',
+  'configuracoes/fiscal': 'configuracoes',
+} as Record<string, string>;
 
-const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas']);
+const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas']);
 
 function hasPermission(
   permissions: { module_key: string; permissions: string[] }[],
@@ -227,6 +230,15 @@ const sections: MenuSection[] = [
         ],
       },
       {
+        id: 'notas' as View,
+        label: 'Notas fiscais',
+        icon: FileText,
+        children: [
+          { id: 'notas' as View, label: 'Listar notas', icon: FileText },
+          { id: 'notas/nova' as View, label: 'Emitir nota', icon: Plus },
+        ],
+      },
+      {
         id: 'financeiro' as View,
         label: 'Financeiro',
         icon: Wallet,
@@ -280,6 +292,7 @@ const sections: MenuSection[] = [
       { id: 'alertas' as View, label: 'Alertas', icon: Bell },
       { id: 'empresa' as View, label: 'Empresa', icon: Building2 },
       { id: 'configuracoes' as View, label: 'Configurações', icon: Settings },
+      { id: 'configuracoes/fiscal' as View, label: 'Configuração fiscal', icon: Receipt },
       { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },
     ],
   },
@@ -293,6 +306,7 @@ const groupedChildren: Record<string, View[]> = {
   movimentacoes: ['movimentacoes', 'formulario-movimentacao', 'historico-movimentacao'],
   fiscal: ['fiscal', 'fiscal-pagar', 'fiscal-pagar-criar', 'fiscal-receber', 'fiscal-receber-criar'],
   financeiro: ['financeiro', 'bancos', 'relatorios/visao-geral'],
+  notas: ['notas' as View, 'notas/nova' as View],
 };
 
 export function Sidebar({

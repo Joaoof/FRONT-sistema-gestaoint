@@ -68,6 +68,10 @@ import { PrevistoVsRealizado } from './pages/Construction/Relatorios/PrevistoVsR
 import { AnaliseDesvio } from './pages/Construction/Relatorios/AnaliseDesvio';
 import { FluxoCaixa } from './pages/Construction/Relatorios/FluxoCaixa';
 import { QuebraCustos } from './pages/Construction/Relatorios/QuebraCustos';
+import { InvoicesListPage } from './pages/Invoices/InvoicesListPage';
+import { InvoiceDetailPage } from './pages/Invoices/InvoiceDetailPage';
+import { IssueInvoicePage } from './pages/Invoices/IssueInvoicePage';
+import { FiscalConfigPage } from './pages/Settings/FiscalConfigPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -193,6 +197,12 @@ function AppContent() {
             <Route path="/obras/relatorios/desvio" element={<AnaliseDesvio />} />
             <Route path="/obras/relatorios/fluxo-caixa" element={<FluxoCaixa />} />
             <Route path="/obras/relatorios/quebra-custos" element={<QuebraCustos />} />
+
+            {/* Notas fiscais */}
+            <Route path="/notas" element={<InvoicesListPage />} />
+            <Route path="/notas/nova" element={<IssueInvoicePage />} />
+            <Route path="/notas/:id" element={<InvoiceDetailPage />} />
+            <Route path="/configuracoes/fiscal" element={<FiscalConfigPage />} />
 
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>
