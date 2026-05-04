@@ -783,99 +783,77 @@ export function MovementHistory() {
                 <motion.div
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-gradient-to-br from-white via-violet-50/30 to-fuchsia-50/40 dark:from-slate-900 dark:via-violet-950/20 dark:to-fuchsia-950/10 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(124,58,237,0.18)] mb-6"
+                    transition={{ duration: 0.35 }}
+                    className="relative rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900 mb-6"
                 >
-                    {/* glow blobs */}
-                    <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-violet-400/25 dark:bg-violet-500/15 blur-3xl pointer-events-none" />
-                    <div className="absolute -bottom-32 -left-24 w-96 h-96 rounded-full bg-emerald-300/20 dark:bg-emerald-500/10 blur-3xl pointer-events-none" />
-                    <div className="absolute top-1/2 left-1/3 w-64 h-64 rounded-full bg-fuchsia-300/15 dark:bg-fuchsia-500/10 blur-3xl pointer-events-none" />
-                    {/* grid texture */}
-                    <div
-                        className="absolute inset-0 opacity-[0.025] dark:opacity-[0.04] pointer-events-none"
-                        style={{
-                            backgroundImage:
-                                "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
-                            backgroundSize: "32px 32px",
-                            color: "#0f172a",
-                        }}
-                    />
-
-                    <div className="relative px-6 lg:px-8 py-7 lg:py-8">
-                        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                    <div className="px-6 lg:px-7 py-6 lg:py-7">
+                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
                             <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-3 flex-wrap">
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 dark:bg-white/[0.06] text-violet-700 dark:text-violet-300 text-[11px] font-medium border border-violet-200/70 dark:border-violet-800/40 backdrop-blur-sm">
-                                        <span className="relative flex h-1.5 w-1.5">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                                        </span>
-                                        <Activity className="w-3 h-3" /> Caixa ao vivo
-                                    </span>
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 text-[11px] font-medium border border-slate-200/70 dark:border-white/[0.08] backdrop-blur-sm">
-                                        <Receipt className="w-3 h-3" /> {filtered.length} lançamentos
-                                    </span>
-                                    {busiestWeekday && (
-                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 dark:bg-white/[0.06] text-amber-700 dark:text-amber-300 text-[11px] font-medium border border-amber-200/70 dark:border-amber-800/40 backdrop-blur-sm">
-                                            <Flame className="w-3 h-3" /> Pico em {busiestWeekday.label}
-                                        </span>
-                                    )}
-                                    {peakHour && (
-                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 dark:bg-white/[0.06] text-sky-700 dark:text-sky-300 text-[11px] font-medium border border-sky-200/70 dark:border-sky-800/40 backdrop-blur-sm">
-                                            <Clock className="w-3 h-3" /> Hora-pico {String(peakHour.hour).padStart(2, "0")}h
-                                        </span>
-                                    )}
-                                </div>
-                                <h1 className="text-[32px] lg:text-[38px] font-bold text-slate-900 dark:text-white tracking-tight leading-[1.05]">
-                                    Histórico de <span className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 dark:from-violet-400 dark:via-fuchsia-400 dark:to-pink-400 bg-clip-text text-transparent">movimentações</span>
+                                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                                    Caixa · {filtered.length} lançamentos
+                                </p>
+                                <h1 className="mt-2 text-[26px] lg:text-[30px] font-semibold text-slate-900 dark:text-white tracking-tight leading-[1.1]">
+                                    Histórico de movimentações
                                 </h1>
-                                <p className="text-[14px] text-slate-600 dark:text-slate-400 mt-2 max-w-xl">
-                                    Visão completa de entradas e saídas com inteligência de fluxo —
-                                    filtre, compare e exporte em segundos.
+                                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 max-w-xl">
+                                    Visão completa de entradas e saídas — filtre, exporte e analise tendências.
                                 </p>
 
                                 {/* Mini stats inline */}
-                                <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
-                                    <div className="px-3 py-2 rounded-xl bg-white/60 dark:bg-white/[0.04] border border-white/80 dark:border-white/[0.06] backdrop-blur-sm">
-                                        <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Saldo</p>
-                                        <p className={`text-[15px] font-mono font-bold tabular-nums mt-0.5 ${balance >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
-                                            {balance >= 0 ? "+ " : "− "}{formatCurrency(Math.abs(balance))}
+                                <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-100 dark:bg-white/[0.06] rounded-lg overflow-hidden border border-slate-200 dark:border-white/[0.06] max-w-2xl">
+                                    <div className="px-3.5 py-2.5 bg-white dark:bg-slate-900">
+                                        <p className="text-[10.5px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-medium">Saldo</p>
+                                        <p className={`text-[14px] font-mono font-semibold tabular-nums mt-1 ${balance >= 0 ? "text-slate-900 dark:text-white" : "text-rose-700 dark:text-rose-400"}`}>
+                                            {balance >= 0 ? "" : "− "}{formatCurrency(Math.abs(balance))}
                                         </p>
                                     </div>
-                                    <div className="px-3 py-2 rounded-xl bg-white/60 dark:bg-white/[0.04] border border-white/80 dark:border-white/[0.06] backdrop-blur-sm">
-                                        <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Ticket médio</p>
-                                        <p className="text-[15px] font-mono font-bold tabular-nums mt-0.5 text-slate-800 dark:text-slate-100">
+                                    <div className="px-3.5 py-2.5 bg-white dark:bg-slate-900">
+                                        <p className="text-[10.5px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-medium">Ticket médio</p>
+                                        <p className="text-[14px] font-mono font-semibold tabular-nums mt-1 text-slate-900 dark:text-white">
                                             {formatCurrency(avgTicket)}
                                         </p>
                                     </div>
-                                    <div className="px-3 py-2 rounded-xl bg-white/60 dark:bg-white/[0.04] border border-white/80 dark:border-white/[0.06] backdrop-blur-sm">
-                                        <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Burn / dia</p>
-                                        <p className="text-[15px] font-mono font-bold tabular-nums mt-0.5 text-slate-800 dark:text-slate-100">
+                                    <div className="px-3.5 py-2.5 bg-white dark:bg-slate-900">
+                                        <p className="text-[10.5px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-medium">Burn / dia</p>
+                                        <p className="text-[14px] font-mono font-semibold tabular-nums mt-1 text-slate-900 dark:text-white">
                                             {formatCurrency(burnRate)}
                                         </p>
                                     </div>
-                                    <div className="px-3 py-2 rounded-xl bg-white/60 dark:bg-white/[0.04] border border-white/80 dark:border-white/[0.06] backdrop-blur-sm">
-                                        <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Taxa retenção</p>
-                                        <p className="text-[15px] font-mono font-bold tabular-nums mt-0.5 text-slate-800 dark:text-slate-100">
+                                    <div className="px-3.5 py-2.5 bg-white dark:bg-slate-900">
+                                        <p className="text-[10.5px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-medium">Taxa retenção</p>
+                                        <p className="text-[14px] font-mono font-semibold tabular-nums mt-1 text-slate-900 dark:text-white">
                                             {savingsRate.toFixed(1)}%
                                         </p>
                                     </div>
                                 </div>
+
+                                {(busiestWeekday || peakHour) && (
+                                    <div className="flex items-center gap-3 mt-3 text-[11.5px] text-slate-500 dark:text-slate-400">
+                                        {busiestWeekday && (
+                                            <span className="inline-flex items-center gap-1">
+                                                <Flame className="w-3 h-3 text-slate-400" /> Pico em {busiestWeekday.label}
+                                            </span>
+                                        )}
+                                        {peakHour && (
+                                            <span className="inline-flex items-center gap-1">
+                                                <Clock className="w-3 h-3 text-slate-400" /> Hora-pico {String(peakHour.hour).padStart(2, "0")}h
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0 flex-wrap lg:justify-end">
                                 <CashMovementBackupActions onImported={() => refetch()} />
-                                <motion.button
+                                <button
                                     type="button"
                                     onClick={() => refetch()}
                                     disabled={loading}
-                                    whileTap={{ scale: 0.97 }}
-                                    whileHover={{ y: -1 }}
-                                    className="inline-flex items-center gap-1.5 h-10 px-4 text-[12.5px] font-semibold text-slate-700 dark:text-slate-200 bg-white/90 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] hover:border-violet-300 hover:bg-white dark:hover:bg-white/[0.1] rounded-xl disabled:opacity-50 transition-all backdrop-blur-sm shadow-sm group"
+                                    className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:border-slate-300 dark:hover:border-white/15 rounded-lg disabled:opacity-50 transition-colors"
                                 >
-                                    <RotateCcw className={`w-3.5 h-3.5 transition-transform ${loading ? "animate-spin text-violet-500" : "group-hover:rotate-180"}`} strokeWidth={2.2} />
+                                    <RotateCcw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} strokeWidth={2} />
                                     <span>{loading ? "Atualizando…" : "Atualizar"}</span>
-                                </motion.button>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -983,37 +961,22 @@ export function MovementHistory() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: 0.25 }}
-                        className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden"
                     >
-                        <div className="absolute -top-16 -right-16 w-44 h-44 rounded-full bg-violet-200/30 dark:bg-violet-500/10 blur-3xl pointer-events-none" />
-                        <div className="relative px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 ring-1 ring-violet-100 dark:ring-violet-500/20 flex items-center justify-center">
-                                    <Layers className="w-4 h-4" />
-                                </span>
-                                <div>
-                                    <h3 className="text-[13.5px] font-bold text-slate-900 dark:text-white">Composição</h3>
-                                    <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Entradas vs saídas</p>
-                                </div>
+                        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                            <div>
+                                <h3 className="text-[12.5px] font-semibold text-slate-900 dark:text-white">Composição</h3>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Entradas vs saídas</p>
                             </div>
+                            <Layers className="w-3.5 h-3.5 text-slate-400" />
                         </div>
-                        <div className="relative p-4">
+                        <div className="p-4">
                             {totalVolume === 0 ? (
-                                <div className="h-48 grid place-items-center text-[12.5px] text-slate-400">Sem dados no recorte</div>
+                                <div className="h-48 grid place-items-center text-[12px] text-slate-400">Sem dados no recorte</div>
                             ) : (
                                 <div className="relative h-48">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
-                                            <defs>
-                                                <linearGradient id="don-en" x1="0" y1="0" x2="1" y2="1">
-                                                    <stop offset="0%" stopColor="#10b981" />
-                                                    <stop offset="100%" stopColor="#14b8a6" />
-                                                </linearGradient>
-                                                <linearGradient id="don-ex" x1="0" y1="0" x2="1" y2="1">
-                                                    <stop offset="0%" stopColor="#ef4444" />
-                                                    <stop offset="100%" stopColor="#e11d48" />
-                                                </linearGradient>
-                                            </defs>
                                             <Pie
                                                 data={[
                                                     { name: "Entradas", value: totalEntries },
@@ -1021,26 +984,25 @@ export function MovementHistory() {
                                                 ]}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={56}
-                                                outerRadius={84}
-                                                paddingAngle={4}
+                                                innerRadius={54}
+                                                outerRadius={80}
+                                                paddingAngle={2}
                                                 dataKey="value"
                                                 stroke="none"
                                                 isAnimationActive
-                                                animationDuration={650}
+                                                animationDuration={500}
                                             >
-                                                <Cell fill="url(#don-en)" />
-                                                <Cell fill="url(#don-ex)" />
+                                                <Cell fill="#10b981" />
+                                                <Cell fill="#ef4444" />
                                             </Pie>
                                             <Tooltip
                                                 formatter={(value: number) => formatCurrency(value)}
                                                 contentStyle={{
                                                     backgroundColor: "#0f172a",
                                                     border: "none",
-                                                    borderRadius: 10,
+                                                    borderRadius: 8,
                                                     color: "#fff",
                                                     fontSize: 12,
-                                                    boxShadow: "0 10px 30px -10px rgba(0,0,0,0.5)",
                                                 }}
                                             />
                                         </PieChart>
@@ -1048,26 +1010,26 @@ export function MovementHistory() {
                                     {/* center label */}
                                     <div className="absolute inset-0 grid place-items-center pointer-events-none">
                                         <div className="text-center">
-                                            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">Saldo</p>
-                                            <p className={`text-[15px] font-mono font-bold tabular-nums ${balance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                                                {balance >= 0 ? "+" : "−"}{formatCurrency(Math.abs(balance)).replace("R$", "").trim()}
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium">Saldo</p>
+                                            <p className={`text-[14px] font-mono font-semibold tabular-nums mt-0.5 ${balance >= 0 ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-rose-400"}`}>
+                                                {balance >= 0 ? "" : "−"}{formatCurrency(Math.abs(balance)).replace("R$", "").trim()}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             )}
-                            <div className="grid grid-cols-2 gap-2 mt-3 text-[12px]">
-                                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-50/40 dark:from-emerald-950/30 dark:to-emerald-950/10 border border-emerald-200/40 dark:border-emerald-500/15">
-                                    <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 text-[11px] font-medium">
-                                        <ArrowDownCircle className="w-3 h-3" /> Entradas
+                            <div className="grid grid-cols-2 gap-2 mt-3 text-[11.5px]">
+                                <div className="flex items-center justify-between px-2.5 py-2 rounded-md bg-slate-50 dark:bg-white/[0.03]">
+                                    <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500" /> Entradas
                                     </span>
-                                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">{entriesShare.toFixed(0)}%</span>
+                                    <span className="font-mono font-medium text-slate-900 dark:text-white">{entriesShare.toFixed(0)}%</span>
                                 </div>
-                                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-br from-rose-50 to-rose-50/40 dark:from-rose-950/30 dark:to-rose-950/10 border border-rose-200/40 dark:border-rose-500/15">
-                                    <span className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300 text-[11px] font-medium">
-                                        <ArrowUpCircle className="w-3 h-3" /> Saídas
+                                <div className="flex items-center justify-between px-2.5 py-2 rounded-md bg-slate-50 dark:bg-white/[0.03]">
+                                    <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                                        <span className="w-2 h-2 rounded-full bg-rose-500" /> Saídas
                                     </span>
-                                    <span className="font-mono font-bold text-rose-700 dark:text-rose-300">{(100 - entriesShare).toFixed(0)}%</span>
+                                    <span className="font-mono font-medium text-slate-900 dark:text-white">{(100 - entriesShare).toFixed(0)}%</span>
                                 </div>
                             </div>
                         </div>
@@ -1078,24 +1040,18 @@ export function MovementHistory() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: 0.3 }}
-                        className="lg:col-span-2 relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden"
+                        className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden"
                     >
-                        <div className="absolute -top-20 -left-10 w-72 h-32 bg-gradient-to-r from-emerald-200/30 to-rose-200/30 dark:from-emerald-500/5 dark:to-rose-500/5 blur-3xl pointer-events-none" />
-                        <div className="relative px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-white/[0.06] flex items-center justify-center">
-                                    <LineChartIcon className="w-4 h-4" />
-                                </span>
-                                <div>
-                                    <h3 className="text-[13.5px] font-bold text-slate-900 dark:text-white">Tendência diária</h3>
-                                    <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Fluxo dos últimos 14 dias</p>
-                                </div>
+                        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                            <div>
+                                <h3 className="text-[12.5px] font-semibold text-slate-900 dark:text-white">Tendência diária</h3>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Fluxo dos últimos 14 dias</p>
                             </div>
-                            <div className="flex items-center gap-2 text-[10.5px] flex-wrap">
-                                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold">
+                            <div className="flex items-center gap-3 text-[11px]">
+                                <span className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500" /> Entradas
                                 </span>
-                                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 font-semibold">
+                                <span className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
                                     <span className="w-2 h-2 rounded-full bg-rose-500" /> Saídas
                                 </span>
                             </div>
@@ -1189,41 +1145,34 @@ export function MovementHistory() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: 0.4 }}
-                        className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-2xl"
+                        className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl"
                     >
-                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-1 ring-amber-100 dark:ring-amber-500/20 flex items-center justify-center">
-                                    <BarChart3 className="w-4 h-4" />
-                                </span>
-                                <div>
-                                    <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Atividade por dia da semana</h3>
-                                    <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Distribuição entradas vs saídas</p>
-                                </div>
+                        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                            <div>
+                                <h3 className="text-[12.5px] font-semibold text-slate-900 dark:text-white">Por dia da semana</h3>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                    {busiestWeekday ? `Mais ativo: ${busiestWeekday.label}` : "Distribuição entradas vs saídas"}
+                                </p>
                             </div>
-                            {busiestWeekday && (
-                                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-500/25">
-                                    <Flame className="w-3 h-3" /> Pico em {busiestWeekday.label}
-                                </span>
-                            )}
+                            <BarChart3 className="w-3.5 h-3.5 text-slate-400" />
                         </div>
-                        <div className="p-3 h-56">
+                        <div className="p-3 h-52">
                             {totalVolume === 0 ? (
-                                <div className="h-full grid place-items-center text-[12.5px] text-slate-400">Sem dados</div>
+                                <div className="h-full grid place-items-center text-[12px] text-slate-400">Sem dados</div>
                             ) : (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={weekdayBreakdown} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.45} vertical={false} />
-                                        <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.4} vertical={false} />
+                                        <XAxis dataKey="label" tick={{ fontSize: 10.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
                                         <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)} />
                                         <Tooltip
                                             formatter={(value: number) => formatCurrency(value)}
                                             contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: 8, color: "#fff", fontSize: 12 }}
                                             labelStyle={{ color: "#cbd5e1" }}
-                                            cursor={{ fill: "rgba(148,163,184,0.08)" }}
+                                            cursor={{ fill: "rgba(148,163,184,0.06)" }}
                                         />
-                                        <Bar dataKey="entradas" fill="#10b981" radius={[6, 6, 0, 0]} />
-                                        <Bar dataKey="saidas" fill="#ef4444" radius={[6, 6, 0, 0]} />
+                                        <Bar dataKey="entradas" fill="#10b981" radius={[3, 3, 0, 0]} />
+                                        <Bar dataKey="saidas" fill="#ef4444" radius={[3, 3, 0, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             )}
@@ -1235,48 +1184,38 @@ export function MovementHistory() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: 0.45 }}
-                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-2xl"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl"
                     >
-                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 ring-1 ring-sky-100 dark:ring-sky-500/20 flex items-center justify-center">
-                                    <Clock className="w-4 h-4" />
-                                </span>
-                                <div>
-                                    <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Por hora do dia</h3>
-                                    <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">{peakHour ? `Pico ${String(peakHour.hour).padStart(2, "0")}h` : "Sem dados"}</p>
-                                </div>
+                        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                            <div>
+                                <h3 className="text-[12.5px] font-semibold text-slate-900 dark:text-white">Por hora do dia</h3>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{peakHour ? `Pico às ${String(peakHour.hour).padStart(2, "0")}h` : "Sem dados"}</p>
                             </div>
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
                         </div>
                         <div className="p-4">
                             <div className="grid grid-cols-12 gap-1">
                                 {hourlyBreakdown.map((h) => {
                                     const intensity = h.count / maxHourCount
-                                    const opacity = h.count === 0 ? 0.06 : 0.18 + intensity * 0.82
+                                    const opacity = h.count === 0 ? 0.04 : 0.12 + intensity * 0.78
                                     return (
                                         <div
                                             key={h.hour}
                                             title={`${String(h.hour).padStart(2, "0")}h — ${h.count} lançamento(s) · ${formatCurrency(h.total)}`}
-                                            className="aspect-square rounded-md transition-transform hover:scale-110 cursor-default"
+                                            className="aspect-square rounded-sm transition-transform hover:scale-110 cursor-default"
                                             style={{
-                                                backgroundColor: `rgba(124, 58, 237, ${opacity})`,
-                                                outline: h.count > 0 ? "1px solid rgba(124,58,237,0.25)" : "1px solid rgba(148,163,184,0.15)",
+                                                backgroundColor: `rgba(15, 23, 42, ${opacity})`,
                                             }}
                                         />
                                     )
                                 })}
                             </div>
-                            <div className="flex items-center justify-between mt-3 text-[10px] text-slate-400">
+                            <div className="flex items-center justify-between mt-2.5 text-[10px] text-slate-400">
                                 <span>00h</span>
                                 <span>06h</span>
                                 <span>12h</span>
                                 <span>18h</span>
                                 <span>23h</span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.06]">
-                                <span className="text-[10.5px] text-slate-500 dark:text-slate-400">Menor</span>
-                                <div className="flex-1 h-1.5 rounded-full" style={{ background: "linear-gradient(to right, rgba(124,58,237,0.06), rgba(124,58,237,1))" }} />
-                                <span className="text-[10.5px] text-slate-500 dark:text-slate-400">Maior</span>
                             </div>
                         </div>
                     </motion.div>
@@ -1290,40 +1229,28 @@ export function MovementHistory() {
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: 0.5 }}
-                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden"
+                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden"
                         >
-                            <div className="relative px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-950/20">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-500/25 flex items-center justify-center shadow-sm">
-                                        <Trophy className="w-4 h-4" strokeWidth={2.2} />
-                                    </span>
-                                    <div>
-                                        <h3 className="text-[13.5px] font-bold text-slate-900 dark:text-white">Top entradas</h3>
-                                        <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Maiores recebimentos do recorte</p>
-                                    </div>
+                            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-[12.5px] font-semibold text-slate-900 dark:text-white">Top entradas</h3>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Maiores recebimentos</p>
                                 </div>
-                                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                                <span className="text-[10.5px] text-slate-400">
                                     {topEntries.length} de {filtered.filter(m => m.type === "ENTRY").length}
                                 </span>
                             </div>
-                            <div className="p-2">
+                            <div className="px-2 py-1">
                                 {topEntries.length === 0 ? (
-                                    <div className="px-3 py-8 text-center text-[12.5px] text-slate-400">Sem entradas no recorte</div>
+                                    <div className="px-3 py-8 text-center text-[12px] text-slate-400">Sem entradas no recorte</div>
                                 ) : (
                                     <ul className="divide-y divide-slate-100 dark:divide-white/[0.04]">
                                         {topEntries.map((m, idx) => {
                                             const max = topEntries[0]?.value || 1
                                             const pct = (m.value / max) * 100
                                             return (
-                                                <li key={m.id} className="px-3 py-2.5 flex items-center gap-3 group hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 rounded-lg transition-colors cursor-pointer" onClick={() => openViewModal(m)}>
-                                                    <span className={`flex items-center justify-center w-7 h-7 rounded-lg text-[11.5px] font-bold tabular-nums shrink-0 ${idx === 0
-                                                        ? "bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-sm"
-                                                        : idx === 1
-                                                            ? "bg-gradient-to-br from-slate-300 to-slate-400 text-white shadow-sm"
-                                                            : idx === 2
-                                                                ? "bg-gradient-to-br from-orange-400 to-orange-500 text-white shadow-sm"
-                                                                : "bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300"
-                                                        }`}>
+                                                <li key={m.id} className="px-3 py-2.5 flex items-center gap-3 group hover:bg-slate-50 dark:hover:bg-white/[0.02] rounded-md transition-colors cursor-pointer" onClick={() => openViewModal(m)}>
+                                                    <span className="flex items-center justify-center w-6 text-[11px] font-mono tabular-nums shrink-0 text-slate-400 dark:text-slate-500">
                                                         {idx + 1}
                                                     </span>
                                                     <div className="min-w-0 flex-1">
@@ -1332,17 +1259,17 @@ export function MovementHistory() {
                                                             <span className="text-[10.5px] text-slate-500 dark:text-slate-400 shrink-0">
                                                                 {formatDate(m.date)} · {typeLabels[mapCategoryToSubtype(m.category as string)]}
                                                             </span>
-                                                            <div className="flex-1 h-1 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
+                                                            <div className="flex-1 h-0.5 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
                                                                 <motion.div
                                                                     initial={{ width: 0 }}
                                                                     animate={{ width: `${pct}%` }}
-                                                                    transition={{ duration: 0.7, delay: idx * 0.05 }}
-                                                                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500"
+                                                                    transition={{ duration: 0.6, delay: idx * 0.05 }}
+                                                                    className="h-full bg-emerald-500"
                                                                 />
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <span className="text-[13px] font-mono font-bold tabular-nums text-emerald-600 dark:text-emerald-400 shrink-0">
+                                                    <span className="text-[12.5px] font-mono font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 shrink-0">
                                                         + {formatCurrency(m.value)}
                                                     </span>
                                                 </li>
@@ -1358,40 +1285,28 @@ export function MovementHistory() {
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: 0.55 }}
-                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden"
+                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden"
                         >
-                            <div className="relative px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between bg-gradient-to-r from-rose-50/50 to-transparent dark:from-rose-950/20">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400 ring-1 ring-rose-200/50 dark:ring-rose-500/25 flex items-center justify-center shadow-sm">
-                                        <Zap className="w-4 h-4" strokeWidth={2.2} />
-                                    </span>
-                                    <div>
-                                        <h3 className="text-[13.5px] font-bold text-slate-900 dark:text-white">Top saídas</h3>
-                                        <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Maiores despesas do recorte</p>
-                                    </div>
+                            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-[12.5px] font-semibold text-slate-900 dark:text-white">Top saídas</h3>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Maiores despesas</p>
                                 </div>
-                                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                                <span className="text-[10.5px] text-slate-400">
                                     {topExits.length} de {filtered.filter(m => m.type === "EXIT").length}
                                 </span>
                             </div>
-                            <div className="p-2">
+                            <div className="px-2 py-1">
                                 {topExits.length === 0 ? (
-                                    <div className="px-3 py-8 text-center text-[12.5px] text-slate-400">Sem saídas no recorte</div>
+                                    <div className="px-3 py-8 text-center text-[12px] text-slate-400">Sem saídas no recorte</div>
                                 ) : (
                                     <ul className="divide-y divide-slate-100 dark:divide-white/[0.04]">
                                         {topExits.map((m, idx) => {
                                             const max = topExits[0]?.value || 1
                                             const pct = (m.value / max) * 100
                                             return (
-                                                <li key={m.id} className="px-3 py-2.5 flex items-center gap-3 group hover:bg-rose-50/40 dark:hover:bg-rose-950/10 rounded-lg transition-colors cursor-pointer" onClick={() => openViewModal(m)}>
-                                                    <span className={`flex items-center justify-center w-7 h-7 rounded-lg text-[11.5px] font-bold tabular-nums shrink-0 ${idx === 0
-                                                        ? "bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-sm"
-                                                        : idx === 1
-                                                            ? "bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-sm"
-                                                            : idx === 2
-                                                                ? "bg-gradient-to-br from-orange-400 to-orange-500 text-white shadow-sm"
-                                                                : "bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300"
-                                                        }`}>
+                                                <li key={m.id} className="px-3 py-2.5 flex items-center gap-3 group hover:bg-slate-50 dark:hover:bg-white/[0.02] rounded-md transition-colors cursor-pointer" onClick={() => openViewModal(m)}>
+                                                    <span className="flex items-center justify-center w-6 text-[11px] font-mono tabular-nums shrink-0 text-slate-400 dark:text-slate-500">
                                                         {idx + 1}
                                                     </span>
                                                     <div className="min-w-0 flex-1">
@@ -1400,17 +1315,17 @@ export function MovementHistory() {
                                                             <span className="text-[10.5px] text-slate-500 dark:text-slate-400 shrink-0">
                                                                 {formatDate(m.date)} · {typeLabels[mapCategoryToSubtype(m.category as string)]}
                                                             </span>
-                                                            <div className="flex-1 h-1 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
+                                                            <div className="flex-1 h-0.5 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
                                                                 <motion.div
                                                                     initial={{ width: 0 }}
                                                                     animate={{ width: `${pct}%` }}
-                                                                    transition={{ duration: 0.7, delay: idx * 0.05 }}
-                                                                    className="h-full bg-gradient-to-r from-rose-500 to-red-500"
+                                                                    transition={{ duration: 0.6, delay: idx * 0.05 }}
+                                                                    className="h-full bg-rose-500"
                                                                 />
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <span className="text-[13px] font-mono font-bold tabular-nums text-rose-600 dark:text-rose-400 shrink-0">
+                                                    <span className="text-[12.5px] font-mono font-semibold tabular-nums text-rose-600 dark:text-rose-400 shrink-0">
                                                         − {formatCurrency(m.value)}
                                                     </span>
                                                 </li>
@@ -1428,25 +1343,20 @@ export function MovementHistory() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.4 }}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-sm overflow-hidden"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden"
                 >
                     {/* HEADER */}
-                    <div className="px-5 lg:px-6 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between bg-gradient-to-r from-slate-50/80 via-white to-violet-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-violet-950/20">
-                        <div className="flex items-center gap-2">
-                            <span className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 ring-1 ring-violet-100 dark:ring-violet-500/20 flex items-center justify-center shadow-sm">
-                                <ListIcon className="w-4 h-4" strokeWidth={2.2} />
-                            </span>
-                            <div>
-                                <h2 className="text-[14px] font-bold text-slate-900 dark:text-white tracking-tight">Lista de movimentações</h2>
-                                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Filtre, ordene e exporte. Clique para ver detalhes.</p>
-                            </div>
+                    <div className="px-5 lg:px-6 py-3.5 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                        <div>
+                            <h2 className="text-[13px] font-semibold text-slate-900 dark:text-white">Lista de movimentações</h2>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Clique em uma linha para ver os detalhes</p>
                         </div>
-                        <div className="hidden md:flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10.5px] font-semibold border border-emerald-200/60 dark:border-emerald-500/20">
-                                <ArrowDownCircle className="w-3 h-3" /> {filtered.filter(m => m.type === "ENTRY").length} entradas
+                        <div className="hidden md:flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {filtered.filter(m => m.type === "ENTRY").length} entradas
                             </span>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10.5px] font-semibold border border-rose-200/60 dark:border-rose-500/20">
-                                <ArrowUpCircle className="w-3 h-3" /> {filtered.filter(m => m.type === "EXIT").length} saídas
+                            <span className="inline-flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> {filtered.filter(m => m.type === "EXIT").length} saídas
                             </span>
                         </div>
                     </div>
@@ -1454,20 +1364,20 @@ export function MovementHistory() {
                     {/* TOOLBAR */}
                     <div className="px-5 lg:px-6 py-4 border-b border-slate-100 dark:border-white/[0.06]">
                         <div className="flex flex-col lg:flex-row gap-3 lg:items-center justify-between mb-4">
-                            <div className="relative flex-1 max-w-lg group">
-                                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" strokeWidth={2} />
+                            <div className="relative flex-1 max-w-lg">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
                                 <input
                                     type="text"
-                                    placeholder="Buscar por descrição, valor, categoria…"
+                                    placeholder="Buscar por descrição…"
                                     value={search}
                                     onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }}
-                                    className="w-full h-11 pl-11 pr-20 text-[13.5px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-violet-500/20 focus:border-violet-500 focus:bg-white dark:focus:bg-slate-900 transition-all"
+                                    className="w-full h-10 pl-10 pr-9 text-[13px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/[0.08] rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-slate-900/5 dark:focus:ring-white/10 focus:border-slate-300 dark:focus:border-white/15 transition-colors"
                                 />
-                                <kbd className="hidden sm:inline-flex absolute right-3 top-1/2 -translate-y-1/2 items-center gap-0.5 px-1.5 h-5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/[0.08] text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">
-                                    {search ? (
-                                        <button type="button" onClick={() => { setSearch(""); setCurrentPage(1) }} className="px-1 hover:text-rose-500">limpar</button>
-                                    ) : "⌘K"}
-                                </kbd>
+                                {search && (
+                                    <button type="button" onClick={() => { setSearch(""); setCurrentPage(1) }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded">
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <ExportPdfDropdown
@@ -1475,50 +1385,39 @@ export function MovementHistory() {
                                     generateAllPdf={generateMovementsPdf}
                                     generateTodayPdf={generateTodayPdf}
                                 />
-                                <div className="relative inline-flex rounded-xl border border-slate-200 dark:border-white/[0.08] p-1 bg-slate-50 dark:bg-slate-950">
+                                <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/[0.08] p-0.5 bg-slate-50 dark:bg-slate-950">
                                     <button
                                         type="button"
                                         onClick={() => setViewMode("table")}
-                                        className={`relative z-10 flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors ${viewMode === "table" ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}
+                                        className={`flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[11.5px] font-medium transition-colors ${viewMode === "table" ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}
                                     >
                                         <ListIcon className="w-3.5 h-3.5" /> Tabela
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setViewMode("cards")}
-                                        className={`relative z-10 flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors ${viewMode === "cards" ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}
+                                        className={`flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[11.5px] font-medium transition-colors ${viewMode === "cards" ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}
                                     >
                                         <LayoutGrid className="w-3.5 h-3.5" /> Cards
                                     </button>
-                                    <motion.span
-                                        layout
-                                        transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                                        className="absolute top-1 bottom-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200/60 dark:border-white/[0.06]"
-                                        style={{
-                                            left: viewMode === "table" ? 4 : "calc(50% + 0px)",
-                                            right: viewMode === "cards" ? 4 : "calc(50% + 0px)",
-                                        }}
-                                    />
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setShowFilters(!showFilters)}
-                                    className={`inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl text-[12.5px] font-semibold border transition-all ${showFilters ? "bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-700/50 shadow-sm" : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:border-slate-300"}`}
+                                    className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[12px] font-medium border transition-colors ${showFilters ? "bg-slate-100 dark:bg-white/[0.06] text-slate-900 dark:text-white border-slate-300 dark:border-white/15" : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]"}`}
                                 >
                                     <SlidersHorizontal className="w-3.5 h-3.5" />
                                     Filtros
                                     {activeFilters.length > 0 && (
-                                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-violet-600 text-white text-[10px] font-bold">{activeFilters.length}</span>
+                                        <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-semibold">{activeFilters.length}</span>
                                     )}
                                 </button>
                             </div>
                         </div>
 
                         {/* Quick date pills */}
-                        <div className="flex items-center gap-1.5 flex-wrap mb-3">
-                            <span className="inline-flex items-center gap-1 mr-1 text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">
-                                <CalendarDays className="w-3.5 h-3.5" /> Período
-                            </span>
+                        <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+                            <CalendarDays className="w-3.5 h-3.5 text-slate-400 mr-1" />
                             {[
                                 { value: "", label: "Tudo" },
                                 { value: "today", label: "Hoje" },
@@ -1529,47 +1428,42 @@ export function MovementHistory() {
                                 { value: "last-month", label: "Mês anterior" },
                                 { value: "last-30-days", label: "30 dias" },
                             ].map((f) => (
-                                <motion.button
+                                <button
                                     key={f.value}
                                     onClick={() => handleQuickDateFilterChange(f.value)}
-                                    whileTap={{ scale: 0.95 }}
-                                    className={`px-3 h-7 rounded-full text-[11.5px] font-medium transition-all border ${quickDateFilter === f.value
-                                        ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white border-violet-600 shadow-sm shadow-violet-500/25"
-                                        : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:border-violet-300 hover:text-violet-700 dark:hover:border-violet-700"}`}
+                                    className={`px-2.5 h-7 rounded-md text-[11.5px] font-medium transition-colors ${quickDateFilter === f.value
+                                        ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900"
+                                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
                                 >
                                     {f.label}
-                                </motion.button>
+                                </button>
                             ))}
                         </div>
 
                         {/* Category chips */}
                         <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="inline-flex items-center gap-1 mr-1 text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">
-                                <ListFilter className="w-3.5 h-3.5" /> Tipo
-                            </span>
+                            <ListFilter className="w-3.5 h-3.5 text-slate-400 mr-1" />
                             {([
-                                { value: "ALL", label: "Todas", icon: "💸", activeClass: "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white" },
-                                { value: "ENTRY", label: "Entradas", icon: "➕", activeClass: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40" },
-                                { value: "EXIT", label: "Saídas", icon: "➖", activeClass: "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-500/40" },
-                                { value: "SALE", label: "Vendas", icon: "💰", activeClass: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40" },
-                                { value: "EXPENSE", label: "Despesas", icon: "🧾", activeClass: "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-500/40" },
-                                { value: "CHANGE", label: "Troco", icon: "💱", activeClass: "bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-300 dark:border-teal-500/40" },
-                                { value: "WITHDRAWAL", label: "Saques", icon: "🏧", activeClass: "bg-orange-50 dark:bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-500/40" },
-                                { value: "PAYMENT", label: "Pagamentos", icon: "💳", activeClass: "bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/40" },
+                                { value: "ALL", label: "Todas" },
+                                { value: "ENTRY", label: "Entradas" },
+                                { value: "EXIT", label: "Saídas" },
+                                { value: "SALE", label: "Vendas" },
+                                { value: "EXPENSE", label: "Despesas" },
+                                { value: "CHANGE", label: "Troco" },
+                                { value: "WITHDRAWAL", label: "Saques" },
+                                { value: "PAYMENT", label: "Pagamentos" },
                             ] as const).map((f) => {
                                 const active = filter === f.value
                                 return (
-                                    <motion.button
+                                    <button
                                         key={f.value}
                                         onClick={() => handleFilterChange(f.value as FilterType)}
-                                        whileTap={{ scale: 0.95 }}
-                                        className={`flex items-center gap-1.5 px-3 h-7 rounded-full text-[11.5px] font-semibold transition-all border ${active
-                                            ? `${f.activeClass} shadow-sm`
-                                            : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]"}`}
+                                        className={`px-2.5 h-7 rounded-md text-[11.5px] font-medium transition-colors ${active
+                                            ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900"
+                                            : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
                                     >
-                                        <span>{f.icon}</span>
-                                        <span>{f.label}</span>
-                                    </motion.button>
+                                        {f.label}
+                                    </button>
                                 )
                             })}
                         </div>
@@ -1627,16 +1521,16 @@ export function MovementHistory() {
                                 className="flex items-center gap-1.5 flex-wrap mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.06]"
                             >
                                 <FilterIcon className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-[11px] text-slate-500 dark:text-slate-400 mr-1">Filtros ativos:</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 mr-1">Ativos:</span>
                                 {activeFilters.map((f) => (
-                                    <span key={f.key} className="inline-flex items-center gap-1 px-2.5 h-6 rounded-full text-[11px] font-medium bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-900/40">
+                                    <span key={f.key} className="inline-flex items-center gap-1 px-2 h-6 rounded text-[11px] font-medium bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/[0.06]">
                                         {f.label}
-                                        <button type="button" onClick={f.onClear} className="hover:bg-violet-200 dark:hover:bg-violet-900/40 rounded-full p-0.5 -mr-1">
+                                        <button type="button" onClick={f.onClear} className="hover:bg-slate-200 dark:hover:bg-white/[0.1] rounded p-0.5 -mr-0.5">
                                             <X className="w-2.5 h-2.5" />
                                         </button>
                                     </span>
                                 ))}
-                                <button type="button" onClick={clearAllFilters} className="text-[11px] text-rose-600 hover:text-rose-700 ml-1 underline-offset-2 hover:underline">
+                                <button type="button" onClick={clearAllFilters} className="text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-white ml-1 underline-offset-2 hover:underline">
                                     Limpar tudo
                                 </button>
                             </motion.div>
@@ -1644,9 +1538,9 @@ export function MovementHistory() {
                     </div>
 
                     {/* SORT BAR */}
-                    <div className="px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.01]">
-                        <div className="flex items-center gap-2 text-[12px]">
-                            <span className="text-slate-500 dark:text-slate-400">Ordenar:</span>
+                    <div className="px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/40 dark:bg-white/[0.01]">
+                        <div className="flex items-center gap-1.5 text-[12px]">
+                            <span className="text-slate-500 dark:text-slate-400 mr-1">Ordenar:</span>
                             {(["date", "value", "description"] as SortField[]).map((field) => {
                                 const active = sortField === field
                                 const labels = { date: "Data", value: "Valor", description: "Descrição" }
@@ -1654,7 +1548,7 @@ export function MovementHistory() {
                                     <button
                                         key={field}
                                         onClick={() => handleSortChange(field)}
-                                        className={`flex items-center gap-1 h-7 px-2.5 rounded-md text-[12px] font-medium transition-colors ${active ? "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
+                                        className={`flex items-center gap-1 h-7 px-2.5 rounded-md text-[12px] font-medium transition-colors ${active ? "bg-slate-100 dark:bg-white/[0.06] text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
                                     >
                                         {labels[field]}
                                         {active && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
@@ -1682,17 +1576,14 @@ export function MovementHistory() {
 
                     {/* CONTENT: TABLE / CARDS */}
                     {paginatedMovements.length === 0 ? (
-                        <div className="text-center py-24 px-6">
-                            <div className="relative w-20 h-20 mx-auto mb-5">
-                                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-violet-500/20 dark:to-fuchsia-500/20 blur-xl" />
-                                <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-violet-50 to-fuchsia-50 dark:from-violet-500/10 dark:to-fuchsia-500/10 ring-1 ring-violet-200/60 dark:ring-violet-500/20 grid place-items-center">
-                                    <Search className="w-8 h-8 text-violet-500 dark:text-violet-400" strokeWidth={1.5} />
-                                </div>
+                        <div className="text-center py-20 px-6">
+                            <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-white/[0.04] grid place-items-center">
+                                <Search className="w-6 h-6 text-slate-400" strokeWidth={1.5} />
                             </div>
-                            <p className="text-[16px] font-bold text-slate-700 dark:text-slate-200">Nenhuma movimentação encontrada</p>
-                            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto">Ajuste os filtros, mude o período ou limpe a busca para ver mais resultados.</p>
+                            <p className="text-[14px] font-semibold text-slate-700 dark:text-slate-200">Nenhuma movimentação encontrada</p>
+                            <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-1.5 max-w-sm mx-auto">Ajuste os filtros ou mude o período para ver mais resultados.</p>
                             {activeFilters.length > 0 && (
-                                <button onClick={clearAllFilters} className="mt-5 inline-flex items-center gap-1.5 px-4 h-10 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white text-[12.5px] font-semibold shadow-sm shadow-violet-500/25 transition-all">
+                                <button onClick={clearAllFilters} className="mt-4 inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-medium hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors">
                                     <X className="w-3.5 h-3.5" /> Limpar filtros
                                 </button>
                             )}
@@ -1700,95 +1591,93 @@ export function MovementHistory() {
                     ) : viewMode === "table" ? (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gradient-to-b from-slate-50 to-slate-50/40 dark:from-white/[0.03] dark:to-white/[0.01] border-b border-slate-200 dark:border-white/[0.06]">
+                                <thead className="bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/[0.06]">
                                     <tr className="text-[10.5px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                        <th className="px-5 py-3.5 text-left font-bold">
+                                        <th className="px-5 py-3 text-left font-semibold">
                                             <button onClick={() => handleSortChange("date")} className="inline-flex items-center gap-1 hover:text-slate-900 dark:hover:text-white transition-colors">
                                                 Data
-                                                {sortField === "date" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3 text-violet-500" /> : <ArrowDown className="w-3 h-3 text-violet-500" />)}
+                                                {sortField === "date" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                                             </button>
                                         </th>
-                                        <th className="px-5 py-3.5 text-left font-bold">
+                                        <th className="px-5 py-3 text-left font-semibold">
                                             <button onClick={() => handleSortChange("description")} className="inline-flex items-center gap-1 hover:text-slate-900 dark:hover:text-white transition-colors">
                                                 Descrição
-                                                {sortField === "description" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3 text-violet-500" /> : <ArrowDown className="w-3 h-3 text-violet-500" />)}
+                                                {sortField === "description" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                                             </button>
                                         </th>
-                                        <th className="px-5 py-3.5 text-left font-bold">Categoria</th>
-                                        <th className="px-5 py-3.5 text-left font-bold">Pagamento</th>
-                                        <th className="px-5 py-3.5 text-left font-bold">Banco</th>
-                                        <th className="px-5 py-3.5 text-right font-bold">
+                                        <th className="px-5 py-3 text-left font-semibold">Categoria</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Pagamento</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Banco</th>
+                                        <th className="px-5 py-3 text-right font-semibold">
                                             <button onClick={() => handleSortChange("value")} className="inline-flex items-center gap-1 ml-auto hover:text-slate-900 dark:hover:text-white transition-colors">
                                                 Valor
-                                                {sortField === "value" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3 text-violet-500" /> : <ArrowDown className="w-3 h-3 text-violet-500" />)}
+                                                {sortField === "value" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                                             </button>
                                         </th>
-                                        <th className="px-3 py-3.5 text-center font-bold w-12"></th>
+                                        <th className="px-3 py-3 text-center font-semibold w-12"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <AnimatePresence>
                                         {paginatedMovements.map((m, idx) => {
                                             const sub = mapCategoryToSubtype(m.category as string)
-                                            const SUBCONFIG: Record<Subtype, { border: string; bg: string; text: string; ring: string; gradFrom: string; gradTo: string }> = {
-                                                SALE: { border: "border-l-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-300", ring: "ring-emerald-200 dark:ring-emerald-500/20", gradFrom: "from-emerald-500", gradTo: "to-teal-500" },
-                                                CHANGE: { border: "border-l-teal-500", bg: "bg-teal-50 dark:bg-teal-500/10", text: "text-teal-700 dark:text-teal-300", ring: "ring-teal-200 dark:ring-teal-500/20", gradFrom: "from-teal-500", gradTo: "to-cyan-500" },
-                                                OTHER_IN: { border: "border-l-green-500", bg: "bg-green-50 dark:bg-green-500/10", text: "text-green-700 dark:text-green-300", ring: "ring-green-200 dark:ring-green-500/20", gradFrom: "from-green-500", gradTo: "to-emerald-500" },
-                                                EXPENSE: { border: "border-l-rose-500", bg: "bg-rose-50 dark:bg-rose-500/10", text: "text-rose-700 dark:text-rose-300", ring: "ring-rose-200 dark:ring-rose-500/20", gradFrom: "from-rose-500", gradTo: "to-red-500" },
-                                                WITHDRAWAL: { border: "border-l-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", text: "text-orange-700 dark:text-orange-300", ring: "ring-orange-200 dark:ring-orange-500/20", gradFrom: "from-orange-500", gradTo: "to-amber-500" },
-                                                PAYMENT: { border: "border-l-red-500", bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-700 dark:text-red-300", ring: "ring-red-200 dark:ring-red-500/20", gradFrom: "from-red-500", gradTo: "to-rose-500" },
+                                            const SUBCONFIG: Record<Subtype, { dot: string }> = {
+                                                SALE: { dot: "bg-emerald-500" },
+                                                CHANGE: { dot: "bg-teal-500" },
+                                                OTHER_IN: { dot: "bg-green-500" },
+                                                EXPENSE: { dot: "bg-rose-500" },
+                                                WITHDRAWAL: { dot: "bg-orange-500" },
+                                                PAYMENT: { dot: "bg-red-500" },
                                             }
                                             const cfg = SUBCONFIG[sub]
                                             const bank = m.bankId ? bankMap.get(m.bankId) : null
                                             return (
                                                 <motion.tr
                                                     key={m.id}
-                                                    initial={{ opacity: 0, y: 6 }}
+                                                    initial={{ opacity: 0, y: 4 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     exit={{ opacity: 0 }}
-                                                    transition={{ duration: 0.2, delay: idx * 0.015 }}
+                                                    transition={{ duration: 0.18, delay: idx * 0.012 }}
                                                     onClick={() => openViewModal(m)}
-                                                    className={`group border-b border-slate-100 dark:border-white/[0.04] border-l-[3px] ${cfg.border} hover:bg-slate-50/70 dark:hover:bg-white/[0.025] transition-colors cursor-pointer`}
+                                                    className="group border-b border-slate-100 dark:border-white/[0.04] hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
                                                 >
-                                                    <td className="px-5 py-3.5 text-[12.5px] text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                                                        <div className="font-semibold">{formatDate(m.date)}</div>
-                                                        {m.date && <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5 inline-flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{formatTime(m.date)}</div>}
+                                                    <td className="px-5 py-3 text-[12.5px] text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                                                        <div className="font-medium">{formatDate(m.date)}</div>
+                                                        {m.date && <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">{formatTime(m.date)}</div>}
                                                     </td>
-                                                    <td className="px-5 py-3.5 text-[12.5px] font-medium text-slate-900 dark:text-white max-w-md">
+                                                    <td className="px-5 py-3 text-[12.5px] font-medium text-slate-900 dark:text-white max-w-md">
                                                         <div className="flex items-center gap-2.5">
-                                                            <span className={`shrink-0 w-8 h-8 rounded-lg ${cfg.bg} ${cfg.text} ring-1 ${cfg.ring} grid place-items-center shadow-sm`}>
-                                                                {m.type === "ENTRY" ? <ArrowDownCircle className="w-4 h-4" strokeWidth={2} /> : <ArrowUpCircle className="w-4 h-4" strokeWidth={2} />}
-                                                            </span>
-                                                            <span className="line-clamp-2 group-hover:text-violet-700 dark:group-hover:text-violet-300 transition-colors">{m.description}</span>
+                                                            <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                                                            <span className="line-clamp-2">{m.description}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-5 py-3.5 text-[12.5px]">
-                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${cfg.bg} ${cfg.text} ${cfg.ring.replace("ring-", "border-").replace("/20", "/40").replace("/30", "/50")}`}>
+                                                    <td className="px-5 py-3 text-[12.5px]">
+                                                        <span className="text-[11.5px] text-slate-600 dark:text-slate-300">
                                                             {typeLabels[sub]}
                                                         </span>
                                                     </td>
-                                                    <td className="px-5 py-3.5 text-[12.5px]">
+                                                    <td className="px-5 py-3 text-[12.5px]">
                                                         {m.typePayment ? (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/20">
-                                                                <CreditCard className="w-2.5 h-2.5" />
+                                                            <span className="inline-flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-300">
+                                                                <CreditCard className="w-2.5 h-2.5 text-slate-400" />
                                                                 {paymentMethodLabels[m.typePayment]}
                                                             </span>
                                                         ) : (<span className="text-slate-300 dark:text-slate-600 text-[11px]">—</span>)}
                                                     </td>
-                                                    <td className="px-5 py-3.5 text-[12.5px]">
+                                                    <td className="px-5 py-3 text-[12.5px]">
                                                         {bank ? (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-white/[0.06]">
-                                                                <span className="w-1.5 h-1.5 rounded-full ring-2 ring-white dark:ring-slate-900" style={{ backgroundColor: bank.corHex }} />
+                                                            <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
+                                                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: bank.corHex }} />
                                                                 {bank.name}
                                                             </span>
                                                         ) : (<span className="text-slate-300 dark:text-slate-600 text-[11px]">—</span>)}
                                                     </td>
-                                                    <td className="px-5 py-3.5 text-right whitespace-nowrap">
-                                                        <span className={`text-[14px] font-mono font-bold tabular-nums ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                                                        <span className={`text-[13px] font-mono font-semibold tabular-nums ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                                                             {m.type === "ENTRY" ? "+" : "−"} {formatCurrency(m.value)}
                                                         </span>
                                                     </td>
-                                                    <td className="px-3 py-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                                                    <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                                                         <ActionsDropdown
                                                             movement={m}
                                                             onView={openViewModal}
@@ -1810,40 +1699,31 @@ export function MovementHistory() {
                             <AnimatePresence>
                                 {paginatedMovements.map((m, idx) => {
                                     const sub = mapCategoryToSubtype(m.category as string)
-                                    const SUBCFG: Record<Subtype, { iconBg: string; iconText: string; iconRing: string; bar: string }> = {
-                                        SALE: { iconBg: "bg-emerald-50 dark:bg-emerald-500/10", iconText: "text-emerald-700 dark:text-emerald-400", iconRing: "ring-emerald-100 dark:ring-emerald-500/20", bar: "from-emerald-500 to-teal-500" },
-                                        CHANGE: { iconBg: "bg-teal-50 dark:bg-teal-500/10", iconText: "text-teal-700 dark:text-teal-400", iconRing: "ring-teal-100 dark:ring-teal-500/20", bar: "from-teal-500 to-cyan-500" },
-                                        OTHER_IN: { iconBg: "bg-green-50 dark:bg-green-500/10", iconText: "text-green-700 dark:text-green-400", iconRing: "ring-green-100 dark:ring-green-500/20", bar: "from-green-500 to-emerald-500" },
-                                        EXPENSE: { iconBg: "bg-rose-50 dark:bg-rose-500/10", iconText: "text-rose-700 dark:text-rose-400", iconRing: "ring-rose-100 dark:ring-rose-500/20", bar: "from-rose-500 to-red-500" },
-                                        WITHDRAWAL: { iconBg: "bg-orange-50 dark:bg-orange-500/10", iconText: "text-orange-700 dark:text-orange-400", iconRing: "ring-orange-100 dark:ring-orange-500/20", bar: "from-orange-500 to-amber-500" },
-                                        PAYMENT: { iconBg: "bg-red-50 dark:bg-red-500/10", iconText: "text-red-700 dark:text-red-400", iconRing: "ring-red-100 dark:ring-red-500/20", bar: "from-red-500 to-rose-500" },
+                                    const DOT: Record<Subtype, string> = {
+                                        SALE: "bg-emerald-500",
+                                        CHANGE: "bg-teal-500",
+                                        OTHER_IN: "bg-green-500",
+                                        EXPENSE: "bg-rose-500",
+                                        WITHDRAWAL: "bg-orange-500",
+                                        PAYMENT: "bg-red-500",
                                     }
-                                    const cfg = SUBCFG[sub]
                                     const bank = m.bankId ? bankMap.get(m.bankId) : null
                                     return (
                                         <motion.div
                                             key={m.id}
-                                            initial={{ opacity: 0, scale: 0.97 }}
-                                            animate={{ opacity: 1, scale: 1 }}
+                                            initial={{ opacity: 0, y: 6 }}
+                                            animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0 }}
                                             transition={{ duration: 0.2, delay: idx * 0.02 }}
-                                            whileHover={{ y: -4 }}
                                             onClick={() => openViewModal(m)}
-                                            className={`relative p-4 rounded-2xl border bg-white dark:bg-slate-900 hover:shadow-xl hover:shadow-slate-900/5 transition-all cursor-pointer overflow-hidden ${m.type === "ENTRY" ? "border-emerald-200/60 dark:border-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-500/40" : "border-rose-200/60 dark:border-rose-500/20 hover:border-rose-300 dark:hover:border-rose-500/40"}`}
+                                            className="p-4 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-white/15 transition-colors cursor-pointer"
                                         >
-                                            <div className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${cfg.bar}`} />
-                                            <div className={`absolute -top-12 -right-12 w-24 h-24 rounded-full bg-gradient-to-br ${cfg.bar} opacity-[0.08] blur-2xl pointer-events-none`} />
-                                            <div className="relative flex items-start justify-between mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`w-9 h-9 rounded-xl ${cfg.iconBg} ${cfg.iconText} ring-1 ${cfg.iconRing} grid place-items-center shadow-sm`}>
-                                                        {m.type === "ENTRY" ? <ArrowDownCircle className="w-4 h-4" strokeWidth={2.2} /> : <ArrowUpCircle className="w-4 h-4" strokeWidth={2.2} />}
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${DOT[sub]}`} />
+                                                    <span className="text-[10.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400 truncate">
+                                                        {typeLabels[sub]}
                                                     </span>
-                                                    <div>
-                                                        <span className={`block text-[10.5px] font-bold uppercase tracking-wider ${cfg.iconText}`}>
-                                                            {typeLabels[sub]}
-                                                        </span>
-                                                        <span className="text-[10.5px] text-slate-400 dark:text-slate-500">{formatDate(m.date)}</span>
-                                                    </div>
                                                 </div>
                                                 <div onClick={(e) => e.stopPropagation()}>
                                                     <ActionsDropdown
@@ -1856,24 +1736,16 @@ export function MovementHistory() {
                                                     />
                                                 </div>
                                             </div>
-                                            <p className="relative text-[13px] font-semibold text-slate-900 dark:text-white line-clamp-2 mb-3 min-h-[34px]">{m.description}</p>
-                                            <p className={`relative text-[22px] font-mono font-bold tabular-nums leading-none tracking-tight ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                            <p className="text-[13px] font-medium text-slate-900 dark:text-white line-clamp-2 mb-3 min-h-[34px]">{m.description}</p>
+                                            <p className={`text-[20px] font-mono font-semibold tabular-nums leading-none tracking-tight ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                                                 {m.type === "ENTRY" ? "+" : "−"} {formatCurrency(m.value)}
                                             </p>
-                                            <div className="relative mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04] flex items-center justify-between gap-2 text-[11px]">
-                                                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                                                    <Clock className="w-3 h-3" /> {formatTime(m.date)}
-                                                </span>
-                                                <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                                                    {m.typePayment && (
-                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
-                                                            <CreditCard className="w-2.5 h-2.5" />
-                                                            {paymentMethodLabels[m.typePayment].split(" ")[0]}
-                                                        </span>
-                                                    )}
+                                            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04] flex items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                                                <span>{formatDate(m.date)} · {formatTime(m.date)}</span>
+                                                <div className="flex items-center gap-2">
                                                     {bank && (
-                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200">
-                                                            <span className="w-1 h-1 rounded-full" style={{ backgroundColor: bank.corHex }} />
+                                                        <span className="inline-flex items-center gap-1">
+                                                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: bank.corHex }} />
                                                             {bank.name}
                                                         </span>
                                                     )}
@@ -1908,7 +1780,7 @@ export function MovementHistory() {
                                                 key={pageNum}
                                                 onClick={() => setCurrentPage(pageNum)}
                                                 whileTap={{ scale: 0.95 }}
-                                                className={`min-w-[28px] h-7 px-2 rounded-md text-[12px] font-medium transition-colors ${active ? "bg-violet-600 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
+                                                className={`min-w-[28px] h-7 px-2 rounded-md text-[12px] font-medium transition-colors ${active ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
                                             >
                                                 {pageNum}
                                             </motion.button>
@@ -2222,13 +2094,14 @@ function DeltaBadge({ delta, inverted = false }: { delta: number; inverted?: boo
     const isPositive = delta >= 0
     const isGood = inverted ? !isPositive : isPositive
     const Icon = Math.abs(delta) < 0.5 ? Minus : isPositive ? TrendingUp : TrendingDown
-
-    const colors = isGood
-        ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-500/25"
-        : "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200/80 dark:border-rose-500/25"
+    const color = Math.abs(delta) < 0.5
+        ? "text-slate-500 dark:text-slate-400"
+        : isGood
+            ? "text-emerald-600 dark:text-emerald-400"
+            : "text-rose-600 dark:text-rose-400"
 
     return (
-        <span className={`inline-flex items-center gap-0.5 px-1.5 h-5 rounded-md text-[10px] font-semibold tabular-nums border ${colors}`}>
+        <span className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums ${color}`}>
             <Icon className="w-2.5 h-2.5" strokeWidth={2.5} />
             {Math.abs(delta).toFixed(1)}%
         </span>
@@ -2282,24 +2155,18 @@ function KpiCard({
 
     return (
         <Wrapper
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay }}
+            transition={{ duration: 0.3, delay }}
             {...wrapperProps}
-            className={`group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-2xl p-4 hover:shadow-xl ${a.hoverBorder} ${a.hoverShadow} transition-all`}
+            className={`group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors`}
         >
-            {/* gradient bar top */}
-            <span className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${a.bar}`} />
-
-            {/* radial decoration */}
-            <div className={`absolute -top-12 -right-12 w-28 h-28 rounded-full bg-gradient-to-br ${a.bar} opacity-[0.06] blur-2xl pointer-events-none`} />
-
             <div className="relative flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
-                    <span className={`w-9 h-9 rounded-xl ${a.iconBg} ${a.iconText} ring-1 ${a.iconRing} flex items-center justify-center shadow-sm`}>
+                    <span className={`w-7 h-7 rounded-md ${a.iconBg} ${a.iconText} flex items-center justify-center`}>
                         {icon}
                     </span>
-                    <p className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <p className="text-[10.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">
                         {label}
                     </p>
                 </div>
@@ -2309,7 +2176,7 @@ function KpiCard({
             </div>
 
             <div className="relative mt-3">
-                <p className={`text-[22px] font-bold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight ${valueClassName}`}>
+                <p className={`text-[22px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight ${valueClassName}`}>
                     {countUp ? (
                         <CountUp
                             end={countUp.end}
@@ -2317,7 +2184,7 @@ function KpiCard({
                             decimals={countUp.decimals}
                             prefix={countUp.prefix}
                             separator={countUp.separator}
-                            duration={0.9}
+                            duration={0.8}
                         />
                     ) : formatValue ? formatValue(value) : value}
                 </p>
@@ -2328,12 +2195,13 @@ function KpiCard({
                 )}
                 {typeof progress === "number" && (
                     <>
-                        <div className="mt-3 h-1.5 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
+                        <div className="mt-3 h-1 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${progress}%` }}
-                                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                                className={`h-full bg-gradient-to-r ${a.bar}`}
+                                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                                className={`h-full ${a.iconText.replace("text-", "bg-").replace(" dark:text-", " dark:bg-")}`}
+                                style={{ backgroundColor: sparkColor }}
                             />
                         </div>
                         {progressLabel && (
@@ -2345,21 +2213,21 @@ function KpiCard({
 
             {/* sparkline */}
             {sparkData && sparkData.length > 0 && sparkColor && sparkId && (
-                <div className="absolute bottom-0 right-0 w-24 h-12 opacity-80 pointer-events-none">
+                <div className="absolute bottom-0 right-0 w-20 h-10 opacity-50 pointer-events-none">
                     <ResponsiveContainer>
                         {sparkAsBars ? (
                             <BarChart data={sparkData}>
-                                <Bar dataKey="v" fill={sparkColor} radius={[2, 2, 0, 0]} />
+                                <Bar dataKey="v" fill={sparkColor} radius={[1, 1, 0, 0]} />
                             </BarChart>
                         ) : (
                             <AreaChart data={sparkData}>
                                 <defs>
                                     <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor={sparkColor} stopOpacity={0.5} />
+                                        <stop offset="0%" stopColor={sparkColor} stopOpacity={0.25} />
                                         <stop offset="100%" stopColor={sparkColor} stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <Area type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.75} fill={`url(#${sparkId})`} />
+                                <Area type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.25} fill={`url(#${sparkId})`} />
                             </AreaChart>
                         )}
                     </ResponsiveContainer>
