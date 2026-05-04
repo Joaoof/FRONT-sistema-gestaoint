@@ -406,22 +406,27 @@ function Receipt({ order, company, via }: ReceiptProps) {
                 </div>
             )}
 
-            {/* AVISO DESTACADO */}
-            <div className="mt-3 border-2 border-black p-2 text-center">
-                <p className="text-[10.5px] font-bold uppercase tracking-wide leading-snug">
-                    Conferir mercadoria no ato da entrega.
-                    <br />
-                    Não aceitamos reclamações posteriores.
+            {/* AVISO — compacto, em uma única linha quando possível */}
+            <div className="mt-3 border border-black px-2 py-1 text-center">
+                <p className="text-[9.5px] font-bold uppercase tracking-wide leading-tight">
+                    Conferir mercadoria no ato da entrega · não aceitamos reclamações posteriores.
                 </p>
             </div>
 
-            {/* Assinatura */}
-            <div className="mt-3 grid grid-cols-2 gap-6 text-[9.5px]">
-                <div className="border-t border-black pt-1 text-center">
-                    Assinatura do cliente
+            {/* Assinatura — altura real para o cliente escrever ACIMA da linha */}
+            <div className="mt-4 grid grid-cols-2 gap-6 text-[9.5px]">
+                <div className="text-center">
+                    {/* área para o traço da assinatura (cliente escreve aqui) */}
+                    <div className="h-12" aria-hidden="true" />
+                    <div className="border-t border-black pt-0.5">
+                        Assinatura do cliente
+                    </div>
                 </div>
-                <div className="border-t border-black pt-1 text-center">
-                    {company?.nomeFantasia ?? company?.name ?? 'Empresa'}
+                <div className="text-center">
+                    <div className="h-12" aria-hidden="true" />
+                    <div className="border-t border-black pt-0.5">
+                        {company?.nomeFantasia ?? company?.name ?? 'Empresa'}
+                    </div>
                 </div>
             </div>
 

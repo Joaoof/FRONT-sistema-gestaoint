@@ -26,7 +26,7 @@ import {
     Wrench,
     X,
 } from 'lucide-react';
-import { LIST_PRODUCTS_WITH_IMAGES } from '../../graphql/mutations/product-with-images';
+import { CREATE_PRODUCT_WITH_IMAGES, LIST_PRODUCTS_WITH_IMAGES } from '../../graphql/mutations/product-with-images';
 import { GET_CUSTOMERS_LIST } from '../../graphql/queries/accounts';
 import { CREATE_CUSTOMER_BASIC } from '../../graphql/mutations/accounts';
 import { CREATE_ORDER } from '../../graphql/queries/orders';
@@ -160,6 +160,92 @@ export function NewSale() {
 
     const [createOrder, { loading: creatingOrder }] = useMutation(CREATE_ORDER);
     const [createCustomer, { loading: creatingCustomer }] = useMutation(CREATE_CUSTOMER_BASIC);
+    const [createProduct, { loading: creatingProduct }] = useMutation(
+        CREATE_PRODUCT_WITH_IMAGES,
+        { refetchQueries: [{ query: LIST_PRODUCTS_WITH_IMAGES, variables: { take: 200, skip: 0 } }] },
+    );
+
+    // Formulário de adição rápida de Mão de obra / Serviço
+    const [showLaborForm, setShowLaborForm] = useState(false);
+    const [laborForm, setLaborForm] = useState({
+        kind: 'LABOR' as 'LABOR' | 'SERVICE',
+        name: '',
+        unit: 'HORA',
+        salePrice: '',
+        description: '',
+    });
+
+    function resetLaborForm() {
+        setLaborForm({
+            kind: 'LABOR',
+            name: '',
+            unit: 'HORA',
+            salePrice: '',
+            description: '',
+        });
+    }
+
+    async function handleAddLabor() {
+        const name = laborForm.name.trim();
+        const price = parseFloat(laborForm.salePrice.replace(',', '.'));
+        if (!name) {
+            toast.error('Informe a descrição da mão de obra.');
+            return;
+        }
+        if (!Number.isFinite(price) || price <= 0) {
+            toast.error('Informe o valor da mão de obra.');
+            return;
+        }
+        try {
+            const res = await createProduct({
+                variables: {
+                    input: {
+                        kind: laborForm.kind,
+                        nameProduct: name,
+                        unit: laborForm.unit || (laborForm.kind === 'LABOR' ? 'HORA' : 'SERV'),
+                        costPrice: 0,
+                        salePrice: price,
+                        quantity: 0,
+                        minStock: 0,
+                        active: true,
+                        description: laborForm.description.trim() || undefined,
+                        images: [],
+                    },
+                },
+            });
+            const created = res.data?.createProductMutation;
+            if (!created) {
+                toast.error('Não foi possível cadastrar.');
+                return;
+            }
+            // Adiciona direto ao carrinho (qtd fixa = 1, com a descrição como detalhe da linha)
+            setCart((prev) => [
+                ...prev,
+                {
+                    productId: created.id,
+                    kind: laborForm.kind,
+                    nameProduct: created.nameProduct,
+                    sku: created.sku ?? null,
+                    unit: created.unit,
+                    unitPrice: Number(created.salePrice),
+                    quantity: 1,
+                    discount: 0,
+                    description: laborForm.description.trim(),
+                    stockAvailable: 0,
+                    coverUrl: undefined,
+                },
+            ]);
+            toast.success(
+                laborForm.kind === 'LABOR'
+                    ? 'Mão de obra adicionada ao pedido.'
+                    : 'Serviço adicionado ao pedido.',
+            );
+            resetLaborForm();
+            setShowLaborForm(false);
+        } catch (err: any) {
+            toast.error(err?.message ?? 'Erro ao cadastrar mão de obra');
+        }
+    }
 
     const products = productsData?.products ?? [];
     const customers = customersData?.customers ?? [];
@@ -618,14 +704,144 @@ export function NewSale() {
             <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* COLUNA ESQUERDA — PRODUTOS */}
                 <section className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
-                    <header className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
-                        <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                            <Package className="w-4 h-4 text-violet-500" /> Catálogo
-                        </h2>
-                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
-                            Clique no produto para adicionar ao carrinho
-                        </p>
+                    <header className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-start justify-between gap-3">
+                        <div>
+                            <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Package className="w-4 h-4 text-violet-500" /> Catálogo
+                            </h2>
+                            <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                Clique no item para adicionar ao carrinho
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowLaborForm((v) => !v)}
+                            className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 text-[12px] font-medium rounded-md transition-colors
+                                       border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100
+                                       dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/15"
+                            title="Adicionar mão de obra ao pedido"
+                        >
+                            <Wrench className="w-3.5 h-3.5" />
+                            {showLaborForm ? 'Fechar' : 'Adicionar mão de obra'}
+                        </button>
                     </header>
+
+                    {/* Formulário inline de Mão de obra / Serviço */}
+                    {showLaborForm && (
+                        <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.06] bg-amber-50/40 dark:bg-amber-500/[0.04]">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Wrench className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                <h3 className="text-[12.5px] font-semibold text-slate-900 dark:text-white">
+                                    {laborForm.kind === 'LABOR' ? 'Nova mão de obra' : 'Novo serviço'}
+                                </h3>
+                                <span className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                                    será cadastrada no catálogo e adicionada ao pedido
+                                </span>
+                            </div>
+
+                            <div className="inline-flex items-center p-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/15 mb-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setLaborForm((p) => ({ ...p, kind: 'LABOR', unit: p.unit === 'SERV' ? 'HORA' : p.unit }))}
+                                    className={`px-2.5 py-1 text-[11.5px] rounded ${laborForm.kind === 'LABOR' ? 'bg-amber-500 text-white' : 'text-slate-600 dark:text-slate-300'}`}
+                                >
+                                    <Wrench className="w-3 h-3 inline mr-1" /> Mão de obra
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setLaborForm((p) => ({ ...p, kind: 'SERVICE', unit: p.unit === 'HORA' ? 'SERV' : p.unit }))}
+                                    className={`px-2.5 py-1 text-[11.5px] rounded ${laborForm.kind === 'SERVICE' ? 'bg-indigo-500 text-white' : 'text-slate-600 dark:text-slate-300'}`}
+                                >
+                                    <Sparkles className="w-3 h-3 inline mr-1" /> Serviço
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_140px] gap-2">
+                                <div>
+                                    <label className="block text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                                        Descrição *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={laborForm.name}
+                                        onChange={(e) => setLaborForm((p) => ({ ...p, name: e.target.value }))}
+                                        placeholder={laborForm.kind === 'LABOR' ? 'Ex.: Hora técnica eletricista' : 'Ex.: Limpeza pós-obra'}
+                                        maxLength={160}
+                                        className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                                        Unidade
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={laborForm.unit}
+                                        onChange={(e) => setLaborForm((p) => ({ ...p, unit: e.target.value.toUpperCase().slice(0, 10) }))}
+                                        className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] uppercase font-mono"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                                        Valor (R$) *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={laborForm.salePrice}
+                                        onChange={(e) => setLaborForm((p) => ({ ...p, salePrice: e.target.value.replace(/[^\d.,]/g, '') }))}
+                                        placeholder="0,00"
+                                        className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] tabular-nums"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-2">
+                                <label className="block text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                                    Detalhe do que será executado (constará na nota)
+                                </label>
+                                <textarea
+                                    value={laborForm.description}
+                                    onChange={(e) => setLaborForm((p) => ({ ...p, description: e.target.value }))}
+                                    rows={2}
+                                    placeholder={
+                                        laborForm.kind === 'LABOR'
+                                            ? 'Ex.: Instalação de 4 tomadas no apartamento 302, troca do disjuntor e revisão do quadro de força.'
+                                            : 'Ex.: Limpeza completa pós-obra de 3 cômodos, incluindo vidros e remoção de resíduos.'
+                                    }
+                                    maxLength={500}
+                                    className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[12.5px] resize-none"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2 mt-3">
+                                <button
+                                    type="button"
+                                    onClick={() => { resetLaborForm(); setShowLaborForm(false); }}
+                                    disabled={creatingProduct}
+                                    className="h-8 px-3 text-[12px] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/15 hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md disabled:opacity-50"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleAddLabor}
+                                    disabled={creatingProduct}
+                                    className={`inline-flex items-center gap-1.5 h-8 px-3 text-[12px] font-semibold text-white rounded-md disabled:opacity-50 ${
+                                        laborForm.kind === 'LABOR'
+                                            ? 'bg-amber-600 hover:bg-amber-700'
+                                            : 'bg-indigo-600 hover:bg-indigo-700'
+                                    }`}
+                                >
+                                    {creatingProduct ? (
+                                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Adicionando…</>
+                                    ) : (
+                                        <><Plus className="w-3.5 h-3.5" /> Adicionar ao pedido</>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.06]">
                         <div className="relative">
@@ -634,7 +850,7 @@ export function NewSale() {
                                 type="search"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Buscar por nome ou SKU…"
+                                placeholder="Buscar produto, serviço ou mão de obra…"
                                 className="w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
                             />
                         </div>
