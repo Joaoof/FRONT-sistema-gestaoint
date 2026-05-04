@@ -38,6 +38,7 @@ import {
   UserPlus,
   Warehouse,
   HardHat,
+  Landmark,
   ArrowLeftRight,
   Banknote,
   FileText,
@@ -101,6 +102,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   empresa: 'configuracoes',
   configuracoes: 'configuracoes',
   vendedores: 'vendas',
+  bancos: 'financeiro',
   motoristas: 'entregas',
   ia: 'dashboard',
   'agente-ia': 'dashboard',
@@ -228,6 +230,7 @@ const sections: MenuSection[] = [
         icon: Wallet,
         children: [
           { id: 'financeiro' as View, label: 'Visão geral', icon: PieChart },
+          { id: 'bancos' as View, label: 'Bancos', icon: Landmark },
           { id: 'relatorios/visao-geral' as View, label: 'Painel completo', icon: BarChart3 },
         ],
       },
@@ -286,7 +289,7 @@ const groupedChildren: Record<string, View[]> = {
   entregas: ['entregas', 'entregas/cadastrar', 'entregas/agendar', 'entregas/relatorios'],
   movimentacoes: ['movimentacoes', 'formulario-movimentacao', 'historico-movimentacao'],
   fiscal: ['fiscal', 'fiscal-pagar', 'fiscal-pagar-criar', 'fiscal-receber', 'fiscal-receber-criar'],
-  financeiro: ['financeiro', 'relatorios/visao-geral'],
+  financeiro: ['financeiro', 'bancos', 'relatorios/visao-geral'],
 };
 
 export function Sidebar({

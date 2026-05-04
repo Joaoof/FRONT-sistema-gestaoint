@@ -56,6 +56,7 @@ export type View =
     | 'help'
     | 'empresa'
     | 'vendedores'
+    | 'bancos'
     | 'ia'
     | 'agente-ia'
     | 'motoristas'

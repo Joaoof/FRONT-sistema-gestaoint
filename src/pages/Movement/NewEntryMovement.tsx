@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
-import { DollarSign, X } from 'lucide-react';
+import { DollarSign, Landmark, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { CREATE_CASH_MOVEMENT } from '../../graphql/queries/queries';
+import { GET_BANKS } from '../../graphql/queries/banks';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../hooks/useNotification';
+
+interface BankOption {
+    id: string;
+    name: string;
+    corHex: string;
+    ativo: boolean;
+}
 
 // ✅ CORREÇÃO 1: Mapeamento correto para a API
 const mapTypeToApiFormat = (type: 'venda' | 'troco' | 'outros') => {
@@ -26,9 +34,16 @@ export function NewEntryMovement() {
         description: '',
         type: 'venda' as 'venda' | 'troco' | 'outros',
         date: new Date().toISOString().slice(0, 16),
+        bankId: '' as string,
     });
 
     const [error, setError] = useState<string | null>(null);
+
+    const { data: banksData } = useQuery<{ banks: BankOption[] }>(GET_BANKS, {
+        variables: { activeOnly: true },
+        fetchPolicy: 'cache-and-network',
+    });
+    const banks = banksData?.banks ?? [];
 
     // ✅ CORREÇÃO 2: Simplificar refetchQueries para evitar problemas
     const [createMovement, { loading }] = useMutation(CREATE_CASH_MOVEMENT, {
@@ -81,6 +96,7 @@ export function NewEntryMovement() {
                         date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
                         // ✅ CORREÇÃO 6: Verificar se a API espera user_id ou userId
                         user_id: user.id, // ou userId: user.id - confira na sua API
+                        bankId: formData.bankId || null,
                     }
                 }
             });
@@ -242,6 +258,32 @@ export function NewEntryMovement() {
                             className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
                             placeholder="Ex: Venda no PDV, troco de cliente..."
                         />
+                    </div>
+
+                    <div>
+                        <label htmlFor="bankId" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
+                            Banco / Conta (opcional)
+                        </label>
+                        <div className="relative">
+                            <Landmark className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            <select
+                                id="bankId"
+                                value={formData.bankId}
+                                onChange={(e) => setFormData({ ...formData, bankId: e.target.value })}
+                                disabled={loading}
+                                className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                            >
+                                <option value="">Sem banco vinculado</option>
+                                {banks.map((b) => (
+                                    <option key={b.id} value={b.id}>{b.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        {banks.length === 0 && (
+                            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                Nenhum banco cadastrado. Cadastre em <strong>Financeiro → Bancos</strong>.
+                            </p>
+                        )}
                     </div>
 
                     <div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
     Search,
     Download,
@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import { useQuery, useMutation } from "@apollo/client"
 import { GET_CASH_MOVEMENTS, CREATE_CASH_MOVEMENT, UPDATE_CASH_MOVEMENT } from "../../graphql/queries/queries"
+import { GET_BANKS } from "../../graphql/queries/banks"
 import { generateMovementPdfDoc } from "../../utils/generatePDF"
 import type { CategoryType, Movement, MovementType, MovementTypePayment } from "../../types"
 import { RotateCcw } from "lucide-react"
@@ -167,6 +168,15 @@ export function MovementHistory() {
         notifyOnNetworkStatusChange: true,
     })
 
+    const { data: banksData } = useQuery<{ banks: Array<{ id: string; name: string; corHex: string }> }>(GET_BANKS, {
+        fetchPolicy: "cache-and-network",
+    })
+    const bankMap = useMemo(() => {
+        const map = new Map<string, { id: string; name: string; corHex: string }>()
+        for (const b of banksData?.banks ?? []) map.set(b.id, b)
+        return map
+    }, [banksData])
+
     const { company, user } = useCompany()
     const companyInfo = company ?? {}
     const userName = user?.name ?? "Usuário Desconhecido"
@@ -301,6 +311,7 @@ export function MovementHistory() {
         typePayment: (m.typePayment as MovementTypePayment) ?? null,
         category: mapCategoryToSubtype(m.category),
         date: m.date,
+        bankId: m.bankId ?? null,
     }));
     const applyQuickDateFilter = (movements: Movement[]) => {
         if (!quickDateFilter) return movements
@@ -889,6 +900,7 @@ export function MovementHistory() {
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Data</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Descrição</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Pagamento</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold">Banco</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold">Tipo</th>
                                         <th className="px-6 py-4 text-right text-sm font-semibold">Valor</th>
                                         <th className="px-6 py-4 text-center text-sm font-semibold">Ações</th>
@@ -914,6 +926,19 @@ export function MovementHistory() {
                                                     </span>
                                                 ) : (
                                                     <span className="text-gray-400 text-xs">— N/A —</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm">
+                                                {m.bankId && bankMap.get(m.bankId) ? (
+                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+                                                        <span
+                                                            className="w-2 h-2 rounded-full"
+                                                            style={{ backgroundColor: bankMap.get(m.bankId)!.corHex }}
+                                                        />
+                                                        {bankMap.get(m.bankId)!.name}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs">—</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-sm">

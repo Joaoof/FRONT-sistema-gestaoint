@@ -69,6 +69,7 @@ export type Movement = {
   value: number;
   description: string;
   date: string;
+  bankId?: string | null;
 };
 
 export interface Receivable {

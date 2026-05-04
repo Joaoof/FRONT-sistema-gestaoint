@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
+import { useQuery } from '@apollo/client';
 import { toast } from 'sonner';
-import { DollarSign, Save, ArrowLeft } from 'lucide-react';
+import { DollarSign, Landmark, Save, ArrowLeft } from 'lucide-react';
 import { apolloClient } from '../lib/apollo-client';
 import { CREATE_CASH_MOVEMENT } from '../graphql/mutations/mutations';
 import { getGraphQLErrorMessages } from '../utils/getGraphQLErrorMessage';
 import { getUserIdFromToken } from '../utils/getToken';
 import { formatLocalDateTime, parseLocalDateTime } from '../utils/formatDate';
 import { GET_CASH_MOVEMENTS } from '../graphql/queries/queries';
+import { GET_BANKS } from '../graphql/queries/banks';
+
+interface BankOption {
+    id: string;
+    name: string;
+    corHex: string;
+    ativo: boolean;
+}
 
 const MOVEMENT_OPTIONS = [
     { type: 'venda', label: 'Venda', imagePath: 'https://cdn-icons-png.flaticon.com/512/5607/5607725.png', group: 'entry', description: 'Receita proveniente de vendas diretas.' },
@@ -99,9 +108,16 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         value: '',
         description: '',
         date: formatLocalDateTime(new Date()),
+        bankId: '' as string,
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const { data: banksData } = useQuery<{ banks: BankOption[] }>(GET_BANKS, {
+        variables: { activeOnly: true },
+        fetchPolicy: 'cache-and-network',
+    });
+    const banks = banksData?.banks ?? [];
 
     const handleGoBack = () => window.history.back();
 
@@ -188,7 +204,7 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 type: movementTypeMap[formData.type as MovementType],
                 category: categoryMap[formData.type as MovementType],
                 typePayment: paymentMethodMap[formData.paymentMethod as PaymentMethodType] || null,
-
+                bankId: formData.bankId || null,
             }
 
             const response = await apolloClient.mutate({
@@ -215,7 +231,8 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                 paymentMethod: null,
                 value: '',
                 description: '',
-                date: formatLocalDateTime(new Date())
+                date: formatLocalDateTime(new Date()),
+                bankId: '',
             });
             onSuccess?.();
         } catch (err: any) {
@@ -389,6 +406,34 @@ export const CashMovementForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                         className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 dark:bg-slate-950 disabled:cursor-not-allowed"
                         placeholder="Ex: Venda de produtos X, Compra de material..."
                     />
+                </div>
+
+                {/* Banco / Conta */}
+                <div>
+                    <label htmlFor="bankId" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
+                        Banco / Conta (opcional)
+                    </label>
+                    <div className="relative">
+                        <Landmark className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <select
+                            id="bankId"
+                            name="bankId"
+                            value={formData.bankId}
+                            onChange={(e) => setFormData(prev => ({ ...prev, bankId: e.target.value }))}
+                            disabled={loading}
+                            className="w-full pl-10 p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-50 dark:bg-slate-950 disabled:cursor-not-allowed"
+                        >
+                            <option value="">Sem banco vinculado</option>
+                            {banks.map((b) => (
+                                <option key={b.id} value={b.id}>{b.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    {banks.length === 0 && (
+                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            Nenhum banco cadastrado. Você pode cadastrar em <strong>Financeiro → Bancos</strong>.
+                        </p>
+                    )}
                 </div>
 
                 {/* Data e Hora */}

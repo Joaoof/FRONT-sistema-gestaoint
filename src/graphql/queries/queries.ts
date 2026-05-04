@@ -11,6 +11,7 @@ export const GET_CASH_MOVEMENTS = gql`
       description
       date
       user_id
+      bankId
     }
   }
 `;
@@ -25,6 +26,7 @@ export const CREATE_CASH_MOVEMENT = gql`
       type # ENTRY ou EXIT
       category # SALE, EXPENSE, WITHDRAWAL, etc.
       date
+      bankId
       createdAt
       updatedAt
     }
