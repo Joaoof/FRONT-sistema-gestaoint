@@ -15,6 +15,8 @@ import {
   Star,
   GripVertical,
   Sparkles,
+  Box,
+  Wrench,
 } from 'lucide-react';
 import { uploadProductImage, validateImage, UploadError, type UploadedAsset } from '../../lib/r2-upload';
 import { toast } from 'sonner';
@@ -33,7 +35,10 @@ type ImageState = {
   error?: string;
 };
 
+type ProductKind = 'PRODUCT' | 'SERVICE' | 'LABOR';
+
 interface FormData {
+  kind: ProductKind;
   sku: string;
   name: string;
   category: string;
@@ -48,6 +53,7 @@ interface FormData {
 }
 
 const INITIAL: FormData = {
+  kind: 'PRODUCT',
   sku: '',
   name: '',
   category: '',
@@ -62,6 +68,38 @@ const INITIAL: FormData = {
 };
 
 const UNITS = PRODUCT_UNITS;
+
+const KIND_DEFAULT_UNIT: Record<ProductKind, string> = {
+  PRODUCT: 'UN',
+  SERVICE: 'SERV',
+  LABOR: 'HORA',
+};
+
+const KIND_OPTIONS: Array<{
+  value: ProductKind;
+  title: string;
+  hint: string;
+  icon: React.ReactNode;
+}> = [
+  {
+    value: 'PRODUCT',
+    title: 'Produto',
+    hint: 'Item físico com controle de estoque.',
+    icon: <Box className="w-4 h-4" strokeWidth={2} />,
+  },
+  {
+    value: 'SERVICE',
+    title: 'Serviço',
+    hint: 'Sem estoque. Ex.: limpeza, consultoria.',
+    icon: <Sparkles className="w-4 h-4" strokeWidth={2} />,
+  },
+  {
+    value: 'LABOR',
+    title: 'Mão de obra',
+    hint: 'Sem estoque, sem quantidade (qtd. fixa = 1).',
+    icon: <Wrench className="w-4 h-4" strokeWidth={2} />,
+  },
+];
 
 export function CreateProduct() {
   const navigate = useNavigate();
@@ -91,6 +129,27 @@ export function CreateProduct() {
     setForm(prev => ({ ...prev, [key]: value }));
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }));
   }
+
+  // Quando muda kind, sugere unidade padrão e zera estoque pra serviço/labor
+  function changeKind(next: ProductKind) {
+    setForm(prev => {
+      const wasDefault =
+        prev.unit === KIND_DEFAULT_UNIT.PRODUCT ||
+        prev.unit === KIND_DEFAULT_UNIT.SERVICE ||
+        prev.unit === KIND_DEFAULT_UNIT.LABOR;
+      const stockless = next !== 'PRODUCT';
+      return {
+        ...prev,
+        kind: next,
+        unit: wasDefault ? KIND_DEFAULT_UNIT[next] : prev.unit,
+        stock: stockless ? '' : prev.stock,
+        minStock: stockless ? '' : prev.minStock,
+        weight: stockless ? '' : prev.weight,
+      };
+    });
+  }
+
+  const isStockless = form.kind !== 'PRODUCT';
 
   // ───────── IMAGENS ─────────
   function startUpload(file: File) {
@@ -203,15 +262,16 @@ export function CreateProduct() {
     setSubmitting(true);
     try {
       const input = {
+        kind: form.kind,
         sku: form.sku.trim() || undefined,
         nameProduct: form.name.trim(),
         unit: form.unit,
         description: form.description.trim() || undefined,
         costPrice: cost,
         salePrice: sale,
-        quantity: parseInt(form.stock || '0', 10),
-        minStock: parseInt(form.minStock || '0', 10),
-        weight: form.weight ? parseFloat(form.weight.replace(',', '.')) : undefined,
+        quantity: isStockless ? 0 : parseInt(form.stock || '0', 10),
+        minStock: isStockless ? 0 : parseInt(form.minStock || '0', 10),
+        weight: !isStockless && form.weight ? parseFloat(form.weight.replace(',', '.')) : undefined,
         categoryId: form.category || undefined,
         active: form.active,
         images: images.filter(i => i.asset).map((i, idx) => ({
@@ -251,9 +311,11 @@ export function CreateProduct() {
             <ArrowLeft className="w-3 h-3" strokeWidth={2} />
             Voltar
           </button>
-          <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Novo produto</h1>
+          <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">
+            Novo {form.kind === 'LABOR' ? 'serviço de mão de obra' : form.kind === 'SERVICE' ? 'serviço' : 'produto'}
+          </h1>
           <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
-            Cadastre um novo item no seu catálogo · campos com <span className="text-rose-600 dark:text-rose-400">*</span> são obrigatórios
+            Cadastre {form.kind === 'PRODUCT' ? 'um produto físico' : 'um item de venda sem estoque'} · campos com <span className="text-rose-600 dark:text-rose-400">*</span> são obrigatórios
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -280,11 +342,54 @@ export function CreateProduct() {
       </div>
 
       <form id="product-form" onSubmit={onSubmit} className="space-y-4">
+        {/* Natureza do item */}
+        <Section
+          tone="violet"
+          icon={<Layers className="w-4 h-4" strokeWidth={2} />}
+          title="Natureza do item"
+          subtitle="Define se há controle de estoque e como o item aparece em vendas e impressão."
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {KIND_OPTIONS.map((opt) => {
+              const selected = form.kind === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => changeKind(opt.value)}
+                  aria-pressed={selected}
+                  className={`group flex items-start gap-3 p-3 rounded-lg border text-left transition-colors ${
+                    selected
+                      ? 'border-violet-400 bg-violet-50 ring-1 ring-violet-300 dark:border-violet-500/60 dark:bg-violet-500/[0.08] dark:ring-violet-500/30'
+                      : 'border-slate-200 bg-white hover:border-slate-300 dark:border-white/[0.10] dark:bg-white/[0.02] dark:hover:border-white/15'
+                  }`}
+                >
+                  <span className={`shrink-0 w-8 h-8 rounded-md grid place-items-center ${
+                    selected
+                      ? 'bg-violet-600 text-white'
+                      : 'bg-slate-100 text-slate-500 dark:bg-white/[0.04] dark:text-slate-400'
+                  }`}>
+                    {opt.icon}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold text-slate-900 dark:text-white">
+                      {opt.title}
+                    </p>
+                    <p className="text-[11.5px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
+                      {opt.hint}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
         {/* Imagens */}
         <Section
           tone="violet"
           icon={<ImagePlus className="w-4 h-4" strokeWidth={2} />}
-          title="Imagens do produto"
+          title={form.kind === 'PRODUCT' ? 'Imagens do produto' : 'Imagens (opcional)'}
           subtitle="Até 8 imagens · JPG, PNG, WebP · 5 MB cada · a primeira será a capa"
         >
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -493,46 +598,64 @@ export function CreateProduct() {
           </div>
         </Section>
 
-        {/* Estoque */}
-        <Section
-          tone="amber"
-          icon={<Package className="w-4 h-4" strokeWidth={2} />}
-          title="Estoque"
-          subtitle="Quantidade atual e ponto de reposição"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Field label="Estoque atual" error={errors.stock}>
-              <input
-                type="number"
-                min="0"
-                value={form.stock}
-                onChange={(e) => update('stock', e.target.value)}
-                placeholder="0"
-                className={inputClass(!!errors.stock)}
-              />
-            </Field>
-            <Field label="Estoque mínimo" hint="Alerta quando atingir esse nível">
-              <input
-                type="number"
-                min="0"
-                value={form.minStock}
-                onChange={(e) => update('minStock', e.target.value)}
-                placeholder="10"
-                className={inputClass()}
-              />
-            </Field>
-            <Field label="Peso (kg)" hint="Para cálculo de frete (opcional)">
-              <input
-                type="text"
-                inputMode="decimal"
-                value={form.weight}
-                onChange={(e) => update('weight', e.target.value.replace(/[^\d.,]/g, ''))}
-                placeholder="0,00"
-                className={inputClass()}
-              />
-            </Field>
+        {/* Estoque — só para PRODUTO físico */}
+        {!isStockless ? (
+          <Section
+            tone="amber"
+            icon={<Package className="w-4 h-4" strokeWidth={2} />}
+            title="Estoque"
+            subtitle="Quantidade atual e ponto de reposição"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Field label="Estoque atual" error={errors.stock}>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.stock}
+                  onChange={(e) => update('stock', e.target.value)}
+                  placeholder="0"
+                  className={inputClass(!!errors.stock)}
+                />
+              </Field>
+              <Field label="Estoque mínimo" hint="Alerta quando atingir esse nível">
+                <input
+                  type="number"
+                  min="0"
+                  value={form.minStock}
+                  onChange={(e) => update('minStock', e.target.value)}
+                  placeholder="10"
+                  className={inputClass()}
+                />
+              </Field>
+              <Field label="Peso (kg)" hint="Para cálculo de frete (opcional)">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={form.weight}
+                  onChange={(e) => update('weight', e.target.value.replace(/[^\d.,]/g, ''))}
+                  placeholder="0,00"
+                  className={inputClass()}
+                />
+              </Field>
+            </div>
+          </Section>
+        ) : (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3.5 dark:border-amber-500/30 dark:bg-amber-500/[0.06]">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" strokeWidth={2} />
+              <div>
+                <p className="text-[12.5px] font-semibold text-amber-800 dark:text-amber-200">
+                  Sem controle de estoque
+                </p>
+                <p className="text-[11.5px] text-amber-700/80 dark:text-amber-200/80 mt-0.5 leading-snug">
+                  {form.kind === 'LABOR' ? 'Mão de obra' : 'Serviço'} não consome estoque ao ser
+                  vendida. Em pedidos, a quantidade é fixada em <strong>1</strong> — o detalhe do que foi
+                  executado vai na descrição do item.
+                </p>
+              </div>
+            </div>
           </div>
-        </Section>
+        )}
 
         {/* Status */}
         <Section

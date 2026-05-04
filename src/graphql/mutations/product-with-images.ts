@@ -9,6 +9,7 @@ export const CREATE_PRODUCT_WITH_IMAGES = gql`
   mutation CreateProductMutation($input: CreateProductInput!) {
     createProductMutation(input: $input) {
       id
+      kind
       sku
       nameProduct
       unit
@@ -38,6 +39,7 @@ export const LIST_PRODUCTS_WITH_IMAGES = gql`
   query ListProducts($search: String, $categoryId: String, $take: Float, $skip: Float) {
     products(search: $search, categoryId: $categoryId, take: $take, skip: $skip) {
       id
+      kind
       sku
       nameProduct
       quantity

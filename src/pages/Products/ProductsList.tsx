@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
     AlertTriangle,
+    Box,
     Download,
     Edit3,
     Grid3x3,
@@ -13,8 +14,10 @@ import {
     Plus,
     Search,
     Sliders,
+    Sparkles,
     Tag,
     Trash2,
+    Wrench,
 } from 'lucide-react';
 import { LIST_PRODUCTS_WITH_IMAGES, DELETE_PRODUCT_WITH_IMAGES } from '../../graphql/mutations/product-with-images';
 import { ProductImage } from '../../components/ProductImage';
@@ -27,8 +30,11 @@ interface ProductImage {
     order: number;
 }
 
+type ProductKind = 'PRODUCT' | 'SERVICE' | 'LABOR';
+
 interface Product {
     id: string;
+    kind: ProductKind;
     sku: string | null;
     nameProduct: string;
     quantity: number;
@@ -44,6 +50,41 @@ interface Product {
 type ViewMode = 'list' | 'grid';
 type StockFilter = 'all' | 'in-stock' | 'low' | 'out';
 type StatusFilter = 'all' | 'ACTIVE' | 'INACTIVE' | 'DISCONTINUED';
+type KindFilter = 'all' | ProductKind;
+
+const KIND_LABEL: Record<ProductKind, string> = {
+    PRODUCT: 'Produto',
+    SERVICE: 'Serviço',
+    LABOR: 'Mão de obra',
+};
+
+import type { LucideIcon } from 'lucide-react';
+
+const KIND_ICON: Record<ProductKind, LucideIcon> = {
+    PRODUCT: Box,
+    SERVICE: Sparkles,
+    LABOR: Wrench,
+};
+
+function isStocklessKind(kind: ProductKind | undefined): boolean {
+    return kind === 'SERVICE' || kind === 'LABOR';
+}
+
+function ProductKindBadge({ kind }: { kind: ProductKind }) {
+    const Icon = KIND_ICON[kind];
+    const tone =
+        kind === 'PRODUCT'
+            ? 'bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/30'
+            : kind === 'SERVICE'
+                ? 'bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/30'
+                : 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30';
+    return (
+        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ring-1 ring-inset ${tone}`}>
+            <Icon className="w-2.5 h-2.5" strokeWidth={2.25} />
+            {KIND_LABEL[kind]}
+        </span>
+    );
+}
 
 const formatBRL = (n: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
@@ -54,6 +95,7 @@ export function ProductsList() {
     const [view, setView] = useState<ViewMode>('list');
     const [stockFilter, setStockFilter] = useState<StockFilter>('all');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+    const [kindFilter, setKindFilter] = useState<KindFilter>('all');
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock' | 'value'>('name');
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -70,9 +112,13 @@ export function ProductsList() {
     const filtered = useMemo(() => {
         let list = [...all];
 
-        if (stockFilter === 'out') list = list.filter((p) => p.quantity === 0);
-        else if (stockFilter === 'low') list = list.filter((p) => p.quantity > 0 && p.quantity <= p.minStock);
-        else if (stockFilter === 'in-stock') list = list.filter((p) => p.quantity > p.minStock);
+        if (kindFilter !== 'all') list = list.filter((p) => (p.kind ?? 'PRODUCT') === kindFilter);
+
+        // Filtros de estoque só fazem sentido para itens físicos (PRODUCT).
+        // Serviço/mão de obra são sempre incluídos quando o filtro é "all".
+        if (stockFilter === 'out') list = list.filter((p) => !isStocklessKind(p.kind) && p.quantity === 0);
+        else if (stockFilter === 'low') list = list.filter((p) => !isStocklessKind(p.kind) && p.quantity > 0 && p.quantity <= p.minStock);
+        else if (stockFilter === 'in-stock') list = list.filter((p) => isStocklessKind(p.kind) || p.quantity > p.minStock);
 
         if (statusFilter !== 'all') list = list.filter((p) => p.status === statusFilter);
 
@@ -90,7 +136,7 @@ export function ProductsList() {
         });
 
         return list;
-    }, [all, stockFilter, statusFilter, sortBy]);
+    }, [all, stockFilter, statusFilter, kindFilter, sortBy]);
 
     const stats = useMemo(() => {
         return {
@@ -231,6 +277,16 @@ export function ProductsList() {
                             className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[13px]"
                         />
                     </div>
+                    <select
+                        value={kindFilter}
+                        onChange={(e) => setKindFilter(e.target.value as KindFilter)}
+                        className="px-3 py-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-md text-[12.5px]"
+                    >
+                        <option value="all">Todos os tipos</option>
+                        <option value="PRODUCT">Produtos</option>
+                        <option value="SERVICE">Serviços</option>
+                        <option value="LABOR">Mão de obra</option>
+                    </select>
                     <select
                         value={stockFilter}
                         onChange={(e) => setStockFilter(e.target.value as StockFilter)}
@@ -431,11 +487,13 @@ function ProductsTable({
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
                     {products.map((p) => {
+                        const kind = p.kind ?? 'PRODUCT';
+                        const stockless = isStocklessKind(kind);
                         const cover = p.images.find((i) => i.isPrimary)?.url ?? p.images[0]?.url;
-                        const low = p.quantity <= p.minStock;
-                        const out = p.quantity === 0;
+                        const low = !stockless && p.quantity <= p.minStock;
+                        const out = !stockless && p.quantity === 0;
                         const margin = p.salePrice > 0 ? ((p.salePrice - p.costPrice) / p.salePrice) * 100 : 0;
-                        const totalValue = p.costPrice * p.quantity;
+                        const totalValue = stockless ? 0 : p.costPrice * p.quantity;
                         const isSelected = selected.has(p.id);
 
                         return (
@@ -464,10 +522,13 @@ function ProductsTable({
                                             fallbackClassName="w-10 h-10 rounded shrink-0"
                                             iconSize={18}
                                         />
-                                        <div>
-                                            <p className="text-[13px] font-medium text-slate-900 dark:text-white max-w-[260px] truncate">
-                                                {p.nameProduct}
-                                            </p>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <p className="text-[13px] font-medium text-slate-900 dark:text-white max-w-[260px] truncate">
+                                                    {p.nameProduct}
+                                                </p>
+                                                <ProductKindBadge kind={kind} />
+                                            </div>
                                             {p.status !== 'ACTIVE' && (
                                                 <span className="text-[10px] uppercase tracking-wide text-slate-500">
                                                     {p.status === 'INACTIVE' ? 'Inativo' : 'Descontinuado'}
@@ -480,17 +541,21 @@ function ProductsTable({
                                     {p.sku ?? <span className="text-slate-400">—</span>}
                                 </td>
                                 <td className="px-3 py-2.5 text-right">
-                                    <span
-                                        className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] font-semibold tabular-nums ${
-                                            out
-                                                ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400'
-                                                : low
-                                                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300'
-                                                  : 'text-slate-700 dark:text-slate-300'
-                                        }`}
-                                    >
-                                        {p.quantity} {p.unit}
-                                    </span>
+                                    {stockless ? (
+                                        <span className="text-slate-400 text-[12px]">—</span>
+                                    ) : (
+                                        <span
+                                            className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] font-semibold tabular-nums ${
+                                                out
+                                                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400'
+                                                    : low
+                                                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300'
+                                                      : 'text-slate-700 dark:text-slate-300'
+                                            }`}
+                                        >
+                                            {p.quantity} {p.unit}
+                                        </span>
+                                    )}
                                 </td>
                                 <td className="px-3 py-2.5 text-right text-[12.5px] text-slate-600 dark:text-slate-300 tabular-nums">
                                     {formatBRL(p.costPrice)}
@@ -512,17 +577,19 @@ function ProductsTable({
                                     </span>
                                 </td>
                                 <td className="px-3 py-2.5 text-right text-[12px] text-slate-600 dark:text-slate-300 tabular-nums">
-                                    {formatBRL(totalValue)}
+                                    {stockless ? <span className="text-slate-400">—</span> : formatBRL(totalValue)}
                                 </td>
                                 <td className="px-3 py-2.5">
                                     <div className="flex items-center gap-1 justify-end">
-                                        <button
-                                            onClick={() => onAdjust(p)}
-                                            title="Ajustar estoque"
-                                            className="p-1.5 text-slate-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded"
-                                        >
-                                            <Sliders className="w-3.5 h-3.5" />
-                                        </button>
+                                        {!stockless && (
+                                            <button
+                                                onClick={() => onAdjust(p)}
+                                                title="Ajustar estoque"
+                                                className="p-1.5 text-slate-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded"
+                                            >
+                                                <Sliders className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => navigate(`/produtos/${p.id}`)}
                                             title="Editar"
@@ -569,9 +636,11 @@ function ProductsGrid({
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-4">
             {products.map((p) => {
+                const kind = p.kind ?? 'PRODUCT';
+                const stockless = isStocklessKind(kind);
                 const cover = p.images.find((i) => i.isPrimary)?.url ?? p.images[0]?.url;
-                const low = p.quantity <= p.minStock;
-                const out = p.quantity === 0;
+                const low = !stockless && p.quantity <= p.minStock;
+                const out = !stockless && p.quantity === 0;
                 const isSelected = selected.has(p.id);
 
                 return (
@@ -591,7 +660,12 @@ function ProductsGrid({
                                 className="rounded border-slate-300 w-4 h-4"
                             />
                         </div>
-                        {(out || low) && (
+                        {kind !== 'PRODUCT' && (
+                            <span className="absolute top-2 right-2 z-10">
+                                <ProductKindBadge kind={kind} />
+                            </span>
+                        )}
+                        {(out || low) && kind === 'PRODUCT' && (
                             <span
                                 className={`absolute top-2 right-2 z-10 inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${
                                     out
@@ -628,19 +702,21 @@ function ProductsGrid({
                                         {formatBRL(p.salePrice)}
                                     </span>
                                     <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
-                                        {p.quantity} {p.unit}
+                                        {stockless ? `/ ${p.unit}` : `${p.quantity} ${p.unit}`}
                                     </span>
                                 </div>
                             </div>
                         </button>
                         <div className="flex border-t border-slate-100 dark:border-white/[0.06]">
-                            <button
-                                onClick={() => onAdjust(p)}
-                                title="Ajustar"
-                                className="flex-1 py-1.5 text-slate-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-500/10 flex items-center justify-center"
-                            >
-                                <Sliders className="w-3.5 h-3.5" />
-                            </button>
+                            {!stockless && (
+                                <button
+                                    onClick={() => onAdjust(p)}
+                                    title="Ajustar"
+                                    className="flex-1 py-1.5 text-slate-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-500/10 flex items-center justify-center"
+                                >
+                                    <Sliders className="w-3.5 h-3.5" />
+                                </button>
+                            )}
                             <button
                                 onClick={() => navigate(`/produtos/${p.id}`)}
                                 title="Editar"

@@ -6,6 +6,8 @@ import {
     AlertTriangle,
     ArrowLeft,
     Banknote,
+    Box,
+    CalendarClock,
     CheckCircle,
     CreditCard,
     Loader2,
@@ -16,9 +18,12 @@ import {
     Printer,
     Search,
     ShoppingCart,
+    Sparkles,
     Trash2,
+    Truck,
     User,
     UserPlus,
+    Wrench,
     X,
 } from 'lucide-react';
 import { LIST_PRODUCTS_WITH_IMAGES } from '../../graphql/mutations/product-with-images';
@@ -31,9 +36,12 @@ import { useNotificationsCenter } from '../../contexts/NotificationsCenterContex
 import { ProductImage } from '../../components/ProductImage';
 
 type PaymentMethod = 'CASH' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'BOLETO' | 'TRANSFER' | 'OTHER';
+type OrderType = 'STANDARD' | 'CUSTOM_ORDER';
+type ProductKind = 'PRODUCT' | 'SERVICE' | 'LABOR';
 
 interface ProductOption {
     id: string;
+    kind: ProductKind;
     nameProduct: string;
     sku: string | null;
     quantity: number;
@@ -41,6 +49,22 @@ interface ProductOption {
     unit: string;
     salePrice: number;
     images: { id: string; url: string; isPrimary: boolean; order: number }[];
+}
+
+const KIND_LABEL: Record<ProductKind, string> = {
+    PRODUCT: 'Produto',
+    SERVICE: 'Serviço',
+    LABOR: 'Mão de obra',
+};
+
+const KIND_ICON: Record<ProductKind, React.ComponentType<{ className?: string }>> = {
+    PRODUCT: Box,
+    SERVICE: Sparkles,
+    LABOR: Wrench,
+};
+
+function isStocklessKind(kind: ProductKind | undefined): boolean {
+    return kind === 'SERVICE' || kind === 'LABOR';
 }
 
 interface CustomerOption {
@@ -53,12 +77,14 @@ interface CustomerOption {
 
 interface CartItem {
     productId: string;
+    kind: ProductKind;
     nameProduct: string;
     sku: string | null;
     unit: string;
     unitPrice: number;
     quantity: number;
     discount: number;
+    description: string;
     stockAvailable: number;
     coverUrl?: string;
 }
@@ -101,11 +127,25 @@ export function NewSale() {
     const [cepLoading, setCepLoading] = useState(false);
     const [gpsLoading, setGpsLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
+    const [orderType, setOrderType] = useState<OrderType>('STANDARD');
+    const [expectedDeliveryDate, setExpectedDeliveryDate] = useState<string>('');
+    const [depositAmount, setDepositAmount] = useState<string>('0');
     const [orderDiscount, setOrderDiscount] = useState<string>('0');
     const [notes, setNotes] = useState('');
     const [sellerId, setSellerId] = useState<string>('');
     const [commissionPercent, setCommissionPercent] = useState<string>('');
     const [printPrompt, setPrintPrompt] = useState<{ id: string; number: number; total: number } | null>(null);
+
+    const isCustomOrder = orderType === 'CUSTOM_ORDER';
+
+    // Sugere data de entrega 7 dias à frente quando vira encomenda
+    useEffect(() => {
+        if (!isCustomOrder || expectedDeliveryDate) return;
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        const tz = d.getTimezoneOffset() * 60000;
+        setExpectedDeliveryDate(new Date(d.getTime() - tz).toISOString().slice(0, 10));
+    }, [isCustomOrder, expectedDeliveryDate]);
 
     const { data: productsData, loading: loadingProducts } = useQuery<{ products: ProductOption[] }>(
         LIST_PRODUCTS_WITH_IMAGES,
@@ -140,28 +180,48 @@ export function NewSale() {
     const filteredProducts = useMemo(() => {
         const term = search.trim().toLowerCase();
         return products.filter((p) => {
-            if (p.quantity <= 0) return false; // só mostra com estoque
+            const stockless = isStocklessKind(p.kind);
+            // Em pronta-entrega só mostra produto físico com estoque OU itens stockless.
+            // Em encomenda, todos os tipos aparecem (estoque será consumido depois).
+            if (!isCustomOrder && !stockless && p.quantity <= 0) return false;
             if (!term) return true;
             return (
                 p.nameProduct.toLowerCase().includes(term) ||
                 (p.sku ?? '').toLowerCase().includes(term)
             );
         });
-    }, [products, search]);
+    }, [products, search, isCustomOrder]);
 
     const subtotal = useMemo(
-        () => cart.reduce((sum, i) => sum + (i.unitPrice * i.quantity - i.discount), 0),
+        () =>
+            cart.reduce(
+                (sum, i) =>
+                    sum + (i.unitPrice * (isStocklessKind(i.kind) ? 1 : i.quantity) - i.discount),
+                0,
+            ),
         [cart],
     );
     const discountValue = Math.max(0, parseFloat(orderDiscount.replace(',', '.')) || 0);
     const total = Math.max(0, subtotal - discountValue);
-    const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+    const totalItems = cart.reduce(
+        (sum, i) => sum + (isStocklessKind(i.kind) ? 1 : i.quantity),
+        0,
+    );
+    const depositValue = isCustomOrder ? Math.max(0, parseFloat(depositAmount.replace(',', '.')) || 0) : 0;
+    const remainingBalance = Math.max(0, total - depositValue);
 
     function addToCart(product: ProductOption) {
+        const stockless = isStocklessKind(product.kind);
         setCart((prev) => {
             const existing = prev.find((i) => i.productId === product.id);
             if (existing) {
-                if (existing.quantity + 1 > product.quantity) {
+                // Mão de obra / serviço fica fixo em 1 — não incrementa.
+                if (stockless) {
+                    toast.info('Este item já foi adicionado (qtd. fixa = 1).');
+                    return prev;
+                }
+                // Pronta-entrega: respeita o estoque. Encomenda: ignora.
+                if (!isCustomOrder && existing.quantity + 1 > product.quantity) {
                     toast.error(`Estoque máximo: ${product.quantity} ${product.unit}`);
                     return prev;
                 }
@@ -173,12 +233,14 @@ export function NewSale() {
                 ...prev,
                 {
                     productId: product.id,
+                    kind: product.kind ?? 'PRODUCT',
                     nameProduct: product.nameProduct,
                     sku: product.sku,
                     unit: product.unit,
                     unitPrice: product.salePrice,
                     quantity: 1,
                     discount: 0,
+                    description: '',
                     stockAvailable: product.quantity,
                     coverUrl: product.images.find((i) => i.isPrimary)?.url ?? product.images[0]?.url,
                 },
@@ -190,9 +252,17 @@ export function NewSale() {
         setCart((prev) =>
             prev.map((i) => {
                 if (i.productId !== productId) return i;
-                const next = Math.max(1, Math.min(qty, i.stockAvailable));
+                if (isStocklessKind(i.kind)) return i; // qty fixa = 1
+                const cap = isCustomOrder ? Number.MAX_SAFE_INTEGER : i.stockAvailable;
+                const next = Math.max(1, Math.min(qty, cap));
                 return { ...i, quantity: next };
             }),
+        );
+    }
+
+    function updateDescription(productId: string, description: string) {
+        setCart((prev) =>
+            prev.map((i) => (i.productId === productId ? { ...i, description } : i)),
         );
     }
 
@@ -327,8 +397,25 @@ export function NewSale() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (cart.length === 0) {
-            toast.error('Adicione pelo menos um produto à venda');
+            toast.error('Adicione pelo menos um item à venda');
             return;
+        }
+        if (isCustomOrder) {
+            const effectiveCustomerName = customerId
+                ? selectedCustomer?.name
+                : customerName.trim();
+            if (!effectiveCustomerName) {
+                toast.error('Encomendas exigem identificação do cliente.');
+                return;
+            }
+            if (!expectedDeliveryDate) {
+                toast.error('Defina a data de entrega prevista da encomenda.');
+                return;
+            }
+            if (depositValue > total) {
+                toast.error('O sinal não pode ser maior que o total.');
+                return;
+            }
         }
         try {
             const res = await createOrder({
@@ -345,13 +432,19 @@ export function NewSale() {
                                 : undefined,
                         status: 'CONFIRMED',
                         paymentMethod,
+                        orderType,
+                        expectedDeliveryDate: isCustomOrder
+                            ? new Date(`${expectedDeliveryDate}T12:00:00`).toISOString()
+                            : undefined,
+                        depositAmount: isCustomOrder ? depositValue : 0,
                         discount: discountValue,
                         notes: notes || undefined,
                         items: cart.map((i) => ({
                             productId: i.productId,
-                            quantity: i.quantity,
+                            quantity: isStocklessKind(i.kind) ? 1 : i.quantity,
                             unitPrice: i.unitPrice,
                             discount: i.discount,
+                            description: i.description.trim() || undefined,
                         })),
                     },
                 },
@@ -423,6 +516,105 @@ export function NewSale() {
                 </div>
             </div>
 
+            {/* TIPO DO PEDIDO — pronta-entrega vs encomenda */}
+            <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white">
+                            Tipo do pedido
+                        </h2>
+                        <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            Define se baixa estoque agora ou se será preparado/buscado depois.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setOrderType('STANDARD')}
+                        aria-pressed={orderType === 'STANDARD'}
+                        className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-colors ${
+                            orderType === 'STANDARD'
+                                ? 'border-emerald-400 bg-emerald-50 ring-1 ring-emerald-300 dark:border-emerald-500/60 dark:bg-emerald-500/[0.08] dark:ring-emerald-500/30'
+                                : 'border-slate-200 hover:border-slate-300 dark:border-white/[0.10] dark:hover:border-white/15'
+                        }`}
+                    >
+                        <span className={`shrink-0 w-9 h-9 rounded-md grid place-items-center ${
+                            orderType === 'STANDARD'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-slate-100 text-slate-500 dark:bg-white/[0.04] dark:text-slate-400'
+                        }`}>
+                            <Truck className="w-4.5 h-4.5" />
+                        </span>
+                        <div>
+                            <p className="text-[13px] font-semibold text-slate-900 dark:text-white">
+                                Pronta-entrega
+                            </p>
+                            <p className="text-[11.5px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
+                                Cliente leva agora · estoque é baixado imediatamente.
+                            </p>
+                        </div>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setOrderType('CUSTOM_ORDER')}
+                        aria-pressed={orderType === 'CUSTOM_ORDER'}
+                        className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-colors ${
+                            orderType === 'CUSTOM_ORDER'
+                                ? 'border-indigo-400 bg-indigo-50 ring-1 ring-indigo-300 dark:border-indigo-500/60 dark:bg-indigo-500/[0.08] dark:ring-indigo-500/30'
+                                : 'border-slate-200 hover:border-slate-300 dark:border-white/[0.10] dark:hover:border-white/15'
+                        }`}
+                    >
+                        <span className={`shrink-0 w-9 h-9 rounded-md grid place-items-center ${
+                            orderType === 'CUSTOM_ORDER'
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-slate-100 text-slate-500 dark:bg-white/[0.04] dark:text-slate-400'
+                        }`}>
+                            <CalendarClock className="w-4.5 h-4.5" />
+                        </span>
+                        <div>
+                            <p className="text-[13px] font-semibold text-slate-900 dark:text-white">
+                                Encomenda
+                            </p>
+                            <p className="text-[11.5px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
+                                Item será preparado/buscado · entrega prevista e sinal opcional.
+                            </p>
+                        </div>
+                    </button>
+                </div>
+
+                {isCustomOrder && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                        <div>
+                            <label className="block text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                                Entrega prevista *
+                            </label>
+                            <input
+                                type="date"
+                                value={expectedDeliveryDate}
+                                min={new Date().toISOString().slice(0, 10)}
+                                onChange={(e) => setExpectedDeliveryDate(e.target.value)}
+                                className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] tabular-nums"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                                Sinal / entrada (R$)
+                            </label>
+                            <input
+                                type="text"
+                                inputMode="decimal"
+                                value={depositAmount}
+                                onChange={(e) => setDepositAmount(e.target.value.replace(/[^\d.,]/g, ''))}
+                                placeholder="0,00"
+                                className="w-full p-2 border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded text-[13px] tabular-nums"
+                            />
+                        </div>
+                    </div>
+                )}
+            </section>
+
             <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* COLUNA ESQUERDA — PRODUTOS */}
                 <section className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
@@ -461,9 +653,12 @@ export function NewSale() {
                         ) : (
                             <ul className="divide-y divide-slate-100 dark:divide-white/[0.06]">
                                 {filteredProducts.map((p) => {
+                                    const kind = p.kind ?? 'PRODUCT';
+                                    const stockless = isStocklessKind(kind);
                                     const cover = p.images.find((i) => i.isPrimary)?.url ?? p.images[0]?.url;
                                     const inCart = cart.find((i) => i.productId === p.id);
-                                    const isLow = p.quantity <= p.minStock;
+                                    const isLow = !stockless && p.quantity <= p.minStock;
+                                    const KindIcon = KIND_ICON[kind];
                                     return (
                                         <li key={p.id}>
                                             <button
@@ -479,16 +674,34 @@ export function NewSale() {
                                                     iconSize={20}
                                                 />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-[13.5px] font-medium text-slate-900 dark:text-white truncate">
-                                                        {p.nameProduct}
-                                                    </p>
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <p className="text-[13.5px] font-medium text-slate-900 dark:text-white truncate">
+                                                            {p.nameProduct}
+                                                        </p>
+                                                        {kind !== 'PRODUCT' && (
+                                                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ring-1 ring-inset ${
+                                                                kind === 'SERVICE'
+                                                                    ? 'bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/30'
+                                                                    : 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30'
+                                                            }`}>
+                                                                <KindIcon className="w-2.5 h-2.5" />
+                                                                {KIND_LABEL[kind]}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div className="flex items-center gap-2 mt-0.5 text-[11.5px] text-slate-500 dark:text-slate-400">
                                                         {p.sku && <span className="font-mono">{p.sku}</span>}
                                                         {p.sku && <span>·</span>}
-                                                        <span className={isLow ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}>
-                                                            {p.quantity} {p.unit} disponível
-                                                        </span>
-                                                        {isLow && <AlertTriangle className="w-3 h-3 text-amber-500" />}
+                                                        {stockless ? (
+                                                            <span>por {p.unit}</span>
+                                                        ) : (
+                                                            <>
+                                                                <span className={isLow ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}>
+                                                                    {p.quantity} {p.unit} disponível
+                                                                </span>
+                                                                {isLow && <AlertTriangle className="w-3 h-3 text-amber-500" />}
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="text-right shrink-0">
@@ -758,9 +971,12 @@ export function NewSale() {
                                 </p>
                             </div>
                         ) : (
-                            <ul className="divide-y divide-slate-100 dark:divide-white/[0.06] max-h-[360px] overflow-y-auto">
+                            <ul className="divide-y divide-slate-100 dark:divide-white/[0.06] max-h-[420px] overflow-y-auto">
                                 {cart.map((item) => {
-                                    const lineTotal = item.unitPrice * item.quantity - item.discount;
+                                    const stockless = isStocklessKind(item.kind);
+                                    const effectiveQty = stockless ? 1 : item.quantity;
+                                    const lineTotal = item.unitPrice * effectiveQty - item.discount;
+                                    const KindIcon = KIND_ICON[item.kind];
                                     return (
                                         <li key={item.productId} className="px-4 py-3">
                                             <div className="flex items-start gap-2">
@@ -772,11 +988,24 @@ export function NewSale() {
                                                     iconSize={16}
                                                 />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-[12.5px] font-medium text-slate-900 dark:text-white truncate">
-                                                        {item.nameProduct}
-                                                    </p>
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <p className="text-[12.5px] font-medium text-slate-900 dark:text-white truncate">
+                                                            {item.nameProduct}
+                                                        </p>
+                                                        {item.kind !== 'PRODUCT' && (
+                                                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-medium ring-1 ring-inset ${
+                                                                item.kind === 'SERVICE'
+                                                                    ? 'bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/30'
+                                                                    : 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30'
+                                                            }`}>
+                                                                <KindIcon className="w-2.5 h-2.5" />
+                                                                {KIND_LABEL[item.kind]}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
                                                         {formatBRL(item.unitPrice)} / {item.unit}
+                                                        {stockless && ' · qtd. fixa = 1'}
                                                     </p>
                                                 </div>
                                                 <button
@@ -789,31 +1018,33 @@ export function NewSale() {
                                                 </button>
                                             </div>
 
-                                            <div className="mt-2 grid grid-cols-3 gap-1.5">
-                                                <div className="flex items-center border border-slate-200 dark:border-white/15 rounded">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => updateQty(item.productId, item.quantity - 1)}
-                                                        className="px-1.5 py-1 text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                                                    >
-                                                        <Minus className="w-3 h-3" />
-                                                    </button>
-                                                    <input
-                                                        type="number"
-                                                        min="1"
-                                                        max={item.stockAvailable}
-                                                        value={item.quantity}
-                                                        onChange={(e) => updateQty(item.productId, parseInt(e.target.value) || 1)}
-                                                        className="w-full text-center text-[12px] py-1 bg-transparent dark:text-white outline-none tabular-nums"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => updateQty(item.productId, item.quantity + 1)}
-                                                        className="px-1.5 py-1 text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                                                    >
-                                                        <Plus className="w-3 h-3" />
-                                                    </button>
-                                                </div>
+                                            <div className={`mt-2 grid gap-1.5 ${stockless ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                                                {!stockless && (
+                                                    <div className="flex items-center border border-slate-200 dark:border-white/15 rounded">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateQty(item.productId, item.quantity - 1)}
+                                                            className="px-1.5 py-1 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                                                        >
+                                                            <Minus className="w-3 h-3" />
+                                                        </button>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max={isCustomOrder ? undefined : item.stockAvailable}
+                                                            value={item.quantity}
+                                                            onChange={(e) => updateQty(item.productId, parseInt(e.target.value) || 1)}
+                                                            className="w-full text-center text-[12px] py-1 bg-transparent dark:text-white outline-none tabular-nums"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateQty(item.productId, item.quantity + 1)}
+                                                            className="px-1.5 py-1 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                                                        >
+                                                            <Plus className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                )}
                                                 <input
                                                     type="number"
                                                     step="0.01"
@@ -834,9 +1065,24 @@ export function NewSale() {
                                                 />
                                             </div>
 
+                                            <input
+                                                type="text"
+                                                value={item.description}
+                                                onChange={(e) => updateDescription(item.productId, e.target.value)}
+                                                placeholder={
+                                                    item.kind === 'LABOR'
+                                                        ? 'Detalhe do serviço (ex.: instalação no apto. 302)'
+                                                        : item.kind === 'SERVICE'
+                                                            ? 'Especificação do serviço'
+                                                            : 'Observação do item (cor, modelo, etc.)'
+                                                }
+                                                maxLength={500}
+                                                className="w-full mt-1.5 px-2 py-1 text-[11.5px] border border-slate-200 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded placeholder:text-slate-400"
+                                            />
+
                                             <div className="mt-1 flex items-center justify-between text-[11px]">
                                                 <span className="text-slate-500 dark:text-slate-400">
-                                                    {item.quantity} × {formatBRL(item.unitPrice)}
+                                                    {effectiveQty} × {formatBRL(item.unitPrice)}
                                                     {item.discount > 0 && ` − ${formatBRL(item.discount)}`}
                                                 </span>
                                                 <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
@@ -944,6 +1190,16 @@ export function NewSale() {
 
                     {/* Totais */}
                     <section className="bg-slate-900 dark:bg-slate-950 text-white rounded-xl p-4 space-y-2">
+                        {isCustomOrder && (
+                            <div className="-mx-4 -mt-4 mb-2 px-4 py-2 bg-indigo-500/15 border-b border-indigo-500/20 text-[10.5px] uppercase tracking-wider font-semibold text-indigo-200 inline-flex items-center gap-1.5">
+                                <CalendarClock className="w-3 h-3" /> Encomenda
+                                {expectedDeliveryDate && (
+                                    <span className="text-indigo-100/80 font-normal normal-case ml-2">
+                                        · entrega {new Date(expectedDeliveryDate + 'T00:00:00').toLocaleDateString('pt-BR')}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                         <div className="flex items-center justify-between text-[12.5px] text-slate-300">
                             <span>Subtotal</span>
                             <span className="tabular-nums">{formatBRL(subtotal)}</span>
@@ -959,13 +1215,34 @@ export function NewSale() {
                             <span className="text-[20px] font-bold tabular-nums">{formatBRL(total)}</span>
                         </div>
 
+                        {isCustomOrder && (
+                            <>
+                                <div className="flex items-center justify-between text-[12.5px] text-emerald-300">
+                                    <span>Sinal / entrada</span>
+                                    <span className="tabular-nums">
+                                        {depositValue > 0 ? `− ${formatBRL(depositValue)}` : '—'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                                    <span className="text-[12.5px] text-slate-400">Saldo a pagar</span>
+                                    <span className="text-[16px] font-bold tabular-nums text-amber-300">
+                                        {formatBRL(remainingBalance)}
+                                    </span>
+                                </div>
+                            </>
+                        )}
+
                         <button
                             type="submit"
                             disabled={cart.length === 0 || creatingOrder}
                             className="w-full mt-3 inline-flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-[14px] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ShoppingCart className="w-4 h-4" />
-                            {creatingOrder ? 'Processando...' : 'Finalizar venda'}
+                            {creatingOrder
+                                ? 'Processando...'
+                                : isCustomOrder
+                                    ? 'Registrar encomenda'
+                                    : 'Finalizar venda'}
                         </button>
 
                         {cart.length > 0 && (

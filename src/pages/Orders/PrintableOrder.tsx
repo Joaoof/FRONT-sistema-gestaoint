@@ -7,11 +7,16 @@ import { useCompany } from '../../contexts/CompanyContext';
 
 type OrderStatus = 'DRAFT' | 'CONFIRMED' | 'PAID' | 'CANCELED' | 'REFUNDED';
 type PaymentMethod = 'CASH' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'BOLETO' | 'TRANSFER' | 'OTHER';
+type OrderType = 'STANDARD' | 'CUSTOM_ORDER';
+type ProductKind = 'PRODUCT' | 'SERVICE' | 'LABOR';
 
 interface OrderItem {
     id: string;
     productId?: string | null;
     productName: string;
+    itemKind?: ProductKind | null;
+    itemUnit?: string | null;
+    description?: string | null;
     quantity: number;
     unitPrice: number;
     discount?: number | null;
@@ -31,6 +36,9 @@ interface OrderDetail {
     commissionAmount?: number | null;
     status: OrderStatus;
     paymentMethod?: PaymentMethod | null;
+    orderType?: OrderType | null;
+    expectedDeliveryDate?: string | null;
+    depositAmount?: number | null;
     subtotal?: number | null;
     discount?: number | null;
     total: number;
@@ -49,6 +57,23 @@ interface OrderDetail {
     } | null;
     items: OrderItem[];
 }
+
+const ORDER_TYPE_LABEL: Record<OrderType, string> = {
+    STANDARD: 'Pronta-entrega',
+    CUSTOM_ORDER: 'Encomenda',
+};
+
+const ITEM_KIND_LABEL: Record<ProductKind, string> = {
+    PRODUCT: 'Produto',
+    SERVICE: 'Serviço',
+    LABOR: 'Mão de obra',
+};
+
+const ITEM_KIND_SHORT: Record<ProductKind, string> = {
+    PRODUCT: 'PROD',
+    SERVICE: 'SERV',
+    LABOR: 'M.OB',
+};
 
 interface CompanyLite {
     name?: string | null;
@@ -129,22 +154,45 @@ function CompanyRow({
 function Receipt({ order, company, via }: ReceiptProps) {
     const subtotal = Number(
         order.subtotal ??
-            order.items.reduce((acc, it) => acc + Number(it.unitPrice) * Number(it.quantity), 0),
+            order.items.reduce((acc, it) => {
+                const stockless = it.itemKind === 'SERVICE' || it.itemKind === 'LABOR';
+                const q = stockless ? 1 : Number(it.quantity);
+                return acc + Number(it.unitPrice) * q;
+            }, 0),
     );
     const discount = Number(order.discount ?? 0);
     const total = Number(order.total ?? subtotal - discount);
-    const totalQty = order.items.reduce((acc, it) => acc + Number(it.quantity), 0);
+    const deposit = Number(order.depositAmount ?? 0);
+    const remaining = Math.max(0, total - deposit);
+    // "Itens físicos" para mostrar quantidade no rodapé.
+    const totalQtyPhysical = order.items
+        .filter((it) => (it.itemKind ?? 'PRODUCT') === 'PRODUCT')
+        .reduce((acc, it) => acc + Number(it.quantity), 0);
     const issuedAt = new Date(order.createdAt);
+    const orderType = (order.orderType ?? 'STANDARD') as OrderType;
+    const isCustomOrder = orderType === 'CUSTOM_ORDER';
+    const expected = order.expectedDeliveryDate ? new Date(order.expectedDeliveryDate) : null;
+    // Mostra coluna Qt apenas se houver itens com quantidade relevante.
+    const showQtyColumn = order.items.some(
+        (it) => (it.itemKind ?? 'PRODUCT') === 'PRODUCT',
+    );
 
     const viaLabel = via === 'empresa' ? 'VIA DA EMPRESA' : 'VIA DO CLIENTE';
 
     return (
         <section className="receipt p-4 text-[10.5px] leading-tight text-black">
-            {/* Topo: identificação da via + número */}
+            {/* Topo: identificação da via + número + tipo do pedido */}
             <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[9px] font-bold tracking-[0.15em] uppercase">
-                    {viaLabel}
-                </span>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] font-bold tracking-[0.15em] uppercase">
+                        {viaLabel}
+                    </span>
+                    {isCustomOrder && (
+                        <span className="text-[8.5px] font-bold tracking-[0.15em] uppercase border border-black px-1 py-[1px]">
+                            ENCOMENDA
+                        </span>
+                    )}
+                </div>
                 <span className="text-[14px] font-bold tabular-nums">
                     PEDIDO #{String(order.number).padStart(4, '0')}
                 </span>
@@ -219,7 +267,7 @@ function Receipt({ order, company, via }: ReceiptProps) {
                 </dl>
             </div>
 
-            {/* Linha vendedor + pagamento */}
+            {/* Linha vendedor + pagamento + (encomenda) entrega */}
             <div className="grid grid-cols-2 gap-3 mt-2 text-[10px]">
                 <div className="min-w-0">
                     <p className="text-[8.5px] uppercase tracking-wider">Vendedor</p>
@@ -229,6 +277,8 @@ function Receipt({ order, company, via }: ReceiptProps) {
                             Comissão: {Number(order.commissionPercent).toFixed(2)}% · {formatBRL(Number(order.commissionAmount ?? 0))}
                         </p>
                     )}
+                    <p className="text-[8.5px] uppercase tracking-wider mt-1">Tipo do pedido</p>
+                    <p className="font-semibold">{ORDER_TYPE_LABEL[orderType]}</p>
                 </div>
                 <div className="min-w-0 text-right">
                     <p className="text-[8.5px] uppercase tracking-wider">Pagamento</p>
@@ -236,8 +286,19 @@ function Receipt({ order, company, via }: ReceiptProps) {
                         {order.paymentMethod ? PAYMENT_LABEL[order.paymentMethod] : '—'}
                     </p>
                     <p className="tabular-nums">
-                        {order.items.length} {order.items.length === 1 ? 'item' : 'itens'} · {totalQty}un
+                        {order.items.length} {order.items.length === 1 ? 'item' : 'itens'}
+                        {totalQtyPhysical > 0 && ` · ${totalQtyPhysical}un`}
                     </p>
+                    {isCustomOrder && expected && (
+                        <>
+                            <p className="text-[8.5px] uppercase tracking-wider mt-1">
+                                Entrega prevista
+                            </p>
+                            <p className="font-semibold tabular-nums">
+                                {expected.toLocaleDateString('pt-BR')}
+                            </p>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -246,39 +307,66 @@ function Receipt({ order, company, via }: ReceiptProps) {
                 <thead>
                     <tr className="text-left border-y border-black">
                         <th className="py-1 pr-1 font-semibold w-6">#</th>
+                        <th className="py-1 px-1 font-semibold w-12">Tipo</th>
                         <th className="py-1 px-1 font-semibold">Descrição</th>
-                        <th className="py-1 px-1 font-semibold text-right tabular-nums w-9">Qt</th>
+                        {showQtyColumn && (
+                            <th className="py-1 px-1 font-semibold text-right tabular-nums w-9">Qt</th>
+                        )}
                         <th className="py-1 px-1 font-semibold text-right tabular-nums w-16">Unit.</th>
                         <th className="py-1 pl-1 font-semibold text-right tabular-nums w-20">Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {order.items.map((it, idx) => (
-                        <tr key={it.id} className="border-b border-black/20 align-top">
-                            <td className="py-0.5 pr-1 tabular-nums">{idx + 1}</td>
-                            <td className="py-0.5 px-1 truncate max-w-0">
-                                {it.productName}
-                                {Number(it.discount ?? 0) > 0 && (
-                                    <span> (−{formatBRL(Number(it.discount))})</span>
+                    {order.items.map((it, idx) => {
+                        const kind = (it.itemKind ?? 'PRODUCT') as ProductKind;
+                        const showQty = kind === 'PRODUCT';
+                        return (
+                            <tr key={it.id} className="border-b border-black/20 align-top">
+                                <td className="py-0.5 pr-1 tabular-nums">{idx + 1}</td>
+                                <td className="py-0.5 px-1 text-[8.5px] font-bold uppercase tracking-wider">
+                                    {ITEM_KIND_SHORT[kind]}
+                                </td>
+                                <td className="py-0.5 px-1">
+                                    <div className="font-semibold truncate">{it.productName}</div>
+                                    {it.description && (
+                                        <div className="text-[9px] leading-tight">
+                                            {it.description}
+                                        </div>
+                                    )}
+                                    <div className="text-[8.5px] leading-tight uppercase tracking-wider">
+                                        {ITEM_KIND_LABEL[kind]}
+                                        {Number(it.discount ?? 0) > 0 && (
+                                            <span> · desc. {formatBRL(Number(it.discount))}</span>
+                                        )}
+                                    </div>
+                                </td>
+                                {showQtyColumn && (
+                                    <td className="py-0.5 px-1 text-right tabular-nums">
+                                        {showQty
+                                            ? `${Number(it.quantity).toLocaleString('pt-BR')} ${it.itemUnit ?? ''}`.trim()
+                                            : '—'}
+                                    </td>
                                 )}
-                            </td>
-                            <td className="py-0.5 px-1 text-right tabular-nums">
-                                {Number(it.quantity).toLocaleString('pt-BR')}
-                            </td>
-                            <td className="py-0.5 px-1 text-right tabular-nums">
-                                {formatBRL(Number(it.unitPrice))}
-                            </td>
-                            <td className="py-0.5 pl-1 text-right font-semibold tabular-nums">
-                                {formatBRL(Number(it.total))}
-                            </td>
-                        </tr>
-                    ))}
+                                <td className="py-0.5 px-1 text-right tabular-nums">
+                                    {formatBRL(Number(it.unitPrice))}
+                                    {!showQty && (
+                                        <span className="block text-[8.5px] text-black/60">
+                                            / {it.itemUnit ?? 'un'}
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="py-0.5 pl-1 text-right font-semibold tabular-nums">
+                                    {formatBRL(Number(it.total))}
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
 
             {/* Totais */}
             <div className="mt-2 flex justify-end">
-                <div className="min-w-[140px] text-[10px]">
+                <div className="min-w-[160px] text-[10px]">
                     <div className="flex items-center justify-between">
                         <span>Subtotal</span>
                         <span className="tabular-nums">{formatBRL(subtotal)}</span>
@@ -293,6 +381,20 @@ function Receipt({ order, company, via }: ReceiptProps) {
                         <span>TOTAL</span>
                         <span className="tabular-nums">{formatBRL(total)}</span>
                     </div>
+                    {isCustomOrder && (
+                        <>
+                            <div className="flex items-center justify-between mt-1">
+                                <span>Entrada/sinal</span>
+                                <span className="tabular-nums">
+                                    {deposit > 0 ? `−${formatBRL(deposit)}` : '—'}
+                                </span>
+                            </div>
+                            <div className="border-t border-black mt-1 pt-1 flex items-center justify-between font-bold text-[12px]">
+                                <span>SALDO A PAGAR</span>
+                                <span className="tabular-nums">{formatBRL(remaining)}</span>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 

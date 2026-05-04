@@ -4,6 +4,7 @@ export const GET_PRODUCT_DETAIL = gql`
   query GetProductDetail($id: String!) {
     product(id: $id) {
       id
+      kind
       sku
       nameProduct
       quantity
@@ -27,6 +28,7 @@ export const UPDATE_PRODUCT_DETAIL = gql`
   mutation UpdateProductDetail($input: UpdateProductInput!) {
     updateProductMutation(input: $input) {
       id
+      kind
       sku
       nameProduct
       quantity

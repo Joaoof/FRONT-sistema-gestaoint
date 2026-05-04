@@ -13,6 +13,9 @@ const ORDER_FIELDS = `
   commissionAmount
   status
   paymentMethod
+  orderType
+  expectedDeliveryDate
+  depositAmount
   subtotal
   discount
   total
@@ -24,10 +27,13 @@ const ORDER_FIELDS = `
     id
     productId
     productName
+    itemKind
+    itemUnit
     quantity
     unitPrice
     discount
     total
+    description
   }
 `;
 
@@ -58,6 +64,27 @@ export const GET_ORDERS_SUMMARY = gql`
   }
 `;
 
+export const GET_ORDER_FOR_PRINT = gql`
+  query OrderForPrint($id: String!) {
+    orderForPrint(id: $id) {
+      empresa { nome_fantasia razao_social cnpj inscricao_estadual endereco cidade estado telefone }
+      cliente { nome cpf_cnpj telefone bairro cep }
+      pedido {
+        numero data_emissao hora_emissao forma_pagamento
+        tipo tipo_label entrega_prevista entrada saldo_a_pagar
+        vencimento valor_total valor_bruto desconto itens_qtd
+      }
+      itens {
+        codigo descricao marca unidade
+        tipo tipo_label mostra_quantidade
+        quantidade valor_unitario desconto valor_total
+      }
+      vendedor
+      observacoes
+    }
+  }
+`;
+
 export const CREATE_ORDER = gql`
   mutation CreateOrder($input: CreateOrderInput!) {
     createOrder(input: $input) {
@@ -66,8 +93,11 @@ export const CREATE_ORDER = gql`
       total
       status
       paymentMethod
+      orderType
+      expectedDeliveryDate
+      depositAmount
       createdAt
-      items { id productId productName quantity unitPrice total }
+      items { id productId productName itemKind itemUnit quantity unitPrice total description }
     }
   }
 `;
