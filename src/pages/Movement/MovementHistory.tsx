@@ -22,6 +22,17 @@ import {
     ArrowDownCircle,
     ArrowUpCircle,
     Wallet,
+    Receipt,
+    Activity,
+    SlidersHorizontal,
+    ListFilter,
+    LayoutGrid,
+    List as ListIcon,
+    Hash,
+    Landmark,
+    CreditCard,
+    Filter as FilterIcon,
+    Layers,
 } from "lucide-react"
 import { useQuery, useMutation } from "@apollo/client"
 import { GET_CASH_MOVEMENTS, CREATE_CASH_MOVEMENT, UPDATE_CASH_MOVEMENT } from "../../graphql/queries/queries"
@@ -30,7 +41,8 @@ import { generateMovementPdfDoc } from "../../utils/generatePDF"
 import type { CategoryType, Movement, MovementType, MovementTypePayment } from "../../types"
 import { RotateCcw } from "lucide-react"
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts"
+import { motion, AnimatePresence } from "framer-motion"
 
 import * as Dialog from "@radix-ui/react-dialog"
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
@@ -540,425 +552,827 @@ export function MovementHistory() {
         setEditingMovement(null)
     }
 
+    // ============= analytics derivados para cards/charts =============
+    const totalCount = filtered.length
+    const avgTicket = totalCount > 0 ? (totalEntries + totalExits) / totalCount : 0
+    const totalVolume = totalEntries + totalExits
+    const entriesShare = totalVolume > 0 ? (totalEntries / totalVolume) * 100 : 0
+
+    // tendência por dia (últimos 14 dias dentro do filtrado)
+    const dailyTrend = useMemo(() => {
+        const map = new Map<string, { date: string; entradas: number; saidas: number; saldo: number }>()
+        const days: string[] = []
+        const today = new Date()
+        for (let i = 13; i >= 0; i--) {
+            const d = new Date(today)
+            d.setDate(today.getDate() - i)
+            const key = d.toISOString().slice(0, 10)
+            days.push(key)
+            map.set(key, { date: key, entradas: 0, saidas: 0, saldo: 0 })
+        }
+        for (const m of filtered) {
+            if (!m.date) continue
+            const key = new Date(m.date).toISOString().slice(0, 10)
+            const slot = map.get(key)
+            if (!slot) continue
+            if (m.type === "ENTRY") slot.entradas += m.value
+            else slot.saidas += m.value
+            slot.saldo = slot.entradas - slot.saidas
+        }
+        return days.map((k) => {
+            const s = map.get(k)!
+            const d = new Date(k + "T00:00:00")
+            return { ...s, label: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) }
+        })
+    }, [filtered])
+
+    // breakdown por categoria
+    const categoryBreakdown = useMemo(() => {
+        const counter = new Map<Subtype, { count: number; total: number }>()
+        for (const m of filtered) {
+            const cat = mapCategoryToSubtype(m.category as string)
+            const cur = counter.get(cat) ?? { count: 0, total: 0 }
+            cur.count += 1
+            cur.total += m.value
+            counter.set(cat, cur)
+        }
+        const COLORS: Record<Subtype, string> = {
+            SALE: "#10b981",
+            CHANGE: "#14b8a6",
+            OTHER_IN: "#22c55e",
+            EXPENSE: "#ef4444",
+            WITHDRAWAL: "#f97316",
+            PAYMENT: "#e11d48",
+        }
+        return Array.from(counter.entries())
+            .map(([cat, v]) => ({
+                category: cat,
+                label: typeLabels[cat as keyof typeof typeLabels],
+                count: v.count,
+                total: v.total,
+                color: COLORS[cat],
+            }))
+            .sort((a, b) => b.total - a.total)
+    }, [filtered]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    // mini sparkline para cada KPI (últimos 7 dias)
+    const sparkEntries = dailyTrend.slice(-7).map((d) => ({ v: d.entradas }))
+    const sparkExits = dailyTrend.slice(-7).map((d) => ({ v: d.saidas }))
+    const sparkCount = useMemo(() => {
+        return dailyTrend.slice(-7).map((d) => {
+            const dateStr = (d as any).date as string
+            const c = filtered.filter((m) => m.date && new Date(m.date).toISOString().slice(0, 10) === dateStr).length
+            return { v: c }
+        })
+    }, [dailyTrend, filtered])
+
+    // active filter chips (para mostrar "filtros ativos")
+    const activeFilters: { key: string; label: string; onClear: () => void }[] = []
+    if (search) activeFilters.push({ key: "search", label: `Busca: "${search}"`, onClear: () => setSearch("") })
+    if (filter !== "ALL") activeFilters.push({ key: "filter", label: `Tipo: ${filter}`, onClear: () => setFilter("ALL") })
+    if (quickDateFilter) activeFilters.push({ key: "qd", label: `Período: ${quickDateFilter}`, onClear: () => setQuickDateFilter("") })
+    if (dateFrom) activeFilters.push({ key: "df", label: `De: ${dateFrom}`, onClear: () => setDateFrom("") })
+    if (dateTo) activeFilters.push({ key: "dt", label: `Até: ${dateTo}`, onClear: () => setDateTo("") })
+    if (valueMin) activeFilters.push({ key: "vmin", label: `Mín: R$ ${valueMin}`, onClear: () => setValueMin("") })
+    if (valueMax) activeFilters.push({ key: "vmax", label: `Máx: R$ ${valueMax}`, onClear: () => setValueMax("") })
+
+    const clearAllFilters = () => {
+        setSearch("")
+        setFilter("ALL")
+        setQuickDateFilter("")
+        setDateFrom("")
+        setDateTo("")
+        setValueMin("")
+        setValueMax("")
+        setCurrentPage(1)
+    }
+
+    // view mode (table | cards)
+    const [viewMode, setViewMode] = useState<"table" | "cards">("table")
+
     if (loading) return <LoadingSkeleton />
 
     if (error) return <div className="p-8 text-center text-red-600 dark:text-red-400">Erro: {error.message}</div>
 
     return (
         <>
-            <div className="space-y-6 w-full">
-                <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.06]">
-                    <div className="min-w-0">
-                        <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Histórico de movimentações</h1>
-                        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Controle completo das entradas e saídas do caixa</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                        <CashMovementBackupActions onImported={() => refetch()} />
-                        <button
-                            type="button"
-                            onClick={() => refetch()}
-                            disabled={loading}
-                            className="inline-flex items-center gap-1.5 h-8 px-3 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-md disabled:opacity-50 transition-colors group"
-                            aria-label="Atualizar dados"
-                        >
-                            <RotateCcw
-                                className={`w-3.5 h-3.5 transition-transform ${loading ? "animate-spin text-violet-500" : "group-hover:rotate-12"}`}
-                                strokeWidth={2}
-                            />
-                            <span>{loading ? "Atualizando…" : "Atualizar"}</span>
-                        </button>
-                    </div>
-                </div>
+            <div className="relative w-full -mx-4 sm:-mx-6 lg:-mx-8 -my-6 lg:-my-8 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
 
-                {/* KPIs SaaS — Entradas, Saídas, Saldo */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <button
+                {/* HERO */}
+                <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35 }}
+                    className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-gradient-to-br from-white via-white to-violet-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-violet-950/20 p-6 lg:p-7 shadow-sm mb-6"
+                >
+                    <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-violet-300/20 dark:bg-violet-500/10 blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-emerald-300/15 dark:bg-emerald-500/10 blur-3xl pointer-events-none" />
+                    <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 text-[11px] font-medium border border-violet-200 dark:border-violet-900/40">
+                                    <Activity className="w-3 h-3" /> Caixa em tempo real
+                                </span>
+                                <span className="text-[11.5px] text-slate-500 dark:text-slate-400">{filtered.length} lançamentos no recorte</span>
+                            </div>
+                            <h1 className="text-[28px] font-semibold text-slate-900 dark:text-white tracking-tight leading-tight">
+                                Histórico de movimentações
+                            </h1>
+                            <p className="text-[13.5px] text-slate-500 dark:text-slate-400 mt-1.5 max-w-xl">
+                                Visão completa de entradas e saídas — filtre, exporte e analise tendências do seu caixa
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                            <CashMovementBackupActions onImported={() => refetch()} />
+                            <motion.button
+                                type="button"
+                                onClick={() => refetch()}
+                                disabled={loading}
+                                whileTap={{ scale: 0.97 }}
+                                className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-lg disabled:opacity-50 transition-colors group"
+                            >
+                                <RotateCcw className={`w-3.5 h-3.5 transition-transform ${loading ? "animate-spin text-violet-500" : "group-hover:rotate-12"}`} strokeWidth={2} />
+                                <span>{loading ? "Atualizando…" : "Atualizar"}</span>
+                            </motion.button>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* KPIs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
+                    {/* Entradas */}
+                    <motion.button
                         type="button"
                         onClick={() => handleAdjustment("ENTRY")}
-                        className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:shadow-sm transition-all"
+                        whileHover={{ y: -3 }}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.05 }}
+                        className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5 transition-all"
                     >
-                        <span className="absolute inset-x-0 top-0 h-[2px] bg-emerald-500 opacity-70" aria-hidden />
-                        <div className="flex items-center gap-2">
-                            <span className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                <ArrowDownCircle className="w-3.5 h-3.5" strokeWidth={2} />
-                            </span>
-                            <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Entradas</span>
-                            <span className="ml-auto text-[10.5px] font-medium text-emerald-700 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">+ Ajustar</span>
+                        <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-500 to-teal-500" />
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 flex items-center justify-center">
+                                        <ArrowDownCircle className="w-4 h-4" strokeWidth={2} />
+                                    </span>
+                                    <div>
+                                        <p className="text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Entradas</p>
+                                    </div>
+                                </div>
+                                <p className="mt-3 text-[22px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
+                                    <CountUp end={totalEntries} decimal="," decimals={2} prefix="R$ " separator="." duration={0.8} />
+                                </p>
+                                <p className="mt-1.5 text-[10.5px] text-emerald-600 dark:text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">+ ajustar caixa</p>
+                            </div>
                         </div>
-                        <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
-                            <CountUp end={totalEntries} decimal="," decimals={2} prefix="R$ " separator="." />
-                        </p>
-                    </button>
+                        {/* sparkline */}
+                        <div className="absolute bottom-0 right-0 w-24 h-12 opacity-70">
+                            <ResponsiveContainer>
+                                <AreaChart data={sparkEntries}>
+                                    <defs>
+                                        <linearGradient id="spk-en" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.45} />
+                                            <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <Area type="monotone" dataKey="v" stroke="#10b981" strokeWidth={1.5} fill="url(#spk-en)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </motion.button>
 
-                    <button
+                    {/* Saídas */}
+                    <motion.button
                         type="button"
                         onClick={() => handleAdjustment("EXIT")}
-                        className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-rose-300 dark:hover:border-rose-500/30 hover:shadow-sm transition-all"
+                        whileHover={{ y: -3 }}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.1 }}
+                        className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 hover:border-rose-300 dark:hover:border-rose-500/40 hover:shadow-lg hover:shadow-rose-500/5 transition-all"
                     >
-                        <span className="absolute inset-x-0 top-0 h-[2px] bg-rose-500 opacity-70" aria-hidden />
-                        <div className="flex items-center gap-2">
-                            <span className="w-7 h-7 rounded-md bg-rose-50 text-rose-700 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                <ArrowUpCircle className="w-3.5 h-3.5" strokeWidth={2} />
-                            </span>
-                            <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Saídas</span>
-                            <span className="ml-auto text-[10.5px] font-medium text-rose-700 dark:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity">+ Ajustar</span>
+                        <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-rose-500 to-red-500" />
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-8 h-8 rounded-lg bg-rose-50 text-rose-700 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20 flex items-center justify-center">
+                                        <ArrowUpCircle className="w-4 h-4" strokeWidth={2} />
+                                    </span>
+                                    <p className="text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Saídas</p>
+                                </div>
+                                <p className="mt-3 text-[22px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
+                                    <CountUp end={totalExits} decimal="," decimals={2} prefix="R$ " separator="." duration={0.8} />
+                                </p>
+                                <p className="mt-1.5 text-[10.5px] text-rose-600 dark:text-rose-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">+ ajustar caixa</p>
+                            </div>
                         </div>
-                        <p className="mt-2.5 text-[24px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
-                            <CountUp end={totalExits} decimal="," decimals={2} prefix="R$ " separator="." />
-                        </p>
-                    </button>
+                        <div className="absolute bottom-0 right-0 w-24 h-12 opacity-70">
+                            <ResponsiveContainer>
+                                <AreaChart data={sparkExits}>
+                                    <defs>
+                                        <linearGradient id="spk-ex" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#ef4444" stopOpacity={0.45} />
+                                            <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <Area type="monotone" dataKey="v" stroke="#ef4444" strokeWidth={1.5} fill="url(#spk-ex)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </motion.button>
 
-                    <div className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors">
-                        <span className={`absolute inset-x-0 top-0 h-[2px] ${balance >= 0 ? 'bg-sky-500' : 'bg-rose-500'} opacity-70`} aria-hidden />
-                        <div className="flex items-center gap-2">
-                            <span className={`w-7 h-7 rounded-md flex items-center justify-center ring-1 ${
-                                balance >= 0
-                                    ? 'bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20'
-                                    : 'bg-rose-50 text-rose-700 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20'
-                            }`}>
-                                <Wallet className="w-3.5 h-3.5" strokeWidth={2} />
-                            </span>
-                            <span className="text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">Saldo atual</span>
+                    {/* Saldo */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.15 }}
+                        className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 hover:border-slate-300 dark:hover:border-white/15 transition-colors"
+                    >
+                        <span className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${balance >= 0 ? "from-sky-500 to-blue-500" : "from-rose-500 to-red-500"}`} />
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className={`w-8 h-8 rounded-lg flex items-center justify-center ring-1 ${balance >= 0
+                                        ? "bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20"
+                                        : "bg-rose-50 text-rose-700 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20"
+                                        }`}>
+                                        <Wallet className="w-4 h-4" strokeWidth={2} />
+                                    </span>
+                                    <p className="text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Saldo</p>
+                                </div>
+                                <p className={`mt-3 text-[22px] font-semibold leading-none tabular-nums tracking-tight ${balance >= 0 ? "text-slate-900 dark:text-white" : "text-rose-700 dark:text-rose-400"}`}>
+                                    <CountUp end={balance} decimal="," decimals={2} prefix="R$ " separator="." duration={0.8} />
+                                </p>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => handleAdjustment("ADJUSTMENT")}
-                                className="ml-auto p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded transition-colors"
+                                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-md transition-colors"
                                 title="Ajustar saldo"
-                                aria-label="Ajustar saldo"
                             >
-                                <Edit className="w-3 h-3" strokeWidth={2} />
+                                <Edit className="w-3.5 h-3.5" strokeWidth={2} />
                             </button>
                         </div>
-                        <p className={`mt-2.5 text-[24px] font-semibold leading-none tabular-nums tracking-tight ${
-                            balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-700 dark:text-rose-400'
-                        }`}>
-                            <CountUp end={balance} decimal="," decimals={2} prefix="R$ " separator="." />
-                        </p>
-                    </div>
-                </div>
-
-                {/* Mini gráfico */}
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg">
-                    <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
-                        <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Resumo financeiro</h3>
-                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Distribuição entre entradas e saídas</p>
-                    </div>
-                    <div className="p-4">
-                    <h3 className="sr-only">Distribuição</h3>
-                    <div className="h-48 font-open_sans">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={[
-                                        { name: "Entradas", value: totalEntries, color: "#10b981" },
-                                        { name: "Saídas", value: totalExits, color: "#ef4444" },
-                                    ]}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={40}
-                                    outerRadius={60}
-                                    paddingAngle={2}
-                                    dataKey="value"
-                                    nameKey="name"
-                                >
-                                    {[
-                                        { name: "Entradas", value: totalEntries, color: "#10b981" },
-                                        { name: "Saídas", value: totalExits, color: "#ef4444" },
-                                    ].map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                                <Legend formatter={(value: string, entry: any) => `${value}: ${formatCurrency(entry.payload.value)}`} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                    </div>
-                </div>
-
-                {/* Filtros */}
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-lg p-4">
-                    <div className="flex flex-col sm:flex-row gap-3 justify-between mb-4">
-                        <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
-                            <input
-                                type="text"
-                                placeholder="Buscar por descrição…"
-                                value={search}
-                                onChange={(e) => {
-                                    setSearch(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                                className="w-full h-9 pl-9 pr-3 text-[13px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-md text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-violet-500/15 focus:border-violet-500 hover:border-slate-300 dark:hover:border-white/15 transition-colors"
+                        {/* mini progress */}
+                        <div className="mt-3 h-1.5 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.min(100, entriesShare)}%` }}
+                                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500"
                             />
                         </div>
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className="flex items-center gap-2 px-5 py-3 border border-gray-300 dark:border-white/15 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800"
-                        >
-                            <img src="https://cdn-icons-png.flaticon.com/512/3161/3161370.png" className="w-5 h-5" />
-                            {showFilters ? "Ocultar" : "Filtros"}
-                        </button>
-                    </div>
+                        <p className="mt-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
+                            {entriesShare.toFixed(0)}% do volume foi entrada
+                        </p>
+                    </motion.div>
 
-                    <div className="mb-4">
-                        <label className="block text-sm  text-gray-700 dark:text-slate-200 mb-2 font-sans">Filtros</label>
-                        <div className="flex flex-wrap gap-2">
-                            {[
-                                { value: "", label: "Todas as datas", icon: "📅" },
-                                { value: "today", label: "Hoje", icon: "📆" },
-                                { value: "yesterday", label: "Ontem", icon: "📋" },
-                                { value: "this-week", label: "Esta semana", icon: "📊" },
-                                { value: "last-7-days", label: "Últimos 7 dias", icon: "🗓️" },
-                                { value: "this-month", label: "Este mês", icon: "📈" },
-                                { value: "last-month", label: "Mês passado", icon: "📉" },
-                                { value: "last-30-days", label: "Últimos 30 dias", icon: "🗂️" },
-                            ].map((f) => (
-                                <button
-                                    key={f.value}
-                                    onClick={() => handleQuickDateFilterChange(f.value)}
-                                    className={`px-3 py-1.5 rounded-full text-sm font-[Inter] font-medium transition ${quickDateFilter === f.value
-                                        ? "bg-[#780087] text-white shadow-md"
-                                        : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
-                                        }`}
-                                >
-                                    {f.icon} {f.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Filtros rápidos em pills */}
-                    <div className="flex flex-wrap gap-2 mb-4 font-poppins">
-                        {[
-                            { value: "ALL", label: "Todos", icon: "💸" },
-                            { value: "ENTRY", label: "Entradas", icon: "➕" },
-                            { value: "EXIT", label: "Saídas", icon: "➖" },
-                            { value: "SALE", label: "Vendas", icon: "💰" },
-                            { value: "EXPENSE", label: "Despesas", icon: "🧾" },
-                            { value: "CHANGE", label: "Troco", icon: "💱" },
-                            { value: "WITHDRAWAL", label: "Saques", icon: "🏧" },
-                            { value: "PAYMENT", label: "Pagamentos", icon: "💳" },
-                        ].map((f) => (
-                            <button
-                                key={f.value}
-                                onClick={() => handleFilterChange(f.value as FilterType)}
-                                className={`px-3 py-1.5 rounded-full text-sm font-[Inter] font-medium transition ${quickDateFilter === f.value
-                                    ? "bg-[#780087] text-white shadow-md"
-                                    : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
-                                    }`}
-                            >
-                                {f.icon} {f.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    {showFilters && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-100 dark:border-white/5">
+                    {/* Total transações */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.2 }}
+                        className="group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 hover:border-violet-300 dark:hover:border-violet-500/40 hover:shadow-lg hover:shadow-violet-500/5 transition-all"
+                    >
+                        <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-violet-500 to-fuchsia-500" />
+                        <div className="flex items-start justify-between">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Tipo</label>
-                                <select
-                                    value={filter}
-                                    onChange={(e) => handleFilterChange(e.target.value as FilterType)}
-                                    className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl"
-                                >
-                                    <option value="ALL">Todos</option>
-                                    <option value="ENTRY">➕ Entradas</option>
-                                    <option value="EXIT">➖ Saídas</option>
-                                    <option value="SALE">💰 Vendas</option>
-                                    <option value="CHANGE">💱 Troco</option>
-                                    <option value="OTHER_IN">📦 Outros (Entrada)</option>
-                                    <option value="EXPENSE">🧾 Despesas</option>
-                                    <option value="WITHDRAWAL">🏧 Saques</option>
-                                    <option value="PAYMENT">💳 Pagamentos</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Data Inicial</label>
-                                <input
-                                    type="date"
-                                    value={dateFrom}
-                                    onChange={(e) => {
-                                        setDateFrom(e.target.value)
-                                        setQuickDateFilter("")
-                                        setCurrentPage(1)
-                                    }}
-                                    className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Data Final</label>
-                                <input
-                                    type="date"
-                                    value={dateTo}
-                                    onChange={(e) => {
-                                        setDateTo(e.target.value)
-                                        setQuickDateFilter("")
-                                        setCurrentPage(1)
-                                    }}
-                                    className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-xl"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <Input
-                                    label="Valor Mín."
-                                    value={valueMin}
-                                    onChange={(v: string) => {
-                                        setValueMin(v)
-                                        setCurrentPage(1)
-                                    }}
-                                />
-                                <Input
-                                    label="Valor Máx."
-                                    value={valueMax}
-                                    onChange={(v: string) => {
-                                        setValueMax(v)
-                                        setCurrentPage(1)
-                                    }}
-                                />
+                                <div className="flex items-center gap-2">
+                                    <span className="w-8 h-8 rounded-lg bg-violet-50 text-violet-700 ring-1 ring-violet-100 dark:bg-violet-500/10 dark:text-violet-400 dark:ring-violet-500/20 flex items-center justify-center">
+                                        <Receipt className="w-4 h-4" strokeWidth={2} />
+                                    </span>
+                                    <p className="text-[10.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Lançamentos</p>
+                                </div>
+                                <p className="mt-3 text-[22px] font-semibold leading-none text-slate-900 dark:text-white tabular-nums tracking-tight">
+                                    <CountUp end={totalCount} duration={0.8} separator="." />
+                                </p>
+                                <p className="mt-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
+                                    Ticket médio <span className="font-mono text-slate-700 dark:text-slate-200">{formatCurrency(avgTicket)}</span>
+                                </p>
                             </div>
                         </div>
-                    )}
+                        <div className="absolute bottom-0 right-0 w-24 h-12 opacity-70">
+                            <ResponsiveContainer>
+                                <BarChart data={sparkCount}>
+                                    <Bar dataKey="v" fill="#a78bfa" radius={[2, 2, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </motion.div>
+                </div>
 
-                    <ExportPdfDropdown
-                        movements={movements}
-                        generateAllPdf={generateMovementsPdf}
-                        generateTodayPdf={generateTodayPdf}
-                    />
-
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-6 mb-4 pb-4 border-b border-gray-200 dark:border-white/10 font-poppins">
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <label className="text-sm font-sans font-medium text-gray-700 dark:text-slate-200">Ordenar por:</label>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handleSortChange("date")}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "date" ? "bg-[#780087] text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
-                                            }`}
-                                    >
-                                        Data
-                                        {sortField === "date" &&
-                                            (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                                    </button>
-                                    <button
-                                        onClick={() => handleSortChange("value")}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "value" ? "bg-[#780087] text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
-                                            }`}
-                                    >
-                                        Valor
-                                        {sortField === "value" &&
-                                            (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                                    </button>
-                                    <button
-                                        onClick={() => handleSortChange("description")}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-sans font-medium transition ${sortField === "description"
-                                            ? "bg-[#780087] text-white"
-                                            : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
-                                            }`}
-                                    >
-                                        Descrição
-                                        {sortField === "description" &&
-                                            (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                                    </button>
+                {/* CHARTS row: composição + tendência diária */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-6">
+                    {/* DONUT */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.25 }}
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl"
+                    >
+                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                            <div>
+                                <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Composição</h3>
+                                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Entradas vs saídas</p>
+                            </div>
+                            <Layers className="w-4 h-4 text-slate-400" />
+                        </div>
+                        <div className="p-4">
+                            {totalVolume === 0 ? (
+                                <div className="h-44 grid place-items-center text-[12.5px] text-slate-400">Sem dados no recorte</div>
+                            ) : (
+                                <div className="h-44">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={[
+                                                    { name: "Entradas", value: totalEntries, color: "#10b981" },
+                                                    { name: "Saídas", value: totalExits, color: "#ef4444" },
+                                                ]}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={48}
+                                                outerRadius={72}
+                                                paddingAngle={3}
+                                                dataKey="value"
+                                                stroke="none"
+                                                isAnimationActive
+                                                animationDuration={500}
+                                            >
+                                                <Cell fill="#10b981" />
+                                                <Cell fill="#ef4444" />
+                                            </Pie>
+                                            <Tooltip
+                                                formatter={(value: number) => formatCurrency(value)}
+                                                contentStyle={{
+                                                    backgroundColor: "#0f172a",
+                                                    border: "none",
+                                                    borderRadius: 8,
+                                                    color: "#fff",
+                                                    fontSize: 12,
+                                                }}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-2 mt-2 text-[12px]">
+                                <div className="flex items-center justify-between p-2 rounded-md bg-emerald-50/60 dark:bg-emerald-950/20">
+                                    <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500" /> Entradas
+                                    </span>
+                                    <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-300">{entriesShare.toFixed(0)}%</span>
+                                </div>
+                                <div className="flex items-center justify-between p-2 rounded-md bg-rose-50/60 dark:bg-rose-950/20">
+                                    <span className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300">
+                                        <span className="w-2 h-2 rounded-full bg-rose-500" /> Saídas
+                                    </span>
+                                    <span className="font-mono font-semibold text-rose-700 dark:text-rose-300">{(100 - entriesShare).toFixed(0)}%</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm font-sans font-medium text-gray-700 dark:text-slate-200">Itens por página:</label>
+                    </motion.div>
+
+                    {/* TREND 14 dias */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.3 }}
+                        className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl"
+                    >
+                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                            <div>
+                                <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Tendência diária</h3>
+                                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">Fluxo dos últimos 14 dias</p>
+                            </div>
+                            <div className="flex items-center gap-3 text-[11px]">
+                                <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500" /> Entradas
+                                </span>
+                                <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                                    <span className="w-2 h-2 rounded-full bg-rose-500" /> Saídas
+                                </span>
+                            </div>
+                        </div>
+                        <div className="p-3 h-48">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={dailyTrend} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="grad-en" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
+                                            <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="grad-ex" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#ef4444" stopOpacity={0.35} />
+                                            <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.45} vertical={false} />
+                                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)} />
+                                    <Tooltip
+                                        formatter={(value: number) => formatCurrency(value)}
+                                        contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: 8, color: "#fff", fontSize: 12 }}
+                                        labelStyle={{ color: "#cbd5e1" }}
+                                    />
+                                    <Area type="monotone" dataKey="entradas" stroke="#10b981" strokeWidth={2} fill="url(#grad-en)" isAnimationActive animationDuration={700} />
+                                    <Area type="monotone" dataKey="saidas" stroke="#ef4444" strokeWidth={2} fill="url(#grad-ex)" isAnimationActive animationDuration={700} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* CATEGORY BREAKDOWN */}
+                {categoryBreakdown.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.35 }}
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl mb-6"
+                    >
+                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                            <div>
+                                <h3 className="text-[13.5px] font-semibold text-slate-900 dark:text-white">Por categoria</h3>
+                                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">{categoryBreakdown.length} categoria(s) ativas</p>
+                            </div>
+                            <Hash className="w-4 h-4 text-slate-400" />
+                        </div>
+                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {categoryBreakdown.map((c) => {
+                                const pct = totalVolume > 0 ? (c.total / totalVolume) * 100 : 0
+                                return (
+                                    <motion.div
+                                        key={c.category}
+                                        whileHover={{ scale: 1.02 }}
+                                        className="p-3 rounded-lg border border-slate-200 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/15 transition-colors cursor-pointer"
+                                        onClick={() => handleFilterChange(c.category as FilterType)}
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+                                                <span className="text-[12.5px] font-medium text-slate-700 dark:text-slate-200">{c.label}</span>
+                                            </div>
+                                            <span className="text-[10.5px] text-slate-500 dark:text-slate-400">{c.count}x</span>
+                                        </div>
+                                        <p className="text-[16px] font-mono font-semibold text-slate-900 dark:text-white tabular-nums">
+                                            {formatCurrency(c.total)}
+                                        </p>
+                                        <div className="mt-2 h-1.5 rounded-full bg-slate-100 dark:bg-white/[0.04] overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${pct}%` }}
+                                                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                                                className="h-full rounded-full"
+                                                style={{ backgroundColor: c.color }}
+                                            />
+                                        </div>
+                                        <p className="mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">{pct.toFixed(1)}% do volume</p>
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* FILTERS + TABLE */}
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-xl"
+                >
+                    {/* TOOLBAR */}
+                    <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                        <div className="flex flex-col lg:flex-row gap-3 lg:items-center justify-between mb-3">
+                            <div className="relative flex-1 max-w-md">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={1.75} />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por descrição…"
+                                    value={search}
+                                    onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }}
+                                    className="w-full h-10 pl-10 pr-3 text-[13px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/[0.08] rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-violet-500/15 focus:border-violet-500 transition-colors"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <ExportPdfDropdown
+                                    movements={movements}
+                                    generateAllPdf={generateMovementsPdf}
+                                    generateTodayPdf={generateTodayPdf}
+                                />
+                                <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/[0.08] p-0.5 bg-slate-50 dark:bg-slate-950">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode("table")}
+                                        className={`flex items-center gap-1 h-8 px-2.5 rounded-md text-[11.5px] font-medium transition-colors ${viewMode === "table" ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}
+                                    >
+                                        <ListIcon className="w-3.5 h-3.5" /> Tabela
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode("cards")}
+                                        className={`flex items-center gap-1 h-8 px-2.5 rounded-md text-[11.5px] font-medium transition-colors ${viewMode === "cards" ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}
+                                    >
+                                        <LayoutGrid className="w-3.5 h-3.5" /> Cards
+                                    </button>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[12.5px] font-medium border transition-colors ${showFilters ? "bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-800" : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]"}`}
+                                >
+                                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                                    Filtros avançados
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Quick date pills */}
+                        <div className="flex items-center gap-1.5 flex-wrap mb-3">
+                            <CalendarDays className="w-3.5 h-3.5 text-slate-400 mr-1" />
+                            {[
+                                { value: "", label: "Tudo" },
+                                { value: "today", label: "Hoje" },
+                                { value: "yesterday", label: "Ontem" },
+                                { value: "this-week", label: "Semana" },
+                                { value: "last-7-days", label: "7 dias" },
+                                { value: "this-month", label: "Mês" },
+                                { value: "last-month", label: "Mês anterior" },
+                                { value: "last-30-days", label: "30 dias" },
+                            ].map((f) => (
+                                <motion.button
+                                    key={f.value}
+                                    onClick={() => handleQuickDateFilterChange(f.value)}
+                                    whileTap={{ scale: 0.95 }}
+                                    className={`px-3 h-7 rounded-full text-[11.5px] font-medium transition-colors border ${quickDateFilter === f.value
+                                        ? "bg-violet-600 text-white border-violet-600"
+                                        : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:border-violet-300 hover:text-violet-700"}`}
+                                >
+                                    {f.label}
+                                </motion.button>
+                            ))}
+                        </div>
+
+                        {/* Category chips */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            <ListFilter className="w-3.5 h-3.5 text-slate-400 mr-1" />
+                            {[
+                                { value: "ALL", label: "Todas", icon: "💸", color: "slate" },
+                                { value: "ENTRY", label: "Entradas", icon: "➕", color: "emerald" },
+                                { value: "EXIT", label: "Saídas", icon: "➖", color: "rose" },
+                                { value: "SALE", label: "Vendas", icon: "💰", color: "emerald" },
+                                { value: "EXPENSE", label: "Despesas", icon: "🧾", color: "rose" },
+                                { value: "CHANGE", label: "Troco", icon: "💱", color: "teal" },
+                                { value: "WITHDRAWAL", label: "Saques", icon: "🏧", color: "orange" },
+                                { value: "PAYMENT", label: "Pagamentos", icon: "💳", color: "red" },
+                            ].map((f) => {
+                                const active = filter === f.value
+                                return (
+                                    <motion.button
+                                        key={f.value}
+                                        onClick={() => handleFilterChange(f.value as FilterType)}
+                                        whileTap={{ scale: 0.95 }}
+                                        className={`flex items-center gap-1 px-2.5 h-7 rounded-full text-[11.5px] font-medium transition-colors border ${active
+                                            ? `bg-${f.color}-50 dark:bg-${f.color}-950/40 text-${f.color}-700 dark:text-${f.color}-300 border-${f.color}-300 dark:border-${f.color}-800`
+                                            : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:border-slate-300"}`}
+                                    >
+                                        <span>{f.icon}</span>
+                                        <span>{f.label}</span>
+                                    </motion.button>
+                                )
+                            })}
+                        </div>
+
+                        {/* Advanced filters */}
+                        <AnimatePresence>
+                            {showFilters && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 mt-3 border-t border-slate-100 dark:border-white/[0.06]">
+                                        <div>
+                                            <label className="block text-[11.5px] font-medium text-slate-600 dark:text-slate-300 mb-1.5">Tipo detalhado</label>
+                                            <select
+                                                value={filter}
+                                                onChange={(e) => handleFilterChange(e.target.value as FilterType)}
+                                                className="w-full p-2.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-[13px] bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                            >
+                                                <option value="ALL">Todos</option>
+                                                <option value="ENTRY">➕ Entradas</option>
+                                                <option value="EXIT">➖ Saídas</option>
+                                                <option value="SALE">💰 Vendas</option>
+                                                <option value="CHANGE">💱 Troco</option>
+                                                <option value="OTHER_IN">📦 Outros (Entrada)</option>
+                                                <option value="EXPENSE">🧾 Despesas</option>
+                                                <option value="WITHDRAWAL">🏧 Saques</option>
+                                                <option value="PAYMENT">💳 Pagamentos</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11.5px] font-medium text-slate-600 dark:text-slate-300 mb-1.5">Data inicial</label>
+                                            <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setQuickDateFilter(""); setCurrentPage(1) }} className="w-full p-2.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-[13px] bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11.5px] font-medium text-slate-600 dark:text-slate-300 mb-1.5">Data final</label>
+                                            <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setQuickDateFilter(""); setCurrentPage(1) }} className="w-full p-2.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-[13px] bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <Input label="Valor mín." value={valueMin} onChange={(v: string) => { setValueMin(v); setCurrentPage(1) }} />
+                                            <Input label="Valor máx." value={valueMax} onChange={(v: string) => { setValueMax(v); setCurrentPage(1) }} />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Active filter chips */}
+                        {activeFilters.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                className="flex items-center gap-1.5 flex-wrap mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.06]"
+                            >
+                                <FilterIcon className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 mr-1">Filtros ativos:</span>
+                                {activeFilters.map((f) => (
+                                    <span key={f.key} className="inline-flex items-center gap-1 px-2.5 h-6 rounded-full text-[11px] font-medium bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-900/40">
+                                        {f.label}
+                                        <button type="button" onClick={f.onClear} className="hover:bg-violet-200 dark:hover:bg-violet-900/40 rounded-full p-0.5 -mr-1">
+                                            <X className="w-2.5 h-2.5" />
+                                        </button>
+                                    </span>
+                                ))}
+                                <button type="button" onClick={clearAllFilters} className="text-[11px] text-rose-600 hover:text-rose-700 ml-1 underline-offset-2 hover:underline">
+                                    Limpar tudo
+                                </button>
+                            </motion.div>
+                        )}
+                    </div>
+
+                    {/* SORT BAR */}
+                    <div className="px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.01]">
+                        <div className="flex items-center gap-2 text-[12px]">
+                            <span className="text-slate-500 dark:text-slate-400">Ordenar:</span>
+                            {(["date", "value", "description"] as SortField[]).map((field) => {
+                                const active = sortField === field
+                                const labels = { date: "Data", value: "Valor", description: "Descrição" }
+                                return (
+                                    <button
+                                        key={field}
+                                        onClick={() => handleSortChange(field)}
+                                        className={`flex items-center gap-1 h-7 px-2.5 rounded-md text-[12px] font-medium transition-colors ${active ? "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
+                                    >
+                                        {labels[field]}
+                                        {active && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        <div className="flex items-center gap-3 text-[12px]">
+                            <span className="text-slate-500 dark:text-slate-400">
+                                {sorted.length === 0 ? "Nenhum resultado" : `${startIndex + 1}–${Math.min(endIndex, sorted.length)} de ${sorted.length}`}
+                            </span>
                             <select
                                 value={itemsPerPage}
-                                onChange={(e) => {
-                                    setItemsPerPage(Number(e.target.value))
-                                    setCurrentPage(1)
-                                }}
-                                className="px-3 py-1.5 border border-gray-300 dark:border-white/15 rounded-lg text-sm font-sans"
+                                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1) }}
+                                className="px-2 h-7 border border-slate-200 dark:border-white/[0.08] rounded-md text-[12px] bg-white dark:bg-slate-900"
                             >
-                                <option value={5}>5</option>
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
-                                <option value={50}>50</option>
-                                <option value={100}>100</option>
+                                <option value={5}>5/pág</option>
+                                <option value={10}>10/pág</option>
+                                <option value={20}>20/pág</option>
+                                <option value={50}>50/pág</option>
+                                <option value={100}>100/pág</option>
                             </select>
                         </div>
                     </div>
 
-                    <div className="text-sm text-gray-600 dark:text-slate-300 mb-4 font-sans">
-                        Mostrando {startIndex + 1} a {Math.min(endIndex, sorted.length)} de {sorted.length} movimentações
-                    </div>
-
-                    {/* Tabela */}
-                    <div className="overflow-x-auto mt-8 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-200 dark:border-white/10">
-                        {paginatedMovements.length === 0 ? (
-                            <div className="text-center py-16 text-gray-500 dark:text-slate-400 font-sans">
-                                <p className="text-lg">🔍 Nenhuma movimentação encontrada.</p>
-                                <p className="text-sm mt-1">Ajuste os filtros.</p>
+                    {/* CONTENT: TABLE / CARDS */}
+                    {paginatedMovements.length === 0 ? (
+                        <div className="text-center py-20">
+                            <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 dark:bg-white/[0.04] grid place-items-center mb-4">
+                                <Search className="w-7 h-7 text-slate-400" />
                             </div>
-                        ) : (
-                            <table className="w-full font-poppins">
-                                <thead className="bg-gradient-to-r from-[#780087] to-[#9d00b8] text-white sticky top-0 z-10 font-open_sans">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Data</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Descrição</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Pagamento</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Banco</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Tipo</th>
-                                        <th className="px-6 py-4 text-right text-sm font-semibold">Valor</th>
-                                        <th className="px-6 py-4 text-center text-sm font-semibold">Ações</th>
+                            <p className="text-[15px] font-medium text-slate-700 dark:text-slate-200">Nenhuma movimentação encontrada</p>
+                            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5">Ajuste os filtros para ver mais resultados.</p>
+                            {activeFilters.length > 0 && (
+                                <button onClick={clearAllFilters} className="mt-4 inline-flex items-center gap-1.5 px-4 h-9 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[12.5px] font-medium">
+                                    <X className="w-3.5 h-3.5" /> Limpar filtros
+                                </button>
+                            )}
+                        </div>
+                    ) : viewMode === "table" ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/[0.06]">
+                                    <tr className="text-[10.5px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        <th className="px-5 py-3 text-left font-semibold">Data</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Descrição</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Categoria</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Pagamento</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Banco</th>
+                                        <th className="px-5 py-3 text-right font-semibold">Valor</th>
+                                        <th className="px-5 py-3 text-center font-semibold w-12"></th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200 bg-white dark:bg-slate-900">
-                                    {paginatedMovements.map((m) => (
-                                        <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-slate-800 odd:bg-gray-50 dark:odd:bg-slate-950 transition-opacity duration-200">
-                                            <td className="px-6 py-4 text-sm text-gray-700 dark:text-slate-200">
-                                                {formatDate(m.date)}
-                                                {m.date && (
-                                                    <>
-                                                        <br />
-                                                        <span className="text-xs text-gray-500 dark:text-slate-400">{formatTime(m.date)}</span>
-                                                    </>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{m.description}</td>
-                                            <td className="px-6 py-4 text-sm">
-                                                {m.typePayment ? (
-                                                    <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                        {paymentMethodLabels[m.typePayment]}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-gray-400 text-xs">— N/A —</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm">
-                                                {m.bankId && bankMap.get(m.bankId) ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
-                                                        <span
-                                                            className="w-2 h-2 rounded-full"
-                                                            style={{ backgroundColor: bankMap.get(m.bankId)!.corHex }}
+                                <tbody>
+                                    <AnimatePresence>
+                                        {paginatedMovements.map((m, idx) => {
+                                            const sub = mapCategoryToSubtype(m.category as string)
+                                            const COLORS: Record<Subtype, string> = {
+                                                SALE: "border-l-emerald-500",
+                                                CHANGE: "border-l-teal-500",
+                                                OTHER_IN: "border-l-green-500",
+                                                EXPENSE: "border-l-rose-500",
+                                                WITHDRAWAL: "border-l-orange-500",
+                                                PAYMENT: "border-l-red-500",
+                                            }
+                                            const bank = m.bankId ? bankMap.get(m.bankId) : null
+                                            return (
+                                                <motion.tr
+                                                    key={m.id}
+                                                    initial={{ opacity: 0, y: 6 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0 }}
+                                                    transition={{ duration: 0.2, delay: idx * 0.015 }}
+                                                    className={`group border-b border-slate-100 dark:border-white/[0.04] border-l-2 ${COLORS[sub]} hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors`}
+                                                >
+                                                    <td className="px-5 py-3 text-[12.5px] text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                                                        <div className="font-medium">{formatDate(m.date)}</div>
+                                                        {m.date && <div className="text-[10.5px] text-slate-500 dark:text-slate-400">{formatTime(m.date)}</div>}
+                                                    </td>
+                                                    <td className="px-5 py-3 text-[12.5px] font-medium text-slate-900 dark:text-white max-w-md">
+                                                        <div className="line-clamp-2">{m.description}</div>
+                                                    </td>
+                                                    <td className="px-5 py-3 text-[12.5px]">
+                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${m.type === "ENTRY" ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40" : "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40"}`}>
+                                                            {typeLabels[sub]}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-5 py-3 text-[12.5px]">
+                                                        {m.typePayment ? (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300">
+                                                                <CreditCard className="w-2.5 h-2.5" />
+                                                                {paymentMethodLabels[m.typePayment]}
+                                                            </span>
+                                                        ) : (<span className="text-slate-400 text-[11px]">—</span>)}
+                                                    </td>
+                                                    <td className="px-5 py-3 text-[12.5px]">
+                                                        {bank ? (
+                                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200">
+                                                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: bank.corHex }} />
+                                                                {bank.name}
+                                                            </span>
+                                                        ) : (<span className="text-slate-400 text-[11px]">—</span>)}
+                                                    </td>
+                                                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                                                        <span className={`text-[13.5px] font-mono font-semibold tabular-nums ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                                            {m.type === "ENTRY" ? "+" : "−"} {formatCurrency(m.value)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-3 py-3 text-center">
+                                                        <ActionsDropdown
+                                                            movement={m}
+                                                            onView={openViewModal}
+                                                            onEdit={openEditModal}
+                                                            onDelete={openDeleteModal}
+                                                            onReverse={handleReverse}
+                                                            isDeleting={deletingId === m.id}
                                                         />
-                                                        {bankMap.get(m.bankId)!.name}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-gray-400 text-xs">—</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm">
-                                                <span
-                                                    className={`inline-flex px-3 py-1 rounded-full text-xs font-medium
-                                                             ${m.type === "ENTRY" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                                                >
-                                                    {typeLabels[mapCategoryToSubtype(m.category)]}
+                                                    </td>
+                                                </motion.tr>
+                                            )
+                                        })}
+                                    </AnimatePresence>
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <AnimatePresence>
+                                {paginatedMovements.map((m, idx) => {
+                                    const sub = mapCategoryToSubtype(m.category as string)
+                                    const bank = m.bankId ? bankMap.get(m.bankId) : null
+                                    return (
+                                        <motion.div
+                                            key={m.id}
+                                            initial={{ opacity: 0, scale: 0.97 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.2, delay: idx * 0.02 }}
+                                            whileHover={{ y: -3 }}
+                                            className={`relative p-4 rounded-xl border bg-white dark:bg-slate-900 hover:shadow-md transition-all ${m.type === "ENTRY" ? "border-emerald-200/60 dark:border-emerald-900/30" : "border-rose-200/60 dark:border-rose-900/30"}`}
+                                        >
+                                            <div className={`absolute inset-x-0 top-0 h-[3px] rounded-t-xl ${m.type === "ENTRY" ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-gradient-to-r from-rose-500 to-red-500"}`} />
+                                            <div className="flex items-start justify-between mb-2">
+                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium border ${m.type === "ENTRY" ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40" : "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40"}`}>
+                                                    {typeLabels[sub]}
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-semibold text-right">
-                                                <span
-                                                    className={`inline-flex items-center gap-1 ${m.type === "ENTRY" ? "text-green-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
-                                                        }`}
-                                                >
-                                                    {m.type === "ENTRY" ? "+" : "-"} R$ {formatCurrency(m.value)}
-                                                </span>
-                                            </td>
-                                            {/* NOVO: Coluna de Ações com Dropdown de 3 pontos */}
-                                            <td className="px-6 py-4 text-sm text-center">
                                                 <ActionsDropdown
                                                     movement={m}
                                                     onView={openViewModal}
@@ -967,86 +1381,74 @@ export function MovementHistory() {
                                                     onReverse={handleReverse}
                                                     isDeleting={deletingId === m.id}
                                                 />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
+                                            </div>
+                                            <p className="text-[13px] font-medium text-slate-900 dark:text-white line-clamp-2 mb-3">{m.description}</p>
+                                            <p className={`text-[20px] font-mono font-semibold tabular-nums ${m.type === "ENTRY" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                                {m.type === "ENTRY" ? "+" : "−"} {formatCurrency(m.value)}
+                                            </p>
+                                            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04] space-y-1.5 text-[11px]">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><Calendar className="w-3 h-3" /> Data</span>
+                                                    <span className="text-slate-700 dark:text-slate-200">{formatDate(m.date)} · {formatTime(m.date)}</span>
+                                                </div>
+                                                {m.typePayment && (
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Pagamento</span>
+                                                        <span className="text-slate-700 dark:text-slate-200">{paymentMethodLabels[m.typePayment]}</span>
+                                                    </div>
+                                                )}
+                                                {bank && (
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><Landmark className="w-3 h-3" /> Banco</span>
+                                                        <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-200">
+                                                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: bank.corHex }} />
+                                                            {bank.name}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    )
+                                })}
+                            </AnimatePresence>
+                        </div>
+                    )}
 
+                    {/* PAGINATION */}
                     {totalPages > 1 && (
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200 dark:border-white/10">
-                            <div className="text-sm text-gray-600 dark:text-slate-300 font-sans">
-                                Página {currentPage} de {totalPages}
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3 border-t border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.01]">
+                            <div className="text-[12px] text-slate-500 dark:text-slate-400">
+                                Página <span className="font-semibold text-slate-700 dark:text-slate-200">{currentPage}</span> de <span className="font-semibold text-slate-700 dark:text-slate-200">{totalPages}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setCurrentPage(1)}
-                                    disabled={currentPage === 1}
-                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                                    title="Primeira página"
-                                >
-                                    <ChevronsLeft className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                                    disabled={currentPage === 1}
-                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                                    title="Página anterior"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-
-                                {/* Page numbers */}
-                                <div className="flex gap-1">
+                            <div className="flex items-center gap-1">
+                                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Primeira"><ChevronsLeft className="w-4 h-4" /></button>
+                                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Anterior"><ChevronLeft className="w-4 h-4" /></button>
+                                <div className="flex gap-1 mx-1">
                                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                                         let pageNum
-                                        if (totalPages <= 5) {
-                                            pageNum = i + 1
-                                        } else if (currentPage <= 3) {
-                                            pageNum = i + 1
-                                        } else if (currentPage >= totalPages - 2) {
-                                            pageNum = totalPages - 4 + i
-                                        } else {
-                                            pageNum = currentPage - 2 + i
-                                        }
-
+                                        if (totalPages <= 5) pageNum = i + 1
+                                        else if (currentPage <= 3) pageNum = i + 1
+                                        else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i
+                                        else pageNum = currentPage - 2 + i
+                                        const active = currentPage === pageNum
                                         return (
-                                            <button
+                                            <motion.button
                                                 key={pageNum}
                                                 onClick={() => setCurrentPage(pageNum)}
-                                                className={`px-3 py-1 rounded-lg text-sm font-sans font-medium transition ${currentPage === pageNum
-                                                    ? "bg-[#780087] text-white"
-                                                    : "border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800"
-                                                    }`}
+                                                whileTap={{ scale: 0.95 }}
+                                                className={`min-w-[28px] h-7 px-2 rounded-md text-[12px] font-medium transition-colors ${active ? "bg-violet-600 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"}`}
                                             >
                                                 {pageNum}
-                                            </button>
+                                            </motion.button>
                                         )
                                     })}
                                 </div>
-
-                                <button
-                                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                                    title="Próxima página"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => setCurrentPage(totalPages)}
-                                    disabled={currentPage === totalPages}
-                                    className="p-2 rounded-lg border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                                    title="Última página"
-                                >
-                                    <ChevronsRight className="w-5 h-5" />
-                                </button>
+                                <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Próxima"><ChevronRight className="w-4 h-4" /></button>
+                                <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Última"><ChevronsRight className="w-4 h-4" /></button>
                             </div>
                         </div>
                     )}
-                </div>
+                </motion.div>
             </div>
 
             {/* Modais */}
