@@ -83,6 +83,8 @@ import { OpportunityDetailPage } from './pages/CRM/OpportunityDetailPage';
 import { ContractsListPage } from './pages/Contracts/ContractsListPage';
 import { ContractDetailPage } from './pages/Contracts/ContractDetailPage';
 import { WhatsappPage } from './pages/Communications/WhatsappPage';
+import { WhatsappContactsPage } from './pages/Communications/WhatsappContactsPage';
+import { WhatsappChatbotPage } from './pages/Communications/WhatsappChatbotPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -227,6 +229,8 @@ function AppContent() {
             <Route path="/notificacoes" element={<NotificationsPage />} />
             <Route path="/comunicacoes" element={<MessagesCenterPage />} />
             <Route path="/comunicacoes/whatsapp" element={<WhatsappPage />} />
+            <Route path="/comunicacoes/whatsapp/contatos" element={<WhatsappContactsPage />} />
+            <Route path="/comunicacoes/whatsapp/chatbot" element={<WhatsappChatbotPage />} />
 
             {/* CRM */}
             <Route path="/crm" element={<PipelinePage />} />

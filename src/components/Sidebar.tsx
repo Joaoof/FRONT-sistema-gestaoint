@@ -6,7 +6,9 @@ import { useCompany } from '../contexts/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut,
+  Bot,
   MessageCircle,
+  Users,
   Moon,
   Sun,
   Search,
@@ -131,6 +133,8 @@ const VIEW_TO_MODULE: Record<View, string> = {
   notificacoes: 'notificacoes',
   comunicacoes: 'comunicacoes',
   'comunicacoes/whatsapp': 'comunicacoes',
+  'comunicacoes/whatsapp/contatos': 'comunicacoes',
+  'comunicacoes/whatsapp/chatbot': 'comunicacoes',
   crm: 'crm',
   contratos: 'contratos',
   auditoria: 'auditoria',
@@ -319,6 +323,8 @@ const sections: MenuSection[] = [
       { id: 'notificacoes' as View, label: 'Notificações', icon: Bell },
       { id: 'comunicacoes' as View, label: 'Central de mensagens', icon: MessageCircle },
       { id: 'comunicacoes/whatsapp' as View, label: 'WhatsApp Business', icon: MessageCircle },
+      { id: 'comunicacoes/whatsapp/contatos' as View, label: 'Contatos WhatsApp', icon: Users },
+      { id: 'comunicacoes/whatsapp/chatbot' as View, label: 'Chatbot WhatsApp', icon: Bot },
       { id: 'auditoria' as View, label: 'Auditoria', icon: History },
       { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },
     ],

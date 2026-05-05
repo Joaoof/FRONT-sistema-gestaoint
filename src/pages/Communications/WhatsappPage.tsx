@@ -2872,7 +2872,13 @@ function ConversationsSidebar({
 export function WhatsappPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ConvFilter>('all');
-  const [activePeer, setActivePeer] = useState<string | null>(null);
+  // pré-seleciona peer vindo da query string (ex: vindos de /contatos ou
+  // toast de lembrete). Lê só na montagem e depois se torna estado normal.
+  const [activePeer, setActivePeer] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const p = new URLSearchParams(window.location.search).get('peer');
+    return p ? decodeURIComponent(p) : null;
+  });
   const [showActions, setShowActions] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
 

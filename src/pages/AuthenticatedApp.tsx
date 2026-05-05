@@ -69,6 +69,8 @@ export type View =
     | 'notificacoes'
     | 'comunicacoes'
     | 'comunicacoes/whatsapp'
+    | 'comunicacoes/whatsapp/contatos'
+    | 'comunicacoes/whatsapp/chatbot'
     | 'crm'
     | 'contratos'
     | 'auditoria'

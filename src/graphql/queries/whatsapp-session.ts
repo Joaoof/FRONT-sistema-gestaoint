@@ -495,6 +495,56 @@ export const ON_WHATSAPP_REMINDER_DUE = gql`
   }
 `;
 
+const CHATBOT_RULE_FIELDS = `
+  id
+  name
+  trigger
+  pattern
+  responseBody
+  priority
+  enabled
+  applyTags
+  businessHoursOnly
+  businessHoursStart
+  businessHoursEnd
+  cooldownMinutes
+  createdAt
+  updatedAt
+`;
+
+export const GET_WHATSAPP_CHATBOT_RULES = gql`
+  query GetWhatsappChatbotRules {
+    whatsappChatbotRules {
+      ${CHATBOT_RULE_FIELDS}
+    }
+  }
+`;
+
+export const CREATE_WHATSAPP_CHATBOT_RULE = gql`
+  mutation CreateWhatsappChatbotRule($input: WhatsappChatbotRuleInput!) {
+    createWhatsappChatbotRule(input: $input) {
+      ${CHATBOT_RULE_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_WHATSAPP_CHATBOT_RULE = gql`
+  mutation UpdateWhatsappChatbotRule(
+    $id: String!
+    $patch: WhatsappChatbotRulePatchInput!
+  ) {
+    updateWhatsappChatbotRule(id: $id, patch: $patch) {
+      ${CHATBOT_RULE_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_WHATSAPP_CHATBOT_RULE = gql`
+  mutation DeleteWhatsappChatbotRule($id: String!) {
+    deleteWhatsappChatbotRule(id: $id)
+  }
+`;
+
 export const SEARCH_CUSTOMERS_FOR_LINK = gql`
   query SearchCustomersForLink($search: String) {
     customers(search: $search) {
