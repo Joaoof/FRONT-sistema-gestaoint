@@ -115,3 +115,35 @@ export const DELETE_ORDER = gql`
     deleteOrder(id: $id)
   }
 `;
+
+/**
+ * Atalho "recebi o pagamento" — em uma única mutation:
+ *  1. Marca todos AccountReceivable pendentes do Order como PAID
+ *  2. Cria automaticamente um CashMovement de entrada no caixa
+ *  3. Atualiza o Order pra status=PAID
+ * Permite ao usuário não passar por 3 telas (Vendas → Contas a Receber →
+ * Movimentações). Aceita opcionalmente paymentMethod, bankId e receivedAmount.
+ */
+export const PAY_ORDER_SHORTCUT = gql`
+  mutation PayOrderShortcut(
+    $orderId: String!
+    $paymentMethod: String
+    $bankId: String
+    $receivedAmount: Float
+  ) {
+    payOrderShortcut(
+      orderId: $orderId
+      paymentMethod: $paymentMethod
+      bankId: $bankId
+      receivedAmount: $receivedAmount
+    ) {
+      id
+      number
+      status
+      paymentMethod
+      total
+      customerId
+      customerName
+    }
+  }
+`;
