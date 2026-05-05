@@ -6,16 +6,28 @@ const GRAPHQL_URI =
 
 const httpLink = new HttpLink({ uri: GRAPHQL_URI });
 
+const AUDIT_OPERATIONS = new Set([
+    'GetAuditLogs',
+    'GetAuditLog',
+    'GetAuditLogsForEntity',
+    'GetAuditLogsExportCsv',
+]);
+
 const authMiddleware = new ApolloLink((operation, forward) => {
-    const token = localStorage.getItem('accessToken'); // ou 'auth_token'
+    const token = localStorage.getItem('accessToken');
 
-    console.log('[Apollo Auth] Token encontrado:', token ? 'Sim' : 'Não');
+    const headers: Record<string, string> = {
+        authorization: token ? `Bearer ${token}` : '',
+    };
 
-    operation.setContext({
-        headers: {
-            authorization: token ? `Bearer ${token}` : '',
-        },
-    });
+    if (AUDIT_OPERATIONS.has(operation.operationName)) {
+        const auditToken = sessionStorage.getItem('auditAccessToken');
+        if (auditToken) {
+            headers['x-audit-token'] = auditToken;
+        }
+    }
+
+    operation.setContext({ headers });
 
     return forward(operation);
 });

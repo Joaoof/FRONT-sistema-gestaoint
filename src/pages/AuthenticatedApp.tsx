@@ -62,6 +62,7 @@ export type View =
     | 'agente-ia'
     | 'motoristas'
     | 'configuracoes'
+    | 'auditoria'
     | 'obras'
     | 'obras/cadastrar'
     | 'obras/transacoes'

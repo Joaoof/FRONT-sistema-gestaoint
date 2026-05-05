@@ -72,6 +72,7 @@ import { InvoicesListPage } from './pages/Invoices/InvoicesListPage';
 import { InvoiceDetailPage } from './pages/Invoices/InvoiceDetailPage';
 import { IssueInvoicePage } from './pages/Invoices/IssueInvoicePage';
 import { FiscalConfigPage } from './pages/Settings/FiscalConfigPage';
+import { AuditPage } from './pages/Audit/AuditPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -203,6 +204,9 @@ function AppContent() {
             <Route path="/notas/nova" element={<IssueInvoicePage />} />
             <Route path="/notas/:id" element={<InvoiceDetailPage />} />
             <Route path="/configuracoes/fiscal" element={<FiscalConfigPage />} />
+
+            {/* Auditoria */}
+            <Route path="/auditoria" element={<AuditPage />} />
 
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>

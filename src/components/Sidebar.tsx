@@ -121,9 +121,10 @@ const VIEW_TO_MODULE: Record<View, string> = {
   notas: 'notas',
   'notas/nova': 'notas',
   'configuracoes/fiscal': 'configuracoes',
+  auditoria: 'auditoria',
 } as Record<string, string>;
 
-const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas']);
+const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas', 'auditoria']);
 
 function hasPermission(
   permissions: { module_key: string; permissions: string[] }[],
@@ -293,6 +294,7 @@ const sections: MenuSection[] = [
       { id: 'empresa' as View, label: 'Empresa', icon: Building2 },
       { id: 'configuracoes' as View, label: 'Configurações', icon: Settings },
       { id: 'configuracoes/fiscal' as View, label: 'Configuração fiscal', icon: Receipt },
+      { id: 'auditoria' as View, label: 'Auditoria', icon: History },
       { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },
     ],
   },
