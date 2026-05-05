@@ -129,6 +129,10 @@ export const GET_WHATSAPP_CONTACT = gql`
       isGroup
       profilePicUrl
       about
+      isBusiness
+      verifiedName
+      businessCategory
+      businessDescription
       customerId
       customerName
       totalMessages
@@ -138,5 +142,35 @@ export const GET_WHATSAPP_CONTACT = gql`
       lastMessageAt
       waLink
     }
+  }
+`;
+
+export const SEARCH_CUSTOMERS_FOR_LINK = gql`
+  query SearchCustomersForLink($search: String) {
+    customers(search: $search) {
+      id
+      name
+      document
+      phone
+      email
+    }
+  }
+`;
+
+export const LINK_CUSTOMER_TO_WHATSAPP_CONTACT = gql`
+  mutation LinkCustomerToWhatsappContact(
+    $peerNumber: String!
+    $customerId: String!
+  ) {
+    linkCustomerToWhatsappContact(
+      peerNumber: $peerNumber
+      customerId: $customerId
+    )
+  }
+`;
+
+export const UNLINK_CUSTOMER_FROM_WHATSAPP_CONTACT = gql`
+  mutation UnlinkCustomerFromWhatsappContact($peerNumber: String!) {
+    unlinkCustomerFromWhatsappContact(peerNumber: $peerNumber)
   }
 `;
