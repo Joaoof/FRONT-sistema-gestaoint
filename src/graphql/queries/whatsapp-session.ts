@@ -119,3 +119,24 @@ export const SYNC_WHATSAPP_MESSAGES_FOR_PEER = gql`
     syncWhatsappMessagesForPeer(peerNumber: $peerNumber, limit: $limit)
   }
 `;
+
+export const GET_WHATSAPP_CONTACT = gql`
+  query GetWhatsappContact($peerNumber: String!) {
+    whatsappContact(peerNumber: $peerNumber) {
+      peerNumber
+      displayName
+      phoneFormatted
+      isGroup
+      profilePicUrl
+      about
+      customerId
+      customerName
+      totalMessages
+      inboundCount
+      outboundCount
+      firstMessageAt
+      lastMessageAt
+      waLink
+    }
+  }
+`;
