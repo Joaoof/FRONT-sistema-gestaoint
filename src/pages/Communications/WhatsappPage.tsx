@@ -19,6 +19,7 @@ import {
   Clock,
   CloudCog,
   Download,
+  ExternalLink,
   EyeOff,
   Filter,
   History,
@@ -33,7 +34,6 @@ import {
   Paperclip,
   Phone,
   Plus,
-  Power,
   RefreshCcw,
   Search,
   Send,
@@ -72,7 +72,6 @@ type SessionStatus =
 interface Session {
   id: string;
   status: SessionStatus;
-  qrCode: string | null;
   phone: string | null;
   profileName: string | null;
   profilePicUrl: string | null;
@@ -331,16 +330,20 @@ function StatusPill({ status }: { status: SessionStatus }) {
 }
 
 // ════════════════════════════════════════════════════════════
-// QR Code (onboarding)
+// WAHA dashboard onboarding
 // ════════════════════════════════════════════════════════════
 
-function QrConnectScreen({
+const WAHA_DASHBOARD_URL =
+  (import.meta.env.VITE_WAHA_DASHBOARD_URL as string | undefined) ??
+  'https://devlikeaprowaha-production-52f4.up.railway.app/dashboard/';
+
+function WahaConnectScreen({
   session,
-  onConnect,
+  onRefresh,
   loading,
 }: {
   session: Session;
-  onConnect: () => void;
+  onRefresh: () => void;
   loading: boolean;
 }) {
   return (
@@ -359,16 +362,16 @@ function QrConnectScreen({
               Conecte o WhatsApp da empresa
             </h2>
             <p className="text-sm text-white/80 mt-3 leading-relaxed">
-              Atenda clientes, dispare boletos e organize conversas direto pelo
-              sistema. Conexão via WAHA — escaneie o QR e pronto.
+              O pareamento é feito direto no painel do WAHA. Depois de escanear
+              o QR por lá, volte aqui e clique em <strong>Atualizar status</strong>.
             </p>
           </div>
           <ol className="space-y-3 text-sm mt-8">
             {[
-              'Abra o WhatsApp no celular',
-              'Toque em Configurações ou ⋮',
-              'Selecione "Aparelhos conectados"',
-              'Toque em "Conectar um aparelho" e escaneie',
+              'Abra o painel do WAHA pelo botão ao lado',
+              'Crie/inicie a sessão chamada "default"',
+              'Escaneie o QR no WhatsApp do celular',
+              'Aguarde o status ficar WORKING e volte aqui',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-semibold shrink-0">
@@ -381,52 +384,33 @@ function QrConnectScreen({
         </div>
 
         <div className="p-8 flex flex-col items-center justify-center bg-slate-50">
-          {session.qrCode ? (
-            <>
-              <div className="relative">
-                <div className="absolute -inset-3 bg-gradient-to-br from-brand-200 to-brand-400 rounded-2xl blur-xl opacity-30" />
-                <div className="relative bg-white border-2 border-brand-200 rounded-2xl p-3 shadow-lg">
-                  <img
-                    src={session.qrCode}
-                    alt="QR Code"
-                    className="w-60 h-60"
-                  />
-                </div>
-              </div>
-              <button
-                onClick={onConnect}
-                disabled={loading}
-                className="mt-6 flex items-center gap-1.5 text-sm text-brand-700 hover:text-brand-800 font-medium"
-              >
-                <RefreshCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                Atualizar QR Code
-              </button>
-              <p className="text-xs text-slate-400 mt-2">
-                O QR é descartado após o pareamento
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="w-32 h-32 rounded-full bg-brand-50 flex items-center justify-center mb-6 border border-brand-100">
-                <Power className="w-14 h-14 text-brand-600" />
-              </div>
-              <button
-                onClick={onConnect}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-700 to-brand-500 text-white py-3 rounded-xl font-medium hover:from-brand-800 hover:to-brand-600 disabled:opacity-50 shadow-lg hover:shadow-xl transition-all"
-              >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Power className="w-5 h-5" />
-                )}
-                Iniciar conexão
-              </button>
-              <p className="text-xs text-slate-500 text-center mt-4">
-                Após clicar, um QR Code aparecerá aqui
-              </p>
-            </>
-          )}
+          <div className="w-32 h-32 rounded-full bg-brand-50 flex items-center justify-center mb-6 border border-brand-100">
+            <ExternalLink className="w-14 h-14 text-brand-600" />
+          </div>
+          <a
+            href={WAHA_DASHBOARD_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-700 to-brand-500 text-white py-3 rounded-xl font-medium hover:from-brand-800 hover:to-brand-600 shadow-lg hover:shadow-xl transition-all"
+          >
+            <ExternalLink className="w-5 h-5" />
+            Abrir painel do WAHA
+          </a>
+          <button
+            onClick={onRefresh}
+            disabled={loading}
+            className="w-full mt-3 flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-all"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCcw className="w-4 h-4" />
+            )}
+            Já conectei, atualizar status
+          </button>
+          <p className="text-xs text-slate-500 text-center mt-4">
+            A sessão é compartilhada — só precisa parear uma vez.
+          </p>
 
           {session.lastError && (
             <div className="mt-6 w-full bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-lg flex items-start gap-2">
@@ -1860,9 +1844,9 @@ export function WhatsappPage() {
 
       {/* Corpo */}
       {!isConnected ? (
-        <QrConnectScreen
+        <WahaConnectScreen
           session={session}
-          onConnect={handleConnect}
+          onRefresh={handleConnect}
           loading={connecting}
         />
       ) : !hasConversations ? (

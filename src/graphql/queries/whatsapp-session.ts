@@ -5,7 +5,6 @@ const SESSION_FIELDS = `
   companyId
   instanceName
   status
-  qrCode
   phone
   profileName
   profilePicUrl
