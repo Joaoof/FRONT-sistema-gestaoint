@@ -40,6 +40,9 @@ const MESSAGE_FIELDS = `
   mediaType
   mediaUrl
   mediaMimetype
+  quotedMessageId
+  quotedBody
+  quotedParticipant
   createdAt
   sentAt
   deliveredAt
@@ -214,6 +217,72 @@ export const GET_WHATSAPP_GROUP_PARTICIPANTS = gql`
       jid
       phone
       isAdmin
+    }
+  }
+`;
+
+export const EDIT_WHATSAPP_MESSAGE = gql`
+  mutation EditWhatsappMessage($messageId: String!, $newBody: String!) {
+    editWhatsappMessage(messageId: $messageId, newBody: $newBody) {
+      ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_WHATSAPP_MESSAGE = gql`
+  mutation DeleteWhatsappMessage($messageId: String!) {
+    deleteWhatsappMessage(messageId: $messageId)
+  }
+`;
+
+export const STAR_WHATSAPP_MESSAGE = gql`
+  mutation StarWhatsappMessage($messageId: String!, $star: Boolean!) {
+    starWhatsappMessage(messageId: $messageId, star: $star)
+  }
+`;
+
+export const PIN_WHATSAPP_MESSAGE = gql`
+  mutation PinWhatsappMessage($messageId: String!, $pin: Boolean!) {
+    pinWhatsappMessage(messageId: $messageId, pin: $pin)
+  }
+`;
+
+export const FORWARD_WHATSAPP_MESSAGE = gql`
+  mutation ForwardWhatsappMessage($messageId: String!, $toPeerNumber: String!) {
+    forwardWhatsappMessage(messageId: $messageId, toPeerNumber: $toPeerNumber) {
+      ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const ARCHIVE_WHATSAPP_CHAT = gql`
+  mutation ArchiveWhatsappChat($peerNumber: String!, $archive: Boolean!) {
+    archiveWhatsappChat(peerNumber: $peerNumber, archive: $archive)
+  }
+`;
+
+export const ON_WHATSAPP_MESSAGE_RECEIVED = gql`
+  subscription OnWhatsappMessageReceived {
+    whatsappMessageReceived {
+      ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const ON_WHATSAPP_MESSAGE_UPDATED = gql`
+  subscription OnWhatsappMessageUpdated {
+    whatsappMessageUpdated {
+      ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const ON_WHATSAPP_PRESENCE_CHANGED = gql`
+  subscription OnWhatsappPresenceChanged($peerNumber: String) {
+    whatsappPresenceChanged(peerNumber: $peerNumber) {
+      peerNumber
+      presence
+      lastSeen
     }
   }
 `;

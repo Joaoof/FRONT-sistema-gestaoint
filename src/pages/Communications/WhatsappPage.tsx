@@ -6,7 +6,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery, useSubscription } from '@apollo/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle,
@@ -19,12 +19,19 @@ import {
   Clock,
   CloudCog,
   Download,
+  ChevronDown,
+  CornerUpLeft,
+  Edit2,
   ExternalLink,
   EyeOff,
   Filter,
   History,
   Inbox,
   Info,
+  Pin,
+  Share2,
+  Star,
+  Trash2,
   Link2,
   Link2Off,
   Loader2,
@@ -49,7 +56,10 @@ import {
 import {
   BLOCK_WHATSAPP_CONTACT,
   CONNECT_WHATSAPP,
+  DELETE_WHATSAPP_MESSAGE,
   DISCONNECT_WHATSAPP,
+  EDIT_WHATSAPP_MESSAGE,
+  FORWARD_WHATSAPP_MESSAGE,
   GET_WHATSAPP_CONTACT,
   GET_WHATSAPP_CONTACT_ABOUT,
   GET_WHATSAPP_CONVERSATIONS,
@@ -59,6 +69,9 @@ import {
   GET_WHATSAPP_SESSION,
   LINK_CUSTOMER_TO_WHATSAPP_CONTACT,
   MARK_WHATSAPP_CONVERSATION_READ,
+  ON_WHATSAPP_MESSAGE_RECEIVED,
+  ON_WHATSAPP_MESSAGE_UPDATED,
+  PIN_WHATSAPP_MESSAGE,
   REACT_TO_WHATSAPP_MESSAGE,
   RECONFIGURE_WHATSAPP_WEBHOOK,
   SEARCH_CUSTOMERS_FOR_LINK,
@@ -68,6 +81,7 @@ import {
   SEND_WHATSAPP_VIDEO,
   SEND_WHATSAPP_VOICE,
   SET_WHATSAPP_TYPING,
+  STAR_WHATSAPP_MESSAGE,
   SYNC_WHATSAPP_FROM_EVOLUTION,
   SYNC_WHATSAPP_MESSAGES_FOR_PEER,
   UNLINK_CUSTOMER_FROM_WHATSAPP_CONTACT,
@@ -116,6 +130,9 @@ interface Message {
   mediaType: string | null;
   mediaUrl: string | null;
   mediaMimetype: string | null;
+  quotedMessageId: string | null;
+  quotedBody: string | null;
+  quotedParticipant: string | null;
   createdAt: string;
   sentAt: string | null;
   deliveredAt: string | null;
@@ -637,17 +654,175 @@ function MediaContent({ message }: { message: Message }) {
   return null;
 }
 
+function QuotedPreview({
+  body,
+  participant,
+}: {
+  body: string;
+  participant: string | null;
+}) {
+  return (
+    <div className="border-l-4 border-[#00a884] bg-black/5 rounded px-2 py-1 mb-1 text-[13px] truncate">
+      {participant && (
+        <div className="text-[11px] font-semibold text-[#00a884] truncate">
+          {participant}
+        </div>
+      )}
+      <div className="truncate text-slate-700">{body}</div>
+    </div>
+  );
+}
+
+function MessageActions({
+  message,
+  onReply,
+  onEdit,
+  onDelete,
+  onStar,
+  onForward,
+  onPin,
+  isStarred,
+  isPinned,
+}: {
+  message: Message;
+  onReply?: (m: Message) => void;
+  onEdit?: (m: Message) => void;
+  onDelete?: (m: Message) => void;
+  onStar?: (m: Message) => void;
+  onForward?: (m: Message) => void;
+  onPin?: (m: Message) => void;
+  isStarred?: boolean;
+  isPinned?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        className="p-0.5 rounded hover:bg-black/10 text-[#54656f]"
+        title="Mais opções"
+      >
+        <ChevronDown className="w-4 h-4" />
+      </button>
+      {open && (
+        <div className="absolute top-6 right-0 bg-white rounded-md shadow-lg border border-slate-200 py-1 min-w-[170px] z-20">
+          {onReply && (
+            <button
+              onClick={() => {
+                setOpen(false);
+                onReply(message);
+              }}
+              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[13px] text-slate-700 flex items-center gap-2"
+            >
+              <CornerUpLeft className="w-3.5 h-3.5" />
+              Responder
+            </button>
+          )}
+          {onForward && (
+            <button
+              onClick={() => {
+                setOpen(false);
+                onForward(message);
+              }}
+              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[13px] text-slate-700 flex items-center gap-2"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              Encaminhar
+            </button>
+          )}
+          {onStar && (
+            <button
+              onClick={() => {
+                setOpen(false);
+                onStar(message);
+              }}
+              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[13px] text-slate-700 flex items-center gap-2"
+            >
+              <Star
+                className={`w-3.5 h-3.5 ${isStarred ? 'fill-yellow-400 text-yellow-500' : ''}`}
+              />
+              {isStarred ? 'Remover dos favoritos' : 'Marcar com estrela'}
+            </button>
+          )}
+          {onPin && (
+            <button
+              onClick={() => {
+                setOpen(false);
+                onPin(message);
+              }}
+              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[13px] text-slate-700 flex items-center gap-2"
+            >
+              <Pin className={`w-3.5 h-3.5 ${isPinned ? 'fill-current' : ''}`} />
+              {isPinned ? 'Desfixar' : 'Fixar'}
+            </button>
+          )}
+          {message.fromMe && onEdit && !message.body.startsWith('🚫') && (
+            <button
+              onClick={() => {
+                setOpen(false);
+                onEdit(message);
+              }}
+              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[13px] text-slate-700 flex items-center gap-2"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+              Editar
+            </button>
+          )}
+          {message.fromMe && onDelete && (
+            <button
+              onClick={() => {
+                setOpen(false);
+                onDelete(message);
+              }}
+              className="w-full text-left px-3 py-1.5 hover:bg-rose-50 text-[13px] text-rose-600 flex items-center gap-2"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Apagar para todos
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MessageBubble({
   message,
   showSender,
   onReact,
+  onReply,
+  onEdit,
+  onDelete,
+  onStar,
+  onForward,
+  onPin,
 }: {
   message: Message;
   showSender?: boolean;
   onReact?: (messageId: string, emoji: string) => void;
+  onReply?: (m: Message) => void;
+  onEdit?: (m: Message) => void;
+  onDelete?: (m: Message) => void;
+  onStar?: (m: Message) => void;
+  onForward?: (m: Message) => void;
+  onPin?: (m: Message) => void;
 }) {
   const time = fmtTime(message.createdAt);
   const isFailed = message.status === 'FAILED';
+  const isRevoked = message.body.startsWith('🚫');
   const senderLabel =
     showSender && !message.fromMe
       ? message.participantName ??
@@ -669,6 +844,21 @@ function MessageBubble({
               : 'bg-[#d9fdd3] text-slate-900'
           }`}
         >
+          <MessageActions
+            message={message}
+            onReply={onReply}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onStar={onStar}
+            onForward={onForward}
+            onPin={onPin}
+          />
+          {message.quotedBody && (
+            <QuotedPreview
+              body={message.quotedBody}
+              participant={message.quotedParticipant}
+            />
+          )}
           {message.mediaType ? (
             <div className="pb-3 space-y-1">
               <MediaContent message={message} />
@@ -686,7 +876,9 @@ function MessageBubble({
             </div>
           ) : (
             <div
-              className="text-[14.2px] break-words whitespace-pre-wrap leading-[19px] pb-3"
+              className={`text-[14.2px] break-words whitespace-pre-wrap leading-[19px] pb-3 ${
+                isRevoked ? 'italic text-slate-500' : ''
+              }`}
               dangerouslySetInnerHTML={{
                 __html: applyWhatsappFormatting(message.body),
               }}
@@ -749,6 +941,19 @@ function MessageBubble({
             {senderLabel}
           </div>
         )}
+        <MessageActions
+          message={message}
+          onReply={onReply}
+          onForward={onForward}
+          onStar={onStar}
+          onPin={onPin}
+        />
+        {message.quotedBody && (
+          <QuotedPreview
+            body={message.quotedBody}
+            participant={message.quotedParticipant}
+          />
+        )}
         {message.mediaType ? (
           <div className="pb-3 space-y-1">
             <MediaContent message={message} />
@@ -766,7 +971,9 @@ function MessageBubble({
           </div>
         ) : (
           <div
-            className="text-[14.2px] text-slate-900 break-words whitespace-pre-wrap leading-[19px] pb-3"
+            className={`text-[14.2px] text-slate-900 break-words whitespace-pre-wrap leading-[19px] pb-3 ${
+              isRevoked ? 'italic text-slate-500' : ''
+            }`}
             dangerouslySetInnerHTML={{
               __html: applyWhatsappFormatting(message.body),
             }}
@@ -781,7 +988,7 @@ function MessageBubble({
             👍
           </button>
         )}
-        <div className="absolute right-2 bottom-1 text-[10.5px] text-[#667781]">
+        <div className="absolute right-2 bottom-1 text-[10.5px] text-[#667781] flex items-center gap-1">
           {time}
         </div>
       </motion.div>
@@ -1387,6 +1594,33 @@ function ChatPanel({
   const [sendFile] = useMutation(SEND_WHATSAPP_FILE);
   const [reactToMsg] = useMutation(REACT_TO_WHATSAPP_MESSAGE);
   const [setTyping] = useMutation(SET_WHATSAPP_TYPING);
+  const [editMsgMutation] = useMutation(EDIT_WHATSAPP_MESSAGE);
+  const [deleteMsgMutation] = useMutation(DELETE_WHATSAPP_MESSAGE);
+  const [starMsgMutation] = useMutation(STAR_WHATSAPP_MESSAGE);
+  const [pinMsgMutation] = useMutation(PIN_WHATSAPP_MESSAGE);
+  const [forwardMsgMutation] = useMutation(FORWARD_WHATSAPP_MESSAGE);
+
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Real-time: assina novas mensagens recebidas e atualizações de status
+  useSubscription(ON_WHATSAPP_MESSAGE_RECEIVED, {
+    onData: ({ data }) => {
+      const msg = (
+        data?.data as {
+          whatsappMessageReceived?: { peerNumber?: string };
+        } | undefined
+      )?.whatsappMessageReceived;
+      if (msg && msg.peerNumber === peer.peerNumber) {
+        refetch();
+      }
+    },
+  });
+  useSubscription(ON_WHATSAPP_MESSAGE_UPDATED, {
+    onData: () => {
+      refetch();
+    },
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [recording, setRecording] = useState(false);
@@ -1543,15 +1777,82 @@ function ChatPanel({
       return;
     }
     try {
-      await send({
-        variables: {
-          to: peer.peerNumber,
-          body: text,
-          customerId: peer.customerId ?? undefined,
-        },
-      });
+      if (editingId) {
+        await editMsgMutation({
+          variables: { messageId: editingId, newBody: text },
+        });
+        setEditingId(null);
+      } else {
+        await send({
+          variables: {
+            to: peer.peerNumber,
+            body: text,
+            customerId: peer.customerId ?? undefined,
+            replyTo: replyingTo?.externalId ?? undefined,
+          },
+        });
+        setReplyingTo(null);
+      }
       setDraft('');
       await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const onReply = (m: Message) => {
+    setReplyingTo(m);
+    setEditingId(null);
+    textareaRef.current?.focus();
+  };
+
+  const onEdit = (m: Message) => {
+    setEditingId(m.id);
+    setReplyingTo(null);
+    setDraft(m.body);
+    textareaRef.current?.focus();
+  };
+
+  const onDelete = async (m: Message) => {
+    if (!window.confirm('Apagar esta mensagem para todos?')) return;
+    try {
+      await deleteMsgMutation({ variables: { messageId: m.id } });
+      await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const onStar = async (m: Message) => {
+    try {
+      await starMsgMutation({
+        variables: { messageId: m.id, star: true },
+      });
+      await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const onPin = async (m: Message) => {
+    try {
+      await pinMsgMutation({ variables: { messageId: m.id, pin: true } });
+      await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const onForward = async (m: Message) => {
+    const target = window.prompt(
+      'Encaminhar para qual número/grupo? (ex: 5511999998888 ou JID @g.us)',
+    );
+    if (!target) return;
+    try {
+      await forwardMsgMutation({
+        variables: { messageId: m.id, toPeerNumber: target },
+      });
+      alert('Mensagem encaminhada.');
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
     }
@@ -1731,6 +2032,12 @@ function ChatPanel({
                   message={m}
                   showSender={peer.isGroup}
                   onReact={onReact}
+                  onReply={onReply}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onStar={onStar}
+                  onForward={onForward}
+                  onPin={onPin}
                 />
               ))}
             </div>
@@ -1738,6 +2045,42 @@ function ChatPanel({
         )}
       </div>
 
+      {(replyingTo || editingId) && (
+        <div className="bg-[#f0f2f5] border-t border-[#d1d7db] px-4 py-2 flex items-start gap-3 shrink-0">
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] uppercase tracking-wide text-[#00a884] font-semibold mb-0.5 flex items-center gap-1">
+              {editingId ? (
+                <>
+                  <Edit2 className="w-3 h-3" /> Editando mensagem
+                </>
+              ) : (
+                <>
+                  <CornerUpLeft className="w-3 h-3" /> Respondendo a{' '}
+                  {replyingTo?.fromMe
+                    ? 'você'
+                    : replyingTo?.participantName ?? 'contato'}
+                </>
+              )}
+            </div>
+            <div className="text-[13px] text-slate-700 truncate border-l-4 border-[#00a884] pl-2">
+              {(editingId
+                ? messages.find((m) => m.id === editingId)?.body
+                : replyingTo?.body) ?? ''}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setReplyingTo(null);
+              setEditingId(null);
+              if (editingId) setDraft('');
+            }}
+            className="p-1 hover:bg-black/10 rounded text-[#54656f]"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       {/* Composer — barra cinza-clara estilo WhatsApp Web */}
       <form
         onSubmit={submit}
