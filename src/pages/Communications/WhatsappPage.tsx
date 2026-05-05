@@ -192,23 +192,25 @@ function getInitials(name: string | null, fallback: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-const AVATAR_GRADIENTS = [
-  'from-violet-400 to-purple-600',
-  'from-fuchsia-400 to-pink-600',
-  'from-indigo-400 to-violet-600',
-  'from-rose-400 to-pink-600',
-  'from-blue-400 to-indigo-600',
-  'from-amber-400 to-orange-600',
-  'from-teal-400 to-cyan-600',
-  'from-emerald-400 to-teal-600',
+// Paleta WhatsApp-style: tons sólidos, sem gradient — mais limpo no Kommo.
+const AVATAR_COLORS = [
+  '#0ea5e9', // sky
+  '#2563eb', // blue
+  '#7c3aed', // violet
+  '#db2777', // pink
+  '#dc2626', // red
+  '#ea580c', // orange
+  '#ca8a04', // amber
+  '#16a34a', // green
+  '#0d9488', // teal
 ];
 
-function gradientFor(seed: string): string {
+function colorFor(seed: string): string {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     hash = seed.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
 function Avatar({
@@ -225,10 +227,10 @@ function Avatar({
   online?: boolean;
 }) {
   const dims = {
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-10 h-10 text-sm',
-    lg: 'w-14 h-14 text-base',
-    xl: 'w-20 h-20 text-2xl',
+    sm: 'w-8 h-8 text-[12px]',
+    md: 'w-10 h-10 text-[14px]',
+    lg: 'w-12 h-12 text-[16px]',
+    xl: 'w-20 h-20 text-[26px]',
   }[size];
   const dotSize = {
     sm: 'w-2 h-2 ring-1',
@@ -242,20 +244,21 @@ function Avatar({
     <div className="relative shrink-0">
       {isGroup ? (
         <div
-          className={`${dims} rounded-full bg-gradient-to-br from-slate-400 to-slate-600 text-white flex items-center justify-center shadow-sm`}
+          className={`${dims} rounded-full bg-[#54656f] text-white flex items-center justify-center`}
         >
           <Users className={iconSizes[size]} />
         </div>
       ) : (
         <div
-          className={`${dims} rounded-full bg-gradient-to-br ${gradientFor(seed)} text-white flex items-center justify-center font-semibold shadow-sm`}
+          className={`${dims} rounded-full text-white flex items-center justify-center font-medium`}
+          style={{ backgroundColor: colorFor(seed) }}
         >
           {getInitials(name, seed)}
         </div>
       )}
       {online && (
         <span
-          className={`absolute bottom-0 right-0 ${dotSize} rounded-full bg-emerald-500 ring-white`}
+          className={`absolute bottom-0 right-0 ${dotSize} rounded-full bg-[#00a884] ring-white`}
           aria-label="online"
         />
       )}
@@ -543,35 +546,39 @@ function MessageBubble({
 
   if (message.fromMe) {
     return (
-      <div className="flex justify-end mb-2">
+      <div className="flex justify-end mb-1.5 px-2">
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.15 }}
-          className={`max-w-[78%] md:max-w-[60%] rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm ${
+          transition={{ duration: 0.12 }}
+          className={`relative max-w-[78%] md:max-w-[55%] rounded-lg pl-3 pr-2 pt-1.5 pb-1 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] ${
             isFailed
-              ? 'bg-rose-100 border border-rose-200 text-slate-900'
-              : 'bg-gradient-to-br from-brand-600 to-brand-500 text-white'
+              ? 'bg-rose-50 border border-rose-200 text-slate-900'
+              : 'bg-[#d9fdd3] text-slate-900'
           }`}
         >
           <div
-            className="text-sm break-words whitespace-pre-wrap leading-relaxed"
+            className="text-[14.2px] break-words whitespace-pre-wrap leading-[19px] pb-3"
             dangerouslySetInnerHTML={{
               __html: applyWhatsappFormatting(message.body),
             }}
           />
-          <div className={`text-[10px] text-right mt-1 flex items-center justify-end gap-1 ${isFailed ? 'text-rose-700' : 'text-white/70'}`}>
-            {time}
+          <div
+            className={`absolute right-2 bottom-1 flex items-center gap-1 text-[10.5px] ${
+              isFailed ? 'text-rose-600' : 'text-[#667781]'
+            }`}
+          >
+            <span>{time}</span>
             {isFailed ? (
-              <AlertTriangle className="w-3 h-3 text-rose-600" />
+              <AlertTriangle className="w-3 h-3" />
             ) : (
               <CheckCheck
-                className={`w-3.5 h-3.5 ${
+                className={`w-[15px] h-[15px] -mb-0.5 ${
                   message.status === 'READ'
-                    ? 'text-sky-300'
+                    ? 'text-[#53bdeb]'
                     : message.status === 'DELIVERED'
-                      ? 'text-white/80'
-                      : 'text-white/50'
+                      ? 'text-[#667781]'
+                      : 'text-[#9aa7ad]'
                 }`}
               />
             )}
@@ -582,16 +589,16 @@ function MessageBubble({
   }
 
   return (
-    <div className="flex justify-start mb-2">
+    <div className="flex justify-start mb-1.5 px-2">
       <motion.div
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.15 }}
-        className="max-w-[78%] md:max-w-[60%] rounded-2xl rounded-bl-sm px-4 py-2.5 bg-white border border-slate-200 shadow-sm"
+        transition={{ duration: 0.12 }}
+        className="relative max-w-[78%] md:max-w-[55%] rounded-lg pl-3 pr-2 pt-1.5 pb-1 bg-white shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]"
       >
         {senderLabel && (
           <div
-            className="text-[11px] font-semibold mb-0.5"
+            className="text-[12.5px] font-semibold mb-0.5 leading-tight"
             style={{
               color: `hsl(${
                 Array.from(senderLabel).reduce(
@@ -605,12 +612,12 @@ function MessageBubble({
           </div>
         )}
         <div
-          className="text-sm text-slate-900 break-words whitespace-pre-wrap leading-relaxed"
+          className="text-[14.2px] text-slate-900 break-words whitespace-pre-wrap leading-[19px] pb-3"
           dangerouslySetInnerHTML={{
             __html: applyWhatsappFormatting(message.body),
           }}
         />
-        <div className="text-[10px] text-slate-400 text-right mt-1">
+        <div className="absolute right-2 bottom-1 text-[10.5px] text-[#667781]">
           {time}
         </div>
       </motion.div>
@@ -620,8 +627,8 @@ function MessageBubble({
 
 function DateSeparator({ children }: { children: ReactNode }) {
   return (
-    <div className="flex justify-center my-4">
-      <div className="bg-white border border-slate-200 text-slate-500 text-[11px] font-medium px-3 py-1 rounded-full shadow-sm">
+    <div className="flex justify-center my-3">
+      <div className="bg-[#e1f2fb] text-[#54656f] text-[12.5px] font-medium px-3 py-[5px] rounded-md shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
         {children}
       </div>
     </div>
@@ -1212,12 +1219,12 @@ function ChatPanel({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-slate-50 relative">
-      {/* Header da conversa (Kommo-style) */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center gap-3 shadow-sm z-10">
+    <div className="flex-1 flex flex-col min-h-0 bg-[#efeae2] relative">
+      {/* Header da conversa — estilo WhatsApp Web */}
+      <div className="bg-[#f0f2f5] border-b border-[#d1d7db] px-4 h-[60px] flex items-center gap-3 z-10 shrink-0">
         <button
           onClick={onBack}
-          className="md:hidden p-1.5 hover:bg-slate-100 rounded-md"
+          className="md:hidden p-1.5 hover:bg-black/5 rounded-full text-[#54656f]"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -1226,19 +1233,18 @@ function ChatPanel({
           seed={peer.peerNumber}
           size="md"
           isGroup={peer.isGroup}
-          online
         />
         <div className="flex-1 min-w-0">
-          <div className="font-semibold truncate text-slate-800 leading-tight flex items-center gap-1.5 text-sm">
+          <div className="font-medium truncate text-[#111b21] leading-tight flex items-center gap-1.5 text-[16px]">
             {displayPeer(peer)}
             {peer.isGroup && (
-              <span className="text-[9px] font-medium uppercase tracking-wide bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+              <span className="text-[9px] font-medium uppercase tracking-wide bg-[#d9fdd3] text-[#005c4b] px-1.5 py-0.5 rounded">
                 grupo
               </span>
             )}
             {peer.isHiddenNumber && !peer.isGroup && (
               <span
-                className="inline-flex items-center gap-1 text-[9px] font-medium uppercase tracking-wide bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-100"
+                className="inline-flex items-center gap-1 text-[9px] font-medium uppercase tracking-wide bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded"
                 title="Telefone oculto pela privacidade do WhatsApp."
               >
                 <EyeOff className="w-2.5 h-2.5" />
@@ -1246,8 +1252,7 @@ function ChatPanel({
               </span>
             )}
           </div>
-          <div className="text-[11px] text-slate-500 truncate flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <div className="text-[12.5px] text-[#667781] truncate">
             {peer.isGroup
               ? `${peer.totalMessages.toLocaleString('pt-BR')} mensagens`
               : peer.isHiddenNumber
@@ -1259,39 +1264,39 @@ function ChatPanel({
         <button
           onClick={handleSyncHistory}
           disabled={syncingHistory}
-          className="p-2 hover:bg-slate-100 rounded-md disabled:opacity-50 text-slate-500 hover:text-slate-700"
+          className="p-2 hover:bg-black/5 rounded-full disabled:opacity-50 text-[#54656f]"
           title="Buscar mensagens antigas"
         >
           {syncingHistory ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-[22px] h-[22px] animate-spin" />
           ) : (
-            <History className="w-4 h-4" />
+            <History className="w-[22px] h-[22px]" />
           )}
         </button>
         <a
           href={`https://wa.me/${peer.peerNumber.replace(/\D+/g, '')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-700"
+          className="p-2 hover:bg-black/5 rounded-full text-[#54656f]"
           title="Abrir no WhatsApp Web"
         >
-          <Phone className="w-4 h-4" />
+          <Phone className="w-[22px] h-[22px]" />
         </a>
         <button
           onClick={onToggleInfo}
-          className={`p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 lg:hidden ${
-            infoOpen ? 'bg-brand-50 text-brand-700 hover:bg-brand-100' : ''
+          className={`p-2 rounded-full text-[#54656f] hover:bg-black/5 lg:hidden ${
+            infoOpen ? 'bg-[#d9fdd3] text-[#005c4b] hover:bg-[#bef0b0]' : ''
           }`}
           title="Detalhes do contato"
         >
-          <Info className="w-4 h-4" />
+          <Info className="w-[22px] h-[22px]" />
         </button>
         <div className="relative">
           <button
             onClick={() => setShowMenu((s) => !s)}
-            className="p-2 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-700"
+            className="p-2 hover:bg-black/5 rounded-full text-[#54656f]"
           >
-            <MoreVertical className="w-4 h-4" />
+            <MoreVertical className="w-[22px] h-[22px]" />
           </button>
           <AnimatePresence>
             {showMenu && (
@@ -1299,12 +1304,12 @@ function ChatPanel({
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
-                className="absolute right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg w-56 z-20 py-1 text-sm"
+                className="absolute right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-xl w-60 z-20 py-1 text-[14.5px]"
               >
                 <button
                   onClick={handleSyncHistory}
                   disabled={syncingHistory}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                  className="w-full text-left px-4 py-2.5 hover:bg-[#f0f2f5] flex items-center gap-2 text-[#3b4a54]"
                 >
                   <History className="w-4 h-4" />
                   Buscar mensagens antigas
@@ -1314,7 +1319,7 @@ function ChatPanel({
                     refetch();
                     setShowMenu(false);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                  className="w-full text-left px-4 py-2.5 hover:bg-[#f0f2f5] flex items-center gap-2 text-[#3b4a54]"
                 >
                   <RefreshCcw className="w-4 h-4" />
                   Atualizar
@@ -1325,22 +1330,26 @@ function ChatPanel({
         </div>
       </div>
 
-      {/* Mensagens */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3">
+      {/* Mensagens — wallpaper bege WhatsApp Web (#efeae2) */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto py-4"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><g fill='%23000000' fill-opacity='0.04'><circle cx='30' cy='30' r='1.2'/><circle cx='90' cy='90' r='1.2'/><circle cx='90' cy='30' r='0.8'/><circle cx='30' cy='90' r='0.8'/><path d='M60 50c-2 0-4 1.5-4 4s2 4 4 4 4-1.5 4-4-2-4-4-4zm0 6c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z'/></g></svg>\")",
+        }}
+      >
         {loadingMessages && messages.length === 0 ? (
           <div className="h-full flex items-center justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-[#667781]" />
           </div>
         ) : messages.length === 0 ? (
           <div className="h-full flex items-center justify-center">
-            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center max-w-sm shadow-sm">
-              <Sparkles className="w-8 h-8 text-brand-500 mx-auto mb-2" />
-              <p className="text-sm text-slate-700 font-medium">
-                Sem mensagens nesta conversa
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Tente <strong>"Buscar mensagens antigas"</strong> no menu, ou
-                envie a primeira mensagem.
+            <div className="bg-[#fff3c4] text-[#3b4a54] rounded-md px-4 py-3 text-center max-w-sm shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] text-[13px]">
+              <Sparkles className="w-5 h-5 text-amber-600 mx-auto mb-1.5" />
+              <p className="font-medium">Sem mensagens nesta conversa</p>
+              <p className="text-[12px] text-[#667781] mt-1">
+                Use <strong>"Buscar mensagens antigas"</strong> no menu, ou envie a primeira mensagem.
               </p>
             </div>
           </div>
@@ -1360,43 +1369,46 @@ function ChatPanel({
         )}
       </div>
 
-      {/* Composer (Kommo-style) */}
+      {/* Composer — barra cinza-clara estilo WhatsApp Web */}
       <form
         onSubmit={submit}
-        className="bg-white border-t border-slate-200 p-3 flex items-end gap-2"
+        className="bg-[#f0f2f5] px-3 py-2.5 flex items-end gap-2 shrink-0"
       >
         <button
           type="button"
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md"
-          title="Anexar"
+          className="p-2 text-[#54656f] hover:text-[#3b4a54] rounded-full"
+          title="Emoji"
         >
-          <Paperclip className="w-5 h-5" />
+          <Smile className="w-[24px] h-[24px]" />
         </button>
         <button
           type="button"
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md"
-          title="Emoji"
+          className="p-2 text-[#54656f] hover:text-[#3b4a54] rounded-full"
+          title="Anexar"
         >
-          <Smile className="w-5 h-5" />
+          <Paperclip className="w-[24px] h-[24px]" />
         </button>
-        <textarea
-          ref={textareaRef}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              submit(e as unknown as FormEvent);
-            }
-          }}
-          rows={1}
-          placeholder="Escreva uma mensagem..."
-          className="flex-1 resize-none border border-slate-200 rounded-xl px-4 py-2 text-sm bg-slate-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-400 focus:border-transparent max-h-32"
-        />
+        <div className="flex-1 bg-white rounded-lg flex items-center min-h-[42px] px-4">
+          <textarea
+            ref={textareaRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submit(e as unknown as FormEvent);
+              }
+            }}
+            rows={1}
+            placeholder="Mensagem"
+            className="flex-1 resize-none border-0 bg-transparent outline-none text-[15px] text-[#111b21] placeholder:text-[#667781] py-2 max-h-32"
+          />
+        </div>
         <button
           type="submit"
           disabled={sending || !draft.trim() || session.status !== 'CONNECTED'}
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-brand-500 text-white flex items-center justify-center hover:from-brand-700 hover:to-brand-600 disabled:opacity-40 shrink-0 shadow-md hover:shadow-lg transition-all"
+          className="w-[42px] h-[42px] rounded-full bg-[#00a884] text-white flex items-center justify-center hover:bg-[#06876c] disabled:opacity-40 shrink-0 transition-colors"
+          title="Enviar"
         >
           {sending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -1438,50 +1450,51 @@ function ConversationsSidebar({
 
   return (
     <aside
-      className={`flex-col bg-white border-r border-slate-200 min-h-0 ${
+      className={`flex-col bg-white border-r border-[#d1d7db] min-h-0 ${
         hidden ? 'hidden md:flex' : 'flex'
       }`}
     >
-      <div className="p-3 border-b border-slate-200">
+      {/* Search bar pill — estilo WhatsApp Web */}
+      <div className="px-3 py-2 bg-white">
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-4 top-[10px] w-[18px] h-[18px] text-[#54656f]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar conversa..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all"
+            placeholder="Pesquisar uma conversa"
+            className="w-full bg-[#f0f2f5] rounded-lg pl-12 pr-3 py-2 text-[14px] text-[#111b21] placeholder:text-[#667781] focus:outline-none border-0"
           />
         </div>
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex items-center gap-1 px-3 py-2 border-b border-slate-200 bg-slate-50/50">
+      {/* Filter chips horizontais — Kommo-style */}
+      <div className="flex items-center gap-2 px-3 pb-2 overflow-x-auto bg-white border-b border-[#e9edef]">
         <button
           onClick={() => setFilter('all')}
-          className={`flex-1 text-[11px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded-md transition-colors ${
+          className={`text-[13px] font-medium px-3 py-1 rounded-full transition-colors whitespace-nowrap shrink-0 ${
             filter === 'all'
-              ? 'bg-brand-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
+              ? 'bg-[#d9fdd3] text-[#005c4b]'
+              : 'bg-[#f0f2f5] text-[#54656f] hover:bg-[#e9edef]'
           }`}
         >
           Todas
         </button>
         <button
           onClick={() => setFilter('unread')}
-          className={`flex-1 text-[11px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 ${
+          className={`text-[13px] font-medium px-3 py-1 rounded-full transition-colors whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 ${
             filter === 'unread'
-              ? 'bg-brand-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
+              ? 'bg-[#d9fdd3] text-[#005c4b]'
+              : 'bg-[#f0f2f5] text-[#54656f] hover:bg-[#e9edef]'
           }`}
         >
           Não lidas
           {totalUnread > 0 && (
             <span
-              className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+              className={`text-[10px] px-1.5 rounded-full font-semibold ${
                 filter === 'unread'
-                  ? 'bg-white text-brand-700'
-                  : 'bg-brand-600 text-white'
+                  ? 'bg-[#005c4b] text-white'
+                  : 'bg-[#00a884] text-white'
               }`}
             >
               {totalUnread}
@@ -1490,19 +1503,19 @@ function ConversationsSidebar({
         </button>
         <button
           onClick={() => setFilter('groups')}
-          className={`flex-1 text-[11px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 ${
+          className={`text-[13px] font-medium px-3 py-1 rounded-full transition-colors whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 ${
             filter === 'groups'
-              ? 'bg-brand-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
+              ? 'bg-[#d9fdd3] text-[#005c4b]'
+              : 'bg-[#f0f2f5] text-[#54656f] hover:bg-[#e9edef]'
           }`}
         >
           Grupos
           {groupCount > 0 && (
             <span
-              className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+              className={`text-[10px] px-1.5 rounded-full font-semibold ${
                 filter === 'groups'
-                  ? 'bg-white text-brand-700'
-                  : 'bg-slate-200 text-slate-700'
+                  ? 'bg-[#005c4b] text-white'
+                  : 'bg-[#cfd5d9] text-[#3b4a54]'
               }`}
             >
               {groupCount}
@@ -1511,13 +1524,13 @@ function ConversationsSidebar({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-white">
         {conversations.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="w-12 h-12 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-3">
-              <Filter className="w-5 h-5 text-slate-400" />
+          <div className="p-10 text-center">
+            <div className="w-12 h-12 rounded-full bg-[#f0f2f5] mx-auto flex items-center justify-center mb-3">
+              <Filter className="w-5 h-5 text-[#54656f]" />
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-[14px] text-[#667781]">
               {search ? 'Nada encontrado' : 'Nenhuma conversa'}
             </p>
           </div>
@@ -1528,40 +1541,36 @@ function ConversationsSidebar({
               <button
                 key={c.peerNumber}
                 onClick={() => onSelect(c.peerNumber)}
-                className={`w-full text-left flex items-center gap-3 px-3 py-3 border-b border-slate-100 transition-colors ${
-                  active
-                    ? 'bg-brand-50/70 border-l-[3px] border-l-brand-600 pl-[10px]'
-                    : 'hover:bg-slate-50'
+                className={`w-full text-left flex items-center gap-3 px-3 py-3 transition-colors border-b border-[#e9edef] last:border-b-0 ${
+                  active ? 'bg-[#f0f2f5]' : 'hover:bg-[#f5f6f6]'
                 }`}
               >
                 <Avatar
                   name={c.peerName}
                   seed={c.peerNumber}
-                  size="md"
+                  size="lg"
                   isGroup={c.isGroup}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className={`truncate text-sm flex items-center gap-1 ${
-                        c.unreadCount > 0
-                          ? 'text-slate-900 font-bold'
-                          : 'text-slate-700 font-semibold'
+                      className={`truncate text-[16px] flex items-center gap-1 text-[#111b21] ${
+                        c.unreadCount > 0 ? 'font-semibold' : 'font-normal'
                       }`}
                     >
                       {c.isHiddenNumber && !c.isGroup && (
                         <EyeOff
-                          className="w-3 h-3 text-slate-400 shrink-0"
+                          className="w-3 h-3 text-[#8696a0] shrink-0"
                           aria-label="Número oculto"
                         />
                       )}
                       {displayPeer(c)}
                     </span>
                     <span
-                      className={`text-[10px] shrink-0 ${
+                      className={`text-[12px] shrink-0 ${
                         c.unreadCount > 0
-                          ? 'text-brand-600 font-semibold'
-                          : 'text-slate-400'
+                          ? 'text-[#00a884] font-medium'
+                          : 'text-[#667781]'
                       }`}
                     >
                       {fmtRelative(c.lastMessageAt)}
@@ -1569,16 +1578,16 @@ function ConversationsSidebar({
                   </div>
                   <div className="flex items-center justify-between gap-2 mt-0.5">
                     <span
-                      className={`text-xs truncate ${
+                      className={`text-[14px] truncate ${
                         c.unreadCount > 0
-                          ? 'text-slate-700 font-medium'
-                          : 'text-slate-500'
+                          ? 'text-[#3b4a54]'
+                          : 'text-[#667781]'
                       }`}
                     >
                       {c.lastMessage ?? '—'}
                     </span>
                     {c.unreadCount > 0 && (
-                      <span className="bg-brand-600 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shrink-0">
+                      <span className="bg-[#00a884] text-white text-[12px] font-medium rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shrink-0">
                         {c.unreadCount}
                       </span>
                     )}
@@ -1732,21 +1741,21 @@ export function WhatsappPage() {
   const hasConversations = conversationsRaw.length > 0;
 
   return (
-    <div className="space-y-3 h-[calc(100vh-7rem)] flex flex-col">
-      {/* Header (Kommo-style: limpo, com info da empresa conectada) */}
-      <header className="flex items-center justify-between flex-wrap gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-600 to-brand-500 flex items-center justify-center shadow-md ring-1 ring-brand-400/20">
+    <div className="h-[calc(100vh-7rem)] flex flex-col bg-[#f0f2f5]">
+      {/* Header — barra fina sobre o painel, estilo Kommo */}
+      <header className="flex items-center justify-between gap-3 bg-white border-b border-[#d1d7db] px-4 h-[60px] shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-full bg-[#00a884] flex items-center justify-center shrink-0">
             <MessageCircle className="w-5 h-5 text-white" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-['Rajdhani'] font-bold leading-none text-slate-800">
+              <h1 className="text-[16px] font-semibold leading-none text-[#111b21] truncate">
                 WhatsApp
               </h1>
               <StatusPill status={session.status} />
             </div>
-            <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+            <div className="flex items-center gap-2 mt-1 text-[12px] text-[#667781] truncate">
               {session.phone && (
                 <span className="font-medium">{formatPhone(session.phone)}</span>
               )}
@@ -1757,28 +1766,28 @@ export function WhatsappPage() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {isConnected && totalUnread > 0 && (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 text-[11px] font-semibold border border-brand-100 mr-1">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#d9fdd3] text-[#005c4b] text-[12px] font-medium mr-1">
               <Bell className="w-3 h-3" />
               {totalUnread} não lida{totalUnread > 1 ? 's' : ''}
             </div>
           )}
           <button
             onClick={() => refetchSession()}
-            className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600"
+            className="p-2 hover:bg-black/5 rounded-full text-[#54656f]"
             title="Atualizar status"
           >
-            <RefreshCcw className="w-4 h-4" />
+            <RefreshCcw className="w-[20px] h-[20px]" />
           </button>
           {isConnected && (
             <div className="relative">
               <button
                 onClick={() => setShowActions((s) => !s)}
-                className="flex items-center gap-1.5 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600"
+                className="p-2 hover:bg-black/5 rounded-full text-[#54656f]"
                 title="Mais ações"
               >
-                <MoreVertical className="w-4 h-4" />
+                <MoreVertical className="w-[20px] h-[20px]" />
               </button>
               <AnimatePresence>
                 {showActions && (
@@ -1786,19 +1795,19 @@ export function WhatsappPage() {
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
-                    className="absolute right-0 mt-1 w-60 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1 text-sm overflow-hidden"
+                    className="absolute right-0 mt-1 w-64 bg-white border border-slate-200 rounded-md shadow-xl z-30 py-1 text-[14px] overflow-hidden"
                   >
                     <button
                       onClick={handleSync}
                       disabled={syncing}
-                      className="w-full text-left px-3 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 disabled:opacity-50"
+                      className="w-full text-left px-4 py-2.5 hover:bg-[#f0f2f5] flex items-center gap-3 disabled:opacity-50"
                     >
-                      <Download className="w-4 h-4 text-blue-600" />
+                      <Download className="w-4 h-4 text-[#00a884]" />
                       <div>
-                        <div className="font-medium text-slate-800">
+                        <div className="font-medium text-[#111b21]">
                           Importar contatos
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-[12px] text-[#667781]">
                           Da lista do WhatsApp
                         </div>
                       </div>
@@ -1806,23 +1815,23 @@ export function WhatsappPage() {
                     <button
                       onClick={handleReconfigure}
                       disabled={reconfiguring}
-                      className="w-full text-left px-3 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 disabled:opacity-50"
+                      className="w-full text-left px-4 py-2.5 hover:bg-[#f0f2f5] flex items-center gap-3 disabled:opacity-50"
                     >
                       <CloudCog className="w-4 h-4 text-amber-600" />
                       <div>
-                        <div className="font-medium text-slate-800">
+                        <div className="font-medium text-[#111b21]">
                           Reconfigurar webhook
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-[12px] text-[#667781]">
                           Se mensagens não chegam
                         </div>
                       </div>
                     </button>
-                    <div className="border-t border-slate-100 my-1" />
+                    <div className="border-t border-[#e9edef] my-1" />
                     <button
                       onClick={handleDisconnect}
                       disabled={disconnecting}
-                      className="w-full text-left px-3 py-2.5 hover:bg-rose-50 flex items-center gap-2.5 text-rose-700"
+                      className="w-full text-left px-4 py-2.5 hover:bg-rose-50 flex items-center gap-3 text-rose-700"
                     >
                       <LogOut className="w-4 h-4" />
                       <div className="font-medium">Desconectar sessão</div>
@@ -1857,7 +1866,7 @@ export function WhatsappPage() {
           reconfiguring={reconfiguring}
         />
       ) : (
-        <div className="flex-1 grid md:grid-cols-[320px_1fr] lg:grid-cols-[320px_1fr_320px] gap-0 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-md min-h-0 relative">
+        <div className="flex-1 grid md:grid-cols-[360px_1fr] lg:grid-cols-[360px_1fr_360px] gap-0 bg-white min-h-0 relative">
           <ConversationsSidebar
             conversations={filteredConvs}
             search={search}
@@ -1888,19 +1897,18 @@ export function WhatsappPage() {
                 infoOpen={showInfo}
               />
             ) : (
-              <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 to-brand-50/30">
-                <div className="text-center max-w-sm p-8">
-                  <div className="w-20 h-20 rounded-full bg-brand-50 mx-auto flex items-center justify-center mb-4 border border-brand-100">
-                    <MessageCircle className="w-10 h-10 text-brand-500" />
+              <div className="flex-1 flex items-center justify-center bg-[#f0f2f5] border-l border-[#d1d7db]">
+                <div className="text-center max-w-md px-10">
+                  <div className="w-44 h-44 rounded-full bg-[#e9edef] mx-auto flex items-center justify-center mb-6">
+                    <MessageCircle className="w-20 h-20 text-[#54656f]" strokeWidth={1.2} />
                   </div>
-                  <h2 className="text-xl font-['Rajdhani'] font-bold text-slate-700">
-                    Selecione uma conversa
+                  <h2 className="text-[28px] font-light text-[#41525d] tracking-tight">
+                    Mantenha seu WhatsApp conectado
                   </h2>
-                  <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-                    Escolha um contato à esquerda para abrir o histórico e
-                    enviar mensagens diretamente do sistema.
+                  <p className="text-[14px] text-[#667781] mt-3 leading-relaxed">
+                    Selecione uma conversa à esquerda para abrir o histórico e enviar mensagens.
                   </p>
-                  <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+                  <div className="mt-8 flex items-center justify-center gap-1.5 text-[12px] text-[#8696a0]">
                     <Plus className="w-3.5 h-3.5" />
                     {conversationsRaw.length} conversa(s) carregada(s)
                   </div>
