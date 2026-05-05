@@ -25,6 +25,7 @@ const CONVERSATION_FIELDS = `
   unreadCount
   totalMessages
   isGroup
+  isHiddenNumber
 `;
 
 const MESSAGE_FIELDS = `

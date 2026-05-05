@@ -30,6 +30,7 @@ import {
   BadgeCheck,
   Briefcase,
   CheckCircle2,
+  EyeOff,
   Link2,
   Link2Off,
   Smile,
@@ -86,6 +87,7 @@ interface Conversation {
   unreadCount: number;
   totalMessages: number;
   isGroup: boolean;
+  isHiddenNumber: boolean;
 }
 
 interface Message {
@@ -243,9 +245,15 @@ function Avatar({
   );
 }
 
-function displayPeer(c: { peerNumber: string; peerName: string | null; isGroup: boolean }): string {
+function displayPeer(c: {
+  peerNumber: string;
+  peerName: string | null;
+  isGroup: boolean;
+  isHiddenNumber?: boolean;
+}): string {
   if (c.peerName && c.peerName.trim().length > 0) return c.peerName;
   if (c.isGroup) return 'Grupo do WhatsApp';
+  if (c.isHiddenNumber) return 'Contato (número oculto)';
   return formatPhone(c.peerNumber);
 }
 
@@ -1224,11 +1232,22 @@ function ChatPanel({
                   grupo
                 </span>
               )}
+              {peer.isHiddenNumber && !peer.isGroup && (
+                <span
+                  className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded"
+                  title="Telefone oculto pela privacidade do WhatsApp. Para resolver, salve o contato na agenda do celular conectado."
+                >
+                  <EyeOff className="w-2.5 h-2.5" />
+                  oculto
+                </span>
+              )}
             </div>
             <div className="text-[11px] text-slate-500 truncate">
               {peer.isGroup
                 ? `${peer.totalMessages.toLocaleString('pt-BR')} mensagens · clique para detalhes`
-                : `${formatPhone(peer.peerNumber)} · ${peer.totalMessages.toLocaleString('pt-BR')} mensagens`}
+                : peer.isHiddenNumber
+                  ? `${peer.totalMessages.toLocaleString('pt-BR')} mensagens · clique para detalhes`
+                  : `${formatPhone(peer.peerNumber)} · ${peer.totalMessages.toLocaleString('pt-BR')} mensagens`}
             </div>
           </div>
         </button>
@@ -1442,6 +1461,12 @@ function ConversationsSidebar({
                     >
                       {c.isGroup && (
                         <Users className="w-3 h-3 text-slate-400 shrink-0" />
+                      )}
+                      {c.isHiddenNumber && !c.isGroup && (
+                        <EyeOff
+                          className="w-3 h-3 text-slate-400 shrink-0"
+                          aria-label="Número oculto"
+                        />
                       )}
                       {displayPeer(c)}
                     </span>
