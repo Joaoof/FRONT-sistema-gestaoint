@@ -44,6 +44,9 @@ import {
   Banknote,
   FileText,
   TrendingDown,
+  Cog,
+  FolderTree,
+  MessageSquare,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -121,10 +124,15 @@ const VIEW_TO_MODULE: Record<View, string> = {
   notas: 'notas',
   'notas/nova': 'notas',
   'configuracoes/fiscal': 'configuracoes',
+  'configuracoes/parametros': 'configuracoes',
+  'configuracoes/plano-contas': 'configuracoes',
+  'configuracoes/templates': 'configuracoes',
+  notificacoes: 'notificacoes',
+  comunicacoes: 'comunicacoes',
   auditoria: 'auditoria',
 } as Record<string, string>;
 
-const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas', 'auditoria']);
+const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas', 'auditoria', 'configuracoes', 'notificacoes', 'comunicacoes']);
 
 function hasPermission(
   permissions: { module_key: string; permissions: string[] }[],
@@ -294,6 +302,11 @@ const sections: MenuSection[] = [
       { id: 'empresa' as View, label: 'Empresa', icon: Building2 },
       { id: 'configuracoes' as View, label: 'Configurações', icon: Settings },
       { id: 'configuracoes/fiscal' as View, label: 'Configuração fiscal', icon: Receipt },
+      { id: 'configuracoes/parametros' as View, label: 'Parâmetros', icon: Cog },
+      { id: 'configuracoes/plano-contas' as View, label: 'Plano de contas', icon: FolderTree },
+      { id: 'configuracoes/templates' as View, label: 'Templates de mensagem', icon: MessageSquare },
+      { id: 'notificacoes' as View, label: 'Notificações', icon: Bell },
+      { id: 'comunicacoes' as View, label: 'Central de mensagens', icon: MessageCircle },
       { id: 'auditoria' as View, label: 'Auditoria', icon: History },
       { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },
     ],

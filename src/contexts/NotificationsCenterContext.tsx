@@ -2,21 +2,50 @@ import {
     createContext,
     useCallback,
     useContext,
-    useEffect,
     useMemo,
-    useState,
     type ReactNode,
 } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
+import {
+    DISMISS_NOTIFICATION,
+    GET_NOTIFICATIONS,
+    MARK_ALL_NOTIFICATIONS_READ,
+    MARK_NOTIFICATION_READ,
+} from '../graphql/queries/notifications';
+
+type BackendType =
+    | 'STOCK_LOW'
+    | 'ORDER_PENDING'
+    | 'INVOICE_DUE'
+    | 'INVOICE_OVERDUE'
+    | 'PAYMENT_RECEIVED'
+    | 'PAYMENT_FAILED'
+    | 'DELIVERY_SCHEDULED'
+    | 'DELIVERY_COMPLETED'
+    | 'CUSTOM'
+    | 'INFO';
+
+type FrontendCategory = 'order' | 'delivery' | 'stock' | 'driver' | 'info';
 
 export interface AppNotification {
     id: string;
-    type: 'order' | 'delivery' | 'stock' | 'driver' | 'info';
+    type: FrontendCategory;
     title: string;
     message?: string;
     href?: string;
     iconUrl?: string;
     createdAt: string;
     read: boolean;
+}
+
+interface BackendNotification {
+    id: string;
+    type: BackendType;
+    title: string;
+    message: string;
+    href: string | null;
+    readAt: string | null;
+    createdAt: string;
 }
 
 interface NotificationsCenterState {
@@ -31,71 +60,105 @@ interface NotificationsCenterState {
 
 const Ctx = createContext<NotificationsCenterState | null>(null);
 
-const STORAGE_KEY = 'app:notifications';
-const MAX_ITEMS = 50;
-
-function load(): AppNotification[] {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw) as AppNotification[];
-        return Array.isArray(parsed) ? parsed.slice(0, MAX_ITEMS) : [];
-    } catch {
-        return [];
+function categorize(t: BackendType): FrontendCategory {
+    switch (t) {
+        case 'STOCK_LOW':
+            return 'stock';
+        case 'ORDER_PENDING':
+            return 'order';
+        case 'DELIVERY_SCHEDULED':
+        case 'DELIVERY_COMPLETED':
+            return 'delivery';
+        default:
+            return 'info';
     }
 }
 
-function save(items: AppNotification[]) {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, MAX_ITEMS)));
-    } catch {
-        // localStorage cheio ou negado — silencioso
-    }
+function adapt(n: BackendNotification): AppNotification {
+    return {
+        id: n.id,
+        type: categorize(n.type),
+        title: n.title,
+        message: n.message,
+        href: n.href ?? undefined,
+        createdAt: n.createdAt,
+        read: !!n.readAt,
+    };
 }
 
 export function NotificationsCenterProvider({ children }: { children: ReactNode }) {
-    const [items, setItems] = useState<AppNotification[]>(() => load());
+    const { data, refetch } = useQuery<{
+        notifications: {
+            items: BackendNotification[];
+            unreadCount: number;
+        };
+    }>(GET_NOTIFICATIONS, {
+        variables: { filter: { page: 1, pageSize: 50 } },
+        fetchPolicy: 'cache-and-network',
+        pollInterval: 30000,
+        errorPolicy: 'all',
+        notifyOnNetworkStatusChange: false,
+    });
 
-    useEffect(() => {
-        save(items);
-    }, [items]);
+    const [markRead] = useMutation(MARK_NOTIFICATION_READ);
+    const [markAllRead] = useMutation(MARK_ALL_NOTIFICATIONS_READ);
+    const [dismiss] = useMutation(DISMISS_NOTIFICATION);
 
-    const push = useCallback((n: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
-        setItems((prev) => [
-            {
-                ...n,
-                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                createdAt: new Date().toISOString(),
-                read: false,
-            },
-            ...prev,
-        ].slice(0, MAX_ITEMS));
+    const items = useMemo(
+        () => (data?.notifications.items ?? []).map(adapt),
+        [data],
+    );
+    const unreadCount = data?.notifications.unreadCount ?? 0;
+
+    // No-op no front (criação de notificação é responsabilidade do backend).
+    const push = useCallback(() => {
+        /* legacy hook — sem efeito no fluxo persistido */
     }, []);
 
-    const markAllRead = useCallback(() => {
-        setItems((prev) => prev.map((n) => ({ ...n, read: true })));
-    }, []);
+    const handleMarkAllRead = useCallback(async () => {
+        try {
+            await markAllRead();
+            await refetch();
+        } catch {
+            /* silencioso */
+        }
+    }, [markAllRead, refetch]);
 
-    const markRead = useCallback((id: string) => {
-        setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    }, []);
+    const handleMarkRead = useCallback(
+        async (id: string) => {
+            try {
+                await markRead({ variables: { id } });
+                await refetch();
+            } catch {
+                /* silencioso */
+            }
+        },
+        [markRead, refetch],
+    );
 
-    const remove = useCallback((id: string) => {
-        setItems((prev) => prev.filter((n) => n.id !== id));
-    }, []);
+    const remove = useCallback(
+        async (id: string) => {
+            try {
+                await dismiss({ variables: { id } });
+                await refetch();
+            } catch {
+                /* silencioso */
+            }
+        },
+        [dismiss, refetch],
+    );
 
-    const clear = useCallback(() => {
-        setItems([]);
-    }, []);
-
-    const unreadCount = useMemo(() => items.filter((n) => !n.read).length, [items]);
+    const clear = useCallback(async () => {
+        await Promise.all(items.map((n) => dismiss({ variables: { id: n.id } })));
+        await refetch();
+    }, [dismiss, items, refetch]);
 
     const value: NotificationsCenterState = {
         items,
         unreadCount,
         push,
-        markAllRead,
-        markRead,
+        markAllRead: handleMarkAllRead,
+        markRead: handleMarkRead,
         remove,
         clear,
     };

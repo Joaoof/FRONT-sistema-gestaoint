@@ -73,6 +73,11 @@ import { InvoiceDetailPage } from './pages/Invoices/InvoiceDetailPage';
 import { IssueInvoicePage } from './pages/Invoices/IssueInvoicePage';
 import { FiscalConfigPage } from './pages/Settings/FiscalConfigPage';
 import { AuditPage } from './pages/Audit/AuditPage';
+import { SystemParametersPage } from './pages/Settings/SystemParametersPage';
+import { ChartOfAccountsPage } from './pages/Settings/ChartOfAccountsPage';
+import { NotificationsPage } from './pages/Notifications/NotificationsPage';
+import { NotificationTemplatesPage } from './pages/Settings/NotificationTemplatesPage';
+import { MessagesCenterPage } from './pages/Communications/MessagesCenterPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -207,6 +212,15 @@ function AppContent() {
 
             {/* Auditoria */}
             <Route path="/auditoria" element={<AuditPage />} />
+
+            {/* Configurações do sistema */}
+            <Route path="/configuracoes/parametros" element={<SystemParametersPage />} />
+            <Route path="/configuracoes/plano-contas" element={<ChartOfAccountsPage />} />
+            <Route path="/configuracoes/templates" element={<NotificationTemplatesPage />} />
+
+            {/* Notificações e comunicações */}
+            <Route path="/notificacoes" element={<NotificationsPage />} />
+            <Route path="/comunicacoes" element={<MessagesCenterPage />} />
 
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>
