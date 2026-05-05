@@ -24,6 +24,7 @@ const CONVERSATION_FIELDS = `
   lastMessageAt
   unreadCount
   totalMessages
+  isGroup
 `;
 
 const MESSAGE_FIELDS = `
@@ -33,6 +34,8 @@ const MESSAGE_FIELDS = `
   body
   status
   externalId
+  participantNumber
+  participantName
   createdAt
   sentAt
   deliveredAt

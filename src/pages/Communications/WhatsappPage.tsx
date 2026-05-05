@@ -29,6 +29,7 @@ import {
   Send,
   Smile,
   Sparkles,
+  Users,
   Wifi,
   WifiOff,
 } from 'lucide-react';
@@ -72,6 +73,7 @@ interface Conversation {
   lastMessageAt: string | null;
   unreadCount: number;
   totalMessages: number;
+  isGroup: boolean;
 }
 
 interface Message {
@@ -81,6 +83,8 @@ interface Message {
   body: string;
   status: 'PENDING' | 'SENT' | 'DELIVERED' | 'FAILED' | 'READ';
   externalId: string | null;
+  participantNumber: string | null;
+  participantName: string | null;
   createdAt: string;
   sentAt: string | null;
   deliveredAt: string | null;
@@ -195,10 +199,12 @@ function Avatar({
   name,
   seed,
   size = 'md',
+  isGroup = false,
 }: {
   name: string | null;
   seed: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  isGroup?: boolean;
 }) {
   const dims = {
     sm: 'w-8 h-8 text-xs',
@@ -206,6 +212,16 @@ function Avatar({
     lg: 'w-14 h-14 text-base',
     xl: 'w-20 h-20 text-2xl',
   }[size];
+  const iconSizes = { sm: 'w-4 h-4', md: 'w-5 h-5', lg: 'w-6 h-6', xl: 'w-9 h-9' };
+  if (isGroup) {
+    return (
+      <div
+        className={`${dims} rounded-full bg-gradient-to-br from-slate-400 to-slate-600 text-white flex items-center justify-center shadow-sm shrink-0`}
+      >
+        <Users className={iconSizes[size]} />
+      </div>
+    );
+  }
   return (
     <div
       className={`${dims} rounded-full bg-gradient-to-br ${gradientFor(seed)} text-white flex items-center justify-center font-semibold shadow-sm shrink-0`}
@@ -213,6 +229,12 @@ function Avatar({
       {getInitials(name, seed)}
     </div>
   );
+}
+
+function displayPeer(c: { peerNumber: string; peerName: string | null; isGroup: boolean }): string {
+  if (c.peerName && c.peerName.trim().length > 0) return c.peerName;
+  if (c.isGroup) return 'Grupo do WhatsApp';
+  return formatPhone(c.peerNumber);
 }
 
 function StatusBadge({ status }: { status: SessionStatus }) {
@@ -473,9 +495,22 @@ function ConnectedEmptyState({
 // Bubbles + grupos por data
 // ════════════════════════════════════════════════════════════
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({
+  message,
+  showSender,
+}: {
+  message: Message;
+  showSender?: boolean;
+}) {
   const time = fmtTime(message.createdAt);
   const isFailed = message.status === 'FAILED';
+  const senderLabel =
+    showSender && !message.fromMe
+      ? message.participantName ??
+        (message.participantNumber
+          ? formatPhone(message.participantNumber)
+          : null)
+      : null;
 
   if (message.fromMe) {
     return (
@@ -525,6 +560,21 @@ function MessageBubble({ message }: { message: Message }) {
         transition={{ duration: 0.15 }}
         className="max-w-[78%] md:max-w-[60%] rounded-xl rounded-tl-sm px-3 pt-2 pb-1.5 bg-white shadow-sm"
       >
+        {senderLabel && (
+          <div
+            className={`text-[11px] font-semibold mb-0.5 ${gradientFor(senderLabel).includes('emerald') ? 'text-emerald-600' : 'text-violet-600'}`}
+            style={{
+              color: `hsl(${
+                Array.from(senderLabel).reduce(
+                  (h, c) => c.charCodeAt(0) + ((h << 5) - h),
+                  0,
+                ) % 360
+              }, 65%, 40%)`,
+            }}
+          >
+            {senderLabel}
+          </div>
+        )}
         <div
           className="text-sm text-slate-900 break-words whitespace-pre-wrap leading-relaxed"
           dangerouslySetInnerHTML={{
@@ -678,14 +728,25 @@ function ChatPanel({
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <Avatar name={peer.peerName} seed={peer.peerNumber} size="md" />
+        <Avatar
+          name={peer.peerName}
+          seed={peer.peerNumber}
+          size="md"
+          isGroup={peer.isGroup}
+        />
         <div className="flex-1 min-w-0">
-          <div className="font-semibold truncate text-slate-800 leading-tight">
-            {peer.peerName ?? formatPhone(peer.peerNumber)}
+          <div className="font-semibold truncate text-slate-800 leading-tight flex items-center gap-1.5">
+            {displayPeer(peer)}
+            {peer.isGroup && (
+              <span className="text-[10px] font-medium uppercase tracking-wide bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">
+                grupo
+              </span>
+            )}
           </div>
           <div className="text-[11px] text-slate-500 truncate">
-            {formatPhone(peer.peerNumber)} ·{' '}
-            {peer.totalMessages.toLocaleString('pt-BR')} mensagens
+            {peer.isGroup
+              ? `${peer.totalMessages.toLocaleString('pt-BR')} mensagens`
+              : `${formatPhone(peer.peerNumber)} · ${peer.totalMessages.toLocaleString('pt-BR')} mensagens`}
           </div>
         </div>
         <button
@@ -772,7 +833,11 @@ function ChatPanel({
             <div key={group.key}>
               <DateSeparator>{dateLabel(group.items[0].createdAt)}</DateSeparator>
               {group.items.map((m) => (
-                <MessageBubble key={m.id} message={m} />
+                <MessageBubble
+                  key={m.id}
+                  message={m}
+                  showSender={peer.isGroup}
+                />
               ))}
             </div>
           ))
@@ -873,15 +938,23 @@ function ConversationsSidebar({
                   active ? 'bg-emerald-50 border-l-4 border-l-emerald-500' : ''
                 }`}
               >
-                <Avatar name={c.peerName} seed={c.peerNumber} size="md" />
+                <Avatar
+                  name={c.peerName}
+                  seed={c.peerNumber}
+                  size="md"
+                  isGroup={c.isGroup}
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className={`font-semibold truncate text-sm ${
+                      className={`font-semibold truncate text-sm flex items-center gap-1 ${
                         c.unreadCount > 0 ? 'text-slate-900' : 'text-slate-700'
                       }`}
                     >
-                      {c.peerName ?? formatPhone(c.peerNumber)}
+                      {c.isGroup && (
+                        <Users className="w-3 h-3 text-slate-400 shrink-0" />
+                      )}
+                      {displayPeer(c)}
                     </span>
                     <span
                       className={`text-[10px] shrink-0 ${
