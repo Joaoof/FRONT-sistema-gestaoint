@@ -30,6 +30,7 @@ import {
   Loader2,
   LogOut,
   MessageCircle,
+  Mic,
   MoreVertical,
   Paperclip,
   Phone,
@@ -46,17 +47,27 @@ import {
   X,
 } from 'lucide-react';
 import {
+  BLOCK_WHATSAPP_CONTACT,
   CONNECT_WHATSAPP,
   DISCONNECT_WHATSAPP,
   GET_WHATSAPP_CONTACT,
+  GET_WHATSAPP_CONTACT_ABOUT,
   GET_WHATSAPP_CONVERSATIONS,
+  GET_WHATSAPP_GROUP_PARTICIPANTS,
   GET_WHATSAPP_MESSAGES,
+  GET_WHATSAPP_PEER_PRESENCE,
   GET_WHATSAPP_SESSION,
   LINK_CUSTOMER_TO_WHATSAPP_CONTACT,
   MARK_WHATSAPP_CONVERSATION_READ,
+  REACT_TO_WHATSAPP_MESSAGE,
   RECONFIGURE_WHATSAPP_WEBHOOK,
   SEARCH_CUSTOMERS_FOR_LINK,
+  SEND_WHATSAPP_FILE,
+  SEND_WHATSAPP_IMAGE,
   SEND_WHATSAPP_MESSAGE,
+  SEND_WHATSAPP_VIDEO,
+  SEND_WHATSAPP_VOICE,
+  SET_WHATSAPP_TYPING,
   SYNC_WHATSAPP_FROM_EVOLUTION,
   SYNC_WHATSAPP_MESSAGES_FOR_PEER,
   UNLINK_CUSTOMER_FROM_WHATSAPP_CONTACT,
@@ -83,6 +94,7 @@ interface Session {
 interface Conversation {
   peerNumber: string;
   peerName: string | null;
+  profilePicUrl: string | null;
   customerId: string | null;
   lastMessage: string | null;
   lastMessageAt: string | null;
@@ -101,6 +113,9 @@ interface Message {
   externalId: string | null;
   participantNumber: string | null;
   participantName: string | null;
+  mediaType: string | null;
+  mediaUrl: string | null;
+  mediaMimetype: string | null;
   createdAt: string;
   sentAt: string | null;
   deliveredAt: string | null;
@@ -219,13 +234,20 @@ function Avatar({
   size = 'md',
   isGroup = false,
   online = false,
+  imageUrl = null,
 }: {
   name: string | null;
   seed: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   isGroup?: boolean;
   online?: boolean;
+  imageUrl?: string | null;
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  useEffect(() => {
+    setImgFailed(false);
+  }, [imageUrl]);
+
   const dims = {
     sm: 'w-8 h-8 text-[12px]',
     md: 'w-10 h-10 text-[14px]',
@@ -240,9 +262,18 @@ function Avatar({
   }[size];
   const iconSizes = { sm: 'w-4 h-4', md: 'w-5 h-5', lg: 'w-6 h-6', xl: 'w-9 h-9' };
 
+  const showImage = imageUrl && !imgFailed;
+
   return (
     <div className="relative shrink-0">
-      {isGroup ? (
+      {showImage ? (
+        <img
+          src={imageUrl}
+          alt={name ?? 'avatar'}
+          onError={() => setImgFailed(true)}
+          className={`${dims} rounded-full object-cover bg-[#dfe5e7]`}
+        />
+      ) : isGroup ? (
         <div
           className={`${dims} rounded-full bg-[#54656f] text-white flex items-center justify-center`}
         >
@@ -527,12 +558,93 @@ function ConnectedEmptyState({
 // Bubbles + grupos por data
 // ════════════════════════════════════════════════════════════
 
+function MediaContent({ message }: { message: Message }) {
+  const { mediaType, mediaUrl, mediaMimetype } = message;
+  if (!mediaType) return null;
+
+  if (mediaType === 'sticker') {
+    return mediaUrl ? (
+      <img
+        src={mediaUrl}
+        alt="Figurinha"
+        className="w-32 h-32 object-contain"
+      />
+    ) : (
+      <div className="text-[14.2px] text-slate-700">🎟️ Figurinha</div>
+    );
+  }
+
+  if (mediaType === 'image') {
+    return mediaUrl ? (
+      <a href={mediaUrl} target="_blank" rel="noreferrer">
+        <img
+          src={mediaUrl}
+          alt="Imagem"
+          className="rounded-md max-w-full max-h-80 object-cover"
+        />
+      </a>
+    ) : (
+      <div className="text-[14.2px] text-slate-700">📷 Imagem</div>
+    );
+  }
+
+  if (mediaType === 'video') {
+    return mediaUrl ? (
+      <video
+        src={mediaUrl}
+        controls
+        className="rounded-md max-w-full max-h-80"
+      />
+    ) : (
+      <div className="text-[14.2px] text-slate-700">🎥 Vídeo</div>
+    );
+  }
+
+  if (mediaType === 'audio' || mediaType === 'ptt') {
+    return mediaUrl ? (
+      <audio
+        src={mediaUrl}
+        controls
+        className="max-w-full"
+      />
+    ) : (
+      <div className="text-[14.2px] text-slate-700">
+        {mediaType === 'ptt' ? '🎙️ Mensagem de voz' : '🎵 Áudio'}
+      </div>
+    );
+  }
+
+  if (mediaType === 'document') {
+    return (
+      <a
+        href={mediaUrl ?? '#'}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center gap-2 text-[14.2px] text-slate-800 hover:underline"
+      >
+        📎 <span className="truncate">{message.body || 'Arquivo'}</span>
+        {mediaMimetype && (
+          <span className="text-[11px] text-slate-500">{mediaMimetype}</span>
+        )}
+      </a>
+    );
+  }
+
+  if (mediaType === 'location') {
+    return <div className="text-[14.2px] text-slate-700">📍 Localização</div>;
+  }
+
+  return null;
+}
+
 function MessageBubble({
   message,
   showSender,
+  onReact,
 }: {
   message: Message;
   showSender?: boolean;
+  onReact?: (messageId: string, emoji: string) => void;
 }) {
   const time = fmtTime(message.createdAt);
   const isFailed = message.status === 'FAILED';
@@ -551,18 +663,44 @@ function MessageBubble({
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.12 }}
-          className={`relative max-w-[78%] md:max-w-[55%] rounded-lg pl-3 pr-2 pt-1.5 pb-1 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] ${
+          className={`group relative max-w-[78%] md:max-w-[55%] rounded-lg pl-3 pr-2 pt-1.5 pb-1 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] ${
             isFailed
               ? 'bg-rose-50 border border-rose-200 text-slate-900'
               : 'bg-[#d9fdd3] text-slate-900'
           }`}
         >
-          <div
-            className="text-[14.2px] break-words whitespace-pre-wrap leading-[19px] pb-3"
-            dangerouslySetInnerHTML={{
-              __html: applyWhatsappFormatting(message.body),
-            }}
-          />
+          {message.mediaType ? (
+            <div className="pb-3 space-y-1">
+              <MediaContent message={message} />
+              {message.body &&
+                !['📷 Imagem', '🎥 Vídeo', '🎙️ Mensagem de voz', '🎵 Áudio', '📎 Arquivo', '🎟️ Figurinha'].includes(
+                  message.body,
+                ) && (
+                  <div
+                    className="text-[14.2px] break-words whitespace-pre-wrap leading-[19px]"
+                    dangerouslySetInnerHTML={{
+                      __html: applyWhatsappFormatting(message.body),
+                    }}
+                  />
+                )}
+            </div>
+          ) : (
+            <div
+              className="text-[14.2px] break-words whitespace-pre-wrap leading-[19px] pb-3"
+              dangerouslySetInnerHTML={{
+                __html: applyWhatsappFormatting(message.body),
+              }}
+            />
+          )}
+          {onReact && (
+            <button
+              onClick={() => onReact(message.id, '👍')}
+              className="absolute -bottom-2 right-8 text-[11px] opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full px-1.5 py-0.5 shadow border border-[#e9edef]"
+              title="Curtir"
+            >
+              👍
+            </button>
+          )}
           <div
             className={`absolute right-2 bottom-1 flex items-center gap-1 text-[10.5px] ${
               isFailed ? 'text-rose-600' : 'text-[#667781]'
@@ -594,7 +732,7 @@ function MessageBubble({
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.12 }}
-        className="relative max-w-[78%] md:max-w-[55%] rounded-lg pl-3 pr-2 pt-1.5 pb-1 bg-white shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]"
+        className="group relative max-w-[78%] md:max-w-[55%] rounded-lg pl-3 pr-2 pt-1.5 pb-1 bg-white shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]"
       >
         {senderLabel && (
           <div
@@ -611,12 +749,38 @@ function MessageBubble({
             {senderLabel}
           </div>
         )}
-        <div
-          className="text-[14.2px] text-slate-900 break-words whitespace-pre-wrap leading-[19px] pb-3"
-          dangerouslySetInnerHTML={{
-            __html: applyWhatsappFormatting(message.body),
-          }}
-        />
+        {message.mediaType ? (
+          <div className="pb-3 space-y-1">
+            <MediaContent message={message} />
+            {message.body &&
+              !['📷 Imagem', '🎥 Vídeo', '🎙️ Mensagem de voz', '🎵 Áudio', '📎 Arquivo', '🎟️ Figurinha'].includes(
+                message.body,
+              ) && (
+                <div
+                  className="text-[14.2px] text-slate-900 break-words whitespace-pre-wrap leading-[19px]"
+                  dangerouslySetInnerHTML={{
+                    __html: applyWhatsappFormatting(message.body),
+                  }}
+                />
+              )}
+          </div>
+        ) : (
+          <div
+            className="text-[14.2px] text-slate-900 break-words whitespace-pre-wrap leading-[19px] pb-3"
+            dangerouslySetInnerHTML={{
+              __html: applyWhatsappFormatting(message.body),
+            }}
+          />
+        )}
+        {onReact && (
+          <button
+            onClick={() => onReact(message.id, '👍')}
+            className="absolute -bottom-2 right-8 text-[11px] opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full px-1.5 py-0.5 shadow border border-[#e9edef]"
+            title="Curtir"
+          >
+            👍
+          </button>
+        )}
         <div className="absolute right-2 bottom-1 text-[10.5px] text-[#667781]">
           {time}
         </div>
@@ -842,9 +1006,40 @@ function ContactInfoPanel({
   const [unlinkMut, { loading: unlinking }] = useMutation(
     UNLINK_CUSTOMER_FROM_WHATSAPP_CONTACT,
   );
+  const [blockMut, { loading: blocking }] = useMutation(BLOCK_WHATSAPP_CONTACT);
+  const { data: aboutData } = useQuery<{ whatsappContactAbout: string | null }>(
+    GET_WHATSAPP_CONTACT_ABOUT,
+    {
+      variables: { peerNumber: peer.peerNumber },
+      skip: peer.isGroup,
+      fetchPolicy: 'cache-and-network',
+    },
+  );
+  const { data: groupData } = useQuery<{
+    whatsappGroupParticipants: { jid: string; phone: string; isAdmin: boolean }[];
+  }>(GET_WHATSAPP_GROUP_PARTICIPANTS, {
+    variables: { peerNumber: peer.peerNumber },
+    skip: !peer.isGroup,
+    fetchPolicy: 'cache-and-network',
+  });
   const [imgError, setImgError] = useState(false);
 
   const c = data?.whatsappContact;
+  const liveAbout = aboutData?.whatsappContactAbout ?? c?.about ?? null;
+  const participants = groupData?.whatsappGroupParticipants ?? [];
+
+  const handleBlock = async () => {
+    const block = window.confirm(
+      'Bloquear este contato? Ele não conseguirá mais enviar mensagens.',
+    );
+    if (!block) return;
+    try {
+      await blockMut({ variables: { peerNumber: peer.peerNumber, block: true } });
+      alert('Contato bloqueado.');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
 
   const handleUnlink = async () => {
     if (!window.confirm('Desvincular este cliente da conversa?')) return;
@@ -940,12 +1135,48 @@ function ContactInfoPanel({
                   {c.verifiedName}
                 </span>
               )}
-              {c.about && (
+              {(liveAbout || c.about) && (
                 <p className="text-[11px] text-slate-600 mt-2 italic px-3 leading-snug">
-                  "{c.about}"
+                  "{liveAbout ?? c.about}"
                 </p>
               )}
+              {!c.isGroup && (
+                <button
+                  onClick={handleBlock}
+                  disabled={blocking}
+                  className="mt-3 text-[11px] text-rose-600 hover:text-rose-700 hover:underline disabled:opacity-50"
+                >
+                  {blocking ? 'Bloqueando…' : 'Bloquear contato'}
+                </button>
+              )}
             </div>
+
+            {/* Group participants */}
+            {peer.isGroup && participants.length > 0 && (
+              <section className="p-4 border-b border-slate-100">
+                <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
+                  <Users className="w-3 h-3" />
+                  Participantes ({participants.length})
+                </h4>
+                <ul className="space-y-1.5 max-h-64 overflow-y-auto">
+                  {participants.map((p) => (
+                    <li
+                      key={p.jid}
+                      className="flex items-center justify-between text-[12px] py-1"
+                    >
+                      <span className="text-slate-800 truncate">
+                        {p.phone || p.jid}
+                      </span>
+                      {p.isAdmin && (
+                        <span className="text-[9px] uppercase tracking-wide bg-brand-50 text-brand-700 px-1.5 py-0.5 rounded">
+                          admin
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             {/* Business info */}
             {c.isBusiness &&
@@ -1150,6 +1381,132 @@ function ChatPanel({
   const [syncMessages, { loading: syncingHistory }] = useMutation(
     SYNC_WHATSAPP_MESSAGES_FOR_PEER,
   );
+  const [sendImage] = useMutation(SEND_WHATSAPP_IMAGE);
+  const [sendVideo] = useMutation(SEND_WHATSAPP_VIDEO);
+  const [sendVoice] = useMutation(SEND_WHATSAPP_VOICE);
+  const [sendFile] = useMutation(SEND_WHATSAPP_FILE);
+  const [reactToMsg] = useMutation(REACT_TO_WHATSAPP_MESSAGE);
+  const [setTyping] = useMutation(SET_WHATSAPP_TYPING);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [recording, setRecording] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const typingTimerRef = useRef<number | null>(null);
+
+  const { data: presenceData } = useQuery<{
+    whatsappPeerPresence: { presence: string | null; lastSeen: string | null } | null;
+  }>(GET_WHATSAPP_PEER_PRESENCE, {
+    variables: { peerNumber: peer.peerNumber },
+    pollInterval: 8000,
+    fetchPolicy: 'cache-and-network',
+    skip: peer.isGroup || session.status !== 'CONNECTED',
+  });
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const r = reader.result as string;
+        // remove "data:<mime>;base64," prefix
+        resolve(r.includes(',') ? r.split(',')[1] : r);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    try {
+      const data = await fileToBase64(file);
+      const fileInput = {
+        data,
+        mimetype: file.type || 'application/octet-stream',
+        filename: file.name,
+      };
+      const vars = {
+        to: peer.peerNumber,
+        file: fileInput,
+        customerId: peer.customerId ?? undefined,
+      };
+      if (file.type.startsWith('image/')) {
+        await sendImage({ variables: vars });
+      } else if (file.type.startsWith('video/')) {
+        await sendVideo({ variables: vars });
+      } else {
+        await sendFile({ variables: vars });
+      }
+      await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      recordedChunksRef.current = [];
+      mr.ondataavailable = (ev) => {
+        if (ev.data.size > 0) recordedChunksRef.current.push(ev.data);
+      };
+      mr.onstop = async () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+        stream.getTracks().forEach((t) => t.stop());
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const r = reader.result as string;
+          const data = r.includes(',') ? r.split(',')[1] : r;
+          try {
+            await sendVoice({
+              variables: {
+                to: peer.peerNumber,
+                file: { data, mimetype: 'audio/ogg; codecs=opus', filename: 'voice.ogg' },
+                customerId: peer.customerId ?? undefined,
+              },
+            });
+            await refetch();
+          } catch (err) {
+            alert(err instanceof Error ? err.message : String(err));
+          }
+        };
+        reader.readAsDataURL(blob);
+      };
+      mr.start();
+      recorderRef.current = mr;
+      setRecording(true);
+    } catch (err) {
+      alert('Não foi possível acessar o microfone: ' + (err as Error).message);
+    }
+  };
+
+  const stopRecording = () => {
+    recorderRef.current?.stop();
+    setRecording(false);
+  };
+
+  const onReact = async (messageId: string, emoji: string) => {
+    try {
+      await reactToMsg({ variables: { messageId, reaction: emoji } });
+      await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleTyping = () => {
+    if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+    setTyping({ variables: { peerNumber: peer.peerNumber, typing: true } }).catch(
+      () => undefined,
+    );
+    typingTimerRef.current = window.setTimeout(() => {
+      setTyping({
+        variables: { peerNumber: peer.peerNumber, typing: false },
+      }).catch(() => undefined);
+    }, 2000);
+  };
 
   const messages = useMemo(
     () => data?.whatsappMessages ?? [],
@@ -1233,10 +1590,21 @@ function ChatPanel({
           seed={peer.peerNumber}
           size="md"
           isGroup={peer.isGroup}
+          imageUrl={peer.profilePicUrl}
         />
         <div className="flex-1 min-w-0">
           <div className="font-medium truncate text-[#111b21] leading-tight flex items-center gap-1.5 text-[16px]">
             {displayPeer(peer)}
+            {presenceData?.whatsappPeerPresence?.presence === 'typing' && (
+              <span className="text-[12px] font-normal text-[#00a884] italic">
+                digitando…
+              </span>
+            )}
+            {presenceData?.whatsappPeerPresence?.presence === 'recording' && (
+              <span className="text-[12px] font-normal text-[#00a884] italic">
+                gravando áudio…
+              </span>
+            )}
             {peer.isGroup && (
               <span className="text-[9px] font-medium uppercase tracking-wide bg-[#d9fdd3] text-[#005c4b] px-1.5 py-0.5 rounded">
                 grupo
@@ -1362,6 +1730,7 @@ function ChatPanel({
                   key={m.id}
                   message={m}
                   showSender={peer.isGroup}
+                  onReact={onReact}
                 />
               ))}
             </div>
@@ -1381,10 +1750,19 @@ function ChatPanel({
         >
           <Smile className="w-[24px] h-[24px]" />
         </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,text/*"
+          className="hidden"
+          onChange={handleAttach}
+        />
         <button
           type="button"
+          onClick={() => fileInputRef.current?.click()}
           className="p-2 text-[#54656f] hover:text-[#3b4a54] rounded-full"
           title="Anexar"
+          disabled={session.status !== 'CONNECTED'}
         >
           <Paperclip className="w-[24px] h-[24px]" />
         </button>
@@ -1392,7 +1770,10 @@ function ChatPanel({
           <textarea
             ref={textareaRef}
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              if (session.status === 'CONNECTED') handleTyping();
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -1400,22 +1781,39 @@ function ChatPanel({
               }
             }}
             rows={1}
-            placeholder="Mensagem"
+            placeholder={recording ? 'Gravando…' : 'Mensagem'}
             className="flex-1 resize-none border-0 bg-transparent outline-none text-[15px] text-[#111b21] placeholder:text-[#667781] py-2 max-h-32"
+            disabled={recording}
           />
         </div>
-        <button
-          type="submit"
-          disabled={sending || !draft.trim() || session.status !== 'CONNECTED'}
-          className="w-[42px] h-[42px] rounded-full bg-[#00a884] text-white flex items-center justify-center hover:bg-[#06876c] disabled:opacity-40 shrink-0 transition-colors"
-          title="Enviar"
-        >
-          {sending ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <Send className="w-5 h-5 -ml-0.5" />
-          )}
-        </button>
+        {draft.trim() ? (
+          <button
+            type="submit"
+            disabled={sending || !draft.trim() || session.status !== 'CONNECTED'}
+            className="w-[42px] h-[42px] rounded-full bg-[#00a884] text-white flex items-center justify-center hover:bg-[#06876c] disabled:opacity-40 shrink-0 transition-colors"
+            title="Enviar"
+          >
+            {sending ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Send className="w-5 h-5 -ml-0.5" />
+            )}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={recording ? stopRecording : startRecording}
+            disabled={session.status !== 'CONNECTED'}
+            className={`w-[42px] h-[42px] rounded-full flex items-center justify-center shrink-0 transition-colors ${
+              recording
+                ? 'bg-red-500 text-white animate-pulse'
+                : 'bg-[#00a884] text-white hover:bg-[#06876c]'
+            } disabled:opacity-40`}
+            title={recording ? 'Parar gravação' : 'Gravar áudio'}
+          >
+            <Mic className="w-5 h-5" />
+          </button>
+        )}
       </form>
     </div>
   );
@@ -1550,6 +1948,7 @@ function ConversationsSidebar({
                   seed={c.peerNumber}
                   size="lg"
                   isGroup={c.isGroup}
+                  imageUrl={c.profilePicUrl}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">

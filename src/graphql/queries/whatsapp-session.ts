@@ -18,6 +18,7 @@ const SESSION_FIELDS = `
 const CONVERSATION_FIELDS = `
   peerNumber
   peerName
+  profilePicUrl
   customerId
   lastMessage
   lastMessageAt
@@ -36,6 +37,9 @@ const MESSAGE_FIELDS = `
   externalId
   participantNumber
   participantName
+  mediaType
+  mediaUrl
+  mediaMimetype
   createdAt
   sentAt
   deliveredAt
@@ -79,9 +83,137 @@ export const SEND_WHATSAPP_MESSAGE = gql`
     $to: String!
     $body: String!
     $customerId: String
+    $replyTo: String
+    $mentions: [String!]
   ) {
-    sendWhatsappMessage(to: $to, body: $body, customerId: $customerId) {
+    sendWhatsappMessage(
+      to: $to
+      body: $body
+      customerId: $customerId
+      replyTo: $replyTo
+      mentions: $mentions
+    ) {
       ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const SEND_WHATSAPP_IMAGE = gql`
+  mutation SendWhatsappImage(
+    $to: String!
+    $file: WhatsappMediaInput!
+    $caption: String
+    $replyTo: String
+    $customerId: String
+  ) {
+    sendWhatsappImage(to: $to, file: $file, caption: $caption, replyTo: $replyTo, customerId: $customerId) {
+      ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const SEND_WHATSAPP_VIDEO = gql`
+  mutation SendWhatsappVideo(
+    $to: String!
+    $file: WhatsappMediaInput!
+    $caption: String
+    $replyTo: String
+    $customerId: String
+  ) {
+    sendWhatsappVideo(to: $to, file: $file, caption: $caption, replyTo: $replyTo, customerId: $customerId) {
+      ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const SEND_WHATSAPP_VOICE = gql`
+  mutation SendWhatsappVoice(
+    $to: String!
+    $file: WhatsappMediaInput!
+    $replyTo: String
+    $customerId: String
+  ) {
+    sendWhatsappVoice(to: $to, file: $file, replyTo: $replyTo, customerId: $customerId) {
+      ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const SEND_WHATSAPP_FILE = gql`
+  mutation SendWhatsappFile(
+    $to: String!
+    $file: WhatsappMediaInput!
+    $caption: String
+    $replyTo: String
+    $customerId: String
+  ) {
+    sendWhatsappFile(to: $to, file: $file, caption: $caption, replyTo: $replyTo, customerId: $customerId) {
+      ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const SEND_WHATSAPP_LOCATION = gql`
+  mutation SendWhatsappLocation(
+    $to: String!
+    $latitude: Float!
+    $longitude: Float!
+    $title: String
+  ) {
+    sendWhatsappLocation(to: $to, latitude: $latitude, longitude: $longitude, title: $title) {
+      ${MESSAGE_FIELDS}
+    }
+  }
+`;
+
+export const REACT_TO_WHATSAPP_MESSAGE = gql`
+  mutation ReactToWhatsappMessage($messageId: String!, $reaction: String!) {
+    reactToWhatsappMessage(messageId: $messageId, reaction: $reaction)
+  }
+`;
+
+export const SET_WHATSAPP_TYPING = gql`
+  mutation SetWhatsappTyping($peerNumber: String!, $typing: Boolean!) {
+    setWhatsappTyping(peerNumber: $peerNumber, typing: $typing)
+  }
+`;
+
+export const GET_WHATSAPP_PEER_PRESENCE = gql`
+  query GetWhatsappPeerPresence($peerNumber: String!) {
+    whatsappPeerPresence(peerNumber: $peerNumber) {
+      presence
+      lastSeen
+    }
+  }
+`;
+
+export const GET_WHATSAPP_CONTACT_ABOUT = gql`
+  query GetWhatsappContactAbout($peerNumber: String!) {
+    whatsappContactAbout(peerNumber: $peerNumber)
+  }
+`;
+
+export const CHECK_WHATSAPP_NUMBER = gql`
+  query CheckWhatsappNumber($phone: String!) {
+    checkWhatsappNumber(phone: $phone) {
+      exists
+      chatId
+    }
+  }
+`;
+
+export const BLOCK_WHATSAPP_CONTACT = gql`
+  mutation BlockWhatsappContact($peerNumber: String!, $block: Boolean!) {
+    blockWhatsappContact(peerNumber: $peerNumber, block: $block)
+  }
+`;
+
+export const GET_WHATSAPP_GROUP_PARTICIPANTS = gql`
+  query GetWhatsappGroupParticipants($peerNumber: String!) {
+    whatsappGroupParticipants(peerNumber: $peerNumber) {
+      jid
+      phone
+      isAdmin
     }
   }
 `;
