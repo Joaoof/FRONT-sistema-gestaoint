@@ -5,13 +5,17 @@ import {
   ArrowLeft,
   Briefcase,
   Calendar,
+  CheckCheck,
   CheckCircle,
   CheckSquare,
+  ExternalLink,
   Loader2,
   Mail,
+  MessageCircle,
   Pencil,
   Phone,
   Plus,
+  Send,
   StickyNote,
   Trash2,
   Trophy,
@@ -29,6 +33,11 @@ import {
   UPDATE_OPPORTUNITY,
   UPDATE_OPPORTUNITY_ACTIVITY,
 } from '../../graphql/queries/opportunities';
+import {
+  BUILD_WHATSAPP_LINK,
+  MARK_WHATSAPP_LINK_OPENED,
+} from '../../graphql/queries/whatsapp';
+import { GET_NOTIFICATION_TEMPLATES } from '../../graphql/queries/notification-templates';
 
 type Stage =
   | 'NEW'
@@ -482,10 +491,313 @@ function NewActivityForm({
   );
 }
 
+interface NotificationTemplate {
+  id: string;
+  key: string;
+  channel: 'IN_APP' | 'EMAIL' | 'WHATSAPP' | 'SMS' | 'PUSH';
+  name: string;
+  subject: string | null;
+  body: string;
+  active: boolean;
+}
+
+interface WhatsappModalProps {
+  opportunity: {
+    id: string;
+    title: string;
+    customerId: string | null;
+    customerName: string | null;
+    customerPhone: string | null;
+    customerEmail: string | null;
+    value: number;
+  };
+  onClose: () => void;
+}
+
+function interpolate(s: string, vars: Record<string, unknown>): string {
+  return s.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, path: string) => {
+    const v = path
+      .split('.')
+      .reduce<unknown>(
+        (acc, p) =>
+          acc && typeof acc === 'object'
+            ? (acc as Record<string, unknown>)[p]
+            : undefined,
+        vars,
+      );
+    return v === null || v === undefined ? '' : String(v);
+  });
+}
+
+function applyWhatsappFormatting(escaped: string): string {
+  return escaped
+    .replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>')
+    .replace(/_([^_\n]+)_/g, '<em>$1</em>')
+    .replace(/\n/g, '<br/>');
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function WhatsappModal({ opportunity, onClose }: WhatsappModalProps) {
+  const [phone, setPhone] = useState(opportunity.customerPhone ?? '');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [body, setBody] = useState(
+    `Olá ${opportunity.customerName ?? ''}, tudo bem?\n\nFalando aqui sobre *${opportunity.title}*.`,
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: templatesData } = useQuery<{
+    notificationTemplates: NotificationTemplate[];
+  }>(GET_NOTIFICATION_TEMPLATES, {
+    variables: { channel: 'WHATSAPP', activeOnly: true },
+    fetchPolicy: 'cache-and-network',
+  });
+
+  const [buildLink, { loading }] = useMutation(BUILD_WHATSAPP_LINK);
+  const [markOpened] = useMutation(MARK_WHATSAPP_LINK_OPENED);
+
+  const templates = templatesData?.notificationTemplates ?? [];
+
+  const previewVars: Record<string, unknown> = {
+    customer: {
+      name: opportunity.customerName ?? '—',
+      phone: opportunity.customerPhone ?? '',
+      email: opportunity.customerEmail ?? '',
+    },
+    opportunity: {
+      title: opportunity.title,
+      value: new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+      }).format(opportunity.value || 0),
+    },
+    date: new Date().toLocaleDateString('pt-BR'),
+  };
+
+  const renderedPreview = interpolate(body, previewVars);
+
+  const handleSelectTemplate = (id: string) => {
+    setSelectedTemplateId(id);
+    const tpl = templates.find((t) => t.id === id);
+    if (tpl) setBody(tpl.body);
+  };
+
+  const sanitize = (raw: string) => raw.replace(/\D+/g, '');
+
+  const submit = async () => {
+    setError(null);
+    const digits = sanitize(phone);
+    if (digits.length < 10) {
+      setError('Telefone inválido — precisa do DDI+DDD+número.');
+      return;
+    }
+    try {
+      const tpl = templates.find((t) => t.id === selectedTemplateId);
+      const res = await buildLink({
+        variables: {
+          input: {
+            toPhone: digits,
+            customerId: opportunity.customerId,
+            body: tpl ? undefined : body,
+            templateKey: tpl?.key,
+            varsJson: tpl ? JSON.stringify(previewVars) : undefined,
+            log: true,
+          },
+        },
+      });
+      const link = res.data?.buildWhatsappLink;
+      if (!link?.url) {
+        setError('Falha ao construir o link.');
+        return;
+      }
+      window.open(link.url, '_blank', 'noopener,noreferrer');
+      if (link.messageLogId) {
+        await markOpened({ variables: { messageLogId: link.messageLogId } });
+      }
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <MessageCircle className="w-6 h-6" />
+            <div>
+              <h2 className="text-lg font-semibold">Enviar WhatsApp</h2>
+              <p className="text-xs text-emerald-50">
+                Mensagem é gerada e o WhatsApp Web/app abre para você confirmar o envio.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/20 rounded"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 flex-1 overflow-hidden">
+          <div className="p-6 space-y-4 overflow-y-auto">
+            <label className="block text-sm">
+              <span className="block mb-1 text-slate-600">
+                Telefone (com DDI)
+              </span>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="55 71 99999-8888"
+                className="w-full border rounded-lg px-3 py-2 font-mono"
+              />
+              <span className="text-xs text-slate-400 mt-1 block">
+                Apenas dígitos serão usados. Será sanitizado.
+              </span>
+            </label>
+
+            {templates.length > 0 && (
+              <label className="block text-sm">
+                <span className="block mb-1 text-slate-600">
+                  Template (opcional)
+                </span>
+                <select
+                  value={selectedTemplateId}
+                  onChange={(e) => handleSelectTemplate(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2"
+                >
+                  <option value="">— mensagem livre —</option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.key})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <label className="block text-sm">
+              <span className="block mb-1 text-slate-600">Mensagem</span>
+              <textarea
+                value={body}
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  setSelectedTemplateId('');
+                }}
+                rows={10}
+                className="w-full border rounded-lg px-3 py-2 font-mono text-sm"
+              />
+              <span className="text-xs text-slate-400 mt-1 block">
+                Suporta *negrito* _itálico_ e variáveis{' '}
+                <code className="text-emerald-600">{'{{customer.name}}'}</code>,{' '}
+                <code className="text-emerald-600">{'{{opportunity.title}}'}</code>,{' '}
+                <code className="text-emerald-600">{'{{opportunity.value}}'}</code>,{' '}
+                <code className="text-emerald-600">{'{{date}}'}</code>.
+              </span>
+            </label>
+
+            {error && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-2 rounded">
+                {error}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-gradient-to-br from-emerald-50 to-slate-50 p-6 flex flex-col items-center justify-center border-l">
+            <div className="w-[260px] h-[480px] bg-slate-900 rounded-[2.2rem] p-2 shadow-2xl">
+              <div className="bg-white h-full rounded-[1.8rem] overflow-hidden flex flex-col">
+                <div className="bg-emerald-600 text-white px-3 py-2 flex items-center gap-2 text-sm">
+                  <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center text-xs font-semibold">
+                    {(opportunity.customerName ?? 'C')
+                      .slice(0, 1)
+                      .toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">
+                      {opportunity.customerName ?? 'Cliente'}
+                    </div>
+                    <div className="text-[10px] text-emerald-100">online</div>
+                  </div>
+                  <Phone className="w-4 h-4" />
+                </div>
+                <div
+                  className="flex-1 p-2 overflow-auto"
+                  style={{ backgroundColor: '#e5ddd5' }}
+                >
+                  <div className="bg-white rounded-lg rounded-tl-none p-2 max-w-[85%] shadow-sm relative">
+                    <div
+                      className="text-xs text-slate-800"
+                      dangerouslySetInnerHTML={{
+                        __html: applyWhatsappFormatting(
+                          escapeHtml(renderedPreview),
+                        ),
+                      }}
+                    />
+                    <div className="text-[9px] text-slate-400 text-right mt-1 flex items-center justify-end gap-0.5">
+                      {new Date().toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                      <CheckCheck className="w-3 h-3 text-blue-500" />
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-slate-100 p-2 flex items-center gap-2 text-slate-400 text-xs">
+                  <span className="flex-1 bg-white rounded-full px-3 py-1.5 text-slate-300">
+                    Mensagem
+                  </span>
+                  <Send className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mt-3 max-w-[260px] text-center">
+              Pré-visualização. Ao confirmar, o WhatsApp Web/app abre com a mensagem pronta.
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t bg-slate-50 px-6 py-3 flex justify-between items-center">
+          <span className="text-xs text-slate-500">
+            Uma cópia será gravada na Central de Mensagens.
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 border rounded-lg text-sm hover:bg-white"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={submit}
+              disabled={loading || !phone || !body.trim()}
+              className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-lg text-sm font-medium hover:from-emerald-700 disabled:opacity-50 shadow"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ExternalLink className="w-4 h-4" />
+              )}
+              Abrir WhatsApp
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function OpportunityDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
   const [creatingActivity, setCreatingActivity] = useState(false);
   const [notesDraft, setNotesDraft] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
@@ -668,6 +980,14 @@ export function OpportunityDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setWhatsappOpen(true)}
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded hover:from-emerald-700 shadow-sm"
+            title="Enviar mensagem WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4" />
+            WhatsApp
+          </button>
           <button
             onClick={() => setEditing(true)}
             className="flex items-center gap-2 px-3 py-2 text-sm border rounded hover:bg-slate-50"
@@ -922,6 +1242,21 @@ export function OpportunityDetailPage() {
           opportunity={opp}
           onClose={() => setEditing(false)}
           onSaved={() => refetch()}
+        />
+      )}
+
+      {whatsappOpen && (
+        <WhatsappModal
+          opportunity={{
+            id: opp.id,
+            title: opp.title,
+            customerId: opp.customerId,
+            customerName: opp.customerName,
+            customerPhone: opp.customerPhone,
+            customerEmail: opp.customerEmail,
+            value: opp.value,
+          }}
+          onClose={() => setWhatsappOpen(false)}
         />
       )}
     </div>

@@ -14,6 +14,8 @@ const SETTINGS_FIELDS = `
   weekStartsOn
   fiscalYearStartMonth
   defaultPageSize
+  companyWhatsappNumber
+  companyWhatsappName
   createdAt
   updatedAt
 `;

@@ -26,6 +26,8 @@ interface CompanySettings {
   weekStartsOn: number;
   fiscalYearStartMonth: number;
   defaultPageSize: number;
+  companyWhatsappNumber: string | null;
+  companyWhatsappName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -165,6 +167,8 @@ export function SystemParametersPage() {
             weekStartsOn: form.weekStartsOn,
             fiscalYearStartMonth: form.fiscalYearStartMonth,
             defaultPageSize: form.defaultPageSize,
+            companyWhatsappNumber: form.companyWhatsappNumber ?? null,
+            companyWhatsappName: form.companyWhatsappName ?? null,
           },
         },
       });
@@ -446,6 +450,53 @@ export function SystemParametersPage() {
                 </option>
               ))}
             </select>
+          </label>
+        </div>
+      </section>
+
+      <section className="bg-white border rounded-lg p-5 space-y-4">
+        <h2 className="font-semibold text-slate-700 flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+          WhatsApp da empresa
+        </h2>
+        <p className="text-xs text-slate-500 -mt-2">
+          Usado pelo sistema para gerar links wa.me. O envio acontece pelo
+          WhatsApp Web/app — basta clicar e enviar.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="text-sm">
+            <span className="block mb-1 text-slate-600">Número (com DDI)</span>
+            <input
+              type="text"
+              placeholder="Ex.: 5571999998888"
+              value={form.companyWhatsappNumber ?? ''}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  companyWhatsappNumber: e.target.value,
+                }))
+              }
+              className="w-full border rounded px-3 py-2 font-mono"
+            />
+            <span className="block mt-1 text-xs text-slate-400">
+              Apenas dígitos. Ex.: 55 (Brasil) + 71 (DDD) + número
+            </span>
+          </label>
+
+          <label className="text-sm">
+            <span className="block mb-1 text-slate-600">Nome de exibição</span>
+            <input
+              type="text"
+              placeholder="Ex.: JC Concreto"
+              value={form.companyWhatsappName ?? ''}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  companyWhatsappName: e.target.value,
+                }))
+              }
+              className="w-full border rounded px-3 py-2"
+            />
           </label>
         </div>
       </section>
