@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckCheck,
+  CloudCog,
+  Download,
   Loader2,
   LogOut,
   MessageCircle,
@@ -29,7 +31,9 @@ import {
   GET_WHATSAPP_MESSAGES,
   GET_WHATSAPP_SESSION,
   MARK_WHATSAPP_CONVERSATION_READ,
+  RECONFIGURE_WHATSAPP_WEBHOOK,
   SEND_WHATSAPP_MESSAGE,
+  SYNC_WHATSAPP_FROM_EVOLUTION,
 } from '../../graphql/queries/whatsapp-session';
 
 type SessionStatus =
@@ -451,6 +455,12 @@ export function WhatsappPage() {
   const [disconnectMut, { loading: disconnecting }] = useMutation(
     DISCONNECT_WHATSAPP,
   );
+  const [reconfigureMut, { loading: reconfiguring }] = useMutation(
+    RECONFIGURE_WHATSAPP_WEBHOOK,
+  );
+  const [syncMut, { loading: syncing }] = useMutation(
+    SYNC_WHATSAPP_FROM_EVOLUTION,
+  );
 
   const session = sessionData?.whatsappSession;
 
@@ -471,6 +481,37 @@ export function WhatsappPage() {
       await refetchSession();
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleReconfigureWebhook = async () => {
+    try {
+      const res = await reconfigureMut();
+      const data = res.data?.reconfigureWhatsappWebhook;
+      alert(
+        data?.ok
+          ? `Webhook reconfigurado!\n\nFormato aceito: ${data.format}\nURL: ${data.webhookUrl}`
+          : 'Falha ao reconfigurar.',
+      );
+    } catch (err) {
+      alert(
+        `Erro ao reconfigurar webhook:\n${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  };
+
+  const handleSync = async () => {
+    try {
+      const res = await syncMut();
+      const count = res.data?.syncWhatsappFromEvolution ?? 0;
+      alert(
+        `${count} contato(s) importado(s).\n\nObs: o Evolution não envia histórico antigo, apenas a lista de contatos. As mensagens antigas continuam só no celular.`,
+      );
+      await refetchConv();
+    } catch (err) {
+      alert(
+        `Erro ao sincronizar:\n${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   };
 
@@ -535,7 +576,7 @@ export function WhatsappPage() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => refetchSession()}
             className="p-2 border rounded hover:bg-slate-50"
@@ -544,17 +585,51 @@ export function WhatsappPage() {
             <RefreshCcw className="w-4 h-4" />
           </button>
           {isConnected && (
-            <button
-              onClick={handleDisconnect}
-              disabled={disconnecting}
-              className="flex items-center gap-2 px-3 py-2 text-sm border border-rose-200 text-rose-700 rounded hover:bg-rose-50"
-            >
-              <LogOut className="w-4 h-4" />
-              Desconectar
-            </button>
+            <>
+              <button
+                onClick={handleReconfigureWebhook}
+                disabled={reconfiguring}
+                className="flex items-center gap-2 px-3 py-2 text-sm border border-amber-200 text-amber-700 rounded hover:bg-amber-50 disabled:opacity-50"
+                title="Reconfigurar webhook no Evolution (use se mensagens não estão chegando)"
+              >
+                {reconfiguring ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CloudCog className="w-4 h-4" />
+                )}
+                Reconfigurar webhook
+              </button>
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className="flex items-center gap-2 px-3 py-2 text-sm border border-blue-200 text-blue-700 rounded hover:bg-blue-50 disabled:opacity-50"
+                title="Importar contatos existentes do Evolution"
+              >
+                {syncing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                Importar contatos
+              </button>
+              <button
+                onClick={handleDisconnect}
+                disabled={disconnecting}
+                className="flex items-center gap-2 px-3 py-2 text-sm border border-rose-200 text-rose-700 rounded hover:bg-rose-50"
+              >
+                <LogOut className="w-4 h-4" />
+                Desconectar
+              </button>
+            </>
           )}
         </div>
       </header>
+      {session.status !== 'CONNECTED' && session.lastError && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-2 rounded flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          {session.lastError}
+        </div>
+      )}
 
       {!isConnected ? (
         <QrConnectScreen

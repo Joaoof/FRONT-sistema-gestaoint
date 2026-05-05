@@ -88,3 +88,25 @@ export const MARK_WHATSAPP_CONVERSATION_READ = gql`
     markWhatsappConversationRead(peerNumber: $peerNumber)
   }
 `;
+
+export const RECONFIGURE_WHATSAPP_WEBHOOK = gql`
+  mutation ReconfigureWhatsappWebhook {
+    reconfigureWhatsappWebhook {
+      ok
+      format
+      webhookUrl
+    }
+  }
+`;
+
+export const GET_WHATSAPP_WEBHOOK_CONFIG = gql`
+  query GetWhatsappWebhookConfig {
+    whatsappWebhookConfig
+  }
+`;
+
+export const SYNC_WHATSAPP_FROM_EVOLUTION = gql`
+  mutation SyncWhatsappFromEvolution {
+    syncWhatsappFromEvolution
+  }
+`;
