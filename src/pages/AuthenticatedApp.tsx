@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useInventory } from '../hooks/useInventory';
 import { Sidebar } from '../components/Sidebar';
 import { useNotification } from '../hooks/useNotification';
+import { WhatsappReminderToaster } from '../components/whatsapp/ReminderToaster';
 
 // Páginas
 import { Dashboard } from './Dashboard';
@@ -267,6 +268,7 @@ export function AuthenticatedApp() {
     return (
 
         <div className={`flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 ${darkMode ? 'dark' : ''}`}>
+            <WhatsappReminderToaster />
             <Sidebar
                 currentView={currentView}
                 onViewChange={handleViewChange}

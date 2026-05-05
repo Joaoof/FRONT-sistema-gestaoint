@@ -56,19 +56,26 @@ import {
 import {
   BLOCK_WHATSAPP_CONTACT,
   CONNECT_WHATSAPP,
+  CREATE_CUSTOMER_FROM_WHATSAPP_CONTACT,
+  CREATE_WHATSAPP_REMINDER,
   DELETE_WHATSAPP_MESSAGE,
+  DELETE_WHATSAPP_REMINDER,
   DISCONNECT_WHATSAPP,
   EDIT_WHATSAPP_MESSAGE,
   FORWARD_WHATSAPP_MESSAGE,
+  GET_WHATSAPP_ACTIVITY_TIMELINE,
   GET_WHATSAPP_CONTACT,
   GET_WHATSAPP_CONTACT_ABOUT,
   GET_WHATSAPP_CONVERSATIONS,
   GET_WHATSAPP_GROUP_PARTICIPANTS,
+  GET_WHATSAPP_MEDIA_SUMMARY,
   GET_WHATSAPP_MESSAGES,
   GET_WHATSAPP_PEER_PRESENCE,
+  GET_WHATSAPP_REMINDERS,
   GET_WHATSAPP_SESSION,
   LINK_CUSTOMER_TO_WHATSAPP_CONTACT,
   MARK_WHATSAPP_CONVERSATION_READ,
+  MARK_WHATSAPP_REMINDER_DONE,
   ON_WHATSAPP_MESSAGE_RECEIVED,
   ON_WHATSAPP_MESSAGE_UPDATED,
   PIN_WHATSAPP_MESSAGE,
@@ -85,6 +92,7 @@ import {
   SYNC_WHATSAPP_FROM_EVOLUTION,
   SYNC_WHATSAPP_MESSAGES_FOR_PEER,
   UNLINK_CUSTOMER_FROM_WHATSAPP_CONTACT,
+  UPDATE_WHATSAPP_CONTACT_CRM,
 } from '../../graphql/queries/whatsapp-session';
 
 type SessionStatus =
@@ -1040,6 +1048,19 @@ interface ContactDetails {
   totalMessages: number;
   inboundCount: number;
   outboundCount: number;
+  messages7d: number;
+  messages30d: number;
+  daysSinceLastMessage: number;
+  avgResponseMinutes: number | null;
+  unansweredOutbound: number;
+  mediaCount: number;
+  callCount: number;
+  shouldGreet: boolean;
+  tags: string[];
+  internalNotes: string | null;
+  conversationStatus: string | null;
+  assignedUserId: string | null;
+  assignedUserName: string | null;
   firstMessageAt: string | null;
   lastMessageAt: string | null;
   waLink: string;
@@ -1214,6 +1235,62 @@ function ContactInfoPanel({
     UNLINK_CUSTOMER_FROM_WHATSAPP_CONTACT,
   );
   const [blockMut, { loading: blocking }] = useMutation(BLOCK_WHATSAPP_CONTACT);
+  const [createCustomerMut, { loading: creatingCustomer }] = useMutation(
+    CREATE_CUSTOMER_FROM_WHATSAPP_CONTACT,
+  );
+  const [updateCrmMut] = useMutation(UPDATE_WHATSAPP_CONTACT_CRM);
+  const [createReminderMut] = useMutation(CREATE_WHATSAPP_REMINDER);
+  const [markReminderDoneMut] = useMutation(MARK_WHATSAPP_REMINDER_DONE);
+  const [deleteReminderMut] = useMutation(DELETE_WHATSAPP_REMINDER);
+  const { data: timelineData } = useQuery<{
+    whatsappActivityTimeline: Array<{
+      id: string;
+      type: string;
+      at: string;
+      description: string | null;
+      actor: string | null;
+      icon: string | null;
+    }>;
+  }>(GET_WHATSAPP_ACTIVITY_TIMELINE, {
+    variables: { peerNumber: peer.peerNumber, limit: 30 },
+    fetchPolicy: 'cache-and-network',
+  });
+  const { data: mediaData } = useQuery<{
+    whatsappMediaSummary: {
+      images: number;
+      videos: number;
+      audios: number;
+      documents: number;
+      stickers: number;
+      locations: number;
+    };
+  }>(GET_WHATSAPP_MEDIA_SUMMARY, {
+    variables: { peerNumber: peer.peerNumber },
+    fetchPolicy: 'cache-and-network',
+  });
+  const { data: remindersData, refetch: refetchReminders } = useQuery<{
+    whatsappReminders: Array<{
+      id: string;
+      title: string;
+      description: string | null;
+      tag: string | null;
+      dueAt: string;
+      doneAt: string | null;
+    }>;
+  }>(GET_WHATSAPP_REMINDERS, {
+    variables: { peerNumber: peer.peerNumber, pending: true },
+    fetchPolicy: 'cache-and-network',
+  });
+
+  const [tagInput, setTagInput] = useState('');
+  const [notesDraft, setNotesDraft] = useState('');
+  const [reminderTitle, setReminderTitle] = useState('');
+  const [reminderDate, setReminderDate] = useState('');
+  const [reminderTag, setReminderTag] = useState('');
+  const [createCustomerOpen, setCreateCustomerOpen] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState('');
+  const [newCustomerEmail, setNewCustomerEmail] = useState('');
+  const [newCustomerDoc, setNewCustomerDoc] = useState('');
   const { data: aboutData } = useQuery<{ whatsappContactAbout: string | null }>(
     GET_WHATSAPP_CONTACT_ABOUT,
     {
@@ -1234,6 +1311,114 @@ function ContactInfoPanel({
   const c = data?.whatsappContact;
   const liveAbout = aboutData?.whatsappContactAbout ?? c?.about ?? null;
   const participants = groupData?.whatsappGroupParticipants ?? [];
+
+  const handleCreateCustomer = async () => {
+    try {
+      const res = await createCustomerMut({
+        variables: {
+          peerNumber: peer.peerNumber,
+          name: newCustomerName.trim() || undefined,
+          email: newCustomerEmail.trim() || undefined,
+          document: newCustomerDoc.trim() || undefined,
+        },
+      });
+      const id = res.data?.createCustomerFromWhatsappContact?.customerId;
+      const linked = res.data?.createCustomerFromWhatsappContact?.linkedMessages;
+      alert(
+        `Cliente criado e vinculado à conversa (${linked} mensagem(ns) conectadas).`,
+      );
+      setCreateCustomerOpen(false);
+      setNewCustomerName('');
+      setNewCustomerEmail('');
+      setNewCustomerDoc('');
+      await refetch();
+      if (id) {
+        // navega pro detalhe (opcional)
+        // window.location.href = `/clientes/${id}`;
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const addTag = async () => {
+    const t = tagInput.trim();
+    if (!t) return;
+    const next = Array.from(new Set([...(c?.tags ?? []), t]));
+    try {
+      await updateCrmMut({
+        variables: { peerNumber: peer.peerNumber, patch: { tags: next } },
+      });
+      setTagInput('');
+      await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const removeTag = async (t: string) => {
+    const next = (c?.tags ?? []).filter((x) => x !== t);
+    try {
+      await updateCrmMut({
+        variables: { peerNumber: peer.peerNumber, patch: { tags: next } },
+      });
+      await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const saveNotes = async () => {
+    try {
+      await updateCrmMut({
+        variables: {
+          peerNumber: peer.peerNumber,
+          patch: { internalNotes: notesDraft },
+        },
+      });
+      await refetch();
+      alert('Notas salvas.');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const setStatus = async (status: string) => {
+    try {
+      await updateCrmMut({
+        variables: {
+          peerNumber: peer.peerNumber,
+          patch: { conversationStatus: status },
+        },
+      });
+      await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const createReminder = async () => {
+    if (!reminderTitle.trim() || !reminderDate) {
+      alert('Informe título e data.');
+      return;
+    }
+    try {
+      await createReminderMut({
+        variables: {
+          peerNumber: peer.peerNumber,
+          title: reminderTitle,
+          dueAt: new Date(reminderDate).toISOString(),
+          tag: reminderTag.trim() || undefined,
+        },
+      });
+      setReminderTitle('');
+      setReminderDate('');
+      setReminderTag('');
+      await refetchReminders();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
 
   const handleBlock = async () => {
     const block = window.confirm(
@@ -1437,6 +1622,295 @@ function ContactInfoPanel({
               </div>
             </section>
 
+            {/* Métricas avançadas */}
+            <section className="p-4 border-b border-slate-100 space-y-2">
+              <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3" />
+                Atividade
+              </h4>
+              <div className="grid grid-cols-2 gap-2 text-[12px]">
+                <div className="bg-slate-50 rounded p-2 border border-slate-100">
+                  <div className="text-slate-500">Últimos 7d</div>
+                  <div className="font-bold text-slate-800 text-base">
+                    {c.messages7d}
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded p-2 border border-slate-100">
+                  <div className="text-slate-500">Últimos 30d</div>
+                  <div className="font-bold text-slate-800 text-base">
+                    {c.messages30d}
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded p-2 border border-slate-100">
+                  <div className="text-slate-500">Sem resposta</div>
+                  <div className="font-bold text-slate-800 text-base">
+                    {c.daysSinceLastMessage}d
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded p-2 border border-slate-100">
+                  <div className="text-slate-500">Tempo médio resp.</div>
+                  <div className="font-bold text-slate-800 text-base">
+                    {c.avgResponseMinutes != null
+                      ? c.avgResponseMinutes < 60
+                        ? `${c.avgResponseMinutes}m`
+                        : `${Math.round(c.avgResponseMinutes / 60)}h`
+                      : '—'}
+                  </div>
+                </div>
+              </div>
+              {c.unansweredOutbound > 1 && (
+                <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                  ⚠️ {c.unansweredOutbound} mensagem(ns) enviadas sem retorno.
+                </div>
+              )}
+              {c.shouldGreet && (
+                <div className="text-[11px] text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">
+                  💬 Sem contato há {c.daysSinceLastMessage}d — talvez mandar
+                  uma saudação?
+                </div>
+              )}
+            </section>
+
+            {/* Mídia compartilhada */}
+            {mediaData?.whatsappMediaSummary && (
+              <section className="p-4 border-b border-slate-100">
+                <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
+                  <Paperclip className="w-3 h-3" />
+                  Mídia compartilhada
+                </h4>
+                <div className="grid grid-cols-3 gap-1.5 text-[11px]">
+                  <div className="text-center bg-slate-50 rounded py-1.5">
+                    📷 {mediaData.whatsappMediaSummary.images}
+                  </div>
+                  <div className="text-center bg-slate-50 rounded py-1.5">
+                    🎥 {mediaData.whatsappMediaSummary.videos}
+                  </div>
+                  <div className="text-center bg-slate-50 rounded py-1.5">
+                    🎵 {mediaData.whatsappMediaSummary.audios}
+                  </div>
+                  <div className="text-center bg-slate-50 rounded py-1.5">
+                    📎 {mediaData.whatsappMediaSummary.documents}
+                  </div>
+                  <div className="text-center bg-slate-50 rounded py-1.5">
+                    🎟 {mediaData.whatsappMediaSummary.stickers}
+                  </div>
+                  <div className="text-center bg-slate-50 rounded py-1.5">
+                    📍 {mediaData.whatsappMediaSummary.locations}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Status da conversa */}
+            <section className="p-4 border-b border-slate-100 space-y-2">
+              <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold flex items-center gap-1.5">
+                <Inbox className="w-3 h-3" />
+                Status
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {(['open', 'pending', 'resolved', 'snoozed'] as const).map(
+                  (s) => (
+                    <button
+                      key={s}
+                      onClick={() => setStatus(s)}
+                      className={`text-[11px] px-2 py-1 rounded-full border transition-colors ${
+                        c.conversationStatus === s
+                          ? 'bg-brand-600 text-white border-brand-600'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-brand-400'
+                      }`}
+                    >
+                      {s === 'open'
+                        ? 'Aberta'
+                        : s === 'pending'
+                          ? 'Pendente'
+                          : s === 'resolved'
+                            ? 'Resolvida'
+                            : 'Adiada'}
+                    </button>
+                  ),
+                )}
+              </div>
+            </section>
+
+            {/* Tags */}
+            <section className="p-4 border-b border-slate-100 space-y-2">
+              <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold flex items-center gap-1.5">
+                <Filter className="w-3 h-3" />
+                Tags
+              </h4>
+              <div className="flex flex-wrap gap-1">
+                {c.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="text-[11px] bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"
+                  >
+                    #{t}
+                    <button
+                      onClick={() => removeTag(t)}
+                      className="hover:text-rose-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                <input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addTag()}
+                  placeholder="nova tag"
+                  className="flex-1 text-[12px] px-2 py-1 border border-slate-200 rounded"
+                />
+                <button
+                  onClick={addTag}
+                  className="text-[11px] px-2 py-1 bg-brand-600 text-white rounded hover:bg-brand-700"
+                >
+                  Add
+                </button>
+              </div>
+            </section>
+
+            {/* Notas internas */}
+            <section className="p-4 border-b border-slate-100 space-y-2">
+              <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold flex items-center gap-1.5">
+                <Edit2 className="w-3 h-3" />
+                Notas internas
+              </h4>
+              <textarea
+                value={notesDraft || c.internalNotes || ''}
+                onChange={(e) => setNotesDraft(e.target.value)}
+                rows={3}
+                placeholder="Anotações privadas (não enviadas ao contato)..."
+                className="w-full text-[12px] px-2 py-1 border border-slate-200 rounded resize-none"
+              />
+              <button
+                onClick={saveNotes}
+                className="text-[11px] px-2 py-1 bg-slate-700 text-white rounded hover:bg-slate-800"
+              >
+                Salvar notas
+              </button>
+            </section>
+
+            {/* Lembretes */}
+            <section className="p-4 border-b border-slate-100 space-y-2">
+              <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold flex items-center gap-1.5">
+                <Bell className="w-3 h-3" />
+                Lembretes
+              </h4>
+              <ul className="space-y-1">
+                {(remindersData?.whatsappReminders ?? []).map((r) => (
+                  <li
+                    key={r.id}
+                    className="text-[12px] flex items-start justify-between gap-2 bg-amber-50 border border-amber-200 rounded p-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-slate-800 truncate">
+                        {r.title}
+                      </div>
+                      <div className="text-[10px] text-slate-500">
+                        {new Date(r.dueAt).toLocaleString('pt-BR')}
+                        {r.tag && ` • #${r.tag}`}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={async () => {
+                          await markReminderDoneMut({
+                            variables: { id: r.id, done: true },
+                          });
+                          await refetchReminders();
+                        }}
+                        className="text-emerald-600 hover:text-emerald-700"
+                        title="Concluir"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await deleteReminderMut({ variables: { id: r.id } });
+                          await refetchReminders();
+                        }}
+                        className="text-rose-500 hover:text-rose-600"
+                        title="Apagar"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="space-y-1">
+                <input
+                  value={reminderTitle}
+                  onChange={(e) => setReminderTitle(e.target.value)}
+                  placeholder="Título do lembrete"
+                  className="w-full text-[12px] px-2 py-1 border border-slate-200 rounded"
+                />
+                <div className="flex gap-1">
+                  <input
+                    type="datetime-local"
+                    value={reminderDate}
+                    onChange={(e) => setReminderDate(e.target.value)}
+                    className="flex-1 text-[11px] px-2 py-1 border border-slate-200 rounded"
+                  />
+                  <input
+                    value={reminderTag}
+                    onChange={(e) => setReminderTag(e.target.value)}
+                    placeholder="tag"
+                    className="w-20 text-[11px] px-2 py-1 border border-slate-200 rounded"
+                  />
+                </div>
+                <button
+                  onClick={createReminder}
+                  className="w-full text-[11px] px-2 py-1.5 bg-amber-500 text-white rounded hover:bg-amber-600 font-medium"
+                >
+                  Criar lembrete
+                </button>
+              </div>
+            </section>
+
+            {/* Timeline */}
+            {timelineData?.whatsappActivityTimeline &&
+              timelineData.whatsappActivityTimeline.length > 0 && (
+                <section className="p-4 border-b border-slate-100">
+                  <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
+                    <History className="w-3 h-3" />
+                    Atividade recente
+                  </h4>
+                  <ul className="space-y-1.5 max-h-72 overflow-y-auto">
+                    {timelineData.whatsappActivityTimeline.slice(0, 15).map((e) => (
+                      <li
+                        key={e.id}
+                        className="flex items-start gap-2 text-[11px]"
+                      >
+                        <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] shrink-0">
+                          {e.type === 'call'
+                            ? '📞'
+                            : e.type === 'media'
+                              ? '📎'
+                              : e.type === 'revoked'
+                                ? '🚫'
+                                : e.type === 'edited'
+                                  ? '✏️'
+                                  : e.type === 'forward'
+                                    ? '↗️'
+                                    : '💬'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-slate-700 truncate">
+                            {e.description}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            {e.actor} • {new Date(e.at).toLocaleString('pt-BR')}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
             {/* Customer link */}
             <section className="p-4 border-b border-slate-100 space-y-2">
               <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
@@ -1481,22 +1955,69 @@ function ContactInfoPanel({
                     currentSuggestionPhone={c.phoneFormatted ?? null}
                     onLinked={() => refetch()}
                   />
-                  <a
-                    href={`/cadastros?phone=${encodeURIComponent(c.phoneFormatted ?? '')}&name=${encodeURIComponent(c.displayName)}`}
-                    className="flex items-center gap-2 p-2.5 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-100"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                      <UserPlus className="w-4 h-4 text-emerald-700" />
-                    </div>
-                    <div className="flex-1 min-w-0 text-xs">
-                      <div className="font-medium text-slate-800">
-                        Cadastrar como cliente
+                  {!createCustomerOpen ? (
+                    <button
+                      onClick={() => {
+                        setNewCustomerName(c.displayName);
+                        setCreateCustomerOpen(true);
+                      }}
+                      className="w-full flex items-center gap-2 p-2.5 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200 text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center">
+                        <UserPlus className="w-4 h-4 text-white" />
                       </div>
+                      <div className="flex-1 min-w-0 text-xs">
+                        <div className="font-semibold text-emerald-800">
+                          Cadastrar como cliente
+                        </div>
+                        <div className="text-[10px] text-emerald-700">
+                          Cria no CRM e linka conversa em 1 clique
+                        </div>
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="bg-white border border-emerald-200 rounded-lg p-3 space-y-2">
+                      <div className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wide">
+                        Novo cliente
+                      </div>
+                      <input
+                        value={newCustomerName}
+                        onChange={(e) => setNewCustomerName(e.target.value)}
+                        placeholder="Nome"
+                        className="w-full text-[12px] px-2 py-1.5 border border-slate-200 rounded"
+                      />
+                      <input
+                        value={newCustomerEmail}
+                        onChange={(e) => setNewCustomerEmail(e.target.value)}
+                        placeholder="E-mail (opcional)"
+                        className="w-full text-[12px] px-2 py-1.5 border border-slate-200 rounded"
+                      />
+                      <input
+                        value={newCustomerDoc}
+                        onChange={(e) => setNewCustomerDoc(e.target.value)}
+                        placeholder="CPF/CNPJ (opcional)"
+                        className="w-full text-[12px] px-2 py-1.5 border border-slate-200 rounded"
+                      />
                       <div className="text-[10px] text-slate-500">
-                        Pré-preenchido com telefone e nome
+                        Telefone: {c.phoneFormatted ?? '—'}
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={handleCreateCustomer}
+                          disabled={creatingCustomer || !newCustomerName.trim()}
+                          className="flex-1 text-[11px] px-2 py-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50 font-medium"
+                        >
+                          {creatingCustomer ? 'Salvando…' : 'Criar cliente'}
+                        </button>
+                        <button
+                          onClick={() => setCreateCustomerOpen(false)}
+                          className="text-[11px] px-2 py-1.5 bg-slate-100 text-slate-600 rounded hover:bg-slate-200"
+                        >
+                          Cancelar
+                        </button>
                       </div>
                     </div>
-                  </a>
+                  )}
                 </>
               )}
             </section>

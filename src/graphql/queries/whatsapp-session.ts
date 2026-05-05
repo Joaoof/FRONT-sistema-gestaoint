@@ -345,9 +345,152 @@ export const GET_WHATSAPP_CONTACT = gql`
       totalMessages
       inboundCount
       outboundCount
+      messages7d
+      messages30d
+      daysSinceLastMessage
+      avgResponseMinutes
+      unansweredOutbound
+      mediaCount
+      callCount
+      shouldGreet
+      tags
+      internalNotes
+      conversationStatus
+      assignedUserId
+      assignedUserName
       firstMessageAt
       lastMessageAt
       waLink
+    }
+  }
+`;
+
+export const GET_WHATSAPP_ACTIVITY_TIMELINE = gql`
+  query GetWhatsappActivityTimeline($peerNumber: String!, $limit: Int) {
+    whatsappActivityTimeline(peerNumber: $peerNumber, limit: $limit) {
+      id
+      type
+      at
+      description
+      actor
+      icon
+    }
+  }
+`;
+
+export const GET_WHATSAPP_MEDIA_SUMMARY = gql`
+  query GetWhatsappMediaSummary($peerNumber: String!) {
+    whatsappMediaSummary(peerNumber: $peerNumber) {
+      images
+      videos
+      audios
+      documents
+      stickers
+      locations
+    }
+  }
+`;
+
+export const UPDATE_WHATSAPP_CONTACT_CRM = gql`
+  mutation UpdateWhatsappContactCrm(
+    $peerNumber: String!
+    $patch: WhatsappCrmInput!
+  ) {
+    updateWhatsappContactCrm(peerNumber: $peerNumber, patch: $patch)
+  }
+`;
+
+export const GET_WHATSAPP_CONTACTS_LIST = gql`
+  query GetWhatsappContactsList {
+    whatsappContactsList {
+      jid
+      number
+      name
+      profilePicUrl
+      isGroup
+      messageCount
+      customerId
+      customerName
+      lastInteractionAt
+    }
+  }
+`;
+
+export const CREATE_CUSTOMER_FROM_WHATSAPP_CONTACT = gql`
+  mutation CreateCustomerFromWhatsappContact(
+    $peerNumber: String!
+    $name: String
+    $document: String
+    $email: String
+  ) {
+    createCustomerFromWhatsappContact(
+      peerNumber: $peerNumber
+      name: $name
+      document: $document
+      email: $email
+    ) {
+      customerId
+      linkedMessages
+    }
+  }
+`;
+
+const REMINDER_FIELDS = `
+  id
+  peerNumber
+  title
+  description
+  tag
+  dueAt
+  doneAt
+  createdBy
+  createdAt
+`;
+
+export const GET_WHATSAPP_REMINDERS = gql`
+  query GetWhatsappReminders($peerNumber: String, $tag: String, $pending: Boolean) {
+    whatsappReminders(peerNumber: $peerNumber, tag: $tag, pending: $pending) {
+      ${REMINDER_FIELDS}
+    }
+  }
+`;
+
+export const CREATE_WHATSAPP_REMINDER = gql`
+  mutation CreateWhatsappReminder(
+    $peerNumber: String!
+    $title: String!
+    $dueAt: DateTime!
+    $description: String
+    $tag: String
+  ) {
+    createWhatsappReminder(
+      peerNumber: $peerNumber
+      title: $title
+      dueAt: $dueAt
+      description: $description
+      tag: $tag
+    ) {
+      ${REMINDER_FIELDS}
+    }
+  }
+`;
+
+export const MARK_WHATSAPP_REMINDER_DONE = gql`
+  mutation MarkWhatsappReminderDone($id: String!, $done: Boolean!) {
+    markWhatsappReminderDone(id: $id, done: $done)
+  }
+`;
+
+export const DELETE_WHATSAPP_REMINDER = gql`
+  mutation DeleteWhatsappReminder($id: String!) {
+    deleteWhatsappReminder(id: $id)
+  }
+`;
+
+export const ON_WHATSAPP_REMINDER_DUE = gql`
+  subscription OnWhatsappReminderDue {
+    whatsappReminderDue {
+      ${REMINDER_FIELDS}
     }
   }
 `;
