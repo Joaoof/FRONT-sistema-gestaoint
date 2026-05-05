@@ -47,6 +47,7 @@ import {
   Cog,
   FolderTree,
   MessageSquare,
+  Briefcase,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -129,10 +130,12 @@ const VIEW_TO_MODULE: Record<View, string> = {
   'configuracoes/templates': 'configuracoes',
   notificacoes: 'notificacoes',
   comunicacoes: 'comunicacoes',
+  crm: 'crm',
+  contratos: 'contratos',
   auditoria: 'auditoria',
 } as Record<string, string>;
 
-const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas', 'auditoria', 'configuracoes', 'notificacoes', 'comunicacoes']);
+const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas', 'auditoria', 'configuracoes', 'notificacoes', 'comunicacoes', 'crm', 'contratos']);
 
 function hasPermission(
   permissions: { module_key: string; permissions: string[] }[],
@@ -293,6 +296,13 @@ const sections: MenuSection[] = [
           { id: 'obras/cadastros/categorias' as View, label: 'Categorias', icon: Tag },
         ],
       },
+    ],
+  },
+  {
+    label: 'CRM & Contratos',
+    items: [
+      { id: 'crm' as View, label: 'Pipeline (CRM)', icon: Briefcase },
+      { id: 'contratos' as View, label: 'Contratos', icon: FileText },
     ],
   },
   {

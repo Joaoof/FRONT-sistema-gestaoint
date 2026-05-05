@@ -78,6 +78,10 @@ import { ChartOfAccountsPage } from './pages/Settings/ChartOfAccountsPage';
 import { NotificationsPage } from './pages/Notifications/NotificationsPage';
 import { NotificationTemplatesPage } from './pages/Settings/NotificationTemplatesPage';
 import { MessagesCenterPage } from './pages/Communications/MessagesCenterPage';
+import { PipelinePage } from './pages/CRM/PipelinePage';
+import { OpportunityDetailPage } from './pages/CRM/OpportunityDetailPage';
+import { ContractsListPage } from './pages/Contracts/ContractsListPage';
+import { ContractDetailPage } from './pages/Contracts/ContractDetailPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -221,6 +225,14 @@ function AppContent() {
             {/* Notificações e comunicações */}
             <Route path="/notificacoes" element={<NotificationsPage />} />
             <Route path="/comunicacoes" element={<MessagesCenterPage />} />
+
+            {/* CRM */}
+            <Route path="/crm" element={<PipelinePage />} />
+            <Route path="/crm/oportunidades/:id" element={<OpportunityDetailPage />} />
+
+            {/* Contratos */}
+            <Route path="/contratos" element={<ContractsListPage />} />
+            <Route path="/contratos/:id" element={<ContractDetailPage />} />
 
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>

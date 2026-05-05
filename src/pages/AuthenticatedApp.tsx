@@ -67,6 +67,8 @@ export type View =
     | 'configuracoes/templates'
     | 'notificacoes'
     | 'comunicacoes'
+    | 'crm'
+    | 'contratos'
     | 'auditoria'
     | 'obras'
     | 'obras/cadastrar'
