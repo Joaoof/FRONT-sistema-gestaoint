@@ -82,6 +82,7 @@ import { PipelinePage } from './pages/CRM/PipelinePage';
 import { OpportunityDetailPage } from './pages/CRM/OpportunityDetailPage';
 import { ContractsListPage } from './pages/Contracts/ContractsListPage';
 import { ContractDetailPage } from './pages/Contracts/ContractDetailPage';
+import { WhatsappPage } from './pages/Communications/WhatsappPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -225,6 +226,7 @@ function AppContent() {
             {/* Notificações e comunicações */}
             <Route path="/notificacoes" element={<NotificationsPage />} />
             <Route path="/comunicacoes" element={<MessagesCenterPage />} />
+            <Route path="/comunicacoes/whatsapp" element={<WhatsappPage />} />
 
             {/* CRM */}
             <Route path="/crm" element={<PipelinePage />} />
