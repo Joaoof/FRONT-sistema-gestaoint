@@ -11,31 +11,34 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle,
   ArrowLeft,
+  BadgeCheck,
+  Bell,
+  Briefcase,
   CheckCheck,
+  CheckCircle2,
   Clock,
   CloudCog,
   Download,
+  EyeOff,
+  Filter,
   History,
   Inbox,
+  Info,
+  Link2,
+  Link2Off,
   Loader2,
   LogOut,
   MessageCircle,
   MoreVertical,
+  Paperclip,
   Phone,
   Plus,
   Power,
   RefreshCcw,
   Search,
   Send,
-  BadgeCheck,
-  Briefcase,
-  CheckCircle2,
-  EyeOff,
-  Link2,
-  Link2Off,
   Smile,
   Sparkles,
-  User,
   Users,
   UserPlus,
   Wifi,
@@ -105,6 +108,8 @@ interface Message {
   readAt: string | null;
 }
 
+type ConvFilter = 'all' | 'unread' | 'groups';
+
 // ════════════════════════════════════════════════════════════
 // Helpers
 // ════════════════════════════════════════════════════════════
@@ -141,17 +146,15 @@ function dateLabel(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
-  if (sameDay) return 'HOJE';
+  if (sameDay) return 'Hoje';
   const yest = new Date(now);
   yest.setDate(yest.getDate() - 1);
-  if (d.toDateString() === yest.toDateString()) return 'ONTEM';
-  return d
-    .toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-    })
-    .toUpperCase();
+  if (d.toDateString() === yest.toDateString()) return 'Ontem';
+  return d.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
 }
 
 function escapeHtml(s: string): string {
@@ -191,14 +194,14 @@ function getInitials(name: string | null, fallback: string): string {
 }
 
 const AVATAR_GRADIENTS = [
-  'from-emerald-400 to-emerald-600',
-  'from-blue-400 to-blue-600',
-  'from-violet-400 to-violet-600',
-  'from-amber-400 to-orange-600',
+  'from-violet-400 to-purple-600',
+  'from-fuchsia-400 to-pink-600',
+  'from-indigo-400 to-violet-600',
   'from-rose-400 to-pink-600',
+  'from-blue-400 to-indigo-600',
+  'from-amber-400 to-orange-600',
   'from-teal-400 to-cyan-600',
-  'from-indigo-400 to-purple-600',
-  'from-lime-400 to-green-600',
+  'from-emerald-400 to-teal-600',
 ];
 
 function gradientFor(seed: string): string {
@@ -214,33 +217,49 @@ function Avatar({
   seed,
   size = 'md',
   isGroup = false,
+  online = false,
 }: {
   name: string | null;
   seed: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   isGroup?: boolean;
+  online?: boolean;
 }) {
   const dims = {
     sm: 'w-8 h-8 text-xs',
-    md: 'w-11 h-11 text-sm',
+    md: 'w-10 h-10 text-sm',
     lg: 'w-14 h-14 text-base',
     xl: 'w-20 h-20 text-2xl',
   }[size];
+  const dotSize = {
+    sm: 'w-2 h-2 ring-1',
+    md: 'w-2.5 h-2.5 ring-2',
+    lg: 'w-3 h-3 ring-2',
+    xl: 'w-4 h-4 ring-2',
+  }[size];
   const iconSizes = { sm: 'w-4 h-4', md: 'w-5 h-5', lg: 'w-6 h-6', xl: 'w-9 h-9' };
-  if (isGroup) {
-    return (
-      <div
-        className={`${dims} rounded-full bg-gradient-to-br from-slate-400 to-slate-600 text-white flex items-center justify-center shadow-sm shrink-0`}
-      >
-        <Users className={iconSizes[size]} />
-      </div>
-    );
-  }
+
   return (
-    <div
-      className={`${dims} rounded-full bg-gradient-to-br ${gradientFor(seed)} text-white flex items-center justify-center font-semibold shadow-sm shrink-0`}
-    >
-      {getInitials(name, seed)}
+    <div className="relative shrink-0">
+      {isGroup ? (
+        <div
+          className={`${dims} rounded-full bg-gradient-to-br from-slate-400 to-slate-600 text-white flex items-center justify-center shadow-sm`}
+        >
+          <Users className={iconSizes[size]} />
+        </div>
+      ) : (
+        <div
+          className={`${dims} rounded-full bg-gradient-to-br ${gradientFor(seed)} text-white flex items-center justify-center font-semibold shadow-sm`}
+        >
+          {getInitials(name, seed)}
+        </div>
+      )}
+      {online && (
+        <span
+          className={`absolute bottom-0 right-0 ${dotSize} rounded-full bg-emerald-500 ring-white`}
+          aria-label="online"
+        />
+      )}
     </div>
   );
 }
@@ -257,48 +276,54 @@ function displayPeer(c: {
   return formatPhone(c.peerNumber);
 }
 
-function StatusBadge({ status }: { status: SessionStatus }) {
+function StatusPill({ status }: { status: SessionStatus }) {
   const map: Record<
     SessionStatus,
-    { label: string; bg: string; text: string; Icon: typeof Wifi; spin?: boolean }
+    { label: string; bg: string; text: string; dot: string; Icon: typeof Wifi; spin?: boolean }
   > = {
     DISCONNECTED: {
       label: 'Desconectado',
-      bg: 'bg-rose-100',
+      bg: 'bg-rose-50',
       text: 'text-rose-700',
+      dot: 'bg-rose-500',
       Icon: WifiOff,
     },
     CONNECTING: {
       label: 'Conectando',
-      bg: 'bg-amber-100',
+      bg: 'bg-amber-50',
       text: 'text-amber-700',
+      dot: 'bg-amber-500',
       Icon: Loader2,
       spin: true,
     },
     QR_PENDING: {
       label: 'Aguardando QR',
-      bg: 'bg-amber-100',
+      bg: 'bg-amber-50',
       text: 'text-amber-700',
+      dot: 'bg-amber-500',
       Icon: Clock,
     },
     CONNECTED: {
       label: 'Online',
-      bg: 'bg-emerald-100',
+      bg: 'bg-emerald-50',
       text: 'text-emerald-700',
+      dot: 'bg-emerald-500',
       Icon: Wifi,
     },
     ERROR: {
       label: 'Erro',
-      bg: 'bg-rose-100',
+      bg: 'bg-rose-50',
       text: 'text-rose-700',
+      dot: 'bg-rose-500',
       Icon: AlertTriangle,
     },
   };
-  const { label, bg, text, Icon, spin } = map[status];
+  const { label, bg, text, dot, Icon, spin } = map[status];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${bg} ${text}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${bg} ${text} border border-current/10`}
     >
+      <span className={`w-1.5 h-1.5 rounded-full ${dot} ${spin ? '' : 'animate-pulse'}`} />
       <Icon className={`w-3 h-3 ${spin ? 'animate-spin' : ''}`} />
       {label}
     </span>
@@ -323,19 +348,19 @@ function QrConnectScreen({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-3xl grid md:grid-cols-2 gap-8 bg-white border rounded-2xl shadow-lg overflow-hidden"
+        className="w-full max-w-3xl grid md:grid-cols-2 gap-0 bg-white border border-slate-200 rounded-2xl shadow-lg overflow-hidden"
       >
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 text-white p-8 flex flex-col justify-between">
+        <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 text-white p-8 flex flex-col justify-between">
           <div>
-            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center mb-4">
               <MessageCircle className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-['Rajdhani'] font-bold leading-tight">
               Conecte o WhatsApp da empresa
             </h2>
-            <p className="text-sm text-emerald-50 mt-3 leading-relaxed">
+            <p className="text-sm text-white/80 mt-3 leading-relaxed">
               Atenda clientes, dispare boletos e organize conversas direto pelo
-              sistema. Funciona como o WhatsApp Web — escaneie o QR e pronto.
+              sistema. Conexão via WAHA — escaneie o QR e pronto.
             </p>
           </div>
           <ol className="space-y-3 text-sm mt-8">
@@ -349,18 +374,18 @@ function QrConnectScreen({
                 <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-semibold shrink-0">
                   {i + 1}
                 </span>
-                <span className="text-emerald-50">{step}</span>
+                <span className="text-white/90">{step}</span>
               </li>
             ))}
           </ol>
         </div>
 
-        <div className="p-8 flex flex-col items-center justify-center">
+        <div className="p-8 flex flex-col items-center justify-center bg-slate-50">
           {session.qrCode ? (
             <>
               <div className="relative">
-                <div className="absolute -inset-3 bg-gradient-to-br from-emerald-200 to-emerald-400 rounded-2xl blur-xl opacity-30" />
-                <div className="relative bg-white border-2 border-emerald-200 rounded-2xl p-3 shadow-lg">
+                <div className="absolute -inset-3 bg-gradient-to-br from-brand-200 to-brand-400 rounded-2xl blur-xl opacity-30" />
+                <div className="relative bg-white border-2 border-brand-200 rounded-2xl p-3 shadow-lg">
                   <img
                     src={session.qrCode}
                     alt="QR Code"
@@ -371,7 +396,7 @@ function QrConnectScreen({
               <button
                 onClick={onConnect}
                 disabled={loading}
-                className="mt-6 flex items-center gap-1.5 text-sm text-emerald-700 hover:text-emerald-800 font-medium"
+                className="mt-6 flex items-center gap-1.5 text-sm text-brand-700 hover:text-brand-800 font-medium"
               >
                 <RefreshCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                 Atualizar QR Code
@@ -382,13 +407,13 @@ function QrConnectScreen({
             </>
           ) : (
             <>
-              <div className="w-32 h-32 rounded-full bg-emerald-50 flex items-center justify-center mb-6">
-                <Power className="w-14 h-14 text-emerald-500" />
+              <div className="w-32 h-32 rounded-full bg-brand-50 flex items-center justify-center mb-6 border border-brand-100">
+                <Power className="w-14 h-14 text-brand-600" />
               </div>
               <button
                 onClick={onConnect}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-3 rounded-xl font-medium hover:from-emerald-700 disabled:opacity-50 shadow-lg hover:shadow-xl transition-shadow"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-700 to-brand-500 text-white py-3 rounded-xl font-medium hover:from-brand-800 hover:to-brand-600 disabled:opacity-50 shadow-lg hover:shadow-xl transition-all"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -434,12 +459,12 @@ function ConnectedEmptyState({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-slate-50 via-emerald-50 to-blue-50"
+      className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-slate-50 via-brand-50/40 to-slate-50"
     >
       <div className="max-w-md w-full text-center">
         <div className="relative inline-block mb-6">
-          <div className="absolute inset-0 bg-emerald-200 rounded-full blur-2xl opacity-50" />
-          <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-xl">
+          <div className="absolute inset-0 bg-brand-200 rounded-full blur-2xl opacity-40" />
+          <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-xl">
             <Inbox className="w-11 h-11 text-white" />
           </div>
         </div>
@@ -448,21 +473,21 @@ function ConnectedEmptyState({
         </h2>
         <p className="text-sm text-slate-600 mt-2 mb-8">
           Conectado, mas ainda sem conversas. O WhatsApp não envia histórico
-          completo automaticamente. Você pode importar os contatos existentes
-          ou aguardar mensagens novas.
+          completo automaticamente. Você pode importar contatos ou aguardar
+          mensagens novas.
         </p>
 
         <div className="grid gap-3 text-left">
           <button
             onClick={onSync}
             disabled={syncing}
-            className="flex items-center gap-3 p-4 bg-white rounded-xl border hover:border-emerald-300 hover:shadow-md transition-all disabled:opacity-50"
+            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-brand-300 hover:shadow-md transition-all disabled:opacity-50"
           >
-            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-brand-50 flex items-center justify-center shrink-0">
               {syncing ? (
-                <Loader2 className="w-5 h-5 text-emerald-600 animate-spin" />
+                <Loader2 className="w-5 h-5 text-brand-600 animate-spin" />
               ) : (
-                <Download className="w-5 h-5 text-emerald-600" />
+                <Download className="w-5 h-5 text-brand-600" />
               )}
             </div>
             <div className="flex-1">
@@ -478,9 +503,9 @@ function ConnectedEmptyState({
           <button
             onClick={onReconfigure}
             disabled={reconfiguring}
-            className="flex items-center gap-3 p-4 bg-white rounded-xl border hover:border-amber-300 hover:shadow-md transition-all disabled:opacity-50"
+            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-amber-300 hover:shadow-md transition-all disabled:opacity-50"
           >
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
               {reconfiguring ? (
                 <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
               ) : (
@@ -497,7 +522,7 @@ function ConnectedEmptyState({
             </div>
           </button>
 
-          <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+          <div className="flex items-start gap-3 p-4 bg-blue-50/60 rounded-xl border border-blue-100">
             <Sparkles className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-xs text-blue-900 leading-relaxed text-left">
               <strong className="block mb-1">Dica:</strong>
@@ -534,24 +559,24 @@ function MessageBubble({
 
   if (message.fromMe) {
     return (
-      <div className="flex justify-end mb-1.5">
+      <div className="flex justify-end mb-2">
         <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.15 }}
-          className={`max-w-[78%] md:max-w-[60%] rounded-xl rounded-tr-sm px-3 pt-2 pb-1.5 shadow-sm relative ${
+          className={`max-w-[78%] md:max-w-[60%] rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm ${
             isFailed
-              ? 'bg-rose-100 border border-rose-200'
-              : 'bg-[#d9fdd3]'
+              ? 'bg-rose-100 border border-rose-200 text-slate-900'
+              : 'bg-gradient-to-br from-brand-600 to-brand-500 text-white'
           }`}
         >
           <div
-            className="text-sm text-slate-900 break-words whitespace-pre-wrap leading-relaxed"
+            className="text-sm break-words whitespace-pre-wrap leading-relaxed"
             dangerouslySetInnerHTML={{
               __html: applyWhatsappFormatting(message.body),
             }}
           />
-          <div className="text-[10px] text-slate-500 text-right mt-0.5 flex items-center justify-end gap-1">
+          <div className={`text-[10px] text-right mt-1 flex items-center justify-end gap-1 ${isFailed ? 'text-rose-700' : 'text-white/70'}`}>
             {time}
             {isFailed ? (
               <AlertTriangle className="w-3 h-3 text-rose-600" />
@@ -559,10 +584,10 @@ function MessageBubble({
               <CheckCheck
                 className={`w-3.5 h-3.5 ${
                   message.status === 'READ'
-                    ? 'text-blue-500'
+                    ? 'text-sky-300'
                     : message.status === 'DELIVERED'
-                      ? 'text-slate-500'
-                      : 'text-slate-400'
+                      ? 'text-white/80'
+                      : 'text-white/50'
                 }`}
               />
             )}
@@ -573,23 +598,23 @@ function MessageBubble({
   }
 
   return (
-    <div className="flex justify-start mb-1.5">
+    <div className="flex justify-start mb-2">
       <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.15 }}
-        className="max-w-[78%] md:max-w-[60%] rounded-xl rounded-tl-sm px-3 pt-2 pb-1.5 bg-white shadow-sm"
+        className="max-w-[78%] md:max-w-[60%] rounded-2xl rounded-bl-sm px-4 py-2.5 bg-white border border-slate-200 shadow-sm"
       >
         {senderLabel && (
           <div
-            className={`text-[11px] font-semibold mb-0.5 ${gradientFor(senderLabel).includes('emerald') ? 'text-emerald-600' : 'text-violet-600'}`}
+            className="text-[11px] font-semibold mb-0.5"
             style={{
               color: `hsl(${
                 Array.from(senderLabel).reduce(
                   (h, c) => c.charCodeAt(0) + ((h << 5) - h),
                   0,
                 ) % 360
-              }, 65%, 40%)`,
+              }, 60%, 42%)`,
             }}
           >
             {senderLabel}
@@ -601,7 +626,7 @@ function MessageBubble({
             __html: applyWhatsappFormatting(message.body),
           }}
         />
-        <div className="text-[10px] text-slate-400 text-right mt-0.5">
+        <div className="text-[10px] text-slate-400 text-right mt-1">
           {time}
         </div>
       </motion.div>
@@ -611,8 +636,8 @@ function MessageBubble({
 
 function DateSeparator({ children }: { children: ReactNode }) {
   return (
-    <div className="flex justify-center my-3">
-      <div className="bg-white/80 backdrop-blur-sm text-slate-600 text-[11px] font-medium px-3 py-1 rounded-lg shadow-sm">
+    <div className="flex justify-center my-4">
+      <div className="bg-white border border-slate-200 text-slate-500 text-[11px] font-medium px-3 py-1 rounded-full shadow-sm">
         {children}
       </div>
     </div>
@@ -634,7 +659,7 @@ function groupByDay(messages: Message[]): Array<{ key: string; items: Message[] 
 }
 
 // ════════════════════════════════════════════════════════════
-// Drawer de detalhes do contato
+// Customer linker (busca cliente)
 // ════════════════════════════════════════════════════════════
 
 interface ContactDetails {
@@ -711,16 +736,16 @@ function CustomerLinker({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 w-full p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+        className="flex items-center gap-2 w-full p-2.5 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors border border-brand-100"
       >
-        <div className="w-9 h-9 rounded-full bg-blue-200 flex items-center justify-center">
-          <Link2 className="w-4 h-4 text-blue-700" />
+        <div className="w-8 h-8 rounded-full bg-brand-200 flex items-center justify-center">
+          <Link2 className="w-4 h-4 text-brand-700" />
         </div>
         <div className="flex-1 text-left text-sm">
-          <div className="font-medium text-slate-800">
+          <div className="font-medium text-slate-800 text-xs">
             Vincular cliente existente
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-[10px] text-slate-500">
             Buscar e selecionar do cadastro
           </div>
         </div>
@@ -731,7 +756,7 @@ function CustomerLinker({
   const customers = data?.customers ?? [];
 
   return (
-    <div className="bg-white border rounded-lg p-3 space-y-2">
+    <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-slate-700">
           Buscar cliente
@@ -751,7 +776,7 @@ function CustomerLinker({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Nome, CPF/CNPJ ou e-mail..."
-          className="w-full bg-slate-50 border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-400"
+          className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-400"
         />
       </div>
       <div className="max-h-56 overflow-y-auto space-y-1">
@@ -769,21 +794,21 @@ function CustomerLinker({
               key={c.id}
               onClick={() => handleLink(c.id)}
               disabled={linking}
-              className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-colors flex items-center gap-2"
+              className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-brand-50 disabled:opacity-50 transition-colors flex items-center gap-2"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-[10px] font-semibold shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white flex items-center justify-center text-[10px] font-semibold shrink-0">
                 {getInitials(c.name, c.id)}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm text-slate-800 truncate">
+                <div className="font-medium text-xs text-slate-800 truncate">
                   {c.name}
                 </div>
-                <div className="text-[11px] text-slate-500 truncate">
+                <div className="text-[10px] text-slate-500 truncate">
                   {c.phone ? formatPhone(c.phone) : c.document ?? c.email ?? ''}
                 </div>
               </div>
               {linking && (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-500" />
               )}
             </button>
           ))
@@ -804,12 +829,18 @@ function fmtFullDate(iso: string | null): string {
   });
 }
 
-function ContactDrawer({
+// ════════════════════════════════════════════════════════════
+// Painel lateral direito (Kommo-style: contato + lead info)
+// ════════════════════════════════════════════════════════════
+
+function ContactInfoPanel({
   peer,
   onClose,
+  showCloseButton,
 }: {
   peer: Conversation;
   onClose: () => void;
+  showCloseButton?: boolean;
 }) {
   const { data, loading, refetch } = useQuery<{
     whatsappContact: ContactDetails;
@@ -835,24 +866,20 @@ function ContactDrawer({
   };
 
   return (
-    <motion.aside
-      initial={{ opacity: 0, x: 30 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 30 }}
-      transition={{ duration: 0.18 }}
-      className="absolute right-0 top-0 h-full w-full sm:w-[360px] bg-white shadow-2xl border-l z-30 flex flex-col"
-    >
-      <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-4 py-3 flex items-center justify-between">
-        <h3 className="font-semibold flex items-center gap-2">
-          <User className="w-5 h-5" />
+    <div className="h-full bg-white border-l border-slate-200 flex flex-col">
+      <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <h3 className="font-semibold text-slate-700 flex items-center gap-2 text-sm">
+          <Info className="w-4 h-4 text-brand-600" />
           Detalhes do contato
         </h3>
-        <button
-          onClick={onClose}
-          className="p-1.5 hover:bg-white/20 rounded-full"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {showCloseButton && (
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-slate-200 rounded-md text-slate-500"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -866,27 +893,27 @@ function ContactDrawer({
           </div>
         ) : (
           <>
-            {/* Cabeçalho com avatar e nome */}
-            <div className="bg-gradient-to-b from-slate-50 to-white p-6 text-center border-b">
+            {/* Header */}
+            <div className="p-5 text-center border-b border-slate-100">
               {c.profilePicUrl && !imgError ? (
                 <div className="relative inline-block">
                   <img
                     src={c.profilePicUrl}
                     alt={c.displayName}
                     onError={() => setImgError(true)}
-                    className="w-24 h-24 rounded-full mx-auto shadow-md object-cover ring-4 ring-white"
+                    className="w-20 h-20 rounded-full mx-auto shadow-md object-cover ring-4 ring-slate-100"
                   />
                   {c.isBusiness && (
                     <div
-                      className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1.5 shadow-md"
+                      className="absolute -bottom-0.5 -right-0.5 bg-brand-600 rounded-full p-1 shadow-md ring-2 ring-white"
                       title={c.verifiedName ? 'Conta business verificada' : 'Conta business'}
                     >
-                      <BadgeCheck className="w-4 h-4 text-white" />
+                      <BadgeCheck className="w-3.5 h-3.5 text-white" />
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="w-24 h-24 mx-auto relative">
+                <div className="w-20 h-20 mx-auto relative">
                   <Avatar
                     name={c.displayName}
                     seed={c.peerNumber}
@@ -894,20 +921,20 @@ function ContactDrawer({
                     isGroup={c.isGroup}
                   />
                   {c.isBusiness && (
-                    <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1.5 shadow-md">
-                      <BadgeCheck className="w-4 h-4 text-white" />
+                    <div className="absolute -bottom-0.5 -right-0.5 bg-brand-600 rounded-full p-1 shadow-md ring-2 ring-white">
+                      <BadgeCheck className="w-3.5 h-3.5 text-white" />
                     </div>
                   )}
                 </div>
               )}
-              <h2 className="mt-3 font-bold text-slate-800 text-lg flex items-center justify-center gap-1.5">
+              <h2 className="mt-3 font-bold text-slate-800 text-base flex items-center justify-center gap-1.5">
                 {c.displayName}
                 {c.isBusiness && (
-                  <BadgeCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <BadgeCheck className="w-4 h-4 text-brand-600 shrink-0" />
                 )}
               </h2>
               {!c.isGroup && c.phoneFormatted && (
-                <p className="text-sm text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   {formatPhone(c.phoneFormatted)}
                 </p>
               )}
@@ -917,24 +944,24 @@ function ContactDrawer({
                 </span>
               )}
               {c.isBusiness && c.verifiedName && (
-                <span className="inline-flex items-center gap-1 mt-2 text-[10px] uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 mt-2 text-[10px] uppercase tracking-wide bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-full">
                   <BadgeCheck className="w-3 h-3" />
-                  Verificado: {c.verifiedName}
+                  {c.verifiedName}
                 </span>
               )}
               {c.about && (
-                <p className="text-xs text-slate-600 mt-3 italic px-3">
+                <p className="text-[11px] text-slate-600 mt-2 italic px-3 leading-snug">
                   "{c.about}"
                 </p>
               )}
             </div>
 
-            {/* Detalhes Business (se aplicável) */}
+            {/* Business info */}
             {c.isBusiness &&
               (c.businessCategory || c.businessDescription) && (
-                <section className="p-4 bg-emerald-50/40 border-b">
-                  <h4 className="text-xs uppercase tracking-wide text-emerald-700 font-semibold mb-2 flex items-center gap-1.5">
-                    <Briefcase className="w-3.5 h-3.5" />
+                <section className="p-4 bg-brand-50/40 border-b border-slate-100">
+                  <h4 className="text-[10px] uppercase tracking-wide text-brand-700 font-semibold mb-2 flex items-center gap-1.5">
+                    <Briefcase className="w-3 h-3" />
                     Conta Business
                   </h4>
                   {c.businessCategory && (
@@ -953,54 +980,54 @@ function ContactDrawer({
                 </section>
               )}
 
-            {/* Estatísticas */}
-            <section className="p-4 grid grid-cols-3 gap-2 border-b">
-              <div className="text-center bg-slate-50 rounded-lg py-2">
-                <div className="text-lg font-bold text-slate-800">
+            {/* Stats */}
+            <section className="p-4 grid grid-cols-3 gap-2 border-b border-slate-100">
+              <div className="text-center bg-slate-50 rounded-lg py-2 border border-slate-100">
+                <div className="text-base font-bold text-slate-800">
                   {c.totalMessages.toLocaleString('pt-BR')}
                 </div>
-                <div className="text-[10px] uppercase text-slate-500 tracking-wide">
+                <div className="text-[9px] uppercase text-slate-500 tracking-wide">
                   Total
                 </div>
               </div>
-              <div className="text-center bg-blue-50 rounded-lg py-2">
-                <div className="text-lg font-bold text-blue-700">
+              <div className="text-center bg-blue-50 rounded-lg py-2 border border-blue-100">
+                <div className="text-base font-bold text-blue-700">
                   {c.inboundCount.toLocaleString('pt-BR')}
                 </div>
-                <div className="text-[10px] uppercase text-blue-600 tracking-wide">
+                <div className="text-[9px] uppercase text-blue-600 tracking-wide">
                   Recebidas
                 </div>
               </div>
-              <div className="text-center bg-emerald-50 rounded-lg py-2">
-                <div className="text-lg font-bold text-emerald-700">
+              <div className="text-center bg-brand-50 rounded-lg py-2 border border-brand-100">
+                <div className="text-base font-bold text-brand-700">
                   {c.outboundCount.toLocaleString('pt-BR')}
                 </div>
-                <div className="text-[10px] uppercase text-emerald-600 tracking-wide">
+                <div className="text-[9px] uppercase text-brand-600 tracking-wide">
                   Enviadas
                 </div>
               </div>
             </section>
 
-            {/* Cliente vinculado */}
-            <section className="p-4 border-b space-y-2">
-              <h4 className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
-                <Link2 className="w-3.5 h-3.5" />
+            {/* Customer link */}
+            <section className="p-4 border-b border-slate-100 space-y-2">
+              <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
+                <Link2 className="w-3 h-3" />
                 Cliente vinculado
               </h4>
               {c.customerId ? (
                 <>
                   <a
                     href={`/clientes/${c.customerId}`}
-                    className="flex items-center gap-2 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    className="flex items-center gap-2 p-2.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100"
                   >
-                    <div className="w-9 h-9 rounded-full bg-blue-200 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center">
                       <CheckCircle2 className="w-4 h-4 text-blue-700" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm text-slate-800 truncate">
+                      <div className="font-medium text-xs text-slate-800 truncate">
                         {c.customerName ?? 'Cliente'}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-[10px] text-slate-500">
                         Ver perfil completo →
                       </div>
                     </div>
@@ -1008,14 +1035,14 @@ function ContactDrawer({
                   <button
                     onClick={handleUnlink}
                     disabled={unlinking}
-                    className="w-full flex items-center justify-center gap-1.5 text-xs text-rose-600 hover:bg-rose-50 py-2 rounded-lg transition-colors disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-1.5 text-xs text-rose-600 hover:bg-rose-50 py-1.5 rounded-lg transition-colors disabled:opacity-50"
                   >
                     {unlinking ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
                       <Link2Off className="w-3.5 h-3.5" />
                     )}
-                    Desvincular cliente
+                    Desvincular
                   </button>
                 </>
               ) : (
@@ -1027,17 +1054,17 @@ function ContactDrawer({
                   />
                   <a
                     href={`/cadastros?phone=${encodeURIComponent(c.phoneFormatted ?? '')}&name=${encodeURIComponent(c.displayName)}`}
-                    className="flex items-center gap-2 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="flex items-center gap-2 p-2.5 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-100"
                   >
-                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
                       <UserPlus className="w-4 h-4 text-emerald-700" />
                     </div>
-                    <div className="flex-1 min-w-0 text-sm">
+                    <div className="flex-1 min-w-0 text-xs">
                       <div className="font-medium text-slate-800">
                         Cadastrar como cliente
                       </div>
-                      <div className="text-xs text-slate-500">
-                        Telefone e nome pré-preenchidos
+                      <div className="text-[10px] text-slate-500">
+                        Pré-preenchido com telefone e nome
                       </div>
                     </div>
                   </a>
@@ -1045,20 +1072,20 @@ function ContactDrawer({
               )}
             </section>
 
-            {/* Linha do tempo */}
-            <section className="p-4 border-b">
-              <h4 className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-3">
-                Histórico de conversa
+            {/* Timeline */}
+            <section className="p-4 border-b border-slate-100">
+              <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold mb-2">
+                Linha do tempo
               </h4>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1.5 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Primeira mensagem</span>
+                  <span className="text-slate-500">Primeira</span>
                   <span className="text-slate-700 font-medium">
                     {fmtFullDate(c.firstMessageAt)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Última mensagem</span>
+                  <span className="text-slate-500">Última</span>
                   <span className="text-slate-700 font-medium">
                     {fmtFullDate(c.lastMessageAt)}
                   </span>
@@ -1066,26 +1093,26 @@ function ContactDrawer({
               </div>
             </section>
 
-            {/* Identificadores */}
-            <section className="p-4 border-b">
-              <h4 className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-2">
+            {/* Identifier */}
+            <section className="p-4 border-b border-slate-100">
+              <h4 className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold mb-2">
                 Identificador WhatsApp
               </h4>
-              <div className="font-mono text-[11px] bg-slate-50 rounded-lg p-2 break-all text-slate-600">
+              <div className="font-mono text-[10px] bg-slate-50 rounded-lg p-2 break-all text-slate-600 border border-slate-100">
                 {c.peerNumber}
               </div>
             </section>
 
-            {/* Ações */}
+            {/* Actions */}
             <section className="p-4 space-y-2">
               {!c.isGroup && c.waLink && (
                 <a
                   href={c.waLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center justify-center gap-2 w-full bg-brand-600 hover:bg-brand-700 text-white py-2 rounded-lg text-xs font-medium transition-colors"
                 >
-                  <Phone className="w-4 h-4" />
+                  <Phone className="w-3.5 h-3.5" />
                   Abrir no WhatsApp Web
                 </a>
               )}
@@ -1093,7 +1120,7 @@ function ContactDrawer({
           </>
         )}
       </div>
-    </motion.aside>
+    </div>
   );
 }
 
@@ -1105,14 +1132,17 @@ function ChatPanel({
   session,
   peer,
   onBack,
+  onToggleInfo,
+  infoOpen,
 }: {
   session: Session;
   peer: Conversation;
   onBack: () => void;
+  onToggleInfo: () => void;
+  infoOpen: boolean;
 }) {
   const [draft, setDraft] = useState('');
   const [showMenu, setShowMenu] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -1130,7 +1160,10 @@ function ChatPanel({
     SYNC_WHATSAPP_MESSAGES_FOR_PEER,
   );
 
-  const messages = data?.whatsappMessages ?? [];
+  const messages = useMemo(
+    () => data?.whatsappMessages ?? [],
+    [data?.whatsappMessages],
+  );
   const groups = useMemo(() => groupByDay(messages), [messages]);
 
   useEffect(() => {
@@ -1145,7 +1178,6 @@ function ChatPanel({
     }
   }, [messages.length]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -1188,7 +1220,7 @@ function ChatPanel({
       alert(
         count > 0
           ? `${count} mensagem(ns) antigas importadas.`
-          : 'Nenhuma mensagem nova encontrada. O Evolution só consegue trazer o que sincronizou — pode tentar abrir a conversa no celular pra forçar.',
+          : 'Nenhuma mensagem nova encontrada. Pode tentar abrir a conversa no celular para forçar a sincronização.',
       );
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
@@ -1196,88 +1228,86 @@ function ChatPanel({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#efeae2]">
-      {/* Background decorativo (similar WhatsApp Web) */}
-      <div
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 30m-3 0a3 3 0 1 1 6 0a3 3 0 1 1 -6 0' fill='%23128C7E'/%3E%3C/svg%3E")`,
-        }}
-      />
-
-      {/* Header da conversa */}
-      <div className="relative z-10 bg-[#f0f2f5] border-b px-4 py-2.5 flex items-center gap-3 shadow-sm">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50 relative">
+      {/* Header da conversa (Kommo-style) */}
+      <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center gap-3 shadow-sm z-10">
         <button
           onClick={onBack}
-          className="md:hidden p-1.5 hover:bg-slate-200 rounded-full"
+          className="md:hidden p-1.5 hover:bg-slate-100 rounded-md"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <button
-          onClick={() => setShowDetails(true)}
-          className="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-slate-200/50 rounded-lg px-2 -mx-2 py-1 transition-colors"
-          title="Ver detalhes do contato"
-        >
-          <Avatar
-            name={peer.peerName}
-            seed={peer.peerNumber}
-            size="md"
-            isGroup={peer.isGroup}
-          />
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold truncate text-slate-800 leading-tight flex items-center gap-1.5">
-              {displayPeer(peer)}
-              {peer.isGroup && (
-                <span className="text-[10px] font-medium uppercase tracking-wide bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">
-                  grupo
-                </span>
-              )}
-              {peer.isHiddenNumber && !peer.isGroup && (
-                <span
-                  className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded"
-                  title="Telefone oculto pela privacidade do WhatsApp. Para resolver, salve o contato na agenda do celular conectado."
-                >
-                  <EyeOff className="w-2.5 h-2.5" />
-                  oculto
-                </span>
-              )}
-            </div>
-            <div className="text-[11px] text-slate-500 truncate">
-              {peer.isGroup
-                ? `${peer.totalMessages.toLocaleString('pt-BR')} mensagens · clique para detalhes`
-                : peer.isHiddenNumber
-                  ? `${peer.totalMessages.toLocaleString('pt-BR')} mensagens · clique para detalhes`
-                  : `${formatPhone(peer.peerNumber)} · ${peer.totalMessages.toLocaleString('pt-BR')} mensagens`}
-            </div>
+        <Avatar
+          name={peer.peerName}
+          seed={peer.peerNumber}
+          size="md"
+          isGroup={peer.isGroup}
+          online
+        />
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold truncate text-slate-800 leading-tight flex items-center gap-1.5 text-sm">
+            {displayPeer(peer)}
+            {peer.isGroup && (
+              <span className="text-[9px] font-medium uppercase tracking-wide bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                grupo
+              </span>
+            )}
+            {peer.isHiddenNumber && !peer.isGroup && (
+              <span
+                className="inline-flex items-center gap-1 text-[9px] font-medium uppercase tracking-wide bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-100"
+                title="Telefone oculto pela privacidade do WhatsApp."
+              >
+                <EyeOff className="w-2.5 h-2.5" />
+                oculto
+              </span>
+            )}
           </div>
-        </button>
+          <div className="text-[11px] text-slate-500 truncate flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            {peer.isGroup
+              ? `${peer.totalMessages.toLocaleString('pt-BR')} mensagens`
+              : peer.isHiddenNumber
+                ? `${peer.totalMessages.toLocaleString('pt-BR')} mensagens`
+                : formatPhone(peer.peerNumber)}
+          </div>
+        </div>
+
         <button
           onClick={handleSyncHistory}
           disabled={syncingHistory}
-          className="p-2 hover:bg-slate-200 rounded-full disabled:opacity-50"
+          className="p-2 hover:bg-slate-100 rounded-md disabled:opacity-50 text-slate-500 hover:text-slate-700"
           title="Buscar mensagens antigas"
         >
           {syncingHistory ? (
-            <Loader2 className="w-4 h-4 animate-spin text-slate-600" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <History className="w-4 h-4 text-slate-600" />
+            <History className="w-4 h-4" />
           )}
         </button>
         <a
           href={`https://wa.me/${peer.peerNumber.replace(/\D+/g, '')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 hover:bg-slate-200 rounded-full"
+          className="p-2 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-700"
           title="Abrir no WhatsApp Web"
         >
-          <Phone className="w-4 h-4 text-slate-600" />
+          <Phone className="w-4 h-4" />
         </a>
+        <button
+          onClick={onToggleInfo}
+          className={`p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 lg:hidden ${
+            infoOpen ? 'bg-brand-50 text-brand-700 hover:bg-brand-100' : ''
+          }`}
+          title="Detalhes do contato"
+        >
+          <Info className="w-4 h-4" />
+        </button>
         <div className="relative">
           <button
             onClick={() => setShowMenu((s) => !s)}
-            className="p-2 hover:bg-slate-200 rounded-full"
+            className="p-2 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-700"
           >
-            <MoreVertical className="w-4 h-4 text-slate-600" />
+            <MoreVertical className="w-4 h-4" />
           </button>
           <AnimatePresence>
             {showMenu && (
@@ -1285,12 +1315,12 @@ function ChatPanel({
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
-                className="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg w-56 z-20 py-1 text-sm"
+                className="absolute right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg w-56 z-20 py-1 text-sm"
               >
                 <button
                   onClick={handleSyncHistory}
                   disabled={syncingHistory}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
                 >
                   <History className="w-4 h-4" />
                   Buscar mensagens antigas
@@ -1300,7 +1330,7 @@ function ChatPanel({
                     refetch();
                     setShowMenu(false);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
                 >
                   <RefreshCcw className="w-4 h-4" />
                   Atualizar
@@ -1312,15 +1342,15 @@ function ChatPanel({
       </div>
 
       {/* Mensagens */}
-      <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto px-4 py-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3">
         {loadingMessages && messages.length === 0 ? (
           <div className="h-full flex items-center justify-center">
             <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
           </div>
         ) : messages.length === 0 ? (
           <div className="h-full flex items-center justify-center">
-            <div className="bg-white/70 backdrop-blur rounded-xl p-6 text-center max-w-sm">
-              <Sparkles className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center max-w-sm shadow-sm">
+              <Sparkles className="w-8 h-8 text-brand-500 mx-auto mb-2" />
               <p className="text-sm text-slate-700 font-medium">
                 Sem mensagens nesta conversa
               </p>
@@ -1346,14 +1376,22 @@ function ChatPanel({
         )}
       </div>
 
-      {/* Input */}
+      {/* Composer (Kommo-style) */}
       <form
         onSubmit={submit}
-        className="relative z-10 bg-[#f0f2f5] border-t p-3 flex items-end gap-2"
+        className="bg-white border-t border-slate-200 p-3 flex items-end gap-2"
       >
         <button
           type="button"
-          className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full"
+          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md"
+          title="Anexar"
+        >
+          <Paperclip className="w-5 h-5" />
+        </button>
+        <button
+          type="button"
+          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md"
+          title="Emoji"
         >
           <Smile className="w-5 h-5" />
         </button>
@@ -1368,13 +1406,13 @@ function ChatPanel({
             }
           }}
           rows={1}
-          placeholder="Digite uma mensagem"
-          className="flex-1 resize-none border-0 rounded-2xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 max-h-32"
+          placeholder="Escreva uma mensagem..."
+          className="flex-1 resize-none border border-slate-200 rounded-xl px-4 py-2 text-sm bg-slate-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-400 focus:border-transparent max-h-32"
         />
         <button
           type="submit"
           disabled={sending || !draft.trim() || session.status !== 'CONNECTED'}
-          className="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 disabled:opacity-40 shrink-0 shadow-md hover:shadow-lg transition-shadow"
+          className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-brand-500 text-white flex items-center justify-center hover:from-brand-700 hover:to-brand-600 disabled:opacity-40 shrink-0 shadow-md hover:shadow-lg transition-all"
         >
           {sending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -1383,42 +1421,44 @@ function ChatPanel({
           )}
         </button>
       </form>
-
-      <AnimatePresence>
-        {showDetails && (
-          <ContactDrawer peer={peer} onClose={() => setShowDetails(false)} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
 
 // ════════════════════════════════════════════════════════════
-// Sidebar
+// Conversations Sidebar (Kommo-style com filtros)
 // ════════════════════════════════════════════════════════════
 
 function ConversationsSidebar({
   conversations,
   search,
   setSearch,
+  filter,
+  setFilter,
   activePeer,
   onSelect,
   hidden,
+  totalUnread,
 }: {
   conversations: Conversation[];
   search: string;
   setSearch: (s: string) => void;
+  filter: ConvFilter;
+  setFilter: (f: ConvFilter) => void;
   activePeer: string | null;
   onSelect: (peer: string) => void;
   hidden: boolean;
+  totalUnread: number;
 }) {
+  const groupCount = conversations.filter((c) => c.isGroup).length;
+
   return (
     <aside
-      className={`flex-col border-r bg-white min-h-0 ${
+      className={`flex-col bg-white border-r border-slate-200 min-h-0 ${
         hidden ? 'hidden md:flex' : 'flex'
       }`}
     >
-      <div className="p-3 border-b">
+      <div className="p-3 border-b border-slate-200">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
           <input
@@ -1426,14 +1466,76 @@ function ConversationsSidebar({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar conversa..."
-            className="w-full bg-slate-100 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-400 transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all"
           />
         </div>
       </div>
+
+      {/* Filter tabs */}
+      <div className="flex items-center gap-1 px-3 py-2 border-b border-slate-200 bg-slate-50/50">
+        <button
+          onClick={() => setFilter('all')}
+          className={`flex-1 text-[11px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded-md transition-colors ${
+            filter === 'all'
+              ? 'bg-brand-600 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          Todas
+        </button>
+        <button
+          onClick={() => setFilter('unread')}
+          className={`flex-1 text-[11px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 ${
+            filter === 'unread'
+              ? 'bg-brand-600 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          Não lidas
+          {totalUnread > 0 && (
+            <span
+              className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                filter === 'unread'
+                  ? 'bg-white text-brand-700'
+                  : 'bg-brand-600 text-white'
+              }`}
+            >
+              {totalUnread}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setFilter('groups')}
+          className={`flex-1 text-[11px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 ${
+            filter === 'groups'
+              ? 'bg-brand-600 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          Grupos
+          {groupCount > 0 && (
+            <span
+              className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                filter === 'groups'
+                  ? 'bg-white text-brand-700'
+                  : 'bg-slate-200 text-slate-700'
+              }`}
+            >
+              {groupCount}
+            </span>
+          )}
+        </button>
+      </div>
+
       <div className="flex-1 overflow-y-auto">
         {conversations.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-500">
-            {search ? 'Nada encontrado' : 'Nenhuma conversa ainda'}
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-3">
+              <Filter className="w-5 h-5 text-slate-400" />
+            </div>
+            <p className="text-sm text-slate-500">
+              {search ? 'Nada encontrado' : 'Nenhuma conversa'}
+            </p>
           </div>
         ) : (
           conversations.map((c) => {
@@ -1442,8 +1544,10 @@ function ConversationsSidebar({
               <button
                 key={c.peerNumber}
                 onClick={() => onSelect(c.peerNumber)}
-                className={`w-full text-left flex items-center gap-3 px-3 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors ${
-                  active ? 'bg-emerald-50 border-l-4 border-l-emerald-500' : ''
+                className={`w-full text-left flex items-center gap-3 px-3 py-3 border-b border-slate-100 transition-colors ${
+                  active
+                    ? 'bg-brand-50/70 border-l-[3px] border-l-brand-600 pl-[10px]'
+                    : 'hover:bg-slate-50'
                 }`}
               >
                 <Avatar
@@ -1455,13 +1559,12 @@ function ConversationsSidebar({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className={`font-semibold truncate text-sm flex items-center gap-1 ${
-                        c.unreadCount > 0 ? 'text-slate-900' : 'text-slate-700'
+                      className={`truncate text-sm flex items-center gap-1 ${
+                        c.unreadCount > 0
+                          ? 'text-slate-900 font-bold'
+                          : 'text-slate-700 font-semibold'
                       }`}
                     >
-                      {c.isGroup && (
-                        <Users className="w-3 h-3 text-slate-400 shrink-0" />
-                      )}
                       {c.isHiddenNumber && !c.isGroup && (
                         <EyeOff
                           className="w-3 h-3 text-slate-400 shrink-0"
@@ -1473,7 +1576,7 @@ function ConversationsSidebar({
                     <span
                       className={`text-[10px] shrink-0 ${
                         c.unreadCount > 0
-                          ? 'text-emerald-600 font-semibold'
+                          ? 'text-brand-600 font-semibold'
                           : 'text-slate-400'
                       }`}
                     >
@@ -1483,13 +1586,15 @@ function ConversationsSidebar({
                   <div className="flex items-center justify-between gap-2 mt-0.5">
                     <span
                       className={`text-xs truncate ${
-                        c.unreadCount > 0 ? 'text-slate-700' : 'text-slate-500'
+                        c.unreadCount > 0
+                          ? 'text-slate-700 font-medium'
+                          : 'text-slate-500'
                       }`}
                     >
                       {c.lastMessage ?? '—'}
                     </span>
                     {c.unreadCount > 0 && (
-                      <span className="bg-emerald-500 text-white text-[10px] font-semibold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shrink-0">
+                      <span className="bg-brand-600 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shrink-0">
                         {c.unreadCount}
                       </span>
                     )}
@@ -1510,8 +1615,10 @@ function ConversationsSidebar({
 
 export function WhatsappPage() {
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<ConvFilter>('all');
   const [activePeer, setActivePeer] = useState<string | null>(null);
   const [showActions, setShowActions] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   const { data: sessionData, refetch: refetchSession, loading: loadingSession } =
     useQuery<{ whatsappSession: Session }>(GET_WHATSAPP_SESSION, {
@@ -1582,7 +1689,7 @@ export function WhatsappPage() {
       alert(
         count > 0
           ? `${count} contato(s) importado(s).`
-          : 'Nenhum contato novo. Pode ser que o Evolution ainda não sincronizou ou já está tudo importado.',
+          : 'Nenhum contato novo. Pode ser que o WAHA ainda não sincronizou ou tudo já está importado.',
       );
       setShowActions(false);
       await refetchConv();
@@ -1591,17 +1698,30 @@ export function WhatsappPage() {
     }
   };
 
-  const conversationsRaw = convData?.whatsappConversations ?? [];
+  const conversationsRaw = useMemo(
+    () => convData?.whatsappConversations ?? [],
+    [convData?.whatsappConversations],
+  );
+  const totalUnread = useMemo(
+    () => conversationsRaw.reduce((sum, c) => sum + c.unreadCount, 0),
+    [conversationsRaw],
+  );
+
   const filteredConvs = useMemo(() => {
-    if (!search) return conversationsRaw;
-    const q = search.toLowerCase();
-    return conversationsRaw.filter(
-      (c) =>
-        (c.peerName ?? '').toLowerCase().includes(q) ||
-        c.peerNumber.includes(q.replace(/\D+/g, '')) ||
-        (c.lastMessage ?? '').toLowerCase().includes(q),
-    );
-  }, [conversationsRaw, search]);
+    let list = conversationsRaw;
+    if (filter === 'unread') list = list.filter((c) => c.unreadCount > 0);
+    if (filter === 'groups') list = list.filter((c) => c.isGroup);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (c) =>
+          (c.peerName ?? '').toLowerCase().includes(q) ||
+          c.peerNumber.includes(q.replace(/\D+/g, '')) ||
+          (c.lastMessage ?? '').toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [conversationsRaw, search, filter]);
 
   const activeConv = useMemo(
     () => conversationsRaw.find((c) => c.peerNumber === activePeer) ?? null,
@@ -1629,44 +1749,52 @@ export function WhatsappPage() {
 
   return (
     <div className="space-y-3 h-[calc(100vh-7rem)] flex flex-col">
-      {/* Header refinado */}
-      <header className="flex items-center justify-between flex-wrap gap-3 bg-white border rounded-xl px-4 py-3 shadow-sm">
+      {/* Header (Kommo-style: limpo, com info da empresa conectada) */}
+      <header className="flex items-center justify-between flex-wrap gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-md">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-600 to-brand-500 flex items-center justify-center shadow-md ring-1 ring-brand-400/20">
             <MessageCircle className="w-5 h-5 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-['Rajdhani'] font-bold leading-none">
-                WhatsApp Business
+              <h1 className="text-lg font-['Rajdhani'] font-bold leading-none text-slate-800">
+                WhatsApp
               </h1>
-              <StatusBadge status={session.status} />
+              <StatusPill status={session.status} />
             </div>
             <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
-              {session.phone && <span>{formatPhone(session.phone)}</span>}
+              {session.phone && (
+                <span className="font-medium">{formatPhone(session.phone)}</span>
+              )}
               {session.profileName && <span>· {session.profileName}</span>}
               {!session.phone && !session.profileName && (
-                <span>Conexão via Evolution API</span>
+                <span>Conexão via WAHA API</span>
               )}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {isConnected && totalUnread > 0 && (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 text-[11px] font-semibold border border-brand-100 mr-1">
+              <Bell className="w-3 h-3" />
+              {totalUnread} não lida{totalUnread > 1 ? 's' : ''}
+            </div>
+          )}
           <button
             onClick={() => refetchSession()}
-            className="p-2 border rounded-lg hover:bg-slate-50 transition-colors"
+            className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600"
             title="Atualizar status"
           >
-            <RefreshCcw className="w-4 h-4 text-slate-600" />
+            <RefreshCcw className="w-4 h-4" />
           </button>
           {isConnected && (
             <div className="relative">
               <button
                 onClick={() => setShowActions((s) => !s)}
-                className="flex items-center gap-1.5 p-2 border rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-1.5 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600"
                 title="Mais ações"
               >
-                <MoreVertical className="w-4 h-4 text-slate-600" />
+                <MoreVertical className="w-4 h-4" />
               </button>
               <AnimatePresence>
                 {showActions && (
@@ -1674,7 +1802,7 @@ export function WhatsappPage() {
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
-                    className="absolute right-0 mt-1 w-60 bg-white border rounded-xl shadow-xl z-30 py-1 text-sm overflow-hidden"
+                    className="absolute right-0 mt-1 w-60 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1 text-sm overflow-hidden"
                   >
                     <button
                       onClick={handleSync}
@@ -1683,7 +1811,9 @@ export function WhatsappPage() {
                     >
                       <Download className="w-4 h-4 text-blue-600" />
                       <div>
-                        <div className="font-medium">Importar contatos</div>
+                        <div className="font-medium text-slate-800">
+                          Importar contatos
+                        </div>
                         <div className="text-xs text-slate-500">
                           Da lista do WhatsApp
                         </div>
@@ -1696,13 +1826,15 @@ export function WhatsappPage() {
                     >
                       <CloudCog className="w-4 h-4 text-amber-600" />
                       <div>
-                        <div className="font-medium">Reconfigurar webhook</div>
+                        <div className="font-medium text-slate-800">
+                          Reconfigurar webhook
+                        </div>
                         <div className="text-xs text-slate-500">
                           Se mensagens não chegam
                         </div>
                       </div>
                     </button>
-                    <div className="border-t my-1" />
+                    <div className="border-t border-slate-100 my-1" />
                     <button
                       onClick={handleDisconnect}
                       disabled={disconnecting}
@@ -1726,7 +1858,7 @@ export function WhatsappPage() {
         </div>
       )}
 
-      {/* Corpo principal */}
+      {/* Corpo */}
       {!isConnected ? (
         <QrConnectScreen
           session={session}
@@ -1741,17 +1873,21 @@ export function WhatsappPage() {
           reconfiguring={reconfiguring}
         />
       ) : (
-        <div className="flex-1 grid md:grid-cols-[340px_1fr] gap-0 border rounded-2xl overflow-hidden bg-white shadow-md min-h-0 relative">
+        <div className="flex-1 grid md:grid-cols-[320px_1fr] lg:grid-cols-[320px_1fr_320px] gap-0 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-md min-h-0 relative">
           <ConversationsSidebar
             conversations={filteredConvs}
             search={search}
             setSearch={setSearch}
+            filter={filter}
+            setFilter={setFilter}
             activePeer={activePeer}
             onSelect={(peer) => {
               setActivePeer(peer);
+              setShowInfo(false);
               setTimeout(() => refetchConv(), 500);
             }}
             hidden={!!activePeer}
+            totalUnread={totalUnread}
           />
 
           <main
@@ -1764,12 +1900,14 @@ export function WhatsappPage() {
                 session={session}
                 peer={activeConv}
                 onBack={() => setActivePeer(null)}
+                onToggleInfo={() => setShowInfo((s) => !s)}
+                infoOpen={showInfo}
               />
             ) : (
-              <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 to-emerald-50/30">
+              <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 to-brand-50/30">
                 <div className="text-center max-w-sm p-8">
-                  <div className="w-20 h-20 rounded-full bg-emerald-100 mx-auto flex items-center justify-center mb-4">
-                    <MessageCircle className="w-10 h-10 text-emerald-500" />
+                  <div className="w-20 h-20 rounded-full bg-brand-50 mx-auto flex items-center justify-center mb-4 border border-brand-100">
+                    <MessageCircle className="w-10 h-10 text-brand-500" />
                   </div>
                   <h2 className="text-xl font-['Rajdhani'] font-bold text-slate-700">
                     Selecione uma conversa
@@ -1786,6 +1924,46 @@ export function WhatsappPage() {
               </div>
             )}
           </main>
+
+          {/* Info panel — sempre visível em lg+; slide-over em telas menores */}
+          {activeConv && (
+            <>
+              <div className="hidden lg:block">
+                <ContactInfoPanel
+                  peer={activeConv}
+                  onClose={() => setShowInfo(false)}
+                />
+              </div>
+              <AnimatePresence>
+                {showInfo && (
+                  <motion.div
+                    key="info-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="lg:hidden absolute inset-0 z-30 bg-slate-900/30 backdrop-blur-sm"
+                    onClick={() => setShowInfo(false)}
+                  />
+                )}
+                {showInfo && (
+                  <motion.aside
+                    key="info-panel"
+                    initial={{ x: '100%' }}
+                    animate={{ x: 0 }}
+                    exit={{ x: '100%' }}
+                    transition={{ type: 'tween', duration: 0.22 }}
+                    className="lg:hidden absolute right-0 top-0 h-full w-full sm:w-[360px] z-40 shadow-2xl"
+                  >
+                    <ContactInfoPanel
+                      peer={activeConv}
+                      onClose={() => setShowInfo(false)}
+                      showCloseButton
+                    />
+                  </motion.aside>
+                )}
+              </AnimatePresence>
+            </>
+          )}
         </div>
       )}
     </div>
