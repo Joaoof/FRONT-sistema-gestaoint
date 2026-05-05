@@ -110,3 +110,9 @@ export const SYNC_WHATSAPP_FROM_EVOLUTION = gql`
     syncWhatsappFromEvolution
   }
 `;
+
+export const SYNC_WHATSAPP_MESSAGES_FOR_PEER = gql`
+  mutation SyncWhatsappMessagesForPeer($peerNumber: String!, $limit: Int) {
+    syncWhatsappMessagesForPeer(peerNumber: $peerNumber, limit: $limit)
+  }
+`;
