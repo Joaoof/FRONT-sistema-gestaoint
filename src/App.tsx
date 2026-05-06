@@ -86,6 +86,7 @@ import { WhatsappPage } from './pages/Communications/WhatsappPage';
 import { WhatsappContactsPage } from './pages/Communications/WhatsappContactsPage';
 import { WhatsappChatbotPage } from './pages/Communications/WhatsappChatbotPage';
 import { TimelinePage } from './pages/TimelinePage';
+import { RemindersPage } from './pages/RemindersPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -233,6 +234,8 @@ function AppContent() {
             <Route path="/comunicacoes/whatsapp/contatos" element={<WhatsappContactsPage />} />
             <Route path="/comunicacoes/whatsapp/chatbot" element={<WhatsappChatbotPage />} />
             <Route path="/timeline" element={<TimelinePage />} />
+            <Route path="/timeline/:category" element={<TimelinePage />} />
+            <Route path="/lembretes" element={<RemindersPage />} />
 
             {/* CRM */}
             <Route path="/crm" element={<PipelinePage />} />

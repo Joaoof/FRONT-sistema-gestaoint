@@ -141,8 +141,11 @@ export function CompanyReminderBell() {
   const upcoming = reminders.filter((r) => new Date(r.dueAt) > now);
   const count = overdue.length;
 
-  // Subscription tempo real — toca som + adiciona toast + pulsa o sino
+  // Subscription tempo real — toca som + adiciona toast + pulsa o sino.
+  // skip+onError tornam resiliente caso o Apollo Client não tenha WS link
+  // configurado (subscription falha mas bell continua funcionando via poll).
   useSubscription<{ companyReminderDue: Reminder }>(ON_COMPANY_REMINDER_DUE, {
+    skip: typeof window === 'undefined',
     onData: ({ data: sub }) => {
       const r = sub?.data?.companyReminderDue;
       if (!r) return;
@@ -154,7 +157,6 @@ export function CompanyReminderBell() {
         return [r, ...prev].slice(0, 5);
       });
       refetch();
-      // Browser notification opcional
       if ('Notification' in window) {
         if (Notification.permission === 'granted') {
           const n = new Notification(`🔔 ${r.title}`, {
@@ -171,6 +173,11 @@ export function CompanyReminderBell() {
           Notification.requestPermission();
         }
       }
+    },
+    onError: (err) => {
+      // WS link não configurado — silencioso. Polling cobre.
+      // eslint-disable-next-line no-console
+      console.debug('[reminder-subscription] desabilitado:', err.message);
     },
   });
 
@@ -218,15 +225,15 @@ export function CompanyReminderBell() {
       <button
         onClick={() => setOpen((v) => !v)}
         title="Lembretes da empresa"
-        className={`fixed top-4 right-4 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all ${
+        className={`fixed bottom-6 right-6 z-[60] w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all ${
           count > 0
-            ? 'bg-rose-500 text-white hover:bg-rose-600'
-            : 'bg-white text-slate-700 hover:bg-slate-50 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-white/10'
+            ? 'bg-rose-500 text-white hover:bg-rose-600 ring-4 ring-rose-200 dark:ring-rose-500/30'
+            : 'bg-brand-600 text-white hover:bg-brand-700 ring-4 ring-brand-100 dark:ring-brand-500/30'
         } ${pulse ? 'animate-bounce' : ''}`}
       >
-        <Bell className={`w-5 h-5 ${pulse ? 'animate-pulse' : ''}`} />
+        <Bell className={`w-6 h-6 ${pulse ? 'animate-pulse' : ''}`} />
         {count > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
+          <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 rounded-full bg-rose-700 text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
             {count > 99 ? '99+' : count}
           </span>
         )}

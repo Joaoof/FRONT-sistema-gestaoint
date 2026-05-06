@@ -1,21 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   AlertTriangle,
+  ArrowLeft,
   Bell,
-  Bookmark,
   Bot,
   Calendar,
+  ChevronRight,
   DollarSign,
   Globe,
-  Heart,
+  Layers,
   Loader2,
   MessageCircle,
   Package,
   Phone,
   RefreshCw,
-  Send,
+  Search,
   ShoppingCart,
   Sparkles,
   Truck,
@@ -26,7 +28,6 @@ import {
   Wallet,
 } from 'lucide-react';
 import { GET_COMPANY_TIMELINE } from '../graphql/queries/timeline';
-import { useCompany } from '../contexts/CompanyContext';
 
 type TimelineCategory =
   | 'FINANCIAL'
@@ -52,7 +53,7 @@ interface TimelineEvent {
   colorKey: string;
 }
 
-type ViewMode =
+type ViewKey =
   | 'hub'
   | 'financial'
   | 'commercial'
@@ -65,22 +66,63 @@ interface ViewConfig {
   label: string;
   desc: string;
   Icon: typeof Sparkles;
-  color: string;
+  accent: string;
   categories: TimelineCategory[] | null;
 }
 
-const VIEWS: Record<ViewMode, ViewConfig> = {
-  hub: { label: 'Hub', desc: 'Tudo da empresa', Icon: Sparkles, color: 'violet', categories: null },
-  financial: { label: 'Financeiro', desc: 'Pagamentos e fluxo de caixa', Icon: Wallet, color: 'emerald', categories: ['FINANCIAL'] },
-  commercial: { label: 'Comercial', desc: 'Vendas e novos clientes', Icon: ShoppingCart, color: 'blue', categories: ['COMMERCIAL'] },
-  operational: { label: 'Operacional', desc: 'Entregas e estoque', Icon: Truck, color: 'amber', categories: ['OPERATIONAL'] },
-  communications: { label: 'Comunicações', desc: 'WhatsApp e chamadas', Icon: MessageCircle, color: 'green', categories: ['COMMUNICATIONS'] },
-  alerts: { label: 'Alertas', desc: 'O que precisa de atenção', Icon: AlertTriangle, color: 'rose', categories: ['ALERTS'] },
-  activity: { label: 'Atividade', desc: 'Quem fez o que', Icon: Users, color: 'slate', categories: ['ACTIVITY'] },
+const VIEWS: Record<ViewKey, ViewConfig> = {
+  hub: {
+    label: 'Hub',
+    desc: 'Visão consolidada de tudo que acontece na empresa',
+    Icon: Layers,
+    accent: 'violet',
+    categories: null,
+  },
+  financial: {
+    label: 'Financeiro',
+    desc: 'Pagamentos recebidos, despesas e fluxo de caixa',
+    Icon: Wallet,
+    accent: 'emerald',
+    categories: ['FINANCIAL'],
+  },
+  commercial: {
+    label: 'Comercial',
+    desc: 'Vendas registradas, novos clientes, conversões',
+    Icon: ShoppingCart,
+    accent: 'blue',
+    categories: ['COMMERCIAL'],
+  },
+  operational: {
+    label: 'Operacional',
+    desc: 'Entregas, ajustes de estoque, ordens em execução',
+    Icon: Truck,
+    accent: 'amber',
+    categories: ['OPERATIONAL'],
+  },
+  communications: {
+    label: 'Comunicações',
+    desc: 'WhatsApp, chamadas e respostas automáticas',
+    Icon: MessageCircle,
+    accent: 'green',
+    categories: ['COMMUNICATIONS'],
+  },
+  alerts: {
+    label: 'Alertas',
+    desc: 'Itens que demandam atenção imediata',
+    Icon: AlertTriangle,
+    accent: 'rose',
+    categories: ['ALERTS'],
+  },
+  activity: {
+    label: 'Atividade',
+    desc: 'Histórico de quem fez o que',
+    Icon: Users,
+    accent: 'slate',
+    categories: ['ACTIVITY'],
+  },
 };
 
 type Period = 'today' | 'yesterday' | 'week' | 'month';
-
 const PERIOD_LABEL: Record<Period, string> = {
   today: 'Hoje',
   yesterday: 'Ontem',
@@ -106,16 +148,19 @@ function formatBRL(n: number): string {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
 }
 
-function relativeTime(iso: string): string {
+function timeOnly(iso: string): string {
+  return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function relativeShort(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();
   const m = Math.floor(ms / 60000);
   if (m < 1) return 'agora';
-  if (m < 60) return `há ${m}m`;
+  if (m < 60) return `${m}min`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `há ${h}h`;
+  if (h < 24) return `${h}h`;
   const d = Math.floor(h / 24);
-  if (d < 7) return `há ${d}d`;
-  return new Date(iso).toLocaleDateString('pt-BR');
+  return `${d}d`;
 }
 
 const ICON_MAP: Record<string, typeof Sparkles> = {
@@ -125,222 +170,153 @@ const ICON_MAP: Record<string, typeof Sparkles> = {
   reminder: Bell, chatbot: Bot,
 };
 
-// Gradientes vibrantes estilo Instagram pro banner do post
-const GRADIENT_MAP: Record<string, string> = {
-  emerald: 'from-emerald-400 via-green-500 to-teal-600',
-  amber: 'from-amber-400 via-orange-500 to-red-500',
-  rose: 'from-rose-400 via-pink-500 to-fuchsia-600',
-  blue: 'from-blue-400 via-indigo-500 to-purple-600',
-  violet: 'from-violet-500 via-purple-500 to-pink-500',
-  green: 'from-green-400 via-emerald-500 to-teal-600',
-  slate: 'from-slate-500 via-slate-600 to-slate-700',
+const ACCENT: Record<
+  string,
+  { ring: string; text: string; bg: string; bgSoft: string; dot: string }
+> = {
+  emerald: {
+    ring: 'ring-emerald-500',
+    text: 'text-emerald-700 dark:text-emerald-400',
+    bg: 'bg-emerald-600',
+    bgSoft: 'bg-emerald-50 dark:bg-emerald-500/10',
+    dot: 'bg-emerald-500',
+  },
+  amber: {
+    ring: 'ring-amber-500',
+    text: 'text-amber-700 dark:text-amber-400',
+    bg: 'bg-amber-600',
+    bgSoft: 'bg-amber-50 dark:bg-amber-500/10',
+    dot: 'bg-amber-500',
+  },
+  rose: {
+    ring: 'ring-rose-500',
+    text: 'text-rose-700 dark:text-rose-400',
+    bg: 'bg-rose-600',
+    bgSoft: 'bg-rose-50 dark:bg-rose-500/10',
+    dot: 'bg-rose-500',
+  },
+  blue: {
+    ring: 'ring-blue-500',
+    text: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-600',
+    bgSoft: 'bg-blue-50 dark:bg-blue-500/10',
+    dot: 'bg-blue-500',
+  },
+  violet: {
+    ring: 'ring-violet-500',
+    text: 'text-violet-700 dark:text-violet-400',
+    bg: 'bg-violet-600',
+    bgSoft: 'bg-violet-50 dark:bg-violet-500/10',
+    dot: 'bg-violet-500',
+  },
+  green: {
+    ring: 'ring-green-500',
+    text: 'text-green-700 dark:text-green-400',
+    bg: 'bg-green-600',
+    bgSoft: 'bg-green-50 dark:bg-green-500/10',
+    dot: 'bg-green-500',
+  },
+  slate: {
+    ring: 'ring-slate-500',
+    text: 'text-slate-700 dark:text-slate-300',
+    bg: 'bg-slate-600',
+    bgSoft: 'bg-slate-100 dark:bg-white/[0.06]',
+    dot: 'bg-slate-500',
+  },
 };
 
-const CHIP_BG: Record<string, string> = {
-  emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-  amber: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-  rose: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
-  blue: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-  violet: 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300',
-  green: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300',
-  slate: 'bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300',
+const TYPE_LABEL_SHORT: Record<string, string> = {
+  ORDER_CREATED: 'Venda',
+  ORDER_PAID: 'Venda paga',
+  ORDER_CANCELED: 'Venda cancelada',
+  RECEIVABLE_CREATED: 'A receber',
+  RECEIVABLE_PAID: 'Recebimento',
+  RECEIVABLE_OVERDUE: 'Vencido',
+  PAYABLE_CREATED: 'A pagar',
+  PAYABLE_PAID: 'Pagamento',
+  CASH_ENTRY: 'Entrada',
+  CASH_EXIT: 'Saída',
+  CUSTOMER_CREATED: 'Novo cliente',
+  DELIVERY_CREATED: 'Entrega agendada',
+  DELIVERY_DELIVERED: 'Entrega concluída',
+  STOCK_LOW: 'Estoque crítico',
+  WHATSAPP_MESSAGE_IN: 'Mensagem',
+  WHATSAPP_CALL: 'Chamada',
+  WHATSAPP_REMINDER_DUE: 'Lembrete',
+  WHATSAPP_CHATBOT_FIRED: 'Chatbot',
 };
 
-const TYPE_HASHTAG: Record<string, string> = {
-  ORDER_CREATED: '#novavenda',
-  ORDER_PAID: '#vendapaga',
-  ORDER_CANCELED: '#cancelamento',
-  RECEIVABLE_CREATED: '#contaareceber',
-  RECEIVABLE_PAID: '#recebido',
-  RECEIVABLE_OVERDUE: '#atrasado',
-  PAYABLE_CREATED: '#contaapagar',
-  PAYABLE_PAID: '#pago',
-  CASH_ENTRY: '#entrada',
-  CASH_EXIT: '#saida',
-  CUSTOMER_CREATED: '#novocliente',
-  DELIVERY_CREATED: '#entrega',
-  DELIVERY_DELIVERED: '#entregaconcluida',
-  STOCK_LOW: '#estoque',
-  WHATSAPP_MESSAGE_IN: '#whatsapp',
-  WHATSAPP_CALL: '#chamada',
-  WHATSAPP_REMINDER_DUE: '#lembrete',
-  WHATSAPP_CHATBOT_FIRED: '#chatbot',
-};
-
-function PostCard({ event, companyName }: { event: TimelineEvent; companyName: string }) {
+function EventRow({ event }: { event: TimelineEvent }) {
   const Icon = ICON_MAP[event.iconKey] ?? Globe;
-  const gradient = GRADIENT_MAP[event.colorKey] ?? GRADIENT_MAP.slate;
-  const chip = CHIP_BG[event.colorKey] ?? CHIP_BG.slate;
-  const hashtag = TYPE_HASHTAG[event.type] ?? '#sistema';
-
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [animateLike, setAnimateLike] = useState(false);
-
-  const handleLike = () => {
-    setLiked((v) => !v);
-    setAnimateLike(true);
-    setTimeout(() => setAnimateLike(false), 700);
-  };
+  const a = ACCENT[event.colorKey] ?? ACCENT.slate;
+  const typeLabel = TYPE_LABEL_SHORT[event.type] ?? '';
 
   return (
-    <motion.article
-      layout
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-white/[0.08] overflow-hidden shadow-sm"
-    >
-      {/* Header — username + ações */}
-      <div className="flex items-center gap-3 px-4 py-3">
-        <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${gradient} p-[2px] shrink-0`}>
-          <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-slate-700 dark:text-slate-200 font-bold text-sm">
-            {companyName.charAt(0).toUpperCase()}
-          </div>
-        </div>
+    <li className="relative pl-12 pr-4 py-3 group hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+      {/* Bullet na linha do tempo */}
+      <span
+        className={`absolute left-[18px] top-[18px] w-3 h-3 rounded-full ${a.dot} ring-4 ring-white dark:ring-slate-900 z-10`}
+      />
+      {/* Ícone pequeno opcional */}
+      <span
+        className={`absolute left-[34px] top-[14px] w-6 h-6 rounded-md ${a.bgSoft} ${a.text} flex items-center justify-center`}
+      >
+        <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+      </span>
+
+      <div className="ml-8 flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-[14px] text-slate-900 dark:text-white truncate">
-              {companyName}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-slate-900 dark:text-white text-[14px] leading-tight">
+              {event.title}
             </span>
-            <span className="text-slate-400">•</span>
-            <span className="text-[13px] text-slate-500">{relativeTime(event.at)}</span>
+            {typeLabel && (
+              <span className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded ${a.bgSoft} ${a.text} font-medium`}>
+                {typeLabel}
+              </span>
+            )}
           </div>
+          {event.description && (
+            <p className="text-[13px] text-slate-600 dark:text-slate-400 mt-1 leading-snug">
+              {event.description}
+            </p>
+          )}
           {event.actor && (
-            <div className="text-[11.5px] text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-[11.5px] text-slate-400 dark:text-slate-500 mt-1">
               por {event.actor}
-            </div>
+            </p>
           )}
         </div>
-        <button
-          className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1"
-          title="Mais"
-        >
-          <span className="block leading-none text-lg">⋯</span>
-        </button>
-      </div>
-
-      {/* Banner — gradient com ícone grande estilo "post" */}
-      <div className={`relative aspect-[5/4] sm:aspect-[4/3] bg-gradient-to-br ${gradient} flex flex-col items-center justify-center text-white px-6 py-8`}>
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.05, type: 'spring', stiffness: 260, damping: 20 }}
-          className="bg-white/20 backdrop-blur-sm rounded-full p-5 mb-4 ring-2 ring-white/30"
-        >
-          <Icon className="w-12 h-12" strokeWidth={1.75} />
-        </motion.div>
-        {event.amount != null && (
-          <div className="text-[36px] sm:text-[44px] font-bold leading-none drop-shadow-sm">
-            {formatBRL(event.amount)}
-          </div>
-        )}
-        <div className="text-center mt-3">
-          <div className="text-[16px] sm:text-[18px] font-semibold leading-tight">
-            {event.title}
-          </div>
-        </div>
-        {/* Animação coração ao curtir */}
-        <AnimatePresence>
-          {animateLike && (
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: [0, 1.4, 1], opacity: [0, 1, 0] }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.7 }}
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-            >
-              <Heart className="w-32 h-32 text-white drop-shadow-2xl" fill="currentColor" />
-            </motion.div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {event.amount != null && (
+            <span className={`font-semibold text-[14px] ${a.text}`}>
+              {formatBRL(event.amount)}
+            </span>
           )}
-        </AnimatePresence>
-      </div>
-
-      {/* Action bar — like, comment, share, save */}
-      <div className="px-3 pt-3 pb-1 flex items-center gap-1">
-        <button
-          onClick={handleLike}
-          className="p-2 hover:opacity-60 transition-opacity"
-          aria-label="Curtir"
-        >
-          <Heart
-            className={`w-6 h-6 transition-all ${
-              liked ? 'text-rose-500 scale-110' : 'text-slate-700 dark:text-slate-200'
-            }`}
-            fill={liked ? 'currentColor' : 'none'}
-            strokeWidth={liked ? 0 : 2}
-          />
-        </button>
-        <button className="p-2 hover:opacity-60 transition-opacity" aria-label="Comentar">
-          <MessageCircle className="w-6 h-6 text-slate-700 dark:text-slate-200" strokeWidth={2} />
-        </button>
-        <button className="p-2 hover:opacity-60 transition-opacity" aria-label="Compartilhar">
-          <Send className="w-[22px] h-[22px] text-slate-700 dark:text-slate-200" strokeWidth={2} />
-        </button>
-        <button
-          onClick={() => setSaved((v) => !v)}
-          className="p-2 hover:opacity-60 transition-opacity ml-auto"
-          aria-label="Salvar"
-        >
-          <Bookmark
-            className={`w-6 h-6 transition-colors ${
-              saved ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'
-            }`}
-            fill={saved ? 'currentColor' : 'none'}
-            strokeWidth={2}
-          />
-        </button>
-      </div>
-
-      {/* Caption */}
-      <div className="px-4 pb-1">
-        {liked && (
-          <div className="text-[13px] font-semibold text-slate-900 dark:text-white mb-1">
-            Você curtiu
-          </div>
-        )}
-        <div className="text-[13.5px] leading-snug">
-          <span className="font-semibold text-slate-900 dark:text-white">
-            {companyName}
-          </span>{' '}
-          <span className="text-slate-700 dark:text-slate-300">
-            {event.description ?? event.title}
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+            {timeOnly(event.at)}
+          </span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+            {relativeShort(event.at)}
           </span>
         </div>
-        <div className="mt-1.5">
-          <span className={`inline-block text-[11px] px-2 py-0.5 rounded-full font-medium ${chip}`}>
-            {hashtag}
-          </span>
-        </div>
-        <div className="mt-1.5 text-[11px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-          {new Date(event.at).toLocaleDateString('pt-BR', {
-            day: 'numeric',
-            month: 'long',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </div>
       </div>
-
-      {/* Comment input fake (visual) */}
-      <div className="px-4 py-3 mt-1 border-t border-slate-100 dark:border-white/[0.06] flex items-center gap-2 text-[13px] text-slate-400">
-        <span className="text-lg">😀</span>
-        <input
-          placeholder="Adicione um comentário…"
-          className="flex-1 bg-transparent outline-none text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
-        />
-      </div>
-    </motion.article>
+    </li>
   );
 }
 
 export function TimelinePage() {
-  const { company } = useCompany();
-  const companyName = company?.name ?? 'Sua empresa';
-  const [view, setView] = useState<ViewMode>('hub');
+  const params = useParams<{ category?: string }>();
+  const navigate = useNavigate();
+
+  const view: ViewKey = (params.category as ViewKey) || 'hub';
+  const config = VIEWS[view] ?? VIEWS.hub;
+
   const [period, setPeriod] = useState<Period>('today');
+  const [search, setSearch] = useState('');
 
   const range = periodRange(period);
-  const config = VIEWS[view];
+  const accent = ACCENT[config.accent];
 
   const { data, loading, error, refetch } = useQuery<{
     companyTimeline: TimelineEvent[];
@@ -352,11 +328,34 @@ export function TimelinePage() {
       limit: 300,
     },
     fetchPolicy: 'cache-and-network',
-    pollInterval: 30_000,
+    pollInterval: 60_000,
   });
 
   const events = data?.companyTimeline ?? [];
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return events;
+    return events.filter((e) =>
+      [e.title, e.description, e.actor].some(
+        (s) => s && s.toLowerCase().includes(q),
+      ),
+    );
+  }, [events, search]);
+
+  // Agrupa por dia
+  const grouped = useMemo(() => {
+    const map = new Map<string, TimelineEvent[]>();
+    for (const e of filtered) {
+      const d = new Date(e.at);
+      const key = d.toLocaleDateString('pt-BR');
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(e);
+    }
+    return Array.from(map.entries());
+  }, [filtered]);
+
+  // KPIs por categoria (no Hub)
   const statsHub = useMemo(() => {
     const counts: Record<TimelineCategory, number> = {
       FINANCIAL: 0, COMMERCIAL: 0, OPERATIONAL: 0,
@@ -366,133 +365,297 @@ export function TimelinePage() {
     return counts;
   }, [events]);
 
-  return (
-    <div className="min-h-[calc(100vh-64px)] bg-slate-100 dark:bg-slate-950">
-      {/* Header */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/[0.06] px-4 sm:px-6 py-4 sticky top-0 z-30 backdrop-blur">
-        <div className="max-w-[700px] mx-auto flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${GRADIENT_MAP[config.color]} flex items-center justify-center text-white shrink-0`}>
-            <config.Icon className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-[18px] font-bold text-slate-900 dark:text-white">
-              {config.label}
-            </h1>
-            <p className="text-[12px] text-slate-500">{config.desc}</p>
-          </div>
-          <button
-            onClick={() => refetch()}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-600 dark:text-slate-300"
-            title="Atualizar"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </header>
+  // KPIs específicos pra cada categoria
+  const categoryStats = useMemo(() => {
+    if (view === 'financial') {
+      const entries = events.filter((e) => e.type === 'CASH_ENTRY' || e.type === 'RECEIVABLE_PAID' || e.type === 'ORDER_PAID');
+      const exits = events.filter((e) => e.type === 'CASH_EXIT' || e.type === 'PAYABLE_PAID');
+      const totalIn = entries.reduce((s, e) => s + (e.amount ?? 0), 0);
+      const totalOut = exits.reduce((s, e) => s + (e.amount ?? 0), 0);
+      return [
+        { label: 'Entradas', value: formatBRL(totalIn), accent: 'emerald' as const, count: entries.length },
+        { label: 'Saídas', value: formatBRL(totalOut), accent: 'rose' as const, count: exits.length },
+        { label: 'Resultado', value: formatBRL(totalIn - totalOut), accent: totalIn - totalOut >= 0 ? ('emerald' as const) : ('rose' as const) },
+      ];
+    }
+    if (view === 'commercial') {
+      const sales = events.filter((e) => e.type === 'ORDER_CREATED' || e.type === 'ORDER_PAID');
+      const totalSales = sales.reduce((s, e) => s + (e.amount ?? 0), 0);
+      const customers = events.filter((e) => e.type === 'CUSTOMER_CREATED').length;
+      return [
+        { label: 'Vendas', value: String(sales.length), accent: 'blue' as const },
+        { label: 'Faturamento', value: formatBRL(totalSales), accent: 'emerald' as const },
+        { label: 'Novos clientes', value: String(customers), accent: 'violet' as const },
+      ];
+    }
+    if (view === 'operational') {
+      const delivered = events.filter((e) => e.type === 'DELIVERY_DELIVERED').length;
+      const created = events.filter((e) => e.type === 'DELIVERY_CREATED').length;
+      const stockAlerts = events.filter((e) => e.type === 'STOCK_LOW').length;
+      return [
+        { label: 'Entregues', value: String(delivered), accent: 'emerald' as const },
+        { label: 'Em rota', value: String(created), accent: 'amber' as const },
+        { label: 'Estoque baixo', value: String(stockAlerts), accent: 'rose' as const },
+      ];
+    }
+    if (view === 'communications') {
+      const msgs = events.filter((e) => e.type === 'WHATSAPP_MESSAGE_IN').length;
+      const calls = events.filter((e) => e.type === 'WHATSAPP_CALL').length;
+      const bot = events.filter((e) => e.type === 'WHATSAPP_CHATBOT_FIRED').length;
+      const reminders = events.filter((e) => e.type === 'WHATSAPP_REMINDER_DUE').length;
+      return [
+        { label: 'Mensagens', value: String(msgs), accent: 'green' as const },
+        { label: 'Chamadas', value: String(calls), accent: 'violet' as const },
+        { label: 'Chatbot', value: String(bot), accent: 'blue' as const },
+        { label: 'Lembretes', value: String(reminders), accent: 'amber' as const },
+      ];
+    }
+    if (view === 'alerts') {
+      const overdue = events.filter((e) => e.type === 'RECEIVABLE_OVERDUE').length;
+      const stock = events.filter((e) => e.type === 'STOCK_LOW').length;
+      const canceled = events.filter((e) => e.type === 'ORDER_CANCELED').length;
+      return [
+        { label: 'AR vencidos', value: String(overdue), accent: 'rose' as const },
+        { label: 'Estoque crítico', value: String(stock), accent: 'amber' as const },
+        { label: 'Cancelamentos', value: String(canceled), accent: 'rose' as const },
+      ];
+    }
+    return [];
+  }, [view, events]);
 
-      {/* Stories-like row — 7 categorias com avatares circulares estilo IG stories */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/[0.06] px-3 py-3 overflow-x-auto">
-        <div className="max-w-[700px] mx-auto flex gap-3">
-          {(Object.keys(VIEWS) as ViewMode[]).map((key) => {
+  return (
+    <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950">
+      {/* Breadcrumb + Header */}
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/[0.06]">
+        <div className="max-w-6xl mx-auto px-6 pt-4 pb-2">
+          {view !== 'hub' && (
+            <button
+              onClick={() => navigate('/timeline')}
+              className="inline-flex items-center gap-1 text-[12px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 mb-2"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Voltar para Hub
+            </button>
+          )}
+          <div className="flex items-start gap-4">
+            <div className={`w-12 h-12 rounded-lg ${accent.bgSoft} ${accent.text} flex items-center justify-center shrink-0`}>
+              <config.Icon className="w-6 h-6" strokeWidth={2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 text-[12px] text-slate-500 dark:text-slate-400">
+                <span>Novidades do dia</span>
+                {view !== 'hub' && (
+                  <>
+                    <ChevronRight className="w-3 h-3" />
+                    <span>{config.label}</span>
+                  </>
+                )}
+              </div>
+              <h1 className="text-[22px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight mt-0.5">
+                {view === 'hub' ? 'Tudo que aconteceu' : config.label}
+              </h1>
+              <p className="text-[13.5px] text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+                {config.desc}
+              </p>
+            </div>
+            <button
+              onClick={() => refetch()}
+              className="h-9 px-3 rounded-md border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] inline-flex items-center gap-1.5 text-[12.5px]"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs (categorias como navegação primária) */}
+        <nav className="max-w-6xl mx-auto px-2 flex overflow-x-auto">
+          {(Object.keys(VIEWS) as ViewKey[]).map((key) => {
             const v = VIEWS[key];
             const Icon = v.Icon;
             const active = view === key;
-            const cat = v.categories?.[0];
-            const count = cat ? statsHub[cat] ?? 0 : events.length;
+            const count = v.categories?.[0] ? statsHub[v.categories[0]] : events.length;
             return (
               <button
                 key={key}
-                onClick={() => setView(key)}
-                className="flex flex-col items-center gap-1.5 shrink-0 group"
+                onClick={() => navigate(key === 'hub' ? '/timeline' : `/timeline/${key}`)}
+                className={`relative inline-flex items-center gap-2 px-4 py-3 text-[13px] whitespace-nowrap transition-colors ${
+                  active
+                    ? 'text-slate-900 dark:text-white font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
               >
-                <div className="relative">
-                  <div className={`w-[68px] h-[68px] rounded-full p-[3px] ${
-                    active
-                      ? `bg-gradient-to-br ${GRADIENT_MAP[v.color]}`
-                      : 'bg-gradient-to-br from-slate-300 via-slate-400 to-slate-500 dark:from-white/20 dark:via-white/30 dark:to-white/20'
-                  } group-hover:scale-105 transition-transform`}>
-                    <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center">
-                      <Icon className={`w-7 h-7 ${active ? CHIP_BG[v.color].split(' ')[1] : 'text-slate-500'}`} strokeWidth={2} />
-                    </div>
-                  </div>
-                  {count > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
-                      {count > 99 ? '99+' : count}
-                    </span>
-                  )}
-                </div>
-                <span className={`text-[11px] ${
-                  active ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'
-                }`}>
-                  {v.label}
-                </span>
+                <Icon className={`w-4 h-4 ${active ? ACCENT[v.accent].text : ''}`} />
+                {v.label}
+                {key !== 'hub' && count > 0 && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                    active ? ACCENT[v.accent].bgSoft + ' ' + ACCENT[v.accent].text : 'bg-slate-100 dark:bg-white/[0.06] text-slate-500'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+                {active && (
+                  <motion.span
+                    layoutId="tl-tab"
+                    className={`absolute bottom-0 left-0 right-0 h-[2px] ${ACCENT[v.accent].bg}`}
+                  />
+                )}
               </button>
             );
           })}
-        </div>
-      </div>
+        </nav>
+      </header>
 
-      {/* Filtros de período */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/[0.06] px-3 py-2.5">
-        <div className="max-w-[700px] mx-auto flex gap-1.5 overflow-x-auto">
-          {(['today', 'yesterday', 'week', 'month'] as Period[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`text-[12px] px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
-                period === p
-                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold'
-                  : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-              }`}
-            >
-              {PERIOD_LABEL[p]}
-            </button>
-          ))}
-          <span className="ml-auto text-[11px] text-slate-400 self-center">
-            {events.length} post{events.length === 1 ? '' : 's'}
+      {/* Toolbar — período + busca */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/[0.06] px-6 py-3">
+        <div className="max-w-6xl mx-auto flex flex-wrap items-center gap-3">
+          <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.04] rounded-md p-0.5">
+            {(['today', 'yesterday', 'week', 'month'] as Period[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`text-[12px] px-3 py-1.5 rounded transition-colors ${
+                  period === p
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm font-medium'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-800'
+                }`}
+              >
+                {PERIOD_LABEL[p]}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="absolute left-3 top-2 w-3.5 h-3.5 text-slate-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar nesta lista…"
+              className="w-full h-8 pl-8 pr-3 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-[12.5px] text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-white/10"
+            />
+          </div>
+          <span className="text-[11.5px] text-slate-500 ml-auto">
+            {filtered.length} de {events.length} eventos
           </span>
         </div>
       </div>
 
-      {/* Feed */}
-      <main className="max-w-[700px] mx-auto px-3 py-4 space-y-4">
+      {/* KPIs específicos por categoria */}
+      {(view !== 'hub' && categoryStats.length > 0) && (
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/[0.06] px-6 py-4">
+          <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {categoryStats.map((s) => {
+              const a = ACCENT[s.accent];
+              return (
+                <div
+                  key={s.label}
+                  className={`rounded-lg border ${a.ring.replace('ring-', 'border-')}/30 ${a.bgSoft} p-3`}
+                >
+                  <div className={`text-[10.5px] uppercase tracking-wide ${a.text} font-semibold`}>
+                    {s.label}
+                  </div>
+                  <div className={`text-[20px] font-bold ${a.text} mt-0.5 tabular-nums`}>
+                    {s.value}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Hub — cards de cada categoria pra navegar */}
+      {view === 'hub' && (
+        <div className="max-w-6xl mx-auto px-6 py-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {(Object.keys(VIEWS) as ViewKey[])
+              .filter((k) => k !== 'hub')
+              .map((k) => {
+                const v = VIEWS[k];
+                const Icon = v.Icon;
+                const cat = v.categories?.[0];
+                const count = cat ? statsHub[cat] ?? 0 : 0;
+                const a = ACCENT[v.accent];
+                return (
+                  <button
+                    key={k}
+                    onClick={() => navigate(`/timeline/${k}`)}
+                    className={`text-left p-4 rounded-xl border bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-white/20 transition-all hover:-translate-y-0.5 hover:shadow-md ${a.ring.replace('ring-', 'border-')}/20`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg ${a.bgSoft} ${a.text} flex items-center justify-center mb-3`}>
+                      <Icon className="w-5 h-5" strokeWidth={2} />
+                    </div>
+                    <div className="text-[13px] font-semibold text-slate-900 dark:text-white">
+                      {v.label}
+                    </div>
+                    <div className={`text-[22px] font-bold ${a.text} mt-1 tabular-nums leading-none`}>
+                      {count}
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-2 leading-tight line-clamp-2">
+                      {v.desc}
+                    </div>
+                  </button>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* Feed — timeline vertical com linha conectora */}
+      <main className="max-w-6xl mx-auto px-6 py-4">
         {error && (
-          <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 rounded-lg p-4 text-sm">
-            <strong>Erro ao carregar:</strong>{' '}
-            {error.message}
+          <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 rounded-lg p-4 text-sm mb-4">
+            <strong>Erro ao carregar:</strong> {error.message}
           </div>
         )}
+
         {loading && events.length === 0 ? (
-          <div className="flex items-center justify-center py-16 text-slate-400">
+          <div className="flex items-center justify-center py-20 text-slate-400">
             <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            Carregando posts…
+            Carregando…
           </div>
-        ) : events.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-white/[0.08] py-16 text-center">
-            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 flex items-center justify-center mb-4">
-              <Calendar className="w-10 h-10 text-white" />
+        ) : filtered.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-white/10 py-16 text-center">
+            <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center mx-auto mb-3">
+              <Calendar className="w-7 h-7 text-slate-400" />
             </div>
-            <h3 className="font-semibold text-slate-800 dark:text-white text-lg">
-              Sem posts ainda
+            <h3 className="font-semibold text-slate-800 dark:text-white">
+              {search ? 'Nada corresponde à busca' : 'Sem eventos no período'}
             </h3>
-            <p className="text-sm text-slate-500 mt-1">
-              Tudo que acontece no sistema vira post aqui.
-            </p>
-            <p className="text-xs text-slate-400 mt-3">
-              Tente expandir o período ou registrar uma nova venda.
+            <p className="text-[13px] text-slate-500 mt-1">
+              {search
+                ? 'Tente outro termo ou limpe o filtro.'
+                : 'Tente expandir o período ou volte mais tarde.'}
             </p>
           </div>
         ) : (
-          events.map((e) => (
-            <PostCard key={e.id} event={e} companyName={companyName} />
-          ))
-        )}
-
-        {/* Footer — fim do feed */}
-        {events.length > 0 && !loading && (
-          <div className="text-center py-8 text-[12px] text-slate-400">
-            <Sparkles className="w-5 h-5 mx-auto mb-2 opacity-50" />
-            Você está em dia com tudo
+          <div className="space-y-1">
+            {grouped.map(([day, items]) => (
+              <section
+                key={day}
+                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-white/10 overflow-hidden"
+              >
+                <header className="px-4 py-2.5 bg-slate-50/60 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[12px] font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide">
+                      {day}
+                    </h3>
+                    <span className="text-[11px] text-slate-500">
+                      {items.length} evento{items.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                </header>
+                <ul className="relative divide-y divide-slate-100 dark:divide-white/[0.04]">
+                  {/* Linha vertical da timeline */}
+                  <span
+                    aria-hidden
+                    className="absolute left-[24px] top-3 bottom-3 w-px bg-slate-200 dark:bg-white/10"
+                  />
+                  {items.map((e) => (
+                    <EventRow key={e.id} event={e} />
+                  ))}
+                </ul>
+              </section>
+            ))}
           </div>
         )}
       </main>
