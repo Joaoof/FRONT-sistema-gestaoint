@@ -136,6 +136,7 @@ function EmptyState({ icon, label }: { icon: React.ReactNode; label: string }) {
 export function DashboardCharts() {
     const navigate = useNavigate();
     const { data: ordersData } = useQuery<{ orders: OrderData[] }>(GET_ORDERS, {
+        variables: { take: 1000 },
         fetchPolicy: 'cache-and-network',
     });
     const { data: receivablesData } = useQuery<{ accountsReceivable: AccountReceivableData[] }>(

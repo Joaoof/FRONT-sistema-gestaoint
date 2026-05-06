@@ -102,6 +102,7 @@ export function WhatsAppReportPage() {
         { fetchPolicy: 'cache-and-network' },
     );
     const { data: ordersData } = useQuery<{ orders: OrderRow[] }>(GET_ORDERS, {
+        variables: { take: 1000 },
         fetchPolicy: 'cache-and-network',
     });
     const { data: productsData } = useQuery<{ products: ProductRow[] }>(LIST_PRODUCTS_WITH_IMAGES, {

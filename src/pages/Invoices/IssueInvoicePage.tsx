@@ -127,6 +127,7 @@ export function IssueInvoicePage() {
         | undefined;
 
     const { data: ordersData, loading: ordersLoading } = useQuery<{ orders: OrderLite[] }>(GET_ORDERS, {
+        variables: { take: 1000 },
         fetchPolicy: 'cache-and-network',
     });
 

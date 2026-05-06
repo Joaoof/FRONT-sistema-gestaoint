@@ -38,8 +38,20 @@ const ORDER_FIELDS = `
 `;
 
 export const GET_ORDERS = gql`
-  query GetOrders($search: String, $status: OrderStatus) {
-    orders(search: $search, status: $status) {
+  query GetOrders(
+    $search: String
+    $status: OrderStatus
+    $take: Int
+    $fromDate: DateTime
+    $toDate: DateTime
+  ) {
+    orders(
+      search: $search
+      status: $status
+      take: $take
+      fromDate: $fromDate
+      toDate: $toDate
+    ) {
       ${ORDER_FIELDS}
     }
   }

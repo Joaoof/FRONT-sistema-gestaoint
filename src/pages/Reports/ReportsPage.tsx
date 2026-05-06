@@ -123,7 +123,14 @@ export function ReportsPage() {
 
   const { data: ordersData, loading: loadingOrders, refetch: refetchOrders } = useQuery<{ orders: OrderRow[] }>(
     GET_ORDERS,
-    { fetchPolicy: 'cache-and-network' },
+    {
+      // take=1000 pra garantir cobertura de mês inteiro de operação (default
+      // antigo era 50 e cortava vendas recentes do relatório).
+      variables: { take: 1000 },
+      fetchPolicy: 'cache-and-network',
+      // refetcha a cada minuto pra capturar vendas registradas em outras abas
+      pollInterval: 60_000,
+    },
   );
   const { data: productsData } = useQuery<{ products: ProductRow[] }>(LIST_PRODUCTS_WITH_IMAGES, {
     variables: { take: 500, skip: 0 },

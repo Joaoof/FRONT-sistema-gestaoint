@@ -74,6 +74,7 @@ export function OrdersListPage() {
     const [rangeFilter, setRangeFilter] = useState<RangeFilter>('all');
 
     const { data, loading, refetch } = useQuery<{ orders: OrderRow[] }>(GET_ORDERS, {
+        variables: { take: 1000 },
         fetchPolicy: 'cache-and-network',
     });
 
