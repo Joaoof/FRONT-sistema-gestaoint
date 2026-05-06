@@ -157,6 +157,7 @@ const sections: MenuSection[] = [
     label: 'Geral',
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { id: 'timeline' as View, label: 'Novidades do dia', icon: Sparkles },
       { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
       { id: 'consultas', label: 'Consultas', icon: ScanSearch },
     ],

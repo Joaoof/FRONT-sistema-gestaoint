@@ -6,6 +6,7 @@ import { useInventory } from '../hooks/useInventory';
 import { Sidebar } from '../components/Sidebar';
 import { useNotification } from '../hooks/useNotification';
 import { WhatsappReminderToaster } from '../components/whatsapp/ReminderToaster';
+import { CompanyReminderBell } from '../components/reminders/CompanyReminderBell';
 
 // Páginas
 import { Dashboard } from './Dashboard';
@@ -68,6 +69,7 @@ export type View =
     | 'configuracoes/plano-contas'
     | 'configuracoes/templates'
     | 'notificacoes'
+    | 'timeline'
     | 'comunicacoes'
     | 'comunicacoes/whatsapp'
     | 'comunicacoes/whatsapp/contatos'
@@ -272,6 +274,7 @@ export function AuthenticatedApp() {
 
         <div className={`flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 ${darkMode ? 'dark' : ''}`}>
             <WhatsappReminderToaster />
+            <CompanyReminderBell />
             <Sidebar
                 currentView={currentView}
                 onViewChange={handleViewChange}
