@@ -63,6 +63,7 @@ export type View =
     | 'agente-ia'
     | 'motoristas'
     | 'configuracoes'
+    | 'configuracoes/fiscal'
     | 'configuracoes/parametros'
     | 'configuracoes/plano-contas'
     | 'configuracoes/templates'
@@ -286,7 +287,7 @@ export function AuthenticatedApp() {
                 />
             )}
 
-            <main className="flex-1 lg:ml-64 transition-all duration-300">
+            <main className="flex-1 lg:ml-72 transition-all duration-300">
                 {/* Header */}
                 <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-3 flex items-center justify-between">
                     <button

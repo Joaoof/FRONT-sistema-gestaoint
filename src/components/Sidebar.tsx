@@ -311,20 +311,39 @@ const sections: MenuSection[] = [
     ],
   },
   {
+    label: 'Comunicações',
+    items: [
+      {
+        id: 'comunicacoes/whatsapp' as View,
+        label: 'WhatsApp',
+        icon: MessageCircle,
+        children: [
+          { id: 'comunicacoes/whatsapp' as View, label: 'Conversas', icon: MessageCircle },
+          { id: 'comunicacoes/whatsapp/contatos' as View, label: 'Contatos', icon: Users },
+          { id: 'comunicacoes/whatsapp/chatbot' as View, label: 'Chatbot', icon: Bot },
+        ],
+      },
+      { id: 'comunicacoes' as View, label: 'Central de mensagens', icon: MessageSquare },
+      { id: 'notificacoes' as View, label: 'Notificações', icon: Bell },
+      { id: 'alertas' as View, label: 'Alertas críticos', icon: AlertTriangle },
+    ],
+  },
+  {
     label: 'Sistema',
     items: [
-      { id: 'alertas' as View, label: 'Alertas', icon: Bell },
       { id: 'empresa' as View, label: 'Empresa', icon: Building2 },
-      { id: 'configuracoes' as View, label: 'Configurações', icon: Settings },
-      { id: 'configuracoes/fiscal' as View, label: 'Configuração fiscal', icon: Receipt },
-      { id: 'configuracoes/parametros' as View, label: 'Parâmetros', icon: Cog },
-      { id: 'configuracoes/plano-contas' as View, label: 'Plano de contas', icon: FolderTree },
-      { id: 'configuracoes/templates' as View, label: 'Templates de mensagem', icon: MessageSquare },
-      { id: 'notificacoes' as View, label: 'Notificações', icon: Bell },
-      { id: 'comunicacoes' as View, label: 'Central de mensagens', icon: MessageCircle },
-      { id: 'comunicacoes/whatsapp' as View, label: 'WhatsApp Business', icon: MessageCircle },
-      { id: 'comunicacoes/whatsapp/contatos' as View, label: 'Contatos WhatsApp', icon: Users },
-      { id: 'comunicacoes/whatsapp/chatbot' as View, label: 'Chatbot WhatsApp', icon: Bot },
+      {
+        id: 'configuracoes' as View,
+        label: 'Configurações',
+        icon: Settings,
+        children: [
+          { id: 'configuracoes' as View, label: 'Geral', icon: Sliders },
+          { id: 'configuracoes/fiscal' as View, label: 'Fiscal', icon: Receipt },
+          { id: 'configuracoes/parametros' as View, label: 'Parâmetros', icon: Cog },
+          { id: 'configuracoes/plano-contas' as View, label: 'Plano de contas', icon: FolderTree },
+          { id: 'configuracoes/templates' as View, label: 'Templates', icon: MessageSquare },
+        ],
+      },
       { id: 'auditoria' as View, label: 'Auditoria', icon: History },
       { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },
     ],
@@ -340,6 +359,18 @@ const groupedChildren: Record<string, View[]> = {
   fiscal: ['fiscal', 'fiscal-pagar', 'fiscal-pagar-criar', 'fiscal-receber', 'fiscal-receber-criar'],
   financeiro: ['financeiro', 'bancos', 'relatorios/visao-geral'],
   notas: ['notas' as View, 'notas/nova' as View],
+  'comunicacoes/whatsapp': [
+    'comunicacoes/whatsapp',
+    'comunicacoes/whatsapp/contatos',
+    'comunicacoes/whatsapp/chatbot',
+  ],
+  configuracoes: [
+    'configuracoes',
+    'configuracoes/fiscal',
+    'configuracoes/parametros',
+    'configuracoes/plano-contas',
+    'configuracoes/templates',
+  ],
 };
 
 export function Sidebar({
@@ -366,7 +397,7 @@ export function Sidebar({
 
   if (isLoading || !company) {
     return (
-      <div className="fixed left-0 top-0 h-full w-64 bg-slate-950 border-r border-white/5 z-50 animate-pulse" />
+      <div className="fixed left-0 top-0 h-full w-72 bg-slate-950 border-r border-white/5 z-50 animate-pulse" />
     );
   }
 
@@ -417,32 +448,32 @@ export function Sidebar({
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full w-64 flex flex-col bg-slate-950 text-slate-100 border-r border-white/[0.06] z-50 transform transition-transform duration-200 ease-out ${
+      className={`fixed left-0 top-0 h-full w-72 flex flex-col bg-slate-950 text-slate-100 border-r border-white/[0.06] z-50 transform transition-transform duration-200 ease-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}
     >
       {/* Header */}
-      <div className="relative px-3.5 py-3.5 border-b border-white/[0.06] flex items-center justify-between">
+      <div className="relative px-4 py-4 border-b border-white/[0.06] flex items-center justify-between">
         <button
           onClick={() => {
             onViewChange('dashboard');
             navigate('/dashboard');
           }}
-          className="flex items-center gap-2.5 cursor-pointer min-w-0 group"
+          className="flex items-center gap-3 cursor-pointer min-w-0 group"
           title="Voltar ao Início"
         >
           <img
             src={logo}
             alt=""
             aria-hidden
-            className="w-7 h-7 rounded-md object-cover ring-1 ring-white/10 group-hover:ring-white/20 transition"
+            className="w-9 h-9 rounded-lg object-cover ring-1 ring-white/10 group-hover:ring-white/20 transition"
             onError={(e) =>
               ((e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
                 company.name,
               )}&background=3B82F6&color=fff`)
             }
           />
-          <span className="font-medium text-[14px] text-white truncate">{company.name}</span>
+          <span className="font-semibold text-[15.5px] text-white truncate">{company.name}</span>
         </button>
         <button
           onClick={onToggle}
@@ -463,15 +494,15 @@ export function Sidebar({
       </div>
 
       {/* Search */}
-      <div className="px-2 pt-2.5 pb-1">
-        <label className="relative flex items-center h-8 px-2.5 rounded-md bg-white/[0.04] border border-white/[0.06] focus-within:border-violet-500/40 focus-within:bg-white/[0.06] transition-colors">
-          <Search className="w-3.5 h-3.5 text-slate-500 shrink-0" strokeWidth={1.75} aria-hidden />
+      <div className="px-3 pt-3 pb-1">
+        <label className="relative flex items-center h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.06] focus-within:border-violet-500/40 focus-within:bg-white/[0.06] transition-colors">
+          <Search className="w-4 h-4 text-slate-500 shrink-0" strokeWidth={1.75} aria-hidden />
           <input
             type="search"
             placeholder="Buscar no menu…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="ml-2 flex-1 bg-transparent border-0 outline-none text-[12.5px] text-slate-200 placeholder:text-slate-500 p-0 m-0 focus:ring-0"
+            className="ml-2 flex-1 bg-transparent border-0 outline-none text-[13.5px] text-slate-200 placeholder:text-slate-500 p-0 m-0 focus:ring-0"
           />
         </label>
       </div>
@@ -480,7 +511,7 @@ export function Sidebar({
       <nav className="relative flex-1 mt-1 px-2 pb-2 overflow-y-auto">
         {filteredSections.map((section, sectionIdx) => (
           <div key={section.label} className={sectionIdx > 0 ? 'mt-3' : ''}>
-            <p className="px-2 pt-2 pb-1.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-slate-500">
+            <p className="px-2.5 pt-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
               {section.label}
             </p>
             <div className="space-y-px">
@@ -622,17 +653,17 @@ function SidebarItem({ item, currentView, expanded, onClick, onChildClick }: Sid
         onClick={onClick}
         title={item.label}
         aria-current={isActive ? 'page' : undefined}
-        className={`group relative w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors ${
+        className={`group relative w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-[14px] transition-colors ${
           isActive
             ? 'bg-white/[0.07] text-white font-medium'
             : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
         }`}
       >
         {isActive && (
-          <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full bg-violet-400" aria-hidden />
+          <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-violet-400" aria-hidden />
         )}
         <Icon
-          className={`w-[17px] h-[17px] shrink-0 transition-colors ${
+          className={`w-[18px] h-[18px] shrink-0 transition-colors ${
             isActive ? 'text-violet-300' : 'text-slate-400 group-hover:text-slate-200'
           }`}
           strokeWidth={1.75}
@@ -648,17 +679,17 @@ function SidebarItem({ item, currentView, expanded, onClick, onChildClick }: Sid
         onClick={onClick}
         title={item.label}
         aria-expanded={expanded}
-        className={`group relative w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors ${
+        className={`group relative w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-[14px] transition-colors ${
           highlight
             ? 'bg-white/[0.07] text-white font-medium'
             : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
         }`}
       >
         {highlight && (
-          <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full bg-violet-400" aria-hidden />
+          <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-violet-400" aria-hidden />
         )}
         <Icon
-          className={`w-[17px] h-[17px] shrink-0 transition-colors ${
+          className={`w-[18px] h-[18px] shrink-0 transition-colors ${
             highlight ? 'text-violet-300' : 'text-slate-400 group-hover:text-slate-200'
           }`}
           strokeWidth={1.75}
@@ -670,7 +701,7 @@ function SidebarItem({ item, currentView, expanded, onClick, onChildClick }: Sid
           className="text-slate-500 shrink-0"
           aria-hidden
         >
-          <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} />
+          <ChevronRight className="w-4 h-4" strokeWidth={2} />
         </motion.span>
       </button>
 
@@ -693,7 +724,7 @@ function SidebarItem({ item, currentView, expanded, onClick, onChildClick }: Sid
                     onClick={() => onChildClick(child.id)}
                     title={child.label}
                     aria-current={isChildActive ? 'page' : undefined}
-                    className={`relative w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12.5px] transition-colors ${
+                    className={`relative w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13.5px] transition-colors ${
                       isChildActive
                         ? 'bg-white/[0.07] text-white font-medium'
                         : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-100'

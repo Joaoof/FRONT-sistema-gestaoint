@@ -111,7 +111,7 @@ function AppContent() {
         </PrivateRoute>
       )}
 
-      <div className={showSidebar ? 'flex-1 lg:ml-64 flex flex-col min-w-0' : 'w-full flex flex-col min-w-0'}>
+      <div className={showSidebar ? 'flex-1 lg:ml-72 flex flex-col min-w-0' : 'w-full flex flex-col min-w-0'}>
         {showSidebar && <Topbar />}
         <main
           key={location.pathname}

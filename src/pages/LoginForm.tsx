@@ -87,20 +87,20 @@ export const LoginForm = () => {
                 }}
             />
 
-            <div className="relative max-w-[400px] w-full animate-fade-in-up">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-white/[0.06] rounded-xl p-7 sm:p-9 space-y-6">
+            <div className="relative max-w-[520px] w-full animate-fade-in-up">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-white/[0.06] rounded-2xl p-10 sm:p-12 space-y-8 shadow-xl shadow-slate-900/5 dark:shadow-black/20">
                     {/* Logo + título */}
-                    <div className="flex flex-col items-center gap-5 pb-2">
-                        <div className="h-12 flex items-center justify-center">
-                            <img src="images/logo.png" alt="Logo" className="max-h-full max-w-[160px] object-contain" />
+                    <div className="flex flex-col items-center gap-6 pb-2">
+                        <div className="h-16 flex items-center justify-center">
+                            <img src="images/logo.png" alt="Logo" className="max-h-full max-w-[220px] object-contain" />
                         </div>
                         <div className="text-center">
-                            <h1 className="text-[19px] font-semibold text-slate-900 dark:text-white tracking-tight">
+                            <h1 className="text-[26px] font-semibold text-slate-900 dark:text-white tracking-tight">
                                 {isRecoveryMode ? "Recuperar acesso" : "Entrar na sua conta"}
                             </h1>
-                            <p className="mt-1.5 text-[13.5px] text-slate-500 dark:text-slate-400">
+                            <p className="mt-2 text-[15px] text-slate-500 dark:text-slate-400">
                                 {isRecoveryMode
-                                    ? "Enviaremos um link para o seu e-mail"
+                                    ? "Enviaremos um link de recuperação para o seu e-mail"
                                     : "Use suas credenciais para continuar"}
                             </p>
                         </div>
@@ -119,7 +119,7 @@ export const LoginForm = () => {
                             <div className="space-y-4">
                                 {/* Campo de E-mail */}
                                 <div>
-                                    <label htmlFor="email" className="block text-[12.5px] font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                    <label htmlFor="email" className="block text-[13.5px] font-medium text-slate-700 dark:text-slate-300 mb-2">
                                         E-mail
                                     </label>
                                     <div className="relative group">
@@ -132,7 +132,7 @@ export const LoginForm = () => {
                                             type="email"
                                             required
                                             autoComplete="email"
-                                            className="block w-full pl-10 pr-3 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-[3px] focus:ring-brand-600/15 focus:border-brand-600 dark:focus:border-brand-400 hover:border-slate-300 dark:hover:border-white/20 transition-colors"
+                                            className="block w-full pl-11 pr-4 py-3.5 text-[15px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-[3px] focus:ring-brand-600/15 focus:border-brand-600 dark:focus:border-brand-400 hover:border-slate-300 dark:hover:border-white/20 transition-colors"
                                             placeholder="seu@email.com"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
@@ -142,12 +142,12 @@ export const LoginForm = () => {
 
                                 {/* Campo de Senha */}
                                 <div>
-                                    <label htmlFor="password_hash" className="block text-[12.5px] font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                    <label htmlFor="password_hash" className="block text-[13.5px] font-medium text-slate-700 dark:text-slate-300 mb-2">
                                         Senha
                                     </label>
                                     <div className="relative group">
                                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                            <Lock className="h-[18px] w-[18px] text-slate-400 group-focus-within:text-brand-600 transition-colors" />
+                                            <Lock className="h-[20px] w-[20px] text-slate-400 group-focus-within:text-brand-600 transition-colors" />
                                         </div>
                                         <input
                                             id="password_hash"
@@ -155,7 +155,7 @@ export const LoginForm = () => {
                                             type="password"
                                             required
                                             autoComplete="current-password"
-                                            className="block w-full pl-10 pr-3 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-[3px] focus:ring-brand-600/15 focus:border-brand-600 dark:focus:border-brand-400 hover:border-slate-300 dark:hover:border-white/20 transition-colors"
+                                            className="block w-full pl-11 pr-4 py-3.5 text-[15px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-[3px] focus:ring-brand-600/15 focus:border-brand-600 dark:focus:border-brand-400 hover:border-slate-300 dark:hover:border-white/20 transition-colors"
                                             placeholder="••••••••"
                                             value={password_hash}
                                             onChange={(e) => setPassword(e.target.value)}
@@ -168,7 +168,7 @@ export const LoginForm = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full flex justify-center items-center gap-2 py-2.5 px-4 text-[14px] font-medium rounded-lg text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="w-full flex justify-center items-center gap-2 py-3.5 px-4 text-[15px] font-semibold rounded-xl text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 {isLoading ? (
                                     <>
@@ -212,19 +212,19 @@ export const LoginForm = () => {
                             )}
 
                             <div>
-                                <label htmlFor="recovery-email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 tracking-wide">
-                                    E-MAIL
+                                <label htmlFor="recovery-email" className="block text-[13.5px] font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    E-mail
                                 </label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                        <Mail className="h-[18px] w-[18px] text-slate-400 group-focus-within:text-brand-600 transition-colors" />
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Mail className="h-[20px] w-[20px] text-slate-400 group-focus-within:text-brand-600 transition-colors" />
                                     </div>
                                     <input
                                         id="recovery-email"
                                         type="email"
                                         required
                                         autoComplete="email"
-                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/60 hover:border-slate-300 dark:hover:border-white/20"
+                                        className="block w-full pl-11 pr-4 py-3.5 text-[15px] bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-[3px] focus:ring-brand-600/15 focus:border-brand-600 dark:focus:border-brand-400 hover:border-slate-300 dark:hover:border-white/20 transition-colors"
                                         placeholder="seu@email.com"
                                         value={recoveryEmail}
                                         onChange={(e) => setRecoveryEmail(e.target.value)}
@@ -234,7 +234,7 @@ export const LoginForm = () => {
 
                             <button
                                 type="submit"
-                                className="w-full py-2.5 px-4 text-[14px] font-medium rounded-lg text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
+                                className="w-full py-3.5 px-4 text-[15px] font-semibold rounded-xl text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                             >
                                 Enviar link de recuperação
                             </button>
