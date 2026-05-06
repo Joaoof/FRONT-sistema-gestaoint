@@ -77,6 +77,7 @@ interface SidebarProps {
 
 const VIEW_TO_MODULE: Record<View, string> = {
   dashboard: 'dashboard',
+  timeline: 'timeline',
   relatorios: 'dashboard',
   'relatorios/visao-geral': 'dashboard',
   entregas: 'entregas',
@@ -140,7 +141,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   auditoria: 'auditoria',
 } as Record<string, string>;
 
-const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas', 'auditoria', 'configuracoes', 'notificacoes', 'comunicacoes', 'crm', 'contratos']);
+const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas', 'auditoria', 'configuracoes', 'notificacoes', 'comunicacoes', 'crm', 'contratos', 'timeline']);
 
 function hasPermission(
   permissions: { module_key: string; permissions: string[] }[],
