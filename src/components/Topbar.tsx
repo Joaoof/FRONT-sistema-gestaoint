@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useCompany } from "../contexts/CompanyContext";
 import { useLowStock } from "../hooks/useLowStock";
 import { useNotificationsCenter } from "../contexts/NotificationsCenterContext";
+import { CreditsBadge } from "./credits/CreditsBadge";
 
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
@@ -186,6 +187,8 @@ export function Topbar() {
           <span>K</span>
         </kbd>
       </div>
+
+      <CreditsBadge />
 
       {/* Central de atividades (notificações in-app) */}
       <div className="relative" data-activity-menu>

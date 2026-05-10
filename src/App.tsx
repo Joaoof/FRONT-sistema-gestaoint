@@ -85,6 +85,8 @@ import { ContractDetailPage } from './pages/Contracts/ContractDetailPage';
 import { TimelinePage } from './pages/TimelinePage';
 import { RemindersPage } from './pages/RemindersPage';
 import { AdminConsole } from './pages/Admin/AdminConsole';
+import { AiCreditsPage } from './pages/AiCredits/AiCreditsPage';
+import { ExportsPage } from './pages/Exports/ExportsPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -232,6 +234,8 @@ function AppContent() {
             <Route path="/timeline" element={<TimelinePage />} />
             <Route path="/timeline/:category" element={<TimelinePage />} />
             <Route path="/admin/console" element={<AdminConsole />} />
+            <Route path="/ia/creditos" element={<AiCreditsPage />} />
+            <Route path="/exportacoes" element={<ExportsPage />} />
             <Route path="/lembretes" element={<RemindersPage />} />
 
             {/* CRM */}

@@ -143,6 +143,8 @@ const VIEW_TO_MODULE: Record<View, string> = {
   contratos: 'contratos',
   auditoria: 'auditoria',
   'admin/console': 'auditoria',
+  'ia/creditos': 'configuracoes',
+  exportacoes: 'configuracoes',
 } as Record<string, string>;
 
 const ALWAYS_VISIBLE_MODULES = new Set(['construction', 'bancos', 'alertas', 'notas', 'auditoria', 'configuracoes', 'notificacoes', 'comunicacoes', 'crm', 'contratos', 'timeline']);
@@ -355,6 +357,8 @@ const sections: MenuSection[] = [
           { id: 'configuracoes/templates' as View, label: 'Templates', icon: MessageSquare },
         ],
       },
+      { id: 'ia/creditos' as View, label: '✨ Créditos IA', icon: Sparkles },
+      { id: 'exportacoes' as View, label: 'Exportações', icon: FileText },
       { id: 'auditoria' as View, label: 'Auditoria', icon: History },
       { id: 'admin/console' as View, label: '🔧 Admin (Super)', icon: Sliders },
       { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },

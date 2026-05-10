@@ -5,8 +5,9 @@ import { UsersTab } from './tabs/UsersTab';
 import { PermissionsTab } from './tabs/PermissionsTab';
 import { LogsTab } from './tabs/LogsTab';
 import { AiConfigTab } from './tabs/AiConfigTab';
+import { PaymentsTab } from './tabs/PaymentsTab';
 
-type Tab = 'users' | 'permissions' | 'logs' | 'ai';
+type Tab = 'users' | 'permissions' | 'logs' | 'ai' | 'payments';
 
 export function AdminConsole() {
   const { user } = useAuth();
@@ -93,6 +94,12 @@ export function AdminConsole() {
             >
               🤖 IA
             </button>
+            <button
+              className={`win98-tab ${tab === 'payments' ? 'active' : ''}`}
+              onClick={() => setTab('payments')}
+            >
+              💰 Pagamentos PIX
+            </button>
           </div>
 
           <div className="win98-tabbody">
@@ -100,6 +107,7 @@ export function AdminConsole() {
             {tab === 'permissions' && <PermissionsTab />}
             {tab === 'logs' && <LogsTab />}
             {tab === 'ai' && <AiConfigTab />}
+            {tab === 'payments' && <PaymentsTab />}
           </div>
 
           <div className="win98-statusbar">

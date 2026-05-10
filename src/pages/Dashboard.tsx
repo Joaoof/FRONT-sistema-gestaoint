@@ -15,6 +15,7 @@ import { LowStockAlert } from '../components/LowStockAlert';
 import { RecentActivityWidget } from '../components/RecentActivityWidget';
 import { DashboardCharts } from '../components/DashboardCharts';
 import { RevenueHeroCard } from '../components/RevenueHeroCard';
+import { InsightCard } from '../components/insights/InsightCard';
 
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -218,6 +219,8 @@ export function Dashboard({
 
       {/* CARD HERO AZUL — INTOCADO */}
       <RevenueHeroCard />
+
+      <InsightCard />
 
       {/* Resumo inline (mini-stats do período) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-200 dark:bg-white/[0.06] rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.08]">
