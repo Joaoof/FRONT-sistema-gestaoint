@@ -1,195 +1,209 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useMutation, useQuery, gql } from '@apollo/client';
+import { toast } from 'sonner';
 import { Minus, ShoppingCart } from 'lucide-react';
-import { ProductExit as ProductExitType, Product } from '../types';
+import { Product } from '../types';
 
-interface ProductExitProps {
-  onAddExit: (exit: Omit<ProductExitType, 'id'>) => void;
-  products: Product[];
+const GET_PRODUCTS = gql`
+  query GetProductsForExit($search: String) {
+    products(search: $search, take: 200) {
+      id
+      nameProduct
+      quantity
+      unit
+      salePrice
+    }
+  }
+`;
+
+const QUICK_PRODUCT_EXIT = gql`
+  mutation QuickProductExit(
+    $productId: String!
+    $quantity: Int!
+    $reason: String!
+    $notes: String
+  ) {
+    quickProductExit(
+      productId: $productId
+      quantity: $quantity
+      reason: $reason
+      notes: $notes
+    ) {
+      id
+      nameProduct
+      quantity
+    }
+  }
+`;
+
+interface ProductRow {
+  id: string;
+  nameProduct: string;
+  quantity: number;
+  unit: string;
+  salePrice: number;
 }
 
-export function ProductExit({ onAddExit, products }: ProductExitProps) {
-  const [formData, setFormData] = useState({
-    productId: '',
-    quantity: 0,
-    reason: 'venda' as 'venda' | 'perda' | 'devolucao' | 'transferencia',
-    notes: ''
+interface ProductExitProps {
+  // Mantido para compat com chamada existente; não é mais usado.
+  onAddExit?: (entry: any) => void;
+  products?: Product[];
+}
+
+const REASONS = [
+  { value: 'venda', label: 'Venda' },
+  { value: 'perda', label: 'Perda/Avaria' },
+  { value: 'devolucao', label: 'Devolução' },
+  { value: 'transferencia', label: 'Transferência' },
+];
+
+export function ProductExit({ onAddExit }: ProductExitProps) {
+  const { data, refetch } = useQuery<{ products: ProductRow[] }>(GET_PRODUCTS, {
+    fetchPolicy: 'cache-and-network',
   });
+  const [productId, setProductId] = useState('');
+  const [quantity, setQuantity] = useState<number>(0);
+  const [reason, setReason] = useState<string>('venda');
+  const [notes, setNotes] = useState('');
+  const [doExit, { loading }] = useMutation(QUICK_PRODUCT_EXIT);
 
-  const reasons = [
-    { value: 'venda', label: 'Venda' },
-    { value: 'perda', label: 'Perda/Avaria' },
-    { value: 'devolucao', label: 'Devolução' },
-    { value: 'transferencia', label: 'Transferência' }
-  ];
+  const products = data?.products ?? [];
+  const selected = products.find((p) => p.id === productId);
 
-  const selectedProduct = products.find(p => p.id === formData.productId);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProduct) return;
-
-    onAddExit({
-      productId: formData.productId,
-      productName: selectedProduct.name,
-      quantity: formData.quantity,
-      unitPrice: selectedProduct.sellingPrice,
-      reason: formData.reason,
-      notes: formData.notes,
-      date: new Date().toISOString()
-    });
-
-    setFormData({
-      productId: '',
-      quantity: 0,
-      reason: 'venda',
-      notes: ''
-    });
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'quantity' ? parseFloat(value) || 0 : value
-    }));
+    if (!selected) {
+      toast.error('Selecione um produto.');
+      return;
+    }
+    if (quantity <= 0) {
+      toast.error('Quantidade deve ser maior que zero.');
+      return;
+    }
+    if (quantity > selected.quantity) {
+      toast.error(`Estoque insuficiente. Disponível: ${selected.quantity}.`);
+      return;
+    }
+    try {
+      await doExit({
+        variables: {
+          productId: selected.id,
+          quantity,
+          reason,
+          notes: notes || null,
+        },
+      });
+      toast.success(`Saída registrada: -${quantity} ${selected.nameProduct}.`);
+      // Atualiza UI
+      refetch();
+      // Compat com legado (se algum componente pai espera callback)
+      onAddExit?.({
+        productId: selected.id,
+        productName: selected.nameProduct,
+        quantity,
+        unitPrice: selected.salePrice,
+        reason,
+        notes,
+        date: new Date().toISOString(),
+      });
+      setProductId('');
+      setQuantity(0);
+      setNotes('');
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Erro ao registrar saída.');
+    }
   };
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">Saída de Produtos</h1>
-        <p className="text-gray-600 dark:text-slate-300">Registre vendas e movimentações de saída</p>
+        <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight dark:text-white mb-2">
+          Saída de Produtos
+        </h1>
+        <p className="text-gray-600 dark:text-slate-300">
+          Registra venda manual, perda, devolução ou transferência. Atualiza o estoque na hora.
+        </p>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 p-8 max-w-2xl">
         <div className="flex items-center mb-6">
           <ShoppingCart className="w-6 h-6 text-red-600 dark:text-red-400 mr-3" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Registrar Saída</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="productId" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Produto *
               </label>
               <select
-                id="productId"
-                name="productId"
-                value={formData.productId}
-                onChange={handleInputChange}
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
                 required
-                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                className="w-full p-3 border border-gray-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500"
               >
                 <option value="">Selecione um produto</option>
-                {products.map(product => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} - Estoque: {product.stock}
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nameProduct} — Estoque: {p.quantity}
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                 Quantidade *
               </label>
               <input
                 type="number"
-                id="quantity"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleInputChange}
+                min={1}
+                value={quantity || ''}
+                onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 0)}
                 required
-                min="1"
-                max={selectedProduct?.stock || 999}
-                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                placeholder="0"
+                className="w-full p-3 border border-gray-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500"
               />
             </div>
 
             <div>
-              <label htmlFor="reason" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
-                Motivo da Saída *
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
+                Motivo *
               </label>
               <select
-                id="reason"
-                name="reason"
-                value={formData.reason}
-                onChange={handleInputChange}
-                required
-                className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className="w-full p-3 border border-gray-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500"
               >
-                {reasons.map(reason => (
-                  <option key={reason.value} value={reason.value}>
-                    {reason.label}
+                {REASONS.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
                   </option>
                 ))}
               </select>
             </div>
 
-            {selectedProduct && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
-                  Valor Total
-                </label>
-                <div className="w-full p-3 bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-white/15 rounded-lg text-gray-900 dark:text-white font-semibold">
-                  R$ {(selectedProduct.sellingPrice * formData.quantity).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
+                Observações
+              </label>
+              <input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full p-3 border border-gray-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500"
+              />
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
-              Observações
-            </label>
-            <textarea
-              id="notes"
-              name="notes"
-              value={formData.notes}
-              onChange={handleInputChange}
-              rows={3}
-              className="w-full p-3 border border-gray-300 dark:border-white/15 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-              placeholder="Observações adicionais sobre a saída..."
-            />
-          </div>
-
-          {selectedProduct && (
-            <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">Informações do Produto</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-blue-700 dark:text-blue-300 font-medium">Estoque Atual:</span>
-                  <p className="text-blue-900">{selectedProduct.stock} unidades</p>
-                </div>
-                <div>
-                  <span className="text-blue-700 dark:text-blue-300 font-medium">Preço Unit.:</span>
-                  <p className="text-blue-900">R$ {selectedProduct.sellingPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                </div>
-                <div>
-                  <span className="text-blue-700 dark:text-blue-300 font-medium">Categoria:</span>
-                  <p className="text-blue-900">{selectedProduct.category}</p>
-                </div>
-                <div>
-                  <span className="text-blue-700 dark:text-blue-300 font-medium">Estoque Após:</span>
-                  <p className="text-blue-900">{selectedProduct.stock - formData.quantity} unidades</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-white/10">
-            <div className="text-sm text-gray-500 dark:text-slate-400">
-              * Campos obrigatórios
-            </div>
+          <div className="flex justify-end">
             <button
               type="submit"
-              disabled={!selectedProduct || formData.quantity === 0}
-              className="flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg"
             >
-              <Minus className="w-5 h-5 mr-2" />
-              Registrar Saída
+              <Minus className="w-4 h-4" />
+              {loading ? 'Registrando…' : 'Registrar saída'}
             </button>
           </div>
         </form>

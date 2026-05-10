@@ -1,13 +1,35 @@
-import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
 import { toast } from 'sonner';
 import { UPDATE_ACCOUNT_RECEIVABLE } from '../../../graphql/mutations/accounts';
+import { GET_BANKS } from '../../../graphql/queries/banks';
 import { AccountReceivableData, AccountStatus } from '../../../types/accounts';
 
 interface EditReceivableModalProps {
     receivable: AccountReceivableData;
     onClose: () => void;
     onSaved: () => void;
+}
+
+type PaymentMethod = 'PIX' | 'CASH' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'BANK_TRANSFER' | 'BANK_SLIP' | 'CHECK' | 'OTHER';
+
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+    PIX: 'PIX',
+    CASH: 'Espécie',
+    CREDIT_CARD: 'Cartão de crédito',
+    DEBIT_CARD: 'Cartão de débito',
+    BANK_TRANSFER: 'Transferência',
+    BANK_SLIP: 'Boleto',
+    CHECK: 'Cheque',
+    OTHER: 'Outro',
+};
+
+const ITAU_DEFAULT_METHODS: PaymentMethod[] = ['CREDIT_CARD', 'DEBIT_CARD', 'BANK_SLIP'];
+
+interface BankOption {
+    id: string;
+    name: string;
+    ativo: boolean;
 }
 
 function toDateInput(value?: string | null): string {
@@ -23,25 +45,68 @@ export function EditReceivableModal({ receivable, onClose, onSaved }: EditReceiv
     const [interestRate, setInterestRate] = useState(receivable.interestRate.toString());
     const [notes, setNotes] = useState(receivable.notes ?? '');
 
+    const [paidAt, setPaidAt] = useState<string>(toDateInput(new Date().toISOString()));
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('PIX');
+    const [bankId, setBankId] = useState<string>('');
+    const [bankTouched, setBankTouched] = useState(false);
+
+    const wasAlreadyPaid = receivable.status === 'PAID';
+    const transitioningToPaid = status === 'PAID' && !wasAlreadyPaid;
+
+    const { data: banksData } = useQuery<{ banks: BankOption[] }>(GET_BANKS, {
+        variables: { activeOnly: true },
+        skip: !transitioningToPaid,
+        fetchPolicy: 'cache-first',
+    });
+
+    const banks = banksData?.banks ?? [];
+    const itauBank = useMemo(
+        () => banks.find((b) => b.name.toLowerCase().includes('itau') || b.name.toLowerCase().includes('itaú')),
+        [banks],
+    );
+
+    useEffect(() => {
+        if (!transitioningToPaid || bankTouched || banks.length === 0) return;
+        if (ITAU_DEFAULT_METHODS.includes(paymentMethod) && itauBank) {
+            setBankId(itauBank.id);
+        } else if (!bankId && banks.length > 0) {
+            setBankId(banks[0].id);
+        }
+    }, [paymentMethod, banks, itauBank, transitioningToPaid, bankTouched, bankId]);
+
     const [updateAccount, { loading }] = useMutation(UPDATE_ACCOUNT_RECEIVABLE);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (transitioningToPaid && !bankId) {
+            toast.error('Selecione um banco antes de marcar como pago.');
+            return;
+        }
+
         try {
-            await updateAccount({
-                variables: {
-                    input: {
-                        id: receivable.id,
-                        description,
-                        amount: parseFloat(amount),
-                        interestRate: parseFloat(interestRate),
-                        dueDate: new Date(dueDate).toISOString(),
-                        status,
-                        notes: notes || null,
-                    },
-                },
-            });
-            toast.success('Conta atualizada com sucesso');
+            const input: Record<string, unknown> = {
+                id: receivable.id,
+                description,
+                amount: parseFloat(amount),
+                interestRate: parseFloat(interestRate),
+                dueDate: new Date(dueDate).toISOString(),
+                status,
+                notes: notes || null,
+            };
+
+            if (transitioningToPaid) {
+                input.paidAt = new Date(paidAt).toISOString();
+                input.paymentMethod = paymentMethod;
+                input.bankId = bankId;
+            }
+
+            await updateAccount({ variables: { input } });
+            toast.success(
+                transitioningToPaid
+                    ? 'Conta marcada como paga e movimentação criada.'
+                    : 'Conta atualizada com sucesso',
+            );
             onSaved();
         } catch (err: any) {
             toast.error(err?.message ?? 'Erro ao atualizar conta');
@@ -50,7 +115,7 @@ export function EditReceivableModal({ receivable, onClose, onSaved }: EditReceiv
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 w-full max-w-lg shadow-xl">
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
                 <div className="mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Editar Conta a Receber</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">Cliente: <span className="font-medium text-slate-700 dark:text-slate-200">{receivable.customer?.name ?? '—'}</span></p>
@@ -120,6 +185,59 @@ export function EditReceivableModal({ receivable, onClose, onSaved }: EditReceiv
                             />
                         </div>
                     </div>
+
+                    {transitioningToPaid && (
+                        <div className="rounded-lg border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-900/20 p-4 space-y-3">
+                            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                                Marcar como pago — vai gerar movimentação automaticamente
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-slate-200 mb-1">Forma de pagamento</label>
+                                    <select
+                                        value={paymentMethod}
+                                        onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                                        className="w-full p-2 text-sm border border-gray-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-lg"
+                                    >
+                                        {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
+                                            <option key={k} value={k}>{v}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-slate-200 mb-1">Data do pagamento</label>
+                                    <input
+                                        type="date"
+                                        value={paidAt}
+                                        onChange={(e) => setPaidAt(e.target.value)}
+                                        className="w-full p-2 text-sm border border-gray-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-lg"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-slate-200 mb-1">
+                                    Banco
+                                    {ITAU_DEFAULT_METHODS.includes(paymentMethod) && itauBank && bankId === itauBank.id && !bankTouched && (
+                                        <span className="ml-2 text-[11px] text-emerald-700 dark:text-emerald-400 font-normal">(Itaú selecionado automaticamente)</span>
+                                    )}
+                                </label>
+                                <select
+                                    value={bankId}
+                                    onChange={(e) => { setBankId(e.target.value); setBankTouched(true); }}
+                                    className="w-full p-2 text-sm border border-gray-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded-lg"
+                                    required
+                                >
+                                    <option value="">Selecione um banco</option>
+                                    {banks.map((b) => (
+                                        <option key={b.id} value={b.id}>{b.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Observações</label>

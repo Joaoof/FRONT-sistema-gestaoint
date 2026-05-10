@@ -6,9 +6,7 @@ import { useCompany } from '../contexts/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut,
-  Bot,
   MessageCircle,
-  Users,
   Moon,
   Sun,
   Search,
@@ -140,9 +138,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   'configuracoes/templates': 'configuracoes',
   notificacoes: 'notificacoes',
   comunicacoes: 'comunicacoes',
-  'comunicacoes/whatsapp': 'comunicacoes',
-  'comunicacoes/whatsapp/contatos': 'comunicacoes',
-  'comunicacoes/whatsapp/chatbot': 'comunicacoes',
+  'whatsapp/relatorio': 'comunicacoes',
   crm: 'crm',
   contratos: 'contratos',
   auditoria: 'auditoria',
@@ -336,16 +332,7 @@ const sections: MenuSection[] = [
   {
     label: 'Comunicações',
     items: [
-      {
-        id: 'comunicacoes/whatsapp' as View,
-        label: 'WhatsApp',
-        icon: MessageCircle,
-        children: [
-          { id: 'comunicacoes/whatsapp' as View, label: 'Conversas', icon: MessageCircle },
-          { id: 'comunicacoes/whatsapp/contatos' as View, label: 'Contatos', icon: Users },
-          { id: 'comunicacoes/whatsapp/chatbot' as View, label: 'Chatbot', icon: Bot },
-        ],
-      },
+      { id: 'whatsapp/relatorio' as View, label: 'WhatsApp', icon: MessageCircle },
       { id: 'comunicacoes' as View, label: 'Central de mensagens', icon: MessageSquare },
       { id: 'notificacoes' as View, label: 'Notificações', icon: Bell },
       { id: 'alertas' as View, label: 'Alertas críticos', icon: AlertTriangle },
@@ -382,11 +369,6 @@ const groupedChildren: Record<string, View[]> = {
   fiscal: ['fiscal', 'fiscal-pagar', 'fiscal-pagar-criar', 'fiscal-receber', 'fiscal-receber-criar'],
   financeiro: ['financeiro', 'bancos', 'relatorios/visao-geral'],
   notas: ['notas' as View, 'notas/nova' as View],
-  'comunicacoes/whatsapp': [
-    'comunicacoes/whatsapp',
-    'comunicacoes/whatsapp/contatos',
-    'comunicacoes/whatsapp/chatbot',
-  ],
   timeline: [
     'timeline',
     'timeline/financial',

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
 import { ProductEntry } from './pages/ProductEntry';
 import { ProductExit } from './pages/ProductExit';
+import { ProductionEntry } from './pages/ProductionEntry';
 import { NewSale } from './pages/Sales/NewSale';
 import { InventoryHub } from './pages/Inventory/InventoryHub';
 import { CategoriesRegistration, CustomersRegistration, SupplierRegistration } from './pages/Register';
@@ -82,9 +83,6 @@ import { PipelinePage } from './pages/CRM/PipelinePage';
 import { OpportunityDetailPage } from './pages/CRM/OpportunityDetailPage';
 import { ContractsListPage } from './pages/Contracts/ContractsListPage';
 import { ContractDetailPage } from './pages/Contracts/ContractDetailPage';
-import { WhatsappPage } from './pages/Communications/WhatsappPage';
-import { WhatsappContactsPage } from './pages/Communications/WhatsappContactsPage';
-import { WhatsappChatbotPage } from './pages/Communications/WhatsappChatbotPage';
 import { TimelinePage } from './pages/TimelinePage';
 import { RemindersPage } from './pages/RemindersPage';
 
@@ -147,6 +145,7 @@ function AppContent() {
             <Route path="/entregas/relatorios" element={<DeliveryReportsPage />} />
             <Route path="/estoque" element={<InventoryHub />} />
             <Route path="/estoque/entrada-rapida" element={<ProductEntry onAddEntry={inventory.addEntry} />} />
+            <Route path="/estoque/producao" element={<ProductionEntry />} />
             <Route path="/estoque/alertas" element={<StockAlertsReport />} />
             <Route path="/produtos" element={<ProductsList />} />
             <Route path="/produtos/cadastrar" element={<CreateProduct />} />
@@ -230,9 +229,6 @@ function AppContent() {
             {/* Notificações e comunicações */}
             <Route path="/notificacoes" element={<NotificationsPage />} />
             <Route path="/comunicacoes" element={<MessagesCenterPage />} />
-            <Route path="/comunicacoes/whatsapp" element={<WhatsappPage />} />
-            <Route path="/comunicacoes/whatsapp/contatos" element={<WhatsappContactsPage />} />
-            <Route path="/comunicacoes/whatsapp/chatbot" element={<WhatsappChatbotPage />} />
             <Route path="/timeline" element={<TimelinePage />} />
             <Route path="/timeline/:category" element={<TimelinePage />} />
             <Route path="/lembretes" element={<RemindersPage />} />
