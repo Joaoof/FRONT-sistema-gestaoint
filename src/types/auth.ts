@@ -7,6 +7,8 @@ export interface User {
     avatarUrl?: string | null
     company_id: string
     role: UserRole
+    is_active?: boolean
+    isSuperAdmin?: boolean
     plan: PlanDto; // ✅ Corrigido: é um objeto, não uma string
     permissions: PermissionDto[]
 }

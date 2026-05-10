@@ -7,6 +7,8 @@ export const GET_USER_QUERY = `
     phone
     avatarUrl
     role
+    is_active
+    isSuperAdmin
     company_id
     plan {
       name

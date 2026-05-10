@@ -84,6 +84,7 @@ import { ContractsListPage } from './pages/Contracts/ContractsListPage';
 import { ContractDetailPage } from './pages/Contracts/ContractDetailPage';
 import { TimelinePage } from './pages/TimelinePage';
 import { RemindersPage } from './pages/RemindersPage';
+import { AdminConsole } from './pages/Admin/AdminConsole';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -230,6 +231,7 @@ function AppContent() {
             <Route path="/comunicacoes" element={<MessagesCenterPage />} />
             <Route path="/timeline" element={<TimelinePage />} />
             <Route path="/timeline/:category" element={<TimelinePage />} />
+            <Route path="/admin/console" element={<AdminConsole />} />
             <Route path="/lembretes" element={<RemindersPage />} />
 
             {/* CRM */}
