@@ -87,6 +87,10 @@ import { RemindersPage } from './pages/RemindersPage';
 import { AdminConsole } from './pages/Admin/AdminConsole';
 import { AiCreditsPage } from './pages/AiCredits/AiCreditsPage';
 import { ExportsPage } from './pages/Exports/ExportsPage';
+import { WarehousesPage } from './pages/Warehouses/WarehousesPage';
+import { FinancialReportsPage } from './pages/Financials/FinancialReportsPage';
+import { ReconciliationPage } from './pages/Reconciliation/ReconciliationPage';
+import { BoletosPage } from './pages/Boletos/BoletosPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -236,6 +240,10 @@ function AppContent() {
             <Route path="/admin/console" element={<AdminConsole />} />
             <Route path="/ia/creditos" element={<AiCreditsPage />} />
             <Route path="/exportacoes" element={<ExportsPage />} />
+            <Route path="/depositos" element={<WarehousesPage />} />
+            <Route path="/financeiro/relatorios" element={<FinancialReportsPage />} />
+            <Route path="/financeiro/conciliacao" element={<ReconciliationPage />} />
+            <Route path="/boletos" element={<BoletosPage />} />
             <Route path="/lembretes" element={<RemindersPage />} />
 
             {/* CRM */}

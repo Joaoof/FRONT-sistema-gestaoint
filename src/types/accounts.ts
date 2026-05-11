@@ -42,6 +42,7 @@ export interface AccountReceivableData {
     productId?: string | null;
     description: string;
     amount: number;
+    paidAmount?: number;
     interestRate: number;
     dueDate: string;
     paidAt?: string | null;
@@ -63,6 +64,7 @@ export interface AccountPayableData {
     supplierName: string;
     description: string;
     amount: number;
+    paidAmount?: number;
     interestRate: number;
     dueDate: string;
     paidAt?: string | null;

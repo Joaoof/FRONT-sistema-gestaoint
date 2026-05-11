@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { toast } from 'sonner';
 import { UPDATE_ACCOUNT_RECEIVABLE } from '../../../graphql/mutations/accounts';
 import { GET_BANKS } from '../../../graphql/queries/banks';
+import { PaymentsSection } from '../../../components/payments/PaymentsSection';
 import { AccountReceivableData, AccountStatus } from '../../../types/accounts';
 
 interface EditReceivableModalProps {
@@ -119,6 +120,17 @@ export function EditReceivableModal({ receivable, onClose, onSaved }: EditReceiv
                 <div className="mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Editar Conta a Receber</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">Cliente: <span className="font-medium text-slate-700 dark:text-slate-200">{receivable.customer?.name ?? '—'}</span></p>
+                </div>
+
+                <div className="mb-4">
+                    <PaymentsSection
+                        accountType="RECEIVABLE"
+                        accountId={receivable.id}
+                        amount={receivable.amount}
+                        paidAmount={receivable.paidAmount ?? 0}
+                        status={receivable.status}
+                        onPaid={() => onSaved()}
+                    />
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">

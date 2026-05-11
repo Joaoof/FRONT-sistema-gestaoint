@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { toast } from 'sonner';
 import { UPDATE_ACCOUNT_PAYABLE } from '../../../graphql/mutations/accounts';
 import { GET_BANKS } from '../../../graphql/queries/banks';
+import { PaymentsSection } from '../../../components/payments/PaymentsSection';
 import { AccountPayableData, AccountStatus } from '../../../types/accounts';
 
 interface EditPayableModalProps {
@@ -123,6 +124,17 @@ export function EditPayableModal({ payable, onClose, onSaved }: EditPayableModal
                 <div className="mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Editar Conta a Pagar</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">ID: <span className="font-mono">{payable.id.slice(0, 8)}</span></p>
+                </div>
+
+                <div className="mb-4">
+                    <PaymentsSection
+                        accountType="PAYABLE"
+                        accountId={payable.id}
+                        amount={payable.amount}
+                        paidAmount={payable.paidAmount ?? 0}
+                        status={payable.status}
+                        onPaid={() => onSaved()}
+                    />
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">

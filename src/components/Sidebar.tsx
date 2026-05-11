@@ -92,6 +92,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   cadastros: 'cadastros',
   estoque: 'estoque',
   'estoque/alertas': 'estoque',
+  depositos: 'estoque',
   produtos: 'estoque',
   'produtos/cadastrar': 'estoque',
   categorias: 'cadastros',
@@ -104,6 +105,9 @@ const VIEW_TO_MODULE: Record<View, string> = {
   'fiscal-pagar': 'fiscal',
   'fiscal-pagar-criar': 'fiscal',
   financeiro: 'financeiro',
+  'financeiro/relatorios': 'financeiro',
+  'financeiro/conciliacao': 'financeiro',
+  boletos: 'financeiro',
   ecommerce: 'ecommerce',
   consultas: 'consultas',
   entrada: 'estoque',
@@ -203,6 +207,7 @@ const sections: MenuSection[] = [
         children: [
           { id: 'estoque' as View, label: 'Central', icon: Boxes },
           { id: 'estoque/alertas' as View, label: 'Alertas críticos', icon: AlertTriangle },
+          { id: 'depositos' as View, label: 'Depósitos', icon: Warehouse },
         ],
       },
       { id: 'cadastros' as View, label: 'Clientes & Fornecedores', icon: UserPlus },
@@ -283,9 +288,12 @@ const sections: MenuSection[] = [
         children: [
           { id: 'financeiro' as View, label: 'Visão geral', icon: PieChart },
           { id: 'bancos' as View, label: 'Bancos', icon: Landmark },
+          { id: 'financeiro/relatorios' as View, label: 'DRE & Fluxo projetado', icon: BarChart3 },
+          { id: 'financeiro/conciliacao' as View, label: 'Conciliação OFX', icon: ArrowLeftRight },
           { id: 'relatorios/visao-geral' as View, label: 'Painel completo', icon: BarChart3 },
         ],
       },
+      { id: 'boletos' as View, label: 'Boletos', icon: Receipt },
     ],
   },
   {
@@ -366,12 +374,12 @@ const sections: MenuSection[] = [
 
 const groupedChildren: Record<string, View[]> = {
   produtos: ['produtos', 'produtos/cadastrar'],
-  estoque: ['estoque', 'estoque/alertas'],
+  estoque: ['estoque', 'estoque/alertas', 'depositos'],
   vendas: ['vendas', 'pedidos' as View, 'vendas/saida-rapida'],
   entregas: ['entregas', 'entregas/cadastrar', 'entregas/agendar', 'entregas/relatorios'],
   movimentacoes: ['movimentacoes', 'formulario-movimentacao', 'historico-movimentacao'],
   fiscal: ['fiscal', 'fiscal-pagar', 'fiscal-pagar-criar', 'fiscal-receber', 'fiscal-receber-criar'],
-  financeiro: ['financeiro', 'bancos', 'relatorios/visao-geral'],
+  financeiro: ['financeiro', 'bancos', 'financeiro/relatorios', 'financeiro/conciliacao', 'relatorios/visao-geral', 'boletos'],
   notas: ['notas' as View, 'notas/nova' as View],
   timeline: [
     'timeline',
