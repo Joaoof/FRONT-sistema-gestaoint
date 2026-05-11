@@ -92,6 +92,7 @@ import { FinancialReportsPage } from './pages/Financials/FinancialReportsPage';
 import { ReconciliationPage } from './pages/Reconciliation/ReconciliationPage';
 import { BoletosPage } from './pages/Boletos/BoletosPage';
 import { BankIntegrationsPage } from './pages/BankIntegrations/BankIntegrationsPage';
+import { WebhookCenterPage } from './pages/WebhookCenter/WebhookCenterPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -246,6 +247,7 @@ function AppContent() {
             <Route path="/financeiro/conciliacao" element={<ReconciliationPage />} />
             <Route path="/boletos" element={<BoletosPage />} />
             <Route path="/financeiro/integracoes" element={<BankIntegrationsPage />} />
+            <Route path="/integracoes/webhooks" element={<WebhookCenterPage />} />
             <Route path="/lembretes" element={<RemindersPage />} />
 
             {/* CRM */}

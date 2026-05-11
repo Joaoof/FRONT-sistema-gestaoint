@@ -148,6 +148,7 @@ const VIEW_TO_MODULE: Record<View, string> = {
   contratos: 'contratos',
   auditoria: 'auditoria',
   'admin/console': 'auditoria',
+  'integracoes/webhooks': 'auditoria',
   'ia/creditos': 'configuracoes',
   exportacoes: 'configuracoes',
 } as Record<string, string>;
@@ -368,6 +369,7 @@ const sections: MenuSection[] = [
       },
       { id: 'exportacoes' as View, label: 'Exportações', icon: FileText },
       { id: 'auditoria' as View, label: 'Auditoria', icon: History },
+      { id: 'integracoes/webhooks' as View, label: '🏦 Central de Webhooks', icon: Banknote },
       { id: 'admin/console' as View, label: '🔧 Admin (Super)', icon: Sliders },
       { id: 'help' as View, label: 'Ajuda & suporte', icon: HelpCircle },
     ],
