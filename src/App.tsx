@@ -91,6 +91,7 @@ import { WarehousesPage } from './pages/Warehouses/WarehousesPage';
 import { FinancialReportsPage } from './pages/Financials/FinancialReportsPage';
 import { ReconciliationPage } from './pages/Reconciliation/ReconciliationPage';
 import { BoletosPage } from './pages/Boletos/BoletosPage';
+import { BankIntegrationsPage } from './pages/BankIntegrations/BankIntegrationsPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -244,6 +245,7 @@ function AppContent() {
             <Route path="/financeiro/relatorios" element={<FinancialReportsPage />} />
             <Route path="/financeiro/conciliacao" element={<ReconciliationPage />} />
             <Route path="/boletos" element={<BoletosPage />} />
+            <Route path="/financeiro/integracoes" element={<BankIntegrationsPage />} />
             <Route path="/lembretes" element={<RemindersPage />} />
 
             {/* CRM */}
