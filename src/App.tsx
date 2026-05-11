@@ -96,7 +96,13 @@ import { WebhookCenterPage } from './pages/WebhookCenter/WebhookCenterPage';
 import { SuperAdminLayout } from './layouts/SuperAdminLayout';
 import { SuperAdminHome } from './pages/SuperAdmin/SuperAdminHome';
 import { SuperAdminInvitations } from './pages/SuperAdmin/SuperAdminInvitations';
-import { SuperAdminPlaceholder } from './pages/SuperAdmin/SuperAdminPlaceholder';
+import { SuperAdminCompanies } from './pages/SuperAdmin/SuperAdminCompanies';
+import { SuperAdminUsers } from './pages/SuperAdmin/SuperAdminUsers';
+import { SuperAdminPlans } from './pages/SuperAdmin/SuperAdminPlans';
+import { SuperAdminAI } from './pages/SuperAdmin/SuperAdminAI';
+import { SuperAdminWebhooks } from './pages/SuperAdmin/SuperAdminWebhooks';
+import { SuperAdminLogs } from './pages/SuperAdmin/SuperAdminLogs';
+import { SuperAdminSettings } from './pages/SuperAdmin/SuperAdminSettings';
 import { AcceptInvitePage } from './pages/AcceptInvite/AcceptInvitePage';
 
 function AppContent() {
@@ -278,14 +284,14 @@ function AppContent() {
               }
             >
               <Route index element={<SuperAdminHome />} />
-              <Route path="empresas" element={<SuperAdminPlaceholder title="Empresas" description="Gerencie todas as empresas (tenants) do GestãoInt." />} />
+              <Route path="empresas" element={<SuperAdminCompanies />} />
               <Route path="convites" element={<SuperAdminInvitations />} />
-              <Route path="usuarios" element={<SuperAdminPlaceholder title="Usuários" description="Todos os usuários cadastrados em todas as empresas." />} />
-              <Route path="planos" element={<SuperAdminPlaceholder title="Planos & Módulos" description="Configure planos, módulos e permissões (READ/WRITE)." />} />
-              <Route path="ia" element={<SuperAdminPlaceholder title="IA & Créditos" description="Pacotes via PIX, consumo de créditos, conversações." />} />
-              <Route path="webhooks" element={<SuperAdminPlaceholder title="Webhooks" description="Conexões bancárias e eventos por empresa." />} />
-              <Route path="logs" element={<SuperAdminPlaceholder title="Logs Master" description="Auditoria global de todas as ações sensíveis." />} />
-              <Route path="configuracoes" element={<SuperAdminPlaceholder title="Configurações" description="Parâmetros do sistema, integrações globais." />} />
+              <Route path="usuarios" element={<SuperAdminUsers />} />
+              <Route path="planos" element={<SuperAdminPlans />} />
+              <Route path="ia" element={<SuperAdminAI />} />
+              <Route path="webhooks" element={<SuperAdminWebhooks />} />
+              <Route path="logs" element={<SuperAdminLogs />} />
+              <Route path="configuracoes" element={<SuperAdminSettings />} />
             </Route>
 
             <Route path="*" element={<div>Página não encontrada</div>} />

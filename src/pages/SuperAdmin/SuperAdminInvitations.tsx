@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Mail, Plus, X, Send, Copy, Check, Clock, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { Mail, Plus, Send, Copy, Check, Clock, CheckCircle2, XCircle, Trash2, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+    Button, Card, PageHeader, Tabs, Table, Th, Td, EmptyState, Badge, Modal, Field, inputCls, textareaCls, Avatar,
+} from './_ui';
 
 type InviteStatus = 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
 
@@ -60,6 +63,17 @@ async function gql<T>(query: string, variables?: Record<string, unknown>): Promi
     return json.data;
 }
 
+const STATUS_LABEL: Record<InviteStatus | 'ALL', string> = {
+    ALL: 'Todos', PENDING: 'Pendentes', ACCEPTED: 'Aceitos', REVOKED: 'Revogados', EXPIRED: 'Expirados',
+};
+
+const STATUS_STYLES: Record<InviteStatus, { tone: 'amber' | 'emerald' | 'slate' | 'rose'; icon: React.ComponentType<{ className?: string }> }> = {
+    PENDING:  { tone: 'amber', icon: Clock },
+    ACCEPTED: { tone: 'emerald', icon: CheckCircle2 },
+    REVOKED:  { tone: 'slate', icon: XCircle },
+    EXPIRED:  { tone: 'rose', icon: XCircle },
+};
+
 export function SuperAdminInvitations() {
     const [items, setItems] = useState<Invitation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -81,12 +95,10 @@ export function SuperAdminInvitations() {
         }
     };
 
-    useEffect(() => {
-        void load();
-    }, [filter]);
+    useEffect(() => { void load(); }, [filter]);
 
     const counts = useMemo(() => {
-        const c = { ALL: items.length, PENDING: 0, ACCEPTED: 0, REVOKED: 0, EXPIRED: 0 } as Record<string, number>;
+        const c: any = { ALL: items.length };
         items.forEach((i) => { c[i.status] = (c[i.status] ?? 0) + 1; });
         return c;
     }, [items]);
@@ -103,100 +115,78 @@ export function SuperAdminInvitations() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">Convites</h1>
-                    <p className="text-[13px] text-slate-400 mt-1">
-                        Envie convites para novos usuários, empresas ou administradores.
-                    </p>
-                </div>
-                <button
-                    onClick={() => setShowModal(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-[13.5px] font-semibold transition-colors"
-                >
-                    <Plus className="w-4 h-4" />
-                    Novo convite
-                </button>
+        <div className="space-y-6 max-w-[1400px]">
+            <PageHeader
+                title="Convites"
+                description="Envie acessos por e-mail. O destinatário recebe um link assinado e cria a própria senha."
+                actions={
+                    <Button icon={Plus} onClick={() => setShowModal(true)}>
+                        Novo convite
+                    </Button>
+                }
+            />
+
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+                <Tabs
+                    options={[
+                        { value: 'ALL', label: STATUS_LABEL.ALL },
+                        { value: 'PENDING', label: STATUS_LABEL.PENDING },
+                        { value: 'ACCEPTED', label: STATUS_LABEL.ACCEPTED },
+                        { value: 'REVOKED', label: STATUS_LABEL.REVOKED },
+                        { value: 'EXPIRED', label: STATUS_LABEL.EXPIRED },
+                    ]}
+                    value={filter}
+                    onChange={setFilter}
+                    counts={counts}
+                />
+                <Button variant="ghost" size="sm" icon={Filter}>Filtros avançados</Button>
             </div>
 
-            {/* Filter tabs */}
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-[#181b25] border border-white/5 w-fit">
-                {(['ALL', 'PENDING', 'ACCEPTED', 'REVOKED', 'EXPIRED'] as const).map((s) => (
-                    <button
-                        key={s}
-                        onClick={() => setFilter(s)}
-                        className={`px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-colors ${
-                            filter === s
-                                ? 'bg-rose-500/15 text-rose-300'
-                                : 'text-slate-400 hover:text-white'
-                        }`}
-                    >
-                        {STATUS_LABEL[s]} <span className="opacity-60">({counts[s] ?? 0})</span>
-                    </button>
-                ))}
-            </div>
-
-            {/* List */}
-            <div className="rounded-xl bg-[#181b25] border border-white/5 overflow-hidden">
-                <table className="w-full text-[13px]">
-                    <thead className="bg-white/[0.02] border-b border-white/5">
-                        <tr className="text-left text-[11px] uppercase tracking-wider text-slate-500">
-                            <th className="px-4 py-3 font-medium">Email</th>
-                            <th className="px-4 py-3 font-medium">Empresa</th>
-                            <th className="px-4 py-3 font-medium">Plano</th>
-                            <th className="px-4 py-3 font-medium">Status</th>
-                            <th className="px-4 py-3 font-medium">Criado</th>
-                            <th className="px-4 py-3 font-medium text-right">Ações</th>
+            <Card padding={false}>
+                <Table>
+                    <thead className="bg-white/[0.02] border-b border-white/[0.06]">
+                        <tr>
+                            <Th>Destinatário</Th>
+                            <Th>Empresa</Th>
+                            <Th>Plano</Th>
+                            <Th>Função</Th>
+                            <Th>Status</Th>
+                            <Th>Criado</Th>
+                            <Th align="right">Ações</Th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-white/[0.04]">
                         {loading ? (
-                            <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-500">Carregando…</td></tr>
+                            <tr><td colSpan={7} className="text-center py-12 text-slate-500">Carregando…</td></tr>
                         ) : items.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className="px-4 py-16 text-center">
-                                    <Mail className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-                                    <div className="text-slate-400 text-[13.5px]">Nenhum convite ainda</div>
-                                    <div className="text-slate-500 text-[12px] mt-1">Clique em "Novo convite" para começar</div>
-                                </td>
-                            </tr>
+                            <tr><td colSpan={7}>
+                                <EmptyState
+                                    icon={Mail}
+                                    title="Nenhum convite ainda"
+                                    description="Clique em 'Novo convite' pra trazer alguém pra plataforma. O destinatário recebe um e-mail bonito e personalizado."
+                                    action={<Button icon={Plus} onClick={() => setShowModal(true)}>Enviar primeiro convite</Button>}
+                                />
+                            </td></tr>
                         ) : items.map((inv) => (
                             <InviteRow key={inv.id} inv={inv} onRevoke={handleRevoke} />
                         ))}
                     </tbody>
-                </table>
-            </div>
+                </Table>
+            </Card>
 
-            {showModal && (
-                <CreateInviteModal
-                    onClose={() => setShowModal(false)}
-                    onCreated={() => { setShowModal(false); void load(); }}
-                />
-            )}
+            <CreateInviteModal
+                open={showModal}
+                onClose={() => setShowModal(false)}
+                onCreated={() => { setShowModal(false); void load(); }}
+            />
         </div>
     );
 }
 
-const STATUS_LABEL: Record<string, string> = {
-    ALL: 'Todos',
-    PENDING: 'Pendentes',
-    ACCEPTED: 'Aceitos',
-    REVOKED: 'Revogados',
-    EXPIRED: 'Expirados',
-};
-
-const STATUS_STYLES: Record<InviteStatus, { bg: string; text: string; icon: React.ComponentType<{ className?: string }> }> = {
-    PENDING:  { bg: 'bg-amber-500/10 border-amber-500/30', text: 'text-amber-300', icon: Clock },
-    ACCEPTED: { bg: 'bg-emerald-500/10 border-emerald-500/30', text: 'text-emerald-300', icon: CheckCircle2 },
-    REVOKED:  { bg: 'bg-slate-500/10 border-slate-500/30', text: 'text-slate-400', icon: XCircle },
-    EXPIRED:  { bg: 'bg-rose-500/10 border-rose-500/30', text: 'text-rose-300', icon: XCircle },
-};
-
 function InviteRow({ inv, onRevoke }: { inv: Invitation; onRevoke: (id: string) => void }) {
     const [copied, setCopied] = useState(false);
     const style = STATUS_STYLES[inv.status];
-    const Icon = style.icon;
+    const StatusIcon = style.icon;
     const link = `${window.location.origin}/aceitar-convite/${inv.token}`;
 
     const copy = async () => {
@@ -207,33 +197,47 @@ function InviteRow({ inv, onRevoke }: { inv: Invitation; onRevoke: (id: string) 
     };
 
     return (
-        <tr className="hover:bg-white/[0.02]">
-            <td className="px-4 py-3 text-white font-medium">{inv.email}</td>
-            <td className="px-4 py-3 text-slate-300">{inv.companyName ?? '—'}</td>
-            <td className="px-4 py-3 text-slate-300">{inv.planName ?? '—'}</td>
-            <td className="px-4 py-3">
-                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[11.5px] font-medium ${style.bg} ${style.text}`}>
-                    <Icon className="w-3 h-3" />
+        <tr className="hover:bg-white/[0.02] transition-colors">
+            <Td>
+                <div className="flex items-center gap-3">
+                    <Avatar name={inv.email} size={32} />
+                    <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-white truncate">{inv.email}</div>
+                        {inv.acceptedAt && (
+                            <div className="text-[10.5px] text-emerald-400 mt-0.5">
+                                aceito em {new Date(inv.acceptedAt).toLocaleDateString('pt-BR')}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </Td>
+            <Td className="text-slate-300 text-[12.5px]">{inv.companyName ?? <span className="text-slate-600">—</span>}</Td>
+            <Td className="text-slate-300 text-[12.5px]">{inv.planName ?? <span className="text-slate-600">—</span>}</Td>
+            <Td>
+                <Badge tone="violet">{translateRole(inv.role)}</Badge>
+            </Td>
+            <Td>
+                <Badge tone={style.tone} icon={StatusIcon}>
                     {STATUS_LABEL[inv.status]}
-                </span>
-            </td>
-            <td className="px-4 py-3 text-slate-400 text-[12px]">
+                </Badge>
+            </Td>
+            <Td className="text-slate-400 text-[11.5px] font-mono-num">
                 {new Date(inv.createdAt).toLocaleDateString('pt-BR')}
-            </td>
-            <td className="px-4 py-3">
-                <div className="flex items-center justify-end gap-1">
+            </Td>
+            <Td align="right">
+                <div className="flex items-center justify-end gap-0.5">
                     {inv.status === 'PENDING' && (
                         <>
                             <button
                                 onClick={copy}
-                                className="p-1.5 rounded hover:bg-white/5 text-slate-400 hover:text-white"
+                                className="p-1.5 rounded-md hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
                                 title="Copiar link"
                             >
                                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                             </button>
                             <button
                                 onClick={() => onRevoke(inv.id)}
-                                className="p-1.5 rounded hover:bg-rose-500/10 text-slate-400 hover:text-rose-400"
+                                className="p-1.5 rounded-md hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-colors"
                                 title="Revogar"
                             >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -241,12 +245,18 @@ function InviteRow({ inv, onRevoke }: { inv: Invitation; onRevoke: (id: string) 
                         </>
                     )}
                 </div>
-            </td>
+            </Td>
         </tr>
     );
 }
 
-function CreateInviteModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+function translateRole(role: string) {
+    return ({
+        SUPER_ADMIN: 'Super Admin', ADMIN: 'Admin', MANAGER: 'Gerente', USER: 'Usuário',
+    } as Record<string, string>)[role] ?? role;
+}
+
+function CreateInviteModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
     const [email, setEmail] = useState('');
     const [role, setRole] = useState('ADMIN');
     const [companyId, setCompanyId] = useState('');
@@ -268,6 +278,7 @@ function CreateInviteModal({ onClose, onCreated }: { onClose: () => void; onCrea
                 },
             });
             toast.success('Convite enviado para ' + email);
+            setEmail(''); setCompanyId(''); setPlanId(''); setMessage('');
             onCreated();
         } catch (e: any) {
             toast.error(e.message);
@@ -277,118 +288,72 @@ function CreateInviteModal({ onClose, onCreated }: { onClose: () => void; onCrea
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <form
-                onSubmit={submit}
-                className="w-full max-w-lg bg-[#181b25] border border-white/10 rounded-xl shadow-2xl overflow-hidden"
-            >
-                <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-                    <div>
-                        <h3 className="text-[15px] font-semibold text-white">Novo convite</h3>
-                        <p className="text-[12px] text-slate-400 mt-0.5">Envie um link de acesso por e-mail</p>
-                    </div>
-                    <button type="button" onClick={onClose} className="text-slate-400 hover:text-white">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <div className="p-5 space-y-4">
-                    <Field label="E-mail *">
-                        <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="usuario@empresa.com"
-                            className="input-dark"
-                        />
-                    </Field>
-
-                    <Field label="Função *">
-                        <select value={role} onChange={(e) => setRole(e.target.value)} className="input-dark">
-                            <option value="ADMIN">Administrador da empresa</option>
-                            <option value="MANAGER">Gerente</option>
-                            <option value="USER">Usuário</option>
-                            <option value="SUPER_ADMIN">Super Admin</option>
-                        </select>
-                    </Field>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <Field label="Empresa (ID)">
-                            <input
-                                type="text"
-                                value={companyId}
-                                onChange={(e) => setCompanyId(e.target.value)}
-                                placeholder="opcional"
-                                className="input-dark"
-                            />
-                        </Field>
-                        <Field label="Plano (ID)">
-                            <input
-                                type="text"
-                                value={planId}
-                                onChange={(e) => setPlanId(e.target.value)}
-                                placeholder="opcional"
-                                className="input-dark"
-                            />
-                        </Field>
-                    </div>
-
-                    <Field label="Mensagem personalizada">
-                        <textarea
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            rows={3}
-                            placeholder="Olá! Você foi convidado para usar o GestãoInt…"
-                            className="input-dark resize-none"
-                        />
-                    </Field>
-                </div>
-
-                <div className="flex items-center justify-end gap-2 px-5 py-4 bg-white/[0.02] border-t border-white/5">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-4 py-2 rounded-lg text-[13px] font-medium text-slate-300 hover:bg-white/5"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white text-[13px] font-semibold"
-                    >
-                        <Send className="w-3.5 h-3.5" />
+        <Modal
+            open={open}
+            onClose={onClose}
+            title="Novo convite"
+            description="Enviamos um link assinado por e-mail. Expira em 7 dias."
+            footer={
+                <>
+                    <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+                    <Button icon={Send} onClick={() => (document.querySelector('#invite-form') as HTMLFormElement)?.requestSubmit()} disabled={submitting}>
                         {submitting ? 'Enviando…' : 'Enviar convite'}
-                    </button>
+                    </Button>
+                </>
+            }
+        >
+            <form id="invite-form" onSubmit={submit} className="space-y-4">
+                <Field label="E-mail do destinatário" required>
+                    <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="pessoa@empresa.com.br"
+                        className={inputCls}
+                    />
+                </Field>
+
+                <Field label="Função no sistema" required>
+                    <select value={role} onChange={(e) => setRole(e.target.value)} className={inputCls}>
+                        <option value="ADMIN">Administrador da empresa</option>
+                        <option value="MANAGER">Gerente</option>
+                        <option value="USER">Usuário</option>
+                        <option value="SUPER_ADMIN">Super administrador</option>
+                    </select>
+                </Field>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <Field label="Empresa (ID)" hint="opcional">
+                        <input
+                            type="text"
+                            value={companyId}
+                            onChange={(e) => setCompanyId(e.target.value)}
+                            placeholder="uuid"
+                            className={inputCls}
+                        />
+                    </Field>
+                    <Field label="Plano (ID)" hint="opcional">
+                        <input
+                            type="text"
+                            value={planId}
+                            onChange={(e) => setPlanId(e.target.value)}
+                            placeholder="uuid"
+                            className={inputCls}
+                        />
+                    </Field>
                 </div>
 
-                <style>{`
-                    .input-dark {
-                        width: 100%;
-                        padding: 0.6rem 0.75rem;
-                        border-radius: 0.5rem;
-                        background: rgba(255,255,255,0.04);
-                        border: 1px solid rgba(255,255,255,0.08);
-                        color: #e2e8f0;
-                        font-size: 13px;
-                        outline: none;
-                    }
-                    .input-dark:focus {
-                        border-color: rgba(244, 63, 94, 0.4);
-                    }
-                    .input-dark::placeholder { color: #64748b; }
-                `}</style>
+                <Field label="Mensagem personalizada" hint="aparece no corpo do e-mail">
+                    <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        rows={3}
+                        placeholder="Olá! Você foi convidado para usar o GestãoInt…"
+                        className={textareaCls}
+                    />
+                </Field>
             </form>
-        </div>
-    );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-    return (
-        <label className="block">
-            <span className="block text-[11.5px] font-medium text-slate-400 uppercase tracking-wider mb-1.5">{label}</span>
-            {children}
-        </label>
+        </Modal>
     );
 }
