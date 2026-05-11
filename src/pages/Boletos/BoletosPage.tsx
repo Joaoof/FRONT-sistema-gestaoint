@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Plus, Receipt, Check, X, Copy, ExternalLink, FileText } from 'lucide-react';
 import { BOLETOS, CANCEL_BOLETO, ISSUE_BOLETO, MARK_BOLETO_PAID } from '../../graphql/queries/boletos';
 import { GET_BANKS } from '../../graphql/queries/banks';
+import { BankProviderIcon } from '../../components/banks/BankProviderIcon';
 
 interface Boleto {
     id: string;
@@ -149,7 +150,7 @@ export function BoletosPage() {
                                                 <div className="text-[10px] text-rose-600 mt-0.5 max-w-[200px] truncate" title={b.errorMessage}>{b.errorMessage}</div>
                                             )}
                                         </td>
-                                        <td className="text-[10.5px] uppercase tracking-wider text-slate-500">{b.provider}</td>
+                                        <td><BankProviderIcon provider={b.provider} size={22} showLabel /></td>
                                         <td className="text-right pr-4">
                                             <div className="inline-flex gap-2">
                                                 {b.digitableLine && (
@@ -280,13 +281,31 @@ function IssueBoletoForm({ onClose, onIssued }: { onClose: () => void; onIssued:
                         <p className="text-[10.5px] text-slate-500 mt-1">Se vincular, pagamento do boleto vai marcar a conta como paga automaticamente.</p>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium mb-1">Provider</label>
-                        <select value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })}
-                            className="w-full p-2 border border-slate-300 dark:border-white/15 dark:bg-slate-800 dark:text-white rounded">
-                            <option value="">Padrão (env)</option>
-                            <option value="MOCK">MOCK (teste)</option>
-                            <option value="ITAU">ITAU (precisa de credenciais)</option>
-                        </select>
+                        <label className="block text-sm font-medium mb-1">Banco emissor do boleto</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {(['MOCK', 'ITAU', 'BB'] as const).map((p) => (
+                                <button
+                                    key={p}
+                                    type="button"
+                                    onClick={() => setForm({ ...form, provider: p })}
+                                    className={`flex flex-col items-center justify-center gap-1.5 p-3 border-2 rounded-lg transition-all ${
+                                        form.provider === p
+                                            ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/30'
+                                            : 'border-slate-200 dark:border-white/10 hover:border-slate-300'
+                                    }`}
+                                >
+                                    <BankProviderIcon provider={p} size={36} />
+                                    <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                                        {p === 'MOCK' ? 'Teste' : p === 'ITAU' ? 'Itaú' : 'Banco do Brasil'}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                        <p className="text-[10.5px] text-slate-500 mt-1">
+                            {form.provider === 'ITAU' || form.provider === 'BB'
+                                ? '⚠️ Precisa de credenciais cadastradas no .env. Se não tiver, vai dar erro.'
+                                : 'MOCK gera dados de teste — útil pra ver o fluxo sem cair no banco real.'}
+                        </p>
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">Instruções (opcional)</label>
