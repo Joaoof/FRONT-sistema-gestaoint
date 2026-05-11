@@ -93,6 +93,11 @@ import { ReconciliationPage } from './pages/Reconciliation/ReconciliationPage';
 import { BoletosPage } from './pages/Boletos/BoletosPage';
 import { BankIntegrationsPage } from './pages/BankIntegrations/BankIntegrationsPage';
 import { WebhookCenterPage } from './pages/WebhookCenter/WebhookCenterPage';
+import { SuperAdminLayout } from './layouts/SuperAdminLayout';
+import { SuperAdminHome } from './pages/SuperAdmin/SuperAdminHome';
+import { SuperAdminInvitations } from './pages/SuperAdmin/SuperAdminInvitations';
+import { SuperAdminPlaceholder } from './pages/SuperAdmin/SuperAdminPlaceholder';
+import { AcceptInvitePage } from './pages/AcceptInvite/AcceptInvitePage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -101,7 +106,9 @@ function AppContent() {
   const inventory = useInventory(); // ✅ Dados do estoque
 
   const isPrintRoute = /\/imprimir(\/|$)/.test(location.pathname);
-  const showSidebar = location.pathname !== '/' && !isPrintRoute;
+  const isSuperAdminRoute = location.pathname.startsWith('/super-admin');
+  const isAcceptInviteRoute = location.pathname.startsWith('/aceitar-convite');
+  const showSidebar = location.pathname !== '/' && !isPrintRoute && !isSuperAdminRoute && !isAcceptInviteRoute;
 
   return (
     <NotificationsCenterProvider>
@@ -124,7 +131,7 @@ function AppContent() {
         <main
           key={location.pathname}
           className={
-            isPrintRoute
+            isPrintRoute || isSuperAdminRoute || isAcceptInviteRoute
               ? 'flex-1'
               : 'flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in'
           }
@@ -257,6 +264,29 @@ function AppContent() {
             {/* Contratos */}
             <Route path="/contratos" element={<ContractsListPage />} />
             <Route path="/contratos/:id" element={<ContractDetailPage />} />
+
+            {/* Aceitar convite (público) */}
+            <Route path="/aceitar-convite/:token" element={<AcceptInvitePage />} />
+
+            {/* Super Admin (layout próprio Kommo) */}
+            <Route
+              path="/super-admin"
+              element={
+                <PrivateRoute>
+                  <SuperAdminLayout />
+                </PrivateRoute>
+              }
+            >
+              <Route index element={<SuperAdminHome />} />
+              <Route path="empresas" element={<SuperAdminPlaceholder title="Empresas" description="Gerencie todas as empresas (tenants) do GestãoInt." />} />
+              <Route path="convites" element={<SuperAdminInvitations />} />
+              <Route path="usuarios" element={<SuperAdminPlaceholder title="Usuários" description="Todos os usuários cadastrados em todas as empresas." />} />
+              <Route path="planos" element={<SuperAdminPlaceholder title="Planos & Módulos" description="Configure planos, módulos e permissões (READ/WRITE)." />} />
+              <Route path="ia" element={<SuperAdminPlaceholder title="IA & Créditos" description="Pacotes via PIX, consumo de créditos, conversações." />} />
+              <Route path="webhooks" element={<SuperAdminPlaceholder title="Webhooks" description="Conexões bancárias e eventos por empresa." />} />
+              <Route path="logs" element={<SuperAdminPlaceholder title="Logs Master" description="Auditoria global de todas as ações sensíveis." />} />
+              <Route path="configuracoes" element={<SuperAdminPlaceholder title="Configurações" description="Parâmetros do sistema, integrações globais." />} />
+            </Route>
 
             <Route path="*" element={<div>Página não encontrada</div>} />
           </Routes>

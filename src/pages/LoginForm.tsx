@@ -2,40 +2,49 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
-import { Mail, Lock, ArrowLeft } from "lucide-react"
+import { Mail, Lock, ArrowLeft, Shield } from "lucide-react"
+import { toast } from "sonner"
 
 export const LoginForm = () => {
     const [isRecoveryMode, setIsRecoveryMode] = useState(false); // Controle da tela
     const [email, setEmail] = useState<string>("")
     const [password_hash, setPassword] = useState<string>("")
-    // Incluímos 'isAuthenticated' aqui para reagir ao login, mas a navegação principal é externa.
-    const { login, isLoading, isAuthenticated } = useAuth()
+    const [isSuperAdminMode, setIsSuperAdminMode] = useState<boolean>(false);
+    const { login, isLoading, isAuthenticated, user } = useAuth()
     const [message, setMessage] = useState<string>("");
     const [recoveryEmail, setRecoveryEmail] = useState<string>(""); // Para recuperação
     const [error, setError] = useState<string>("");
 
     const navigate = useNavigate();
 
-    // Use um useEffect para reagir APENAS quando o estado global de autenticação mudar.
+    // Redirecionamento condicional: se o usuário marcou "Sou super admin" e
+    // realmente é super, vai pro layout super-admin. Senão, dashboard normal.
+    // Se marcou super mas NÃO é → joga erro e desloga.
     useEffect(() => {
-        if (isAuthenticated) {
-            // Navega após o AuthContext confirmar que o usuário está autenticado
+        if (!isAuthenticated || !user) return;
+
+        if (isSuperAdminMode) {
+            if (user.isSuperAdmin === true) {
+                navigate('/super-admin', { replace: true });
+            } else {
+                toast.error('Você não tem permissão de super-admin.');
+                // Limpa sessão pra evitar o usuário entrar como normal por acidente
+                localStorage.removeItem('accessToken');
+                window.location.href = '/';
+            }
+        } else {
             navigate('/dashboard', { replace: true });
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, user, isSuperAdminMode, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError(""); // Limpa erro anterior
+        setError("");
 
         try {
             await login(email, password_hash);
-            // ❌ REMOVIDO: navigate('/dashboard', { replace: true });
-            // Deixamos o useEffect acima lidar com a navegação após a conclusão do login.
         } catch (err) {
-            // O AuthContext já trata erros e desliga o loading/define o erro
             console.error("Erro na submissão do login:", err);
-            // Se houver um erro, o AuthContext deve definir um estado de erro
         }
     }
 
@@ -164,11 +173,40 @@ export const LoginForm = () => {
                                 </div>
                             </div>
 
+                            {/* Toggle super admin */}
+                            <label
+                                className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                                    isSuperAdminMode
+                                        ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/30'
+                                        : 'border-slate-200 dark:border-white/10 hover:border-slate-300'
+                                }`}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={isSuperAdminMode}
+                                    onChange={(e) => setIsSuperAdminMode(e.target.checked)}
+                                    className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-2 focus:ring-rose-500"
+                                />
+                                <Shield className={`w-5 h-5 shrink-0 ${isSuperAdminMode ? 'text-rose-600' : 'text-slate-400'}`} />
+                                <div className="flex-1 min-w-0">
+                                    <div className={`text-[13.5px] font-semibold ${isSuperAdminMode ? 'text-rose-900 dark:text-rose-200' : 'text-slate-700 dark:text-slate-300'}`}>
+                                        Você é super admin?
+                                    </div>
+                                    <div className={`text-[11px] ${isSuperAdminMode ? 'text-rose-700 dark:text-rose-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                                        Marque para acessar o painel global de gestão
+                                    </div>
+                                </div>
+                            </label>
+
                             {/* Botão Entrar */}
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full flex justify-center items-center gap-2 py-3.5 px-4 text-[15px] font-semibold rounded-xl text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className={`w-full flex justify-center items-center gap-2 py-3.5 px-4 text-[15px] font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    isSuperAdminMode
+                                        ? 'text-white bg-rose-600 hover:bg-rose-700'
+                                        : 'text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100'
+                                }`}
                             >
                                 {isLoading ? (
                                     <>
