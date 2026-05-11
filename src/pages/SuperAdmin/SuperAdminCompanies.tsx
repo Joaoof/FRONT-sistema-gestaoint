@@ -1,53 +1,80 @@
 import { useMemo, useState } from 'react';
 import { Building2, Plus, Search, Filter, ExternalLink, Power, Eye } from 'lucide-react';
+import { toast } from 'sonner';
 import {
     Button, Card, PageHeader, KPI, Tabs, Table, Th, Td, EmptyState, Badge, Modal, Field, inputCls, Avatar,
 } from './_ui';
+import { gql, useQuery, timeAgo, formatBRL } from './_api';
 
-type CompanyStatus = 'ACTIVE' | 'SUSPENDED' | 'TRIAL';
 type Company = {
     id: string;
     name: string;
-    cnpj: string;
-    plan: string;
-    users: number;
-    revenueMonth: number;
-    status: CompanyStatus;
+    cnpj: string | null;
+    email: string | null;
+    phone: string | null;
+    logoUrl: string | null;
+    isActive: boolean;
+    plan: string | null;
+    usersCount: number;
+    revenue30d: number;
     createdAt: string;
-    lastActivity: string;
+    lastActivityAt: string | null;
 };
 
-const MOCK: Company[] = [
-    { id: '1', name: 'Norteshop Distribuidora', cnpj: '12.345.678/0001-90', plan: 'Pro', users: 18, revenueMonth: 45200, status: 'ACTIVE', createdAt: '2025-08-12', lastActivity: '2 min' },
-    { id: '2', name: 'Padaria Bom Pão Ltda', cnpj: '11.222.333/0001-44', plan: 'Starter', users: 4, revenueMonth: 8900, status: 'ACTIVE', createdAt: '2026-03-02', lastActivity: '1 h' },
-    { id: '3', name: 'Tech Solutions SA', cnpj: '22.333.444/0001-55', plan: 'Enterprise', users: 42, revenueMonth: 128400, status: 'ACTIVE', createdAt: '2024-11-01', lastActivity: '4 min' },
-    { id: '4', name: 'Construtora Horizonte', cnpj: '33.444.555/0001-66', plan: 'Pro', users: 12, revenueMonth: 0, status: 'SUSPENDED', createdAt: '2025-02-19', lastActivity: '12 dias' },
-    { id: '5', name: 'Loja do João', cnpj: '44.555.666/0001-77', plan: 'Trial', users: 2, revenueMonth: 0, status: 'TRIAL', createdAt: '2026-05-08', lastActivity: '3 h' },
-];
+const Q_LIST = `
+  query SuperAdminCompanies($input: ListCompaniesInput) {
+    superAdminCompanies(input: $input) {
+      id name cnpj email phone logoUrl isActive
+      plan usersCount revenue30d createdAt lastActivityAt
+    }
+  }
+`;
+
+const M_CREATE = `
+  mutation SuperAdminCreateCompany($input: CreateCompanyAdminInput!) {
+    superAdminCreateCompany(input: $input) {
+      id name cnpj email phone logoUrl isActive plan usersCount revenue30d createdAt lastActivityAt
+    }
+  }
+`;
+
+const M_SET_ACTIVE = `
+  mutation SetActive($id: ID!, $isActive: Boolean!) {
+    superAdminSetCompanyActive(id: $id, isActive: $isActive)
+  }
+`;
 
 export function SuperAdminCompanies() {
-    const [items] = useState<Company[]>(MOCK);
     const [search, setSearch] = useState('');
-    const [filter, setFilter] = useState<'ALL' | CompanyStatus>('ALL');
+    const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED'>('ALL');
     const [showModal, setShowModal] = useState(false);
     const [detail, setDetail] = useState<Company | null>(null);
 
-    const filtered = useMemo(() => {
-        return items.filter((c) =>
-            (filter === 'ALL' || c.status === filter) &&
-            (c.name.toLowerCase().includes(search.toLowerCase()) || c.cnpj.includes(search))
-        );
-    }, [items, search, filter]);
+    const { data, loading, refetch } = useQuery<{ superAdminCompanies: Company[] }>(
+        Q_LIST,
+        { input: { search: search || null, status: filter === 'ALL' ? null : filter } },
+        [search, filter],
+    );
+    const items = data?.superAdminCompanies ?? [];
 
     const counts = useMemo(() => ({
         ALL: items.length,
-        ACTIVE: items.filter((c) => c.status === 'ACTIVE').length,
-        SUSPENDED: items.filter((c) => c.status === 'SUSPENDED').length,
-        TRIAL: items.filter((c) => c.status === 'TRIAL').length,
+        ACTIVE: items.filter((c) => c.isActive).length,
+        SUSPENDED: items.filter((c) => !c.isActive).length,
     }), [items]);
 
-    const totalRevenue = items.reduce((s, c) => s + c.revenueMonth, 0);
-    const totalUsers = items.reduce((s, c) => s + c.users, 0);
+    const totalRevenue = items.reduce((s, c) => s + c.revenue30d, 0);
+    const totalUsers = items.reduce((s, c) => s + c.usersCount, 0);
+
+    const toggle = async (c: Company) => {
+        if (!confirm(`${c.isActive ? 'Suspender' : 'Reativar'} ${c.name}?`)) return;
+        try {
+            await gql(M_SET_ACTIVE, { id: c.id, isActive: !c.isActive });
+            toast.success(`Empresa ${c.isActive ? 'suspensa' : 'reativada'}`);
+            setDetail(null);
+            void refetch();
+        } catch (e: any) { toast.error(e.message); }
+    };
 
     return (
         <div className="space-y-6 max-w-[1400px]">
@@ -58,10 +85,10 @@ export function SuperAdminCompanies() {
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <KPI label="Total" value={items.length} icon={Building2} accent="sky" />
-                <KPI label="Ativas" value={counts.ACTIVE} accent="emerald" />
-                <KPI label="Usuários totais" value={totalUsers} accent="violet" />
-                <KPI label="MRR estimado" value={`R$ ${totalRevenue.toLocaleString('pt-BR')}`} accent="amber" />
+                <KPI label="Total" value={loading ? '…' : items.length} icon={Building2} accent="sky" />
+                <KPI label="Ativas" value={loading ? '…' : counts.ACTIVE} accent="emerald" />
+                <KPI label="Usuários totais" value={loading ? '…' : totalUsers} accent="violet" />
+                <KPI label="Receita 30d" value={loading ? '…' : formatBRL(totalRevenue)} accent="amber" />
             </div>
 
             <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -69,7 +96,6 @@ export function SuperAdminCompanies() {
                     options={[
                         { value: 'ALL', label: 'Todas' },
                         { value: 'ACTIVE', label: 'Ativas' },
-                        { value: 'TRIAL', label: 'Trial' },
                         { value: 'SUSPENDED', label: 'Suspensas' },
                     ]}
                     value={filter}
@@ -98,14 +124,16 @@ export function SuperAdminCompanies() {
                             <Th>CNPJ</Th>
                             <Th>Plano</Th>
                             <Th align="right">Usuários</Th>
-                            <Th align="right">MRR</Th>
+                            <Th align="right">Receita 30d</Th>
                             <Th>Status</Th>
                             <Th>Última atividade</Th>
                             <Th align="right">Ações</Th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.04]">
-                        {filtered.length === 0 ? (
+                        {loading ? (
+                            <tr><td colSpan={8} className="text-center py-12 text-slate-500">Carregando…</td></tr>
+                        ) : items.length === 0 ? (
                             <tr><td colSpan={8}>
                                 <EmptyState
                                     icon={Building2}
@@ -114,33 +142,37 @@ export function SuperAdminCompanies() {
                                     action={<Button icon={Plus} onClick={() => setShowModal(true)}>Nova empresa</Button>}
                                 />
                             </td></tr>
-                        ) : filtered.map((c) => (
+                        ) : items.map((c) => (
                             <tr key={c.id} className="hover:bg-white/[0.02] cursor-pointer" onClick={() => setDetail(c)}>
                                 <Td>
                                     <div className="flex items-center gap-3">
                                         <Avatar name={c.name} size={36} />
                                         <div>
                                             <div className="text-[13px] font-semibold text-white">{c.name}</div>
-                                            <div className="text-[10.5px] text-slate-500 mt-0.5">ID {c.id}</div>
+                                            <div className="text-[10.5px] text-slate-500 mt-0.5 font-mono-num">{c.id.slice(0, 8)}…</div>
                                         </div>
                                     </div>
                                 </Td>
-                                <Td className="font-mono-num text-[11.5px] text-slate-400">{c.cnpj}</Td>
+                                <Td className="font-mono-num text-[11.5px] text-slate-400">{c.cnpj ?? '—'}</Td>
                                 <Td>
-                                    <Badge tone={c.plan === 'Enterprise' ? 'violet' : c.plan === 'Pro' ? 'sky' : c.plan === 'Trial' ? 'amber' : 'neutral'}>
-                                        {c.plan}
-                                    </Badge>
+                                    {c.plan ? (
+                                        <Badge tone={c.plan === 'Enterprise' ? 'violet' : c.plan === 'Pro' ? 'sky' : 'neutral'}>
+                                            {c.plan}
+                                        </Badge>
+                                    ) : <span className="text-slate-600">—</span>}
                                 </Td>
-                                <Td align="right" className="font-mono-num text-[13px] text-slate-200">{c.users}</Td>
+                                <Td align="right" className="font-mono-num text-[13px] text-slate-200">{c.usersCount}</Td>
                                 <Td align="right" className="font-mono-num text-[13px] text-slate-200">
-                                    {c.revenueMonth > 0 ? `R$ ${c.revenueMonth.toLocaleString('pt-BR')}` : <span className="text-slate-600">—</span>}
+                                    {c.revenue30d > 0 ? formatBRL(c.revenue30d) : <span className="text-slate-600">—</span>}
                                 </Td>
                                 <Td>
-                                    <Badge tone={c.status === 'ACTIVE' ? 'emerald' : c.status === 'TRIAL' ? 'amber' : 'rose'}>
-                                        {c.status === 'ACTIVE' ? 'Ativa' : c.status === 'TRIAL' ? 'Trial' : 'Suspensa'}
+                                    <Badge tone={c.isActive ? 'emerald' : 'rose'}>
+                                        {c.isActive ? 'Ativa' : 'Suspensa'}
                                     </Badge>
                                 </Td>
-                                <Td className="text-[11.5px] text-slate-500">há {c.lastActivity}</Td>
+                                <Td className="text-[11.5px] text-slate-500">
+                                    {c.lastActivityAt ? `há ${timeAgo(c.lastActivityAt)}` : '—'}
+                                </Td>
                                 <Td align="right">
                                     <button className="p-1.5 rounded-md hover:bg-white/5 text-slate-500 hover:text-white" onClick={(e) => { e.stopPropagation(); setDetail(c); }}>
                                         <Eye className="w-3.5 h-3.5" />
@@ -152,26 +184,52 @@ export function SuperAdminCompanies() {
                 </Table>
             </Card>
 
-            <NewCompanyModal open={showModal} onClose={() => setShowModal(false)} />
-            <CompanyDetailModal company={detail} onClose={() => setDetail(null)} />
+            <NewCompanyModal open={showModal} onClose={() => setShowModal(false)} onCreated={() => { setShowModal(false); void refetch(); }} />
+            <CompanyDetailModal company={detail} onClose={() => setDetail(null)} onToggle={toggle} />
         </div>
     );
 }
 
-function NewCompanyModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+function NewCompanyModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
     const [name, setName] = useState('');
     const [cnpj, setCnpj] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [planId, setPlanId] = useState('');
     const [adminEmail, setAdminEmail] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+
+    const submit = async () => {
+        if (!name.trim()) return toast.error('Nome obrigatório');
+        setSubmitting(true);
+        try {
+            await gql(M_CREATE, {
+                input: {
+                    name: name.trim(),
+                    cnpj: cnpj.trim() || null,
+                    email: email.trim() || null,
+                    phone: phone.trim() || null,
+                    planId: planId.trim() || null,
+                    adminEmail: adminEmail.trim() || null,
+                },
+            });
+            toast.success('Empresa criada');
+            setName(''); setCnpj(''); setEmail(''); setPhone(''); setPlanId(''); setAdminEmail('');
+            onCreated();
+        } catch (e: any) { toast.error(e.message); }
+        finally { setSubmitting(false); }
+    };
+
     return (
         <Modal
             open={open}
             onClose={onClose}
             title="Nova empresa"
-            description="Cria o tenant e envia um convite para o primeiro administrador."
+            description="Cria o tenant. Se informar e-mail de admin, um convite é enviado automaticamente."
             footer={
                 <>
                     <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-                    <Button>Criar e convidar</Button>
+                    <Button onClick={submit} disabled={submitting}>{submitting ? 'Criando…' : 'Criar empresa'}</Button>
                 </>
             }
         >
@@ -179,53 +237,60 @@ function NewCompanyModal({ open, onClose }: { open: boolean; onClose: () => void
                 <Field label="Nome fantasia" required>
                     <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="Padaria do Bairro Ltda" />
                 </Field>
-                <Field label="CNPJ" required>
-                    <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} className={inputCls} placeholder="00.000.000/0000-00" />
-                </Field>
-                <Field label="E-mail do administrador" required hint="receberá o convite de acesso">
+                <div className="grid grid-cols-2 gap-3">
+                    <Field label="CNPJ"><input value={cnpj} onChange={(e) => setCnpj(e.target.value)} className={inputCls} placeholder="00.000.000/0000-00" /></Field>
+                    <Field label="Telefone"><input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} placeholder="(11) 99999-0000" /></Field>
+                </div>
+                <Field label="E-mail da empresa"><input value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="contato@empresa.com.br" /></Field>
+                <Field label="Plano (ID)" hint="opcional"><input value={planId} onChange={(e) => setPlanId(e.target.value)} className={inputCls} placeholder="uuid do plano" /></Field>
+                <Field label="E-mail do administrador" hint="se preenchido, dispara convite">
                     <input value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} className={inputCls} placeholder="dono@empresa.com.br" />
-                </Field>
-                <Field label="Plano inicial">
-                    <select className={inputCls}>
-                        <option>Trial (15 dias)</option>
-                        <option>Starter</option>
-                        <option>Pro</option>
-                        <option>Enterprise</option>
-                    </select>
                 </Field>
             </div>
         </Modal>
     );
 }
 
-function CompanyDetailModal({ company, onClose }: { company: Company | null; onClose: () => void }) {
+function CompanyDetailModal({ company, onClose, onToggle }: { company: Company | null; onClose: () => void; onToggle: (c: Company) => void }) {
     if (!company) return null;
     return (
         <Modal
             open={!!company}
             onClose={onClose}
             title={company.name}
-            description={`CNPJ ${company.cnpj}`}
+            description={`CNPJ ${company.cnpj ?? '—'}`}
             size="lg"
             footer={
                 <>
                     <Button variant="ghost" icon={ExternalLink}>Acessar tenant</Button>
-                    <Button variant="danger" icon={Power}>{company.status === 'ACTIVE' ? 'Suspender' : 'Reativar'}</Button>
+                    <Button variant="danger" icon={Power} onClick={() => onToggle(company)}>
+                        {company.isActive ? 'Suspender' : 'Reativar'}
+                    </Button>
                 </>
             }
         >
             <div className="grid grid-cols-2 gap-3 mb-5">
-                <KPI label="Usuários" value={company.users} icon={Building2} accent="violet" />
-                <KPI label="MRR" value={`R$ ${company.revenueMonth.toLocaleString('pt-BR')}`} accent="amber" />
+                <KPI label="Usuários" value={company.usersCount} icon={Building2} accent="violet" />
+                <KPI label="Receita 30d" value={formatBRL(company.revenue30d)} accent="amber" />
             </div>
             <Card>
                 <div className="text-[12px] text-slate-400">
-                    <div className="flex justify-between py-1.5"><span>Plano</span><Badge tone="sky">{company.plan}</Badge></div>
-                    <div className="flex justify-between py-1.5"><span>Status</span><Badge tone={company.status === 'ACTIVE' ? 'emerald' : 'rose'}>{company.status}</Badge></div>
-                    <div className="flex justify-between py-1.5"><span>Criada em</span><span className="text-slate-200 font-mono-num">{new Date(company.createdAt).toLocaleDateString('pt-BR')}</span></div>
-                    <div className="flex justify-between py-1.5"><span>Última atividade</span><span className="text-slate-200">há {company.lastActivity}</span></div>
+                    <Row label="Plano" value={company.plan ? <Badge tone="sky">{company.plan}</Badge> : <span className="text-slate-600">sem plano</span>} />
+                    <Row label="Status" value={<Badge tone={company.isActive ? 'emerald' : 'rose'}>{company.isActive ? 'Ativa' : 'Suspensa'}</Badge>} />
+                    <Row label="E-mail" value={<span className="text-slate-200">{company.email ?? '—'}</span>} />
+                    <Row label="Telefone" value={<span className="text-slate-200">{company.phone ?? '—'}</span>} />
+                    <Row label="Criada em" value={<span className="text-slate-200 font-mono-num">{new Date(company.createdAt).toLocaleDateString('pt-BR')}</span>} />
+                    <Row label="Última atividade" value={<span className="text-slate-200">{company.lastActivityAt ? `há ${timeAgo(company.lastActivityAt)}` : '—'}</span>} />
                 </div>
             </Card>
         </Modal>
+    );
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+    return (
+        <div className="flex justify-between items-center py-1.5 border-b border-white/[0.04] last:border-0">
+            <span>{label}</span>{value}
+        </div>
     );
 }
