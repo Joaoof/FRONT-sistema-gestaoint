@@ -240,8 +240,7 @@ const sections: MenuSection[] = [
   {
     label: 'Inteligência',
     items: [
-      { id: 'ia' as View, label: 'IA Studio', icon: Sparkles },
-      { id: 'agente-ia' as View, label: 'Agente de IA', icon: MessageCircle },
+      { id: 'ia' as View, label: '🧠 IA — Hub central', icon: Sparkles },
     ],
   },
   {
@@ -357,7 +356,6 @@ const sections: MenuSection[] = [
           { id: 'configuracoes/templates' as View, label: 'Templates', icon: MessageSquare },
         ],
       },
-      { id: 'ia/creditos' as View, label: '✨ Créditos IA', icon: Sparkles },
       { id: 'exportacoes' as View, label: 'Exportações', icon: FileText },
       { id: 'auditoria' as View, label: 'Auditoria', icon: History },
       { id: 'admin/console' as View, label: '🔧 Admin (Super)', icon: Sliders },

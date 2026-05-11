@@ -28,7 +28,7 @@ export function CreditsBadge() {
 
     return (
         <button
-            onClick={() => navigate('/ia/creditos')}
+            onClick={() => navigate('/ia?tab=credits')}
             className={`hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-md text-[12px] font-medium border transition-colors ${color} hover:brightness-95`}
             title={acc.isLow ? 'Saldo baixo — clique pra comprar mais' : 'Saldo de créditos da IA'}
         >
