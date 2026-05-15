@@ -292,6 +292,30 @@ export function SuperAdminLayout() {
                     </div>
                 </header>
 
+                {/* Banner de diagnóstico: JWT sem isSuperAdmin */}
+                {user && user.isSuperAdmin === false && (
+                    <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 lg:px-8 py-3">
+                        <div className="flex items-start gap-3">
+                            <div className="w-7 h-7 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 font-bold text-[14px] shrink-0">!</div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-[13px] font-semibold text-amber-200">
+                                    Seu token atual NÃO tem isSuperAdmin
+                                </div>
+                                <div className="text-[12px] text-amber-300/80 mt-1">
+                                    A rota /super-admin abre, mas todas as queries protegidas vão retornar vazio.
+                                    Provavelmente você foi promovido a SuperAdmin DEPOIS de logar — o JWT antigo não reflete a mudança.
+                                </div>
+                                <button
+                                    onClick={async () => { await logout(); navigate('/', { replace: true }); }}
+                                    className="mt-2 text-[12px] font-semibold text-amber-100 hover:text-white underline"
+                                >
+                                    Logout agora e logar de novo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Content */}
                 <main className="px-6 lg:px-8 py-8 min-h-[calc(100vh-68px)] anim-fade-slide" key={location.pathname}>
                     <Outlet />

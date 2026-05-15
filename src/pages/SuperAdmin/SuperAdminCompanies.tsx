@@ -54,7 +54,7 @@ export function SuperAdminCompanies() {
 
     const openDetail = (c: Company) => navigate(`/super-admin/empresas/${c.id}`);
 
-    const { data, loading, refetch } = useQuery<{ superAdminCompanies: Company[] }>(
+    const { data, loading, error, refetch } = useQuery<{ superAdminCompanies: Company[] }>(
         Q_LIST,
         { input: { search: search || null, status: filter === 'ALL' ? null : filter } },
         [search, filter],
@@ -120,6 +120,31 @@ export function SuperAdminCompanies() {
                 </div>
             </div>
 
+            {error && (
+                <Card className="border-rose-500/40 bg-rose-500/[0.04]">
+                    <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-300 font-bold shrink-0">!</div>
+                        <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-semibold text-rose-200">Erro ao carregar empresas</div>
+                            <div className="text-[12px] text-rose-300/80 mt-1 font-mono-num break-all">{error}</div>
+                            <div className="text-[11.5px] text-slate-400 mt-2">
+                                {/super[\s-]?admin/i.test(error)
+                                    ? '💡 Seu token JWT não tem isSuperAdmin=true. Faça logout e login novamente para o token atualizar.'
+                                    : /unauthor|jwt|token/i.test(error)
+                                    ? '💡 Token inválido ou expirado. Faça logout e login novamente.'
+                                    : '💡 Verifique o terminal do backend para detalhes do erro.'}
+                            </div>
+                            <button
+                                onClick={() => { localStorage.removeItem('accessToken'); window.location.href = '/'; }}
+                                className="mt-3 text-[11.5px] font-semibold text-rose-200 hover:text-white underline"
+                            >
+                                Forçar logout
+                            </button>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
             <Card padding={false}>
                 <Table>
                     <thead className="bg-white/[0.02] border-b border-white/[0.06]">
@@ -141,9 +166,9 @@ export function SuperAdminCompanies() {
                             <tr><td colSpan={8}>
                                 <EmptyState
                                     icon={Building2}
-                                    title="Nenhuma empresa encontrada"
-                                    description="Ajuste os filtros ou crie a primeira empresa do sistema."
-                                    action={<Button icon={Plus} onClick={() => setShowModal(true)}>Nova empresa</Button>}
+                                    title={error ? 'Falha ao listar empresas' : 'Nenhuma empresa encontrada'}
+                                    description={error ? 'Veja a mensagem de erro acima.' : 'Ajuste os filtros ou crie a primeira empresa do sistema.'}
+                                    action={!error ? <Button icon={Plus} onClick={() => setShowModal(true)}>Nova empresa</Button> : undefined}
                                 />
                             </td></tr>
                         ) : items.map((c) => (

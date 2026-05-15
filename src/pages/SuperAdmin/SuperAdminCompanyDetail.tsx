@@ -15,6 +15,7 @@ import {
     SUPER_ADMIN_TOGGLE_COMPANY_MODULE_MUTATION,
 } from '../../graphql/queries/feature-flags';
 import { ModuleConfigModal } from './ModuleConfigModal';
+import { EvolutionChatbotTab } from './EvolutionChatbotTab';
 
 // ============================================================
 //   Tipos
@@ -123,7 +124,7 @@ const CONFIGURABLE = new Set([
 export function SuperAdminCompanyDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [tab, setTab] = useState<'info' | 'modules'>('info');
+    const [tab, setTab] = useState<'info' | 'modules' | 'evolution'>('info');
     const [configFor, setConfigFor] = useState<string | null>(null);
     const [showTemplateModal, setShowTemplateModal] = useState(false);
 
@@ -216,10 +217,11 @@ export function SuperAdminCompanyDetail() {
                 </div>
             )}
 
-            <Tabs<'info' | 'modules'>
+            <Tabs<'info' | 'modules' | 'evolution'>
                 options={[
                     { value: 'info', label: 'Informações' },
                     { value: 'modules', label: 'Módulos' },
+                    { value: 'evolution', label: 'Chatbot Evolution' },
                 ]}
                 value={tab}
                 onChange={setTab}
@@ -249,6 +251,8 @@ export function SuperAdminCompanyDetail() {
                     onConfigure={(mk) => setConfigFor(mk)}
                 />
             )}
+
+            {tab === 'evolution' && id && <EvolutionChatbotTab companyId={id} />}
 
             {configFor && id && (
                 <ModuleConfigModal
