@@ -28,6 +28,7 @@ import { AIAgentWidget } from './components/AIAgentWidget';
 import { AIAgentPage } from './pages/AI/AIAgentPage';
 import { PrivateRoute } from './components/ProtectedRoute';
 import { CompanyProvider } from './contexts/CompanyContext';
+import { FeatureFlagProvider, useFeatures } from './contexts/FeatureFlagContext';
 import { CashMovementForm } from './pages/CashMovementForm';
 import { PayablesList } from './pages/Tax/AccountsPayable/List';
 import { DeliveriesPage } from './pages/DeliveriesPage';
@@ -97,6 +98,7 @@ import { SuperAdminLayout } from './layouts/SuperAdminLayout';
 import { SuperAdminHome } from './pages/SuperAdmin/SuperAdminHome';
 import { SuperAdminInvitations } from './pages/SuperAdmin/SuperAdminInvitations';
 import { SuperAdminCompanies } from './pages/SuperAdmin/SuperAdminCompanies';
+import { SuperAdminCompanyDetail } from './pages/SuperAdmin/SuperAdminCompanyDetail';
 import { SuperAdminUsers } from './pages/SuperAdmin/SuperAdminUsers';
 import { SuperAdminPlans } from './pages/SuperAdmin/SuperAdminPlans';
 import { SuperAdminAI } from './pages/SuperAdmin/SuperAdminAI';
@@ -109,7 +111,14 @@ function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { user } = useAuth(); // ✅ Pega o user com permissions
+  const { permissionsCompat, features } = useFeatures(); // 🚦 Feature flags por empresa
   const inventory = useInventory(); // ✅ Dados do estoque
+
+  // Se já temos features carregadas, elas têm prioridade sobre user.permissions
+  // (incluem overrides da empresa). Senão, caímos no fallback original.
+  const effectivePermissions = features.length > 0
+    ? permissionsCompat
+    : (user?.permissions || []);
 
   const isPrintRoute = /\/imprimir(\/|$)/.test(location.pathname);
   const isSuperAdminRoute = location.pathname.startsWith('/super-admin');
@@ -127,7 +136,7 @@ function AppContent() {
             onToggle={() => setSidebarOpen(!sidebarOpen)}
             currentView={location.pathname.slice(1) as any}
             onViewChange={() => { }}
-            userPermissions={user?.permissions || []} // ✅ ESSE CAMPO É OBRIGATÓRIO
+            userPermissions={effectivePermissions} // 🚦 Feature flags por empresa (overrides ∪ plano)
           />
         </PrivateRoute>
       )}
@@ -285,6 +294,7 @@ function AppContent() {
             >
               <Route index element={<SuperAdminHome />} />
               <Route path="empresas" element={<SuperAdminCompanies />} />
+              <Route path="empresas/:id" element={<SuperAdminCompanyDetail />} />
               <Route path="convites" element={<SuperAdminInvitations />} />
               <Route path="usuarios" element={<SuperAdminUsers />} />
               <Route path="planos" element={<SuperAdminPlans />} />
@@ -313,7 +323,9 @@ export default function App() {
         <AuthProvider>
           <NotificationProvider>
             <CompanyProvider>
-              <AppContent />
+              <FeatureFlagProvider>
+                <AppContent />
+              </FeatureFlagProvider>
             </CompanyProvider>
           </NotificationProvider>
         </AuthProvider>

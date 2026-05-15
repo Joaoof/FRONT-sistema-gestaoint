@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Building2, Plus, Search, Filter, ExternalLink, Power, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Building2, Plus, Search, Filter, Eye, Settings2, ExternalLink, Power } from 'lucide-react';
 import { toast } from 'sonner';
 import {
     Button, Card, PageHeader, KPI, Tabs, Table, Th, Td, EmptyState, Badge, Modal, Field, inputCls, Avatar,
@@ -45,10 +46,13 @@ const M_SET_ACTIVE = `
 `;
 
 export function SuperAdminCompanies() {
+    const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED'>('ALL');
     const [showModal, setShowModal] = useState(false);
     const [detail, setDetail] = useState<Company | null>(null);
+
+    const openDetail = (c: Company) => navigate(`/super-admin/empresas/${c.id}`);
 
     const { data, loading, refetch } = useQuery<{ superAdminCompanies: Company[] }>(
         Q_LIST,
@@ -143,7 +147,7 @@ export function SuperAdminCompanies() {
                                 />
                             </td></tr>
                         ) : items.map((c) => (
-                            <tr key={c.id} className="hover:bg-white/[0.02] cursor-pointer" onClick={() => setDetail(c)}>
+                            <tr key={c.id} className="hover:bg-white/[0.02] cursor-pointer" onClick={() => openDetail(c)}>
                                 <Td>
                                     <div className="flex items-center gap-3">
                                         <Avatar name={c.name} size={36} />
@@ -174,9 +178,22 @@ export function SuperAdminCompanies() {
                                     {c.lastActivityAt ? `há ${timeAgo(c.lastActivityAt)}` : '—'}
                                 </Td>
                                 <Td align="right">
-                                    <button className="p-1.5 rounded-md hover:bg-white/5 text-slate-500 hover:text-white" onClick={(e) => { e.stopPropagation(); setDetail(c); }}>
-                                        <Eye className="w-3.5 h-3.5" />
-                                    </button>
+                                    <div className="inline-flex items-center gap-1 justify-end">
+                                        <button
+                                            title="Configurar módulos"
+                                            className="p-1.5 rounded-md hover:bg-white/5 text-slate-500 hover:text-rose-300"
+                                            onClick={(e) => { e.stopPropagation(); openDetail(c); }}
+                                        >
+                                            <Settings2 className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                            title="Resumo rápido"
+                                            className="p-1.5 rounded-md hover:bg-white/5 text-slate-500 hover:text-white"
+                                            onClick={(e) => { e.stopPropagation(); setDetail(c); }}
+                                        >
+                                            <Eye className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 </Td>
                             </tr>
                         ))}
