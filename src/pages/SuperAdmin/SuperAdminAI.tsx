@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
     Coins, MessageSquare, CheckCircle2, XCircle, Clock,
     ArrowDownToLine, Settings as SettingsIcon, Edit3, Save, AlertCircle,
+    Plus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -53,6 +54,14 @@ const Q_TX = `
 
 const M_CONFIRM = `mutation ConfirmPurchase($purchaseId: ID!) { superAdminConfirmAiPurchase(purchaseId: $purchaseId) }`;
 
+const M_ADD_WHATSAPP_CREDITS = `
+  mutation AddWhatsappCredits($companyId: String!, $amount: Int!, $reason: String) {
+    superAdminAddWhatsappCredits(companyId: $companyId, amount: $amount, reason: $reason) {
+      id companyId balance whatsappBalance
+    }
+  }
+`;
+
 const PACKS = [
     { credits: 500,  price: 50  },
     { credits: 800,  price: 70, popular: true },
@@ -60,7 +69,7 @@ const PACKS = [
 ];
 
 export function SuperAdminAI() {
-    const [tab, setTab] = useState<'overview' | 'purchases' | 'transactions' | 'packs'>('overview');
+    const [tab, setTab] = useState<'overview' | 'purchases' | 'transactions' | 'whatsapp' | 'packs'>('overview');
 
     const { data: ovData, loading: ovLoading } = useQuery<{ superAdminAiOverview: AiOverview }>(Q_OVERVIEW);
     const ov = ovData?.superAdminAiOverview;
@@ -85,6 +94,7 @@ export function SuperAdminAI() {
                     { value: 'overview', label: 'Visão geral' },
                     { value: 'purchases', label: 'Compras PIX' },
                     { value: 'transactions', label: 'Transações' },
+                    { value: 'whatsapp', label: 'Pool WhatsApp' },
                     { value: 'packs', label: 'Pacotes' },
                 ]}
                 value={tab}
@@ -94,6 +104,7 @@ export function SuperAdminAI() {
             {tab === 'overview' && <OverviewTab data={ov} loading={ovLoading} />}
             {tab === 'purchases' && <PurchasesTab />}
             {tab === 'transactions' && <TransactionsTab />}
+            {tab === 'whatsapp' && <WhatsappPoolTab />}
             {tab === 'packs' && <PacksTab />}
         </div>
     );
@@ -295,6 +306,99 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="flex items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0">
             <span className="text-slate-400">{label}</span>{value}
+        </div>
+    );
+}
+
+function WhatsappPoolTab() {
+    const [companyId, setCompanyId] = useState('');
+    const [amount, setAmount] = useState<number | ''>('');
+    const [reason, setReason] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [lastResult, setLastResult] = useState<{ companyId: string; balance: number; whatsappBalance: number } | null>(null);
+
+    const submit = async () => {
+        if (!companyId.trim() || !amount || amount <= 0) {
+            toast.error('Preencha companyId e amount > 0.');
+            return;
+        }
+        setBusy(true);
+        try {
+            const data = await gql<{ superAdminAddWhatsappCredits: { companyId: string; balance: number; whatsappBalance: number } }>(
+                M_ADD_WHATSAPP_CREDITS,
+                { companyId: companyId.trim(), amount: Number(amount), reason: reason.trim() || null },
+            );
+            const acc = data.superAdminAddWhatsappCredits;
+            setLastResult(acc);
+            toast.success(`+${amount} créditos WhatsApp creditados. Novo saldo: ${acc.whatsappBalance}`);
+            setAmount('');
+            setReason('');
+        } catch (e: any) {
+            toast.error(e.message ?? 'Falha ao creditar.');
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+                <SectionTitle title="Recarregar pool WhatsApp" description="O pool WhatsApp é separado do pool web (chat do operador). Cada mensagem do bot do Zap consome esse pool." />
+                <div className="space-y-3 mt-4">
+                    <div>
+                        <label className="block text-[12px] text-slate-400 mb-1">Company ID</label>
+                        <input
+                            type="text"
+                            value={companyId}
+                            onChange={(e) => setCompanyId(e.target.value)}
+                            placeholder="uuid da empresa"
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded px-3 py-2 text-[13px] text-white font-mono-num"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[12px] text-slate-400 mb-1">Quantidade de créditos</label>
+                        <input
+                            type="number"
+                            min={1}
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder="ex: 1000"
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded px-3 py-2 text-[13px] text-white font-mono-num"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[12px] text-slate-400 mb-1">Motivo (opcional)</label>
+                        <input
+                            type="text"
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            placeholder="ex: Cortesia onboarding"
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded px-3 py-2 text-[13px] text-white"
+                        />
+                    </div>
+                    <Button variant="primary" icon={Plus} onClick={submit} disabled={busy}>
+                        {busy ? 'Creditando…' : 'Creditar pool WhatsApp'}
+                    </Button>
+                </div>
+            </Card>
+
+            <Card>
+                <SectionTitle title="Como funciona" description="Diferença entre os 2 pools" />
+                <div className="space-y-3 mt-4 text-[12.5px] text-slate-300 leading-relaxed">
+                    <p><strong className="text-white">Pool Web</strong> (<code className="font-mono-num text-amber-300">balance</code>): consumido pelo chat IA dentro do painel. Recarregado via PIX (pacotes R$50/70/100) nas Compras PIX.</p>
+                    <p><strong className="text-white">Pool WhatsApp</strong> (<code className="font-mono-num text-emerald-300">whatsappBalance</code>): consumido pelo bot Evolution quando o cliente final manda msg no Zap. <strong>Sem pacote PIX</strong> ainda — recarregue manualmente aqui.</p>
+                    <p className="text-slate-400">As transações são marcadas com <code className="font-mono-num">channel</code> pra você ver quem está consumindo o quê na aba Transações.</p>
+                </div>
+                {lastResult && (
+                    <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded">
+                        <div className="text-[12px] text-emerald-300 font-semibold">Último crédito aplicado:</div>
+                        <div className="text-[11px] font-mono-num text-slate-400 mt-1">{lastResult.companyId}</div>
+                        <div className="text-[13px] text-white mt-1">
+                            Web: <span className="font-mono-num font-bold">{lastResult.balance}</span> · WhatsApp: <span className="font-mono-num font-bold text-emerald-300">{lastResult.whatsappBalance}</span>
+                        </div>
+                    </div>
+                )}
+            </Card>
         </div>
     );
 }

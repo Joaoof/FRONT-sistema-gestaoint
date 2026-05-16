@@ -6,8 +6,9 @@ import { PermissionsTab } from './tabs/PermissionsTab';
 import { LogsTab } from './tabs/LogsTab';
 import { AiConfigTab } from './tabs/AiConfigTab';
 import { PaymentsTab } from './tabs/PaymentsTab';
+import { PendingActionsTab } from './tabs/PendingActionsTab';
 
-type Tab = 'users' | 'permissions' | 'logs' | 'ai' | 'payments';
+type Tab = 'users' | 'permissions' | 'logs' | 'ai' | 'pending' | 'payments';
 
 export function AdminConsole() {
   const { user } = useAuth();
@@ -95,6 +96,12 @@ export function AdminConsole() {
               🤖 IA
             </button>
             <button
+              className={`win98-tab ${tab === 'pending' ? 'active' : ''}`}
+              onClick={() => setTab('pending')}
+            >
+              ⏳ Ações IA Pendentes
+            </button>
+            <button
               className={`win98-tab ${tab === 'payments' ? 'active' : ''}`}
               onClick={() => setTab('payments')}
             >
@@ -107,6 +114,7 @@ export function AdminConsole() {
             {tab === 'permissions' && <PermissionsTab />}
             {tab === 'logs' && <LogsTab />}
             {tab === 'ai' && <AiConfigTab />}
+            {tab === 'pending' && <PendingActionsTab />}
             {tab === 'payments' && <PaymentsTab />}
           </div>
 
