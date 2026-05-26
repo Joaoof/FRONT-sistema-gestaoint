@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Shield, Loader2, CheckCircle2, XCircle, Mail, Building2, Crown, Eye, EyeOff, Lock, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { API_BASE } from '../../lib/api';
 
 type ValidateResponse = {
     valid: boolean;
@@ -16,8 +17,6 @@ type ValidateResponse = {
         expiresAt?: string | null;
     };
 };
-
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') || '';
 
 export function AcceptInvitePage() {
     const { token } = useParams<{ token: string }>();
