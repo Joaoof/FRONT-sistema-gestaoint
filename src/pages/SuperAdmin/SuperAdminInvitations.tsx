@@ -36,16 +36,27 @@ const GQL_LIST = `
 const GQL_CREATE = `
   mutation CreateInvitation($input: CreateInvitationInput!) {
     createInvitation(input: $input) {
-      id email status token
+      invitation { id email status token }
+      acceptUrl
     }
   }
 `;
 
 const GQL_REVOKE = `
   mutation RevokeInvitation($id: String!) {
-    revokeInvitation(id: $id) { id status }
+    revokeInvitation(id: $id)
   }
 `;
+
+// Opções pros dropdowns do convite (empresa / plano).
+const GQL_OPTIONS = `
+  query InviteOptions {
+    superAdminCompanies { id name }
+    superAdminPlans { id name }
+  }
+`;
+
+type OptionItem = { id: string; name: string };
 
 async function gql<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
     const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
@@ -264,6 +275,26 @@ function CreateInviteModal({ open, onClose, onCreated }: { open: boolean; onClos
     const [message, setMessage] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
+    const [companies, setCompanies] = useState<OptionItem[]>([]);
+    const [plans, setPlans] = useState<OptionItem[]>([]);
+    const [loadingOptions, setLoadingOptions] = useState(false);
+
+    // Carrega empresas/planos só quando o modal abre.
+    useEffect(() => {
+        if (!open) return;
+        let cancelled = false;
+        setLoadingOptions(true);
+        gql<{ superAdminCompanies: OptionItem[]; superAdminPlans: OptionItem[] }>(GQL_OPTIONS)
+            .then((data) => {
+                if (cancelled) return;
+                setCompanies(data.superAdminCompanies ?? []);
+                setPlans(data.superAdminPlans ?? []);
+            })
+            .catch((e: any) => toast.error(e.message))
+            .finally(() => !cancelled && setLoadingOptions(false));
+        return () => { cancelled = true; };
+    }, [open]);
+
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
@@ -324,23 +355,31 @@ function CreateInviteModal({ open, onClose, onCreated }: { open: boolean; onClos
                 </Field>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <Field label="Empresa (ID)" hint="opcional">
-                        <input
-                            type="text"
+                    <Field label="Empresa" hint={loadingOptions ? 'carregando…' : 'opcional'}>
+                        <select
                             value={companyId}
                             onChange={(e) => setCompanyId(e.target.value)}
-                            placeholder="uuid"
+                            disabled={loadingOptions}
                             className={inputCls}
-                        />
+                        >
+                            <option value="">— Definir na aceitação —</option>
+                            {companies.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </select>
                     </Field>
-                    <Field label="Plano (ID)" hint="opcional">
-                        <input
-                            type="text"
+                    <Field label="Plano" hint={loadingOptions ? 'carregando…' : 'opcional'}>
+                        <select
                             value={planId}
                             onChange={(e) => setPlanId(e.target.value)}
-                            placeholder="uuid"
+                            disabled={loadingOptions}
                             className={inputCls}
-                        />
+                        >
+                            <option value="">— Nenhum —</option>
+                            {plans.map((p) => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
                     </Field>
                 </div>
 
