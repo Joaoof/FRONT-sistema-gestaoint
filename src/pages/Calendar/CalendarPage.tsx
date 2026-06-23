@@ -131,7 +131,12 @@ export function CalendarPage() {
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white rounded-lg hover:opacity-90 text-sm font-semibold shadow-sm"
           title="Resumir agenda com IA"
         >
-          <Sparkles className="w-4 h-4" />
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/4595/4595071.png"
+            alt=""
+            className="w-4 h-4 object-contain"
+            loading="lazy"
+          />
           Resumir agenda
         </button>
 
