@@ -107,6 +107,7 @@ import { SuperAdminWebhooks } from './pages/SuperAdmin/SuperAdminWebhooks';
 import { SuperAdminLogs } from './pages/SuperAdmin/SuperAdminLogs';
 import { SuperAdminSettings } from './pages/SuperAdmin/SuperAdminSettings';
 import { AcceptInvitePage } from './pages/AcceptInvite/AcceptInvitePage';
+import { FocoDoDiaPage } from './pages/FocoDoDiaPage';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -274,6 +275,7 @@ function AppContent() {
             <Route path="/lembretes" element={<RemindersPage />} />
             <Route path="/calendario" element={<CalendarPage />} />
             <Route path="/agenda" element={<CalendarPage />} />
+            <Route path="/foco" element={<FocoDoDiaPage />} />
 
             {/* CRM */}
             <Route path="/crm" element={<PipelinePage />} />

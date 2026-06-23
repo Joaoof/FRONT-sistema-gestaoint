@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { Bell, BellRing, Check, Search, ChevronRight, Slash, Command, Trash2 } from "lucide-react";
+import { Bell, BellRing, Check, Search, ChevronRight, Slash, Command, Trash2, Sparkles } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useCompany } from "../contexts/CompanyContext";
 import { useLowStock } from "../hooks/useLowStock";
 import { useNotificationsCenter } from "../contexts/NotificationsCenterContext";
 import { CreditsBadge } from "./credits/CreditsBadge";
+import { QuickCaptureButton } from "./quickCapture/QuickCaptureButton";
+import { AgendaAudioWidget } from "./agendaAudio/AgendaAudioWidget";
 
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
@@ -186,6 +188,22 @@ export function Topbar() {
           {isMac ? <Command className="w-2.5 h-2.5" strokeWidth={2} /> : "Ctrl"}
           <span>K</span>
         </kbd>
+      </div>
+
+      {/* Foco do dia (TDAH-friendly) */}
+      <button
+        type="button"
+        onClick={() => navigate('/foco')}
+        title="Foco do dia — só o que importa agora"
+        className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md bg-violet-100 text-violet-800 hover:bg-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:hover:bg-violet-900/60 transition"
+      >
+        <Sparkles className="w-3.5 h-3.5" />
+        Foco
+      </button>
+
+      <div className="hidden lg:flex items-center gap-2">
+        <AgendaAudioWidget />
+        <QuickCaptureButton />
       </div>
 
       <CreditsBadge />

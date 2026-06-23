@@ -117,3 +117,23 @@ export const SUMMARIZE_AGENDA = gql`
     )
   }
 `;
+
+export const SUMMARIZE_AGENDA_AUDIO = gql`
+  mutation SummarizeAgendaAudio(
+    $period: String!
+    $referenceDate: DateTime
+    $sources: [String!]
+    $voice: String
+  ) {
+    summarizeAgendaAudio(
+      period: $period
+      referenceDate: $referenceDate
+      sources: $sources
+      voice: $voice
+    ) {
+      audioBase64
+      transcript
+      mimeType
+    }
+  }
+`;

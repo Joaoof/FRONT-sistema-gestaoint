@@ -47,6 +47,22 @@ export const DELETE_ACCOUNT_PAYABLE = gql`
   }
 `;
 
+export const SNOOZE_ACCOUNT_PAYABLE = gql`
+  mutation SnoozeAccountPayable($id: String!, $preset: AccountPayableSnoozePreset!) {
+    snoozeAccountPayable(id: $id, preset: $preset) {
+      id dueDate supplierName description amount status
+    }
+  }
+`;
+
+export const QUICK_CAPTURE_ACCOUNT_PAYABLE = gql`
+  mutation QuickCaptureAccountPayable($text: String!) {
+    quickCaptureAccountPayable(text: $text) {
+      id supplierName description amount dueDate status
+    }
+  }
+`;
+
 const CUSTOMER_FULL_FIELDS = `
   id name nomeFantasia razaoSocial document email phone
   address bairro cidade estado cep latitude longitude

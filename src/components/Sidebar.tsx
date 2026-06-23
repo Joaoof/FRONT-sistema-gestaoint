@@ -186,6 +186,7 @@ const sections: MenuSection[] = [
           { id: 'timeline/activity' as View, label: 'Atividade', icon: History },
         ],
       },
+      { id: 'foco' as View, label: 'Foco do dia ✨', icon: Sparkles },
       { id: 'lembretes' as View, label: 'Lembretes', icon: Bell },
       { id: 'calendario' as View, label: 'Agenda / Calendário', icon: CalendarIcon },
       { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
