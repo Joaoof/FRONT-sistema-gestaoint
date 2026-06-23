@@ -85,6 +85,7 @@ import { ContractsListPage } from './pages/Contracts/ContractsListPage';
 import { ContractDetailPage } from './pages/Contracts/ContractDetailPage';
 import { TimelinePage } from './pages/TimelinePage';
 import { RemindersPage } from './pages/RemindersPage';
+import { CalendarPage } from './pages/Calendar/CalendarPage';
 import { AdminConsole } from './pages/Admin/AdminConsole';
 import { AiCreditsPage } from './pages/AiCredits/AiCreditsPage';
 import { ExportsPage } from './pages/Exports/ExportsPage';
@@ -271,6 +272,8 @@ function AppContent() {
             <Route path="/financeiro/integracoes" element={<BankIntegrationsPage />} />
             <Route path="/integracoes/webhooks" element={<WebhookCenterPage />} />
             <Route path="/lembretes" element={<RemindersPage />} />
+            <Route path="/calendario" element={<CalendarPage />} />
+            <Route path="/agenda" element={<CalendarPage />} />
 
             {/* CRM */}
             <Route path="/crm" element={<PipelinePage />} />

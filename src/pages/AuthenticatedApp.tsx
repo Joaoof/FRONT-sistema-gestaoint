@@ -77,6 +77,7 @@ export type View =
     | 'timeline/alerts'
     | 'timeline/activity'
     | 'lembretes'
+    | 'calendario'
     | 'comunicacoes'
     | 'comunicacoes/whatsapp'
     | 'comunicacoes/whatsapp/contatos'
