@@ -103,3 +103,17 @@ export const TEST_WEB_PUSH = gql`
     testWebPush
   }
 `;
+
+export const SUMMARIZE_AGENDA = gql`
+  mutation SummarizeAgenda(
+    $period: String!
+    $referenceDate: DateTime
+    $sources: [String!]
+  ) {
+    summarizeAgenda(
+      period: $period
+      referenceDate: $referenceDate
+      sources: $sources
+    )
+  }
+`;

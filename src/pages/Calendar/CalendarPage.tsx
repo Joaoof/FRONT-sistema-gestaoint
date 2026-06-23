@@ -17,6 +17,7 @@ import {
 } from '../../graphql/queries/calendar';
 import { useWebPush } from '../../hooks/useWebPush';
 import { EventModal } from './EventModal';
+import { SummaryModal } from './SummaryModal';
 import {
   CalendarItem,
   SOURCE_ICON,
@@ -55,6 +56,7 @@ export function CalendarPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEventId, setModalEventId] = useState<string | null>(null);
   const [modalPrefill, setModalPrefill] = useState<{ start: Date; end: Date } | null>(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const range = useMemo(() => getViewRange(view, refDate), [view, refDate]);
 
@@ -109,8 +111,13 @@ export function CalendarPage() {
     <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950">
       {/* HEADER */}
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 px-6 py-4 flex flex-wrap items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white">
-          <CalendarIcon className="w-5 h-5" />
+        <div className="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/9887/9887384.png"
+            alt="Agenda"
+            className="w-8 h-8 object-contain"
+            loading="lazy"
+          />
         </div>
         <div className="flex-1 min-w-[200px]">
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Agenda</h1>
@@ -118,6 +125,15 @@ export function CalendarPage() {
             Eventos, lembretes, contas e entregas — tudo num só lugar.
           </p>
         </div>
+
+        <button
+          onClick={() => setSummaryOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white rounded-lg hover:opacity-90 text-sm font-semibold shadow-sm"
+          title="Resumir agenda com IA"
+        >
+          <Sparkles className="w-4 h-4" />
+          Resumir agenda
+        </button>
 
         <button
           onClick={() => setRefDate(new Date())}
@@ -249,6 +265,13 @@ export function CalendarPage() {
         prefillEnd={modalPrefill?.end ?? null}
         onClose={() => setModalOpen(false)}
         onSaved={() => refetch()}
+      />
+
+      <SummaryModal
+        isOpen={summaryOpen}
+        onClose={() => setSummaryOpen(false)}
+        initialReferenceDate={refDate}
+        initialSources={activeSources}
       />
     </div>
   );
